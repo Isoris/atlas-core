@@ -48,22 +48,27 @@ if [ -f "$WORKSPACE_ROOT/.atlas.env" ]; then
   set +a
 fi
 
-# After assemble.sh / link.sh, the unified server lives under one of the
-# atlas packages: atlases/<atlas_id>/server/popstats_server.py. We pick
-# the FIRST atlas that ships a server. If multiple atlases ship servers
-# in the future, we'll need a config to pick which one — for now there
-# is exactly one (inversion-atlas), so the loop is a no-op.
-SERVER_PY=""
-for cand in "$WORKSPACE_ROOT"/atlases/*/server/popstats_server.py; do
-  [ -f "$cand" ] || continue
-  SERVER_PY="$cand"
-  break
-done
+# The unified server now lives in atlas-core (see atlas-core/server/README.md).
+# After assemble.sh, it sits at $WORKSPACE_ROOT/server/atlas_server.py.
+SERVER_PY="$WORKSPACE_ROOT/server/atlas_server.py"
 
-if [ -z "$SERVER_PY" ]; then
-  echo "ERROR: no atlas ships a server in this workspace."
-  echo "       Looked for: $WORKSPACE_ROOT/atlases/*/server/popstats_server.py"
-  echo "       Did assemble.sh / link.sh complete successfully?"
+# Back-compat: if an old assembled workspace still has the previous
+# atlases/<id>/server/atlas_server.py (or popstats_server.py) layout,
+# fall through to it.
+if [ ! -f "$SERVER_PY" ]; then
+  for cand in "$WORKSPACE_ROOT"/atlases/*/server/atlas_server.py \
+              "$WORKSPACE_ROOT"/atlases/*/server/popstats_server.py; do
+    [ -f "$cand" ] || continue
+    SERVER_PY="$cand"
+    break
+  done
+fi
+
+if [ ! -f "$SERVER_PY" ]; then
+  echo "ERROR: server entry point not found in this workspace."
+  echo "       Looked for: $WORKSPACE_ROOT/server/atlas_server.py"
+  echo "       (and the legacy atlases/*/server/atlas_server.py fallback)"
+  echo "       Did assemble.sh complete successfully?"
   exit 1
 fi
 
@@ -100,7 +105,8 @@ echo
 # the server serves the UI from the workspace AND treats it as the
 # project root for /file IO.
 cd "$SERVER_DIR"
-exec python3 popstats_server.py \
+SERVER_BASENAME="$(basename "$SERVER_PY")"
+exec python3 "$SERVER_BASENAME" \
   --workspace-root "$WORKSPACE_ROOT" \
   --project-root   "$WORKSPACE_ROOT" \
   --host 127.0.0.1 \

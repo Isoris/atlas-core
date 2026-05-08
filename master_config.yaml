@@ -1,0 +1,308 @@
+# =============================================================================
+# atlas master_config.yaml  (site-local, WSL @ /mnt/e/)
+# =============================================================================
+# Active master_config for THIS machine. Loaded by core/master_config.js in
+# preference to master_config.example.yaml.
+#
+# All read-only roots use ABSOLUTE /mnt/e/... paths pointing directly at the
+# results_inversions / results_diversity / results_population / results_genome
+# tree we just laid down. The unified server's static mount serves them
+# because assemble.sh creates a $WORKSPACE/mnt/e -> /mnt/e symlink (the
+# absolute-path mirror) — fetching /mnt/e/X resolves to that symlink.
+#
+# Cache lives outside the project tree at /mnt/e/atlas-cache.
+# =============================================================================
+
+atlas:
+  workspace_root: "."
+  active_atlas:   "inversion"
+  active_chrom:   "C_gar_LG28"
+
+species:
+  - id:     "gariepinus"
+    config: "species/gariepinus.config.yaml"
+    active: true
+
+# -----------------------------------------------------------------------------
+# ROOTS
+# -----------------------------------------------------------------------------
+# Absolute /mnt/e/ paths. species_scoped: false everywhere for now (single
+# species cohort); when macrocephalus data lands, add per-species roots and
+# flip species_scoped: true on the ones that need it.
+# -----------------------------------------------------------------------------
+roots:
+
+  # ----- read-only inputs (Category 1) ---------------------------------------
+
+  beagle:
+    path: "/mnt/e/results_inversions/01_beagle"
+    role: "intervals"
+    species_scoped: false
+    description: "main_qcpass.<CHR>.beagle.gz files. Input to popstats compute."
+
+  cohort_dosage:
+    path: "/mnt/e/results_inversions/02_dosage_sites"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-chromosome dosage tile store: <chrom>.sites.tsv.gz + <chrom>.dosage.tsv.gz. Read by GET /api/dosage/chunk for the streaming dosage heatmap."
+
+  pestpg_inversions:
+    path: "/mnt/e/results_inversions/03_pestPG"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-sample ANGSD -doThetas pestPG outputs scoped to the inversion path."
+
+  clair3_phased_ghsl:
+    path: "/mnt/e/results_inversions/04_clair3_phased_GHSL"
+    role: "intervals"
+    species_scoped: false
+    description: "Phased Clair3 VCFs feeding the GHSL inversion-discovery path."
+
+  precomp_zblocks:
+    path: "/mnt/e/results_inversions/path_localpca_zblocks/04_atlas_json"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-chromosome atlas JSONs from the z-blocks local-PCA path. Auto-loaded by atlas pages."
+
+  precomp_thetapi:
+    path: "/mnt/e/results_inversions/path_localpca_thetapi/04_atlas_json"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-chromosome atlas JSONs from the theta-pi local-PCA path. Auto-loaded by atlas pages."
+
+  precomp_ghsl:
+    path: "/mnt/e/results_inversions/path_localpca_GHSL/04_atlas_json"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-chromosome atlas JSONs from the GHSL local-PCA path. Auto-loaded by atlas pages."
+
+  per_chrom_zblocks:
+    path: "/mnt/e/results_inversions/path_localpca_zblocks/03_per_chrom"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-chromosome RDS / sim-mat / envelope outputs for the z-blocks local-PCA path."
+
+  per_chrom_thetapi:
+    path: "/mnt/e/results_inversions/path_localpca_thetapi/03_per_chrom"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-chromosome outputs for the theta-pi local-PCA path."
+
+  per_chrom_ghsl:
+    path: "/mnt/e/results_inversions/path_localpca_GHSL/03_per_chrom"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-chromosome outputs for the GHSL local-PCA path."
+
+  mds_zblocks:
+    path: "/mnt/e/results_inversions/path_localpca_zblocks/02_mds"
+    role: "intervals"
+    species_scoped: false
+    description: "Genome-wide MDS rollup for the z-blocks path (windows_master.tsv.gz, candidate_regions.tsv.gz)."
+
+  mds_thetapi:
+    path: "/mnt/e/results_inversions/path_localpca_thetapi/02_mds"
+    role: "intervals"
+    species_scoped: false
+    description: "MDS rollup for the theta-pi path (may be empty by design)."
+
+  mds_ghsl:
+    path: "/mnt/e/results_inversions/path_localpca_GHSL/02_mds"
+    role: "intervals"
+    species_scoped: false
+    description: "MDS rollup for the GHSL path."
+
+  shared_inversions:
+    path: "/mnt/e/results_inversions/_shared"
+    role: "samples"
+    species_scoped: false
+    description: "Cross-path shared metadata: sample_metadata.tsv, 00_inversion_config.sh, chrom.list, reference/."
+
+  reference:
+    path: "/mnt/e/results_inversions/_shared/reference"
+    role: "intervals"
+    species_scoped: false
+    description: "Reference FASTA + index. Filenames declared in species/gariepinus.config.yaml."
+
+  # ----- diversity, population, genome ---------------------------------------
+
+  diversity_pestpg:
+    path: "/mnt/e/results_diversity/01_pestPG"
+    role: "intervals"
+    species_scoped: false
+    description: "ANGSD -doThetas pestPG outputs (theta_pi, watterson_theta scans)."
+
+  diversity_froh_h:
+    path: "/mnt/e/results_diversity/02_F_ROH_H"
+    role: "samples"
+    species_scoped: false
+    description: "F_ROH | H heterozygosity-conditioned ROH framework outputs."
+
+  diversity_pi_theta:
+    path: "/mnt/e/results_diversity/03_genome_wide_pi_theta"
+    role: "samples"
+    species_scoped: false
+    description: "Genome-wide pi / theta rollups."
+
+  population_natora:
+    path: "/mnt/e/results_population/01_natora_pruned"
+    role: "samples"
+    species_scoped: false
+    description: "NAToRA-pruned unrelated subset (e.g. 81 samples)."
+
+  population_ngsrelate:
+    path: "/mnt/e/results_population/02_ngsrelate"
+    role: "samples"
+    species_scoped: false
+    description: "Pairwise ngsRelate theta + relatedness summaries."
+
+  population_ngsadmix:
+    path: "/mnt/e/results_population/03_ngsadmix"
+    role: "samples"
+    species_scoped: false
+    description: "NGSadmix K=2..20 sweeps (qopt + log-likelihood tables)."
+
+  population_pcangsd:
+    path: "/mnt/e/results_population/04_pcangsd"
+    role: "samples"
+    species_scoped: false
+    description: "pcangsd PCA / kinship outputs."
+
+  population_evaladmix:
+    path: "/mnt/e/results_population/05_evaladmix"
+    role: "samples"
+    species_scoped: false
+    description: "evalAdmix residuals."
+
+  population_fpw:
+    path: "/mnt/e/results_population/06_FPW"
+    role: "samples"
+    species_scoped: false
+    description: "Founder waves (FPW) decomposition."
+
+  genome_assembly:
+    path: "/mnt/e/results_genome/01_assembly"
+    role: "intervals"
+    species_scoped: false
+    description: "hifiasm / verkko outputs."
+
+  genome_annotation:
+    path: "/mnt/e/results_genome/02_annotation"
+    role: "intervals"
+    species_scoped: false
+    description: "BRAKER, RepeatMasker, etc."
+
+  genome_te_density:
+    path: "/mnt/e/results_genome/03_TE_density"
+    role: "intervals"
+    species_scoped: false
+    description: "EDTA outputs and TE density tracks."
+
+  genome_synteny:
+    path: "/mnt/e/results_genome/04_synteny"
+    role: "intervals"
+    species_scoped: false
+    description: "wfmash + catfish-synteny-toolkit outputs."
+
+  # ----- writable evidence roots (Category 1, browser-writable) --------------
+
+  candidates:
+    path: "/mnt/e/atlas-cache/candidates"
+    role: "evidence"
+    description: "Per-candidate folders. WRITABLE - browser analysis modules persist here. Held in atlas-cache so the source tree stays clean."
+
+  arrangement_calls:
+    path: "/mnt/e/atlas-cache/arrangement_calls"
+    role: "evidence"
+    description: "Per-candidate per-version arrangement call outputs. WRITABLE."
+
+  comparative:
+    path: "/mnt/e/atlas-cache/comparative"
+    role: "intervals"
+    description: "Cross-species synteny / breakpoint reuse / phylogeny derived in-session."
+
+  review_sessions:
+    path: "/mnt/e/atlas-cache/review/{active_atlas}/sessions"
+    role: "evidence"
+    description: "Per-session review state (manual overrides, candidate decisions). WRITABLE; allowlisted in the server's POST /file handler."
+
+  # ----- working dir + cache (Categories 2 + 3) ------------------------------
+
+  working_dir:
+    path: "/mnt/e/atlas-cache/working_dir"
+    role: "results"
+    description: "Persistent working directory for browser-side analysis outputs not tied to a candidate version."
+
+  cache:
+    path: "/mnt/e/atlas-cache"
+    role: "results"
+    writable: true
+    ephemeral: true
+    description: "Working cache for server compute results, browser-side intermediate computations, plus the writable evidence roots above. Layout: server_results/{op_id}/{hash}.json + free-form. SAFE TO DELETE (the writable evidence roots also live here - back them up elsewhere if you care about review state)."
+    excluded_from_tarballs: true
+
+# -----------------------------------------------------------------------------
+# SERVER  (atlas_server.py)
+# -----------------------------------------------------------------------------
+server:
+
+  bind:
+    host: "127.0.0.1"
+    port: 8000
+
+  cors_origins:
+    - "http://localhost:8000"
+    - "http://127.0.0.1:8000"
+    - "null"
+
+  validation:
+    min_group_n: 10
+
+  popstats_cache:
+    path: "/mnt/e/atlas-cache/popstats_engine_cache"
+    max_bytes: 53687091200
+    health_ttl_sec: 60
+
+  dosage:
+    max_region_bp: 50000000
+    samples_file: null
+
+# -----------------------------------------------------------------------------
+# ENGINES — local compiled binaries (Windows / WSL).
+# -----------------------------------------------------------------------------
+engines:
+  region_popstats: "/mnt/c/Users/quent/Desktop/bio_tools_quentin/bin/region_popstats"
+  hobs_windower:   "/mnt/c/Users/quent/Desktop/bio_tools_quentin/bin/hobs_windower"
+  angsd_patched:   "/mnt/c/Users/quent/Desktop/bio_tools_quentin/bin/angsd_fixed_HWE"
+  instant_q:       "/mnt/c/Users/quent/Desktop/bio_tools_quentin/bin/instant_q"
+
+# -----------------------------------------------------------------------------
+# DEFAULTS
+# -----------------------------------------------------------------------------
+defaults:
+
+  popstats:
+    win_bp: 50000
+    step_bp: 10000
+    type: 2
+    downsample: 1
+    ncores: 4
+
+  hobs:
+    scales:
+      - "5kb:5000:1000"
+      - "10kb:10000:2000"
+      - "50kb:50000:10000"
+      - "100kb:100000:20000"
+      - "250kb:250000:50000"
+      - "500kb:500000:100000"
+      - "1Mb:1000000:200000"
+
+  angsd:
+    threads: 2
+    major_minor: 1
+    min_maf: 0.05
+    min_mapq: 20
+    min_q: 20
+    snp_pval: "1e-6"
+    max_het_freq: 1.0

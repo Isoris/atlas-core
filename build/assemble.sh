@@ -108,15 +108,32 @@ done
 } > "$WORKSPACE/atlases/_index.json"
 
 # 5. Symlink the data folder into the workspace -------------------------
-# The atlas reads data via /file/data/... at runtime; making it a sibling
-# symlink avoids copying GB of data and keeps it editable from the source.
+# Two complementary links, both pointing at the same target:
+#   (a) $WORKSPACE/data            -> $DATA_DIR     (legacy convenience link)
+#   (b) $WORKSPACE/$DATA_DIR       -> $DATA_DIR     (full-path mirror)
+# Link (b) lets master_config.yaml use absolute paths like
+# /mnt/e/results_inversions/01_beagle and have the unified server's
+# static mount serve them: a fetch for /mnt/e/X resolves to
+# $WORKSPACE/mnt/e/X, which (b) bridges back to the real $DATA_DIR/X.
 if [ "${kv_data:-}" ]; then
   DATA_DIR="$(resolve_path "$kv_data")"
   if [ -d "$DATA_DIR" ]; then
+    # (a) legacy convenience link
     ln -s "$DATA_DIR" "$WORKSPACE/data"
     echo "==> linked data: $DATA_DIR → $WORKSPACE/data"
+    # (b) full-path mirror (only for absolute DATA_DIR, which it always is
+    # after resolve_path; but be explicit for clarity).
+    case "$DATA_DIR" in
+      /*)
+        PARENT_DIR="$(dirname "$DATA_DIR")"
+        BASENAME="$(basename "$DATA_DIR")"
+        mkdir -p "$WORKSPACE$PARENT_DIR"
+        ln -s "$DATA_DIR" "$WORKSPACE$PARENT_DIR/$BASENAME"
+        echo "==> mirrored absolute path: $DATA_DIR → $WORKSPACE$PARENT_DIR/$BASENAME"
+        ;;
+    esac
   else
-    echo "  ! data path not found: $DATA_DIR (skipping link)"
+    echo "  ! data path not found: $DATA_DIR (skipping links)"
   fi
 fi
 

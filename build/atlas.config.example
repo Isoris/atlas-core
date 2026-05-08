@@ -8,9 +8,13 @@
 #     bash atlas-core/build/assemble.sh
 #
 # Each atlas_<name> entry is a path to that atlas's source folder.
-# data is the path to the read-only data tree (typically on a big disk).
-# server_config is the path to popstats_server.config.yaml — optional;
-# leave commented out and the server will run with popstats disabled.
+# data is the path to the read-only data tree (typically on a big disk);
+#   assemble.sh creates a workspace/data symlink AND a same-path mirror
+#   (workspace/<dataDir> -> dataDir) so absolute paths in master_config
+#   resolve through the unified server's static mount.
+# server_config is the path to atlas_server.config.yaml — optional;
+#   leave commented out and the server runs with the popstats subsystem
+#   disabled (UI + /file + /compute still work).
 #
 # Paths can be absolute (/mnt/e/...) or relative to atlas-core/build/.
 # Lines starting with # are comments. Blank lines are ignored.
@@ -24,7 +28,7 @@ atlas_inversion  = ../../inversion-atlas
 # atlas_population = ../../population-atlas
 
 # Data folder (the read-only data tree, outside any git repo)
-data             = /mnt/e/01-catfish_assembly_CGA
+data             = /mnt/e
 
-# Popstats server config (optional — comment out to disable popstats)
-# server_config    = /home/quentin/atlas/popstats_server.config.yaml
+# Atlas server config (optional — comment out to disable popstats compute)
+# server_config    = ../server/atlas_server.local.yaml

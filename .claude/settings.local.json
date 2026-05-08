@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uname -a; ls -la /mnt/ 2>&1 | head -10; echo \"---\"; ls /e 2>&1 | head -3; echo \"---\"; ls \"/c/Users/quent/Desktop/atlas-core\" 2>&1 | head -5)",
+      "Read(//c/mnt/**)",
+      "PowerShell(wsl.exe --list --quiet 2>&1)"
+    ]
+  }
+}

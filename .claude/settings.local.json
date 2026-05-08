@@ -3,7 +3,9 @@
     "allow": [
       "Bash(uname -a; ls -la /mnt/ 2>&1 | head -10; echo \"---\"; ls /e 2>&1 | head -3; echo \"---\"; ls \"/c/Users/quent/Desktop/atlas-core\" 2>&1 | head -5)",
       "Read(//c/mnt/**)",
-      "PowerShell(wsl.exe --list --quiet 2>&1)"
+      "PowerShell(wsl.exe --list --quiet 2>&1)",
+      "PowerShell(wsl.exe -d Ubuntu-24.04 -- bash /mnt/c/Users/quent/Desktop/atlas-core/build/_one_shot_link_data.sh)",
+      "PowerShell(wsl.exe -d Ubuntu-24.04 -- bash -c 'echo \"=== current state on /mnt/e ===\"; ls -la /mnt/e/results_inversions/01_beagle | head -5; echo; ls -la /mnt/e/results_inversions/02_dosage_sites | head -5; echo; ls /mnt/e/results_diversity/01_pestPG 2>/dev/null | wc -l; echo; ls /mnt/e/results_inversions/03_pestPG 2>/dev/null | wc -l; echo; ls /mnt/e/_shared 2>/dev/null')"
     ]
   }
 }

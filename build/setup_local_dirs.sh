@@ -19,21 +19,33 @@
 set -euo pipefail
 
 MNT=/mnt/e
+SHARED="$MNT/_shared"
 RESULTS_INV="$MNT/results_inversions"
 RESULTS_DIV="$MNT/results_diversity"
 RESULTS_POP="$MNT/results_population"
 RESULTS_GEN="$MNT/results_genome"
 CACHE="$MNT/atlas-cache"
 
+echo "==> _shared/ ($SHARED)"
+# Cohort-wide inputs the whole atlas reads (samples.ind, chrom_sizes.tsv,
+# callable_regions, reference fasta, etc.). Used by inversions, diversity,
+# AND population — top-level so no result tree owns it.
+mkdir -p \
+  "$SHARED" \
+  "$SHARED/reference"
+
 echo "==> results_inversions/ ($RESULTS_INV)"
+# 03_theta_pi_pestPG holds the win10000.step2000 slice consumed by the
+# theta-pi local-PCA path (STEP_TR_A/B). The full 4-scale pestPG bundle
+# lives in results_diversity/03_theta_pi — we only duplicate the slice
+# the inversion path actually reads.
 mkdir -p \
   "$RESULTS_INV/01_beagle" \
   "$RESULTS_INV/02_dosage_sites" \
-  "$RESULTS_INV/03_pestPG" \
-  "$RESULTS_INV/04_clair3_phased_GHSL" \
-  "$RESULTS_INV/_shared/reference"
+  "$RESULTS_INV/03_theta_pi_pestPG" \
+  "$RESULTS_INV/04_clair3_phased_GHSL"
 
-for path in path_localpca_zblocks path_localpca_thetapi path_localpca_GHSL; do
+for path in local_PCA_MDS_z local_PCA_MDS_theta_pi local_PCA_MDS_GHSL; do
   mkdir -p \
     "$RESULTS_INV/$path/01_local_pca" \
     "$RESULTS_INV/$path/02_mds" \
@@ -45,10 +57,15 @@ for path in path_localpca_zblocks path_localpca_thetapi path_localpca_GHSL; do
 done
 
 echo "==> results_diversity/ ($RESULTS_DIV)"
+# Folder names mirror the producer repo at
+# /mnt/c/Users/quent/Desktop/catfish-diversity-analysis/Modules/.
+# When the producer adds a module, add the matching slot here.
 mkdir -p \
-  "$RESULTS_DIV/01_pestPG" \
-  "$RESULTS_DIV/02_F_ROH_H" \
-  "$RESULTS_DIV/03_genome_wide_pi_theta"
+  "$RESULTS_DIV/01_saf_per_sample" \
+  "$RESULTS_DIV/02_heterozygosity" \
+  "$RESULTS_DIV/03_theta_pi" \
+  "$RESULTS_DIV/04_roh" \
+  "$RESULTS_DIV/05_aggregated"
 
 echo "==> results_population/ ($RESULTS_POP)"
 mkdir -p \

@@ -31,9 +31,10 @@ base: "/mnt/e"
 # ref: "${base}/00-samples/fClaHyb_Gar_LG.fa"
 # ref_fai: "${base}/00-samples/fClaHyb_Gar_LG.fa.fai"
 
-# Local reference paths (symlinked into _shared/reference by setup_local_data.sh):
-ref: "${base}/results_inversions/_shared/reference/fClaHyb_Gar_LG.fa"
-ref_fai: "${base}/results_inversions/_shared/reference/fClaHyb_Gar_LG.fa.fai"
+# Local reference paths (in top-level _shared/reference; cross-cutting between
+# inversions / diversity / population, so it lives outside any result tree):
+ref: "${base}/_shared/reference/fClaHyb_Gar_LG.fa"
+ref_fai: "${base}/_shared/reference/fClaHyb_Gar_LG.fa.fai"
 
 # ---- Engine binaries --------------------------------------------------------
 # Local compiled binaries / symlinks.
@@ -63,8 +64,8 @@ beagle_dir: "${base}/results_inversions/01_beagle"
 # Original scratch:
 # sample_list: "${base}/het_roh/01_inputs_check/samples.ind"
 
-# Local sample list (symlinked into _shared/ by setup_local_data.sh):
-sample_list: "${base}/results_inversions/_shared/samples.ind"
+# Local sample list (in top-level _shared/, cohort-wide):
+sample_list: "${base}/_shared/samples.ind"
 
 # Per-sample BAMs used by Hobs/HWE endpoint.
 # We skip BAM-heavy Hobs/HWE locally for now, but keep this key defined

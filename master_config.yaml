@@ -46,11 +46,11 @@ roots:
     species_scoped: false
     description: "Per-chromosome dosage tile store: <chrom>.sites.tsv.gz + <chrom>.dosage.tsv.gz. Read by GET /api/dosage/chunk for the streaming dosage heatmap."
 
-  pestpg_inversions:
-    path: "/mnt/e/results_inversions/03_pestPG"
+  inversion_theta_pi_pestPG:
+    path: "/mnt/e/results_inversions/03_theta_pi_pestPG"
     role: "intervals"
     species_scoped: false
-    description: "Per-sample ANGSD -doThetas pestPG outputs scoped to the inversion path."
+    description: "win10000.step2000 pestPG subset consumed by STEP_TR_A/B (theta-pi local-PCA path). Sourced from results_diversity/03_theta_pi; copied here so the inversion pipeline reads only the scale it actually uses (per the STEP_TR_A/B README, the other 3 scales stay in diversity)."
 
   clair3_phased_ghsl:
     path: "/mnt/e/results_inversions/04_clair3_phased_GHSL"
@@ -59,90 +59,104 @@ roots:
     description: "Phased Clair3 VCFs feeding the GHSL inversion-discovery path."
 
   precomp_zblocks:
-    path: "/mnt/e/results_inversions/path_localpca_zblocks/04_atlas_json"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_z/04_atlas_json"
     role: "intervals"
     species_scoped: false
     description: "Per-chromosome atlas JSONs from the z-blocks local-PCA path. Auto-loaded by atlas pages."
 
   precomp_thetapi:
-    path: "/mnt/e/results_inversions/path_localpca_thetapi/04_atlas_json"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_theta_pi/04_atlas_json"
     role: "intervals"
     species_scoped: false
     description: "Per-chromosome atlas JSONs from the theta-pi local-PCA path. Auto-loaded by atlas pages."
 
   precomp_ghsl:
-    path: "/mnt/e/results_inversions/path_localpca_GHSL/04_atlas_json"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_GHSL/04_atlas_json"
     role: "intervals"
     species_scoped: false
     description: "Per-chromosome atlas JSONs from the GHSL local-PCA path. Auto-loaded by atlas pages."
 
   per_chrom_zblocks:
-    path: "/mnt/e/results_inversions/path_localpca_zblocks/03_per_chrom"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_z/03_per_chrom"
     role: "intervals"
     species_scoped: false
     description: "Per-chromosome RDS / sim-mat / envelope outputs for the z-blocks local-PCA path."
 
   per_chrom_thetapi:
-    path: "/mnt/e/results_inversions/path_localpca_thetapi/03_per_chrom"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_theta_pi/03_per_chrom"
     role: "intervals"
     species_scoped: false
     description: "Per-chromosome outputs for the theta-pi local-PCA path."
 
   per_chrom_ghsl:
-    path: "/mnt/e/results_inversions/path_localpca_GHSL/03_per_chrom"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_GHSL/03_per_chrom"
     role: "intervals"
     species_scoped: false
     description: "Per-chromosome outputs for the GHSL local-PCA path."
 
   mds_zblocks:
-    path: "/mnt/e/results_inversions/path_localpca_zblocks/02_mds"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_z/02_mds"
     role: "intervals"
     species_scoped: false
     description: "Genome-wide MDS rollup for the z-blocks path (windows_master.tsv.gz, candidate_regions.tsv.gz)."
 
   mds_thetapi:
-    path: "/mnt/e/results_inversions/path_localpca_thetapi/02_mds"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_theta_pi/02_mds"
     role: "intervals"
     species_scoped: false
     description: "MDS rollup for the theta-pi path (may be empty by design)."
 
   mds_ghsl:
-    path: "/mnt/e/results_inversions/path_localpca_GHSL/02_mds"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_GHSL/02_mds"
     role: "intervals"
     species_scoped: false
     description: "MDS rollup for the GHSL path."
 
-  shared_inversions:
-    path: "/mnt/e/results_inversions/_shared"
+  shared:
+    path: "/mnt/e/_shared"
     role: "samples"
     species_scoped: false
-    description: "Cross-path shared metadata: sample_metadata.tsv, 00_inversion_config.sh, chrom.list, reference/."
+    description: "Cohort-wide inputs the whole atlas reads (samples.ind, chrom_sizes.tsv, callable_regions.rf, samples_qcpass.txt, bamlist_qcpass.txt, etc.). Used by inversions, diversity, AND population."
 
   reference:
-    path: "/mnt/e/results_inversions/_shared/reference"
+    path: "/mnt/e/_shared/reference"
     role: "intervals"
     species_scoped: false
-    description: "Reference FASTA + index. Filenames declared in species/gariepinus.config.yaml."
+    description: "Reference FASTA + index. Filenames declared in species/gariepinus.config.yaml. Top-level shared so all three result trees can read it."
 
   # ----- diversity, population, genome ---------------------------------------
 
-  diversity_pestpg:
-    path: "/mnt/e/results_diversity/01_pestPG"
+  # Folder names mirror the producer repo at
+  # /mnt/c/Users/quent/Desktop/catfish-diversity-analysis/Modules/.
+  diversity_saf_per_sample:
+    path: "/mnt/e/results_diversity/01_saf_per_sample"
+    role: "samples"
+    species_scoped: false
+    description: "Per-sample ANGSD SAF outputs (Module 01_saf_per_sample). 226 samples."
+
+  diversity_heterozygosity:
+    path: "/mnt/e/results_diversity/02_heterozygosity"
+    role: "samples"
+    species_scoped: false
+    description: "Heterozygosity bundle (Module 02_heterozygosity). Subfolders: 02_sfs/, 04_summary/ (genomewide_heterozygosity.tsv), 05_ancestry_heterozygosity/, 05_single_heterozygosity_boxplot/."
+
+  diversity_theta_pi:
+    path: "/mnt/e/results_diversity/03_theta_pi"
     role: "intervals"
     species_scoped: false
-    description: "ANGSD -doThetas pestPG outputs (theta_pi, watterson_theta scans)."
+    description: "ANGSD -doThetas pestPG outputs (Module 03_theta_pi). 4 scales x 226 samples = 904 .pestPG files. Read by both diversity scans AND the inversion path-2 (theta-pi local-PCA) via the registry."
 
-  diversity_froh_h:
-    path: "/mnt/e/results_diversity/02_F_ROH_H"
+  diversity_roh:
+    path: "/mnt/e/results_diversity/04_roh"
     role: "samples"
     species_scoped: false
-    description: "F_ROH | H heterozygosity-conditioned ROH framework outputs."
+    description: "ROH outputs (Module 04_roh) including F_ROH | H framework results."
 
-  diversity_pi_theta:
-    path: "/mnt/e/results_diversity/03_genome_wide_pi_theta"
+  diversity_aggregated:
+    path: "/mnt/e/results_diversity/05_aggregated"
     role: "samples"
     species_scoped: false
-    description: "Genome-wide pi / theta rollups."
+    description: "Cross-module rollups (Module 05_aggregated): genome-wide pi/theta tables, sample-level summaries."
 
   population_natora:
     path: "/mnt/e/results_population/01_natora_pruned"

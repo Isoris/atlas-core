@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "boundary.schema.json",
+  "block_type": "boundary",
+  "block_type_template": "boundary_{5prime|3prime}",
+  "description": "Per-boundary evidence: position, hardness, sharpness, boundary type, supporting cheats, and verdict. Written twice per candidate (boundary_5prime, boundary_3prime). Sharpness is real Hudson Fst/Hobs step from Cheat 4 when Engine B is available, otherwise sim_mat proxy. NAMING: 5prime/3prime are relative to the project reference assembly orientation (bp1 = lower coordinate = 5prime; bp2 = higher coordinate = 3prime). This is NOT relative to NCBI or any external reference. Legacy consumers reading q3_left_*/q3_right_* keys are supported via a dual-write shim in utils/registry_key_helpers.R (flag RKH_EMIT_LEGACY_SIDE_KEYS).",
+  "question": "Q3",
+  "group_validation_required": "NONE",
+  "source_script": "STEP_C01g_boundary_catalog_wired_4_8_10_11_17_21_v934_registry.R",
+  "required": ["boundary_bp", "side", "hardness", "sharpness", "boundary_verdict"],
+  "properties": {
+    "side": { "type": "string", "enum": ["5prime", "3prime"] },
+    "boundary_bp": { "type": "integer" },
+    "hardness": {
+      "type": "number",
+      "description": "0-1: how consistent the boundary location is across matrix variants"
+    },
+    "sharpness": {
+      "type": "number",
+      "description": "Fst/Hobs contrast between ±flank of boundary"
+    },
+    "boundary_type": {
+      "type": "string",
+      "enum": ["sharp_hard", "sharp_soft", "diffuse_hard", "diffuse_soft", "system_junction"]
+    },
+    "boundary_verdict": {
+      "type": "string",
+      "enum": ["confirmed_structural", "likely_structural", "probable_structural",
+               "single_evidence_structural", "internal_feature",
+               "system_junction", "unresolved"]
+    },
+    "n_cheats_supporting": { "type": "integer" },
+    "cheat_4_passed": { "type": "boolean" },
+    "cheat_8_passed": { "type": "boolean" },
+    "cheat_10_passed": { "type": "boolean" },
+    "cheat_11_passed": { "type": "boolean" },
+    "cheat_17_passed": { "type": "boolean" },
+    "cheat_21_passed": { "type": "boolean" },
+    "clip_count": { "type": "integer" },
+    "depth_anomaly": { "type": "number" },
+    "is_fossil": { "type": "boolean" },
+    "sv_breakpoint_support": { "type": "object" },
+    "blue_cross_inner": { "type": "boolean", "description": "derived from PHASE_01C block_detect inner boundary" }
+  },
+  "keys_extracted": [
+    { "key": "q3_{side}_bp", "from": "boundary_bp" },
+    { "key": "q3_{side}_hardness", "from": "hardness" },
+    { "key": "q3_{side}_sharpness", "from": "sharpness" },
+    { "key": "q3_{side}_type", "from": "boundary_type" },
+    { "key": "q3_{side}_verdict", "from": "boundary_verdict" },
+    { "key": "q3_{side}_n_cheats", "from": "n_cheats_supporting" },
+    { "key": "q3_{side}_clip_count", "from": "clip_count" },
+    { "key": "q3_{side}_depth_anomaly", "from": "depth_anomaly" },
+    { "key": "q3_{side}_is_fossil", "from": "is_fossil" }
+  ],
+  "note_on_side_templating": "The library substitutes {side} with '5prime' or '3prime' at key extraction time based on block_type. So boundary_5prime.json writes q3_5prime_bp, q3_5prime_hardness, etc., and boundary_3prime.json writes q3_3prime_*. During migration, utils/registry_key_helpers.R also dual-writes q3_left_*/q3_right_* copies (toggle RKH_EMIT_LEGACY_SIDE_KEYS). 5prime ≡ bp1 ≡ lower coordinate on the project reference assembly."
+}

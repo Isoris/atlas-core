@@ -1,0 +1,28 @@
+{
+  "atlas_id": "mock",
+  "atlas_name": "Mock atlas (for core testing)",
+  "atlas_version": "0.1",
+  "atlas_description": "Trivial atlas used by atlas-core's test suite to verify the engine works in isolation. NOT shipped to end users.",
+
+  "pages": [
+    {
+      "id": "hello",
+      "label": "hello",
+      "stage": "test",
+      "fragment": "atlases/mock/pages/hello.html",
+      "module":   "atlases/mock/pages/hello.js"
+    }
+  ],
+
+  "registries": {
+    "layers":     "atlases/mock/registries/data/layers.registry.json",
+    "files":      "atlases/mock/registries/data/files.registry.json",
+    "operations": "atlases/mock/registries/data/operations.registry.json",
+    "pages":      "atlases/mock/registries/data/pages.registry.json",
+    "slots":      "atlases/mock/registries/data/slots.registry.json"
+  },
+
+  "stages": [
+    { "id": "test", "label": "test", "order": 1 }
+  ]
+}

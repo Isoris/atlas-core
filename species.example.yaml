@@ -1,0 +1,117 @@
+# =============================================================================
+# species.example.yaml — TWO species shown side-by-side
+# =============================================================================
+# Per-species config for a multi-species atlas. Copy ONE of the blocks below
+# into its own file (e.g. gariepinus.config.yaml, macrocephalus.config.yaml)
+# and reference from master_config.yaml under the `species:` array.
+#
+# Single-species atlases can keep one species block and ignore the rest.
+# Multi-species atlases load all listed species; the registry templates
+# {species_id} into species-scoped layer paths.
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# Example 1 — C. gariepinus (the cohort active in the inversion atlas today)
+# -----------------------------------------------------------------------------
+# Save this block as `species/gariepinus.config.yaml`.
+
+species_id:       "gariepinus"
+label:            "C. gariepinus"
+scientific_name:  "Clarias gariepinus"
+ncbi_taxid:       13013
+
+cohort:
+  cohort_id:    "main_226_hatchery"
+  n_samples:    226
+  samples_file: "cohort/samples.ind"
+  description:  "Pure C. gariepinus hatchery cohort. Mixed populations from
+                Thai hatchery broodlines; substructure not yet resolved.
+                Sequenced 9x; BAMs at bams root."
+
+populations:
+  # Initial placeholder: all 226 samples treated as one population.
+  # When NGSadmix / family analysis resolves substructure, append new
+  # population entries below this one — never overwrite. Old results
+  # against population_id 'mixed' stay valid for reproducibility.
+  - population_id: "mixed"
+    label:          "all 226 samples (population structure unresolved)"
+    members:        "ALL"
+    status:         "active"
+    source_methods: ["placeholder"]
+    created_at:     "2026-02-04T00:00:00Z"
+    notes:          "Initial state. Hatchery broodlines mixed. Population
+                     structure to be resolved by NGSadmix K=8 + pedigree."
+
+reference:
+  fasta:                "fClaHyb_Gar_LG.fa"
+  fai:                  "fClaHyb_Gar_LG.fa.fai"
+  n_chromosomes:        28
+  chrom_naming_pattern: "C_gar_LG{NN}"
+
+
+# -----------------------------------------------------------------------------
+# Example 2 — C. macrocephalus (bighead catfish, future cohort)
+# -----------------------------------------------------------------------------
+# Save this block as `species/macrocephalus.config.yaml`. Add to
+# master_config.species when the cohort lands.
+
+# species_id:       "macrocephalus"
+# label:            "C. macrocephalus"
+# scientific_name:  "Clarias macrocephalus"
+# ncbi_taxid:       91432
+#
+# cohort:
+#   cohort_id:    "wild_main_v1"
+#   n_samples:    150       # placeholder — fill when known
+#   samples_file: "cohort/samples.ind"
+#   description:  "Pure C. macrocephalus wild cohort. To be sequenced."
+#
+# populations:
+#   - population_id: "mixed"
+#     label:          "all samples (initial state)"
+#     members:        "ALL"
+#     status:         "active"
+#     source_methods: ["placeholder"]
+#     created_at:     "2026-XX-XXT00:00:00Z"
+#
+# reference:
+#   fasta:                "fClaMac.fa"          # placeholder
+#   fai:                  "fClaMac.fa.fai"
+#   n_chromosomes:        28                    # expected; verify on assembly
+#   chrom_naming_pattern: "C_mac_LG{NN}"
+
+
+# =============================================================================
+# Notes on multi-species patterns the atlas supports
+# =============================================================================
+#
+# 1. **Species-scoped read-only data roots.**
+#    Master config declares roots like `precomp_gariepinus` and
+#    `precomp_macrocephalus` separately. Layer entries that are species-scoped
+#    template `{species_id}` and the registry routes to the right root.
+#
+# 2. **Shared comparative roots.**
+#    Cross-species data (synteny, breakpoint reuse, phylogeny) lives at a
+#    species-agnostic root like `comparative` and references both species
+#    by ID inside the data itself.
+#
+# 3. **Flat candidates root with species_id field on each record.**
+#    Candidates from any species share `data/candidates/`. Each candidate's
+#    `lineage.json` records its species_id. A future mapping-table pass can
+#    aggregate "all candidates from species X" or "all candidates with
+#    cross-species support" without touching the filesystem layout.
+#
+# 4. **Population substructure as append-only.**
+#    When NGSadmix or pedigree analysis resolves the hatchery into K
+#    populations, append new population entries; do NOT overwrite the
+#    initial 'mixed'. Old results stay readable.
+#
+# 5. **What's NOT planned (avoid the rabbit hole):**
+#    - No cross-species sample harmonization (mixed-species cohorts).
+#      If you need that, design when the situation actually arises.
+#    - No automatic species inference from data files.
+#      Species ID is declared in the config; data files trust the declaration.
+#    - No species hierarchy / phylogeny inside the registry.
+#      That belongs in domain layers (e.g. `phylo_tree`), not in the
+#      species config.

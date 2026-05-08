@@ -1,0 +1,10 @@
+{
+  "layers": {
+    "hello_data": {
+      "tier": "warm",
+      "preload_on": "page_mount",
+      "source": "inline",
+      "value": { "message": "hello from the mock atlas" }
+    }
+  }
+}

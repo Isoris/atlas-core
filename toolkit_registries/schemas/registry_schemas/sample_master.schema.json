@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "sample_master.schema.json",
+  "title": "Atlas sample_master TSV row v1",
+  "description": "Schema for ONE ROW of a cohort's samples.tsv file. The TSV is referenced by cohort.config.samples_tsv; each row is one sample. Required columns: sample_id, species, bam. Recommended: origin, phenotype, family_id, sex. Free-form additional columns are allowed (the registry preserves them as metadata).",
+
+  "type": "object",
+  "required": ["sample_id", "species", "bam"],
+
+  "properties": {
+
+    "sample_id": {
+      "type": "string",
+      "description": "Unique sample identifier within this cohort. Stable forever. Used as the FK target from group.members[]. Must match BAM read-group SM: tag for provenance.",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$",
+      "examples": ["CGA042", "F1_001", "GAR_pure_01", "MAC_wild_017"]
+    },
+
+    "species": {
+      "type": "string",
+      "description": "FK to species.config.species_id. The species this individual sample belongs to. For pure-species cohorts, this is the same species_id for every row. For mixed cohorts (e.g. F1 + pure parents in one cohort), each row's species can differ. The cohort's species_composition is derived as the unique set of values in this column.",
+      "examples": ["gariepinus", "macrocephalus", "F1_hybrid"]
+    },
+
+    "bam": {
+      "type": "string",
+      "description": "Filename or relative path to the BAM file. Resolved against the cohort's bams root (configured in master_config). The BAM must be aligned to the cohort's genome_id."
+    },
+
+    "origin": {
+      "type": "string",
+      "description": "Where the sample came from. Free-form; common values include 'hatchery', 'wild', 'farm_<name>', 'unknown'. Used to define groups by origin.",
+      "examples": ["hatchery", "wild", "farm_central_thai", "farm_north_thai"]
+    },
+
+    "phenotype": {
+      "type": "string",
+      "description": "Phenotype label for this sample. Free-form; project-specific. Used to define groups by phenotype.",
+      "examples": ["white_flesh", "yellow_flesh", "fast_growth", "slow_growth", "unknown"]
+    },
+
+    "family_id": {
+      "type": "string",
+      "description": "Family / pedigree identifier. Samples sharing a family_id are siblings or parent-offspring. Used to define groups by family.",
+      "examples": ["F042", "F042_offspring", "unrelated"]
+    },
+
+    "sex": {
+      "type": "string",
+      "enum": ["M", "F", "U", "unknown"],
+      "description": "Sex of the individual. M = male, F = female, U/unknown = not determined."
+    },
+
+    "father_id": {
+      "type": "string",
+      "description": "Optional sample_id of the father, when known. For pedigree-aware analyses."
+    },
+
+    "mother_id": {
+      "type": "string",
+      "description": "Optional sample_id of the mother, when known."
+    },
+
+    "collection_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the sample was collected (YYYY-MM-DD)."
+    },
+
+    "tissue": {
+      "type": "string",
+      "description": "Tissue type sequenced. e.g. 'fin_clip', 'muscle', 'blood'."
+    },
+
+    "coverage": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Per-sample mean coverage (overrides cohort.metadata.mean_coverage when present)."
+    },
+
+    "qc_status": {
+      "type": "string",
+      "enum": ["pass", "fail", "warn", "unknown"],
+      "default": "unknown",
+      "description": "QC verdict for this sample. 'fail' samples are typically excluded from downstream analyses; the registry preserves them in samples_tsv for provenance but groups can filter on this column."
+    },
+
+    "qc_notes": {
+      "type": "string",
+      "description": "Free-form QC notes."
+    },
+
+    "notes": {
+      "type": "string",
+      "description": "Free-form notes about this sample."
+    }
+  },
+
+  "additionalProperties": {
+    "type": ["string", "number", "boolean", "null"],
+    "description": "Project-specific columns (e.g. 'morphology_score', 'farmer_id', 'breeding_program') are allowed. The registry preserves them and groups can filter on any column."
+  },
+
+  "_format": {
+    "_doc": "The TSV file is tab-separated with a header row matching this schema's property names. Missing optional columns are OK; missing required columns is an error. Empty cells in optional columns are read as null."
+  },
+
+  "_examples": {
+    "pure_gariepinus_row": {
+      "sample_id":   "CGA042",
+      "species":     "gariepinus",
+      "bam":         "CGA042.markdup.bam",
+      "origin":      "hatchery",
+      "phenotype":   "white_flesh",
+      "family_id":   "F042",
+      "sex":         "F",
+      "coverage":    9.2,
+      "qc_status":   "pass"
+    },
+    "f1_hybrid_row": {
+      "sample_id":   "F1_001",
+      "species":     "F1_hybrid",
+      "bam":         "F1_001.markdup.bam",
+      "origin":      "cross_2026",
+      "father_id":   "GAR_pure_01",
+      "mother_id":   "MAC_pure_01",
+      "sex":         "M",
+      "coverage":    12.0,
+      "qc_status":   "pass"
+    }
+  }
+}

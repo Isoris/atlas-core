@@ -1,0 +1,233 @@
+/* atlas-core/css/base.css
+ * =====================================================================
+ * Generic base styles: HTML reset, body chrome, header, generic
+ * typography. Uses tokens from tokens.css.
+ *
+ * Origin: extracted from legacy/Inversion_atlas.html (lines 81-300).
+ * The selectors all reference standard HTML elements or atlas-core
+ * IDs (header, h1, .meta, themeToggleBtn, etc.) that exist in every
+ * atlas, not just inversion. Inversion-specific styles live under
+ * inversion-atlas/atlases/inversion/css/.
+ * =====================================================================
+ */
+
+* { box-sizing: border-box; }
+/* v3.99 turn 4: body is now a flex column so .wrap fills whatever vertical
+   space remains after <header> and <nav id="tabBar">, regardless of
+   zoom level. Previously .wrap used `height: calc(100vh - 76px)` which
+   hardcodes the sum of header (44px) + tabBar (32px). At certain zoom
+   levels this arithmetic doesn't quite match the actual rendered heights,
+   leaving empty space at the bottom of the viewport (the body background
+   showing through below the grid). Flex math removes the hardcoded
+   constant and always fills correctly. */
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+             font-family: var(--serif); font-size: 13.5px; overflow: hidden;
+             height: 100vh; height: 100dvh;
+             display: flex; flex-direction: column; }
+header { padding: 10px 22px; border-bottom: 1px solid var(--rule);
+         display: flex; align-items: baseline; gap: 18px; height: 44px; }
+header h1 { font-size: 16px; font-weight: 500; margin: 0; letter-spacing: 0.02em; }
+header .meta { color: var(--ink-dim); font-family: var(--mono); font-size: 11px; }
+header .meta b { color: var(--ink); font-weight: 500; }
+/* v3.99 turn 5: harmonized header buttons. candidateModeBtn and
+   layoutModeBtn previously had no styling and rendered at the browser
+   default (~13.3px), making them visibly larger than themeToggleBtn /
+   resetLayoutBtn. Now all four share the same compact 11px / mono font
+   and padding. Active variants for candidateMode + layoutMode keep the
+   accent style applied via JS by toggling specific attributes. */
+header #themeToggleBtn,
+header #resetLayoutBtn,
+header #candidateModeBtn,
+header #layoutModeBtn,
+header #saveSessionBtn,
+header #loadSessionBtn {
+  align-self: center;
+  background: var(--panel-2); border: 1px solid var(--rule); color: var(--ink);
+  padding: 4px 12px; font-family: var(--mono); font-size: 11px;
+  border-radius: 3px; cursor: pointer; line-height: 1;
+  /* nowrap + flex-shrink:0 keep button text on one line at narrow viewports.
+     v4 turn 17: added saveSessionBtn + loadSessionBtn (their inline styles
+     lacked nowrap, so emoji + word stacked vertically). display:inline-flex
+     keeps emoji and word on the same line in old browsers too. */
+  white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center;
+}
+header #candidateModeBtn[data-active="1"] {
+  background: var(--accent); color: #0e1116; border-color: var(--accent);
+  font-weight: 600;
+}
+header #candidateModeBtn:hover,
+header #layoutModeBtn:hover {
+  background: var(--panel-3); border-color: var(--accent);
+}
+/* turn 127: previous margin-left:auto rules removed. The header markup
+   now uses an explicit <div style="flex:1"> spacer to push the right-side
+   cluster (folders + atlas selector + theme) to the right edge as a
+   single group with consistent gaps. */
+header #themeToggleBtn:hover,
+header #resetLayoutBtn:hover { background: var(--panel-3); border-color: var(--accent); }
+/* v4 turn 73: responsive header sizing for high browser zoom (133%+).
+   At 133% zoom, the effective viewport narrows to ~1500px on a 1920px
+   screen and the header buttons start clipping. Shrink fonts + padding
+   so the row stays on a single line. */
+@media (max-width: 1500px) {
+  header h1 { font-size: 14px; }
+  header .meta { font-size: 10px; }
+  header #themeToggleBtn,
+  header #resetLayoutBtn,
+  header #candidateModeBtn,
+  header #layoutModeBtn,
+  header #saveSessionBtn,
+  header #loadSessionBtn {
+    font-size: 10px; padding: 3px 9px;
+  }
+  header #schemaBadge { font-size: 9.5px; padding: 2px 6px; }
+}
+@media (max-width: 1200px) {
+  header { gap: 10px; padding: 8px 14px; }
+  header h1 { font-size: 13px; }
+  header .meta { font-size: 9.5px; }
+  header #themeToggleBtn,
+  header #resetLayoutBtn,
+  header #candidateModeBtn,
+  header #layoutModeBtn,
+  header #saveSessionBtn,
+  header #loadSessionBtn {
+    font-size: 9.5px; padding: 3px 7px;
+  }
+  header #schemaBadge { font-size: 9px; padding: 2px 5px; }
+  header #jsScriptsBadge { font-size: 9px; padding: 2px 5px; }
+}
+header #schemaBadge,
+header #jsScriptsBadge {
+  align-self: center; margin-left: 8px;
+  background: var(--panel-2); border: 1px solid var(--rule); color: var(--ink-dim);
+  padding: 3px 8px; font-family: var(--mono); font-size: 10px;
+  border-radius: 3px; line-height: 1.4;
+  /* v3.99 turn 9: keep "schema v2 · 0 layers" on a single line. */
+  white-space: nowrap; flex-shrink: 0;
+}
+header #schemaBadge.v1 { color: var(--ink-dimmer); }
+header #schemaBadge.v2 { color: var(--good); border-color: var(--good); }
+/* turn 128: JS scripts badge — same look as schemaBadge.v2 when all expected
+   globals are present. .partial = some configured scripts didn't register
+   globals (orange/dim warning); .v2 = all green. */
+header #jsScriptsBadge.v2      { color: var(--good); border-color: var(--good); }
+header #jsScriptsBadge.partial { color: var(--accent, #f5a524); border-color: var(--accent, #f5a524); }
+
+/* v4 turn 58: atlas-mode three-pill indicator. Three buttons in a single
+   bordered container; "active" pill has darker bg + brighter text;
+   "inactive" pills are dimmed. Hover lights up the inactive pills.
+   Inline styles in the markup carry the initial state; CSS here adds
+   hover affordance.
+   v4 turn 73d: replaced 3-pill bar with hover-expanding 4-atlas dropdown.
+   The .atlas-row class (rows in the dropdown panel) lights up on hover;
+   the dropdown reveals when #atlasModeIndicator is hovered. */
+header #atlasModeIndicator { align-self: center; flex-shrink: 0; }
+header #atlasActiveBtn { flex-shrink: 0; }
+header #atlasActiveBtn:hover { background: rgba(64, 144, 220, 0.30) !important;
+                                border-color: rgba(64, 144, 220, 0.85) !important; }
+/* Show dropdown on hover. A small invisible spacer above the dropdown
+   prevents flicker when moving cursor from button → list. */
+header #atlasModeIndicator:hover #atlasDropdown,
+header #atlasModeIndicator:focus-within #atlasDropdown { display: block !important; }
+/* Row hover highlights pick up each row's accent color, fading the bg
+   toward the row's left-border tint. */
+header .atlas-row:hover { color: var(--ink) !important; }
+header .atlas-row[data-color="blue"]:hover   { background: rgba(64, 144, 220, 0.18) !important; }
+header .atlas-row[data-color="green"]:hover  { background: rgba(72, 200, 120, 0.18) !important; }
+header .atlas-row[data-color="orange"]:hover { background: rgba(228, 138, 60, 0.18) !important; }
+header .atlas-row[data-color="yellow"]:hover { background: rgba(232, 196, 76, 0.18) !important; }
+/* turn 127: three colour-coded folder buttons — session / mode / data.
+   Each folder is a button that on hover reveals a popover panel with the
+   grouped buttons stacked vertically. Pattern mirrors #atlasModeIndicator. */
+header .header-folder { position: relative; align-self: center; flex-shrink: 0;
+                        font-family: var(--mono); font-size: 10.5px; }
+header .header-folder-btn {
+  background: var(--panel-2); color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 3px; padding: 4px 11px; line-height: 1;
+  font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: 0.03em; cursor: pointer;
+  white-space: nowrap; display: inline-flex; align-items: center;
+  transition: background 0.1s, border-color 0.1s;
+}
+header .header-folder-btn .arrow { opacity: 0.55; margin-left: 5px; font-size: 9px; }
+header .header-folder[data-color="blue"]   .header-folder-btn {
+  background: rgba(64, 144, 220, 0.14); border-color: rgba(64, 144, 220, 0.45);
+}
+header .header-folder[data-color="blue"]:hover .header-folder-btn {
+  background: rgba(64, 144, 220, 0.26); border-color: rgba(64, 144, 220, 0.80);
+}
+header .header-folder[data-color="green"]  .header-folder-btn {
+  background: rgba(72, 200, 120, 0.14); border-color: rgba(72, 200, 120, 0.45);
+}
+header .header-folder[data-color="green"]:hover .header-folder-btn {
+  background: rgba(72, 200, 120, 0.26); border-color: rgba(72, 200, 120, 0.80);
+}
+header .header-folder[data-color="yellow"] .header-folder-btn {
+  background: rgba(232, 196, 76, 0.14); border-color: rgba(232, 196, 76, 0.45);
+}
+header .header-folder[data-color="yellow"]:hover .header-folder-btn {
+  background: rgba(232, 196, 76, 0.26); border-color: rgba(232, 196, 76, 0.80);
+}
+/* Active-state ring when a child button inside has data-active="1"
+   (e.g. candidate mode). The folder button itself glows. */
+header .header-folder[data-has-active="1"][data-color="green"] .header-folder-btn {
+  box-shadow: 0 0 0 1px rgba(245, 165, 36, 0.45) inset;
+}
+/* The popover panel — hidden until hover/focus. */
+header .header-folder-panel {
+  display: none;
+  position: absolute; top: calc(100% + 2px); right: 0;
+  background: var(--panel); border: 1px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+  padding: 4px; z-index: 50;
+  min-width: 170px;
+  flex-direction: column; gap: 2px;
+}
+/* Tinted left border on the panel matching the folder colour */
+header .header-folder[data-color="blue"]   .header-folder-panel { border-left: 3px solid rgba(64, 144, 220, 0.65); }
+header .header-folder[data-color="green"]  .header-folder-panel { border-left: 3px solid rgba(72, 200, 120, 0.65); }
+header .header-folder[data-color="yellow"] .header-folder-panel { border-left: 3px solid rgba(232, 196, 76, 0.65); }
+/* Reveal on hover/focus-within — same pattern as #atlasModeIndicator */
+header .header-folder:hover .header-folder-panel,
+header .header-folder:focus-within .header-folder-panel { display: flex !important; }
+/* Buttons living inside a folder panel — uniform compact size, full width. */
+header .header-folder-panel button,
+header .header-folder-panel .folder-btn {
+  background: var(--panel-2); color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 2px; padding: 4px 10px; line-height: 1;
+  font-family: var(--mono); font-size: 10.5px;
+  text-align: left; cursor: pointer;
+  white-space: nowrap; display: inline-flex; align-items: center;
+  transition: background 0.1s, border-color 0.1s;
+  width: 100%;
+}
+header .header-folder-panel button:hover {
+  background: var(--panel-3); border-color: var(--accent);
+}
+/* Active-mode highlights inside the panel — preserved from old styling */
+header .header-folder-panel #candidateModeBtn[data-active="1"] {
+  background: var(--accent); color: #0e1116; border-color: var(--accent);
+  font-weight: 600;
+}
+/* Override ALL inline-styled atlas-tool-btn buttons that were originally
+   sized for the tab-bar row (height:22px). Folder-panel context wins. */
+header .header-folder-panel .atlas-tool-btn {
+  height: auto !important;
+  padding: 4px 10px !important;
+  font-size: 10.5px !important;
+  background: var(--panel-2) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--rule) !important;
+  border-radius: 2px !important;
+  align-self: stretch !important;
+}
+header .header-folder-panel .atlas-tool-btn:hover {
+  background: var(--panel-3) !important;
+  border-color: var(--accent) !important;
+}
+
+/* Tab bar pinned below header */

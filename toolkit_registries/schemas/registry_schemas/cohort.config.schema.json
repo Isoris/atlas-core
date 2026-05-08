@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "cohort.config.schema.json",
+  "title": "Atlas cohort config v1",
+  "description": "A cohort = one BAM list aligned to one genome plus per-sample metadata. THE OPERATIONAL UNIT engines run against. FK target for groups, candidates, results, evidence. Per HIERARCHY_SPEC.md: cohort.genome_id is the coordinate system; cohort.species_composition is derived from the samples_tsv and used to enforce the combine rule.",
+
+  "type": "object",
+  "required": ["cohort_id", "genome_id", "samples_tsv", "species_composition"],
+
+  "properties": {
+
+    "cohort_id": {
+      "type": "string",
+      "description": "Unique short identifier. Used as folder slug under data/cohorts/ and as FK target. Stable forever (don't rename).",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]*$",
+      "examples": ["main_226_hatchery", "wild_collection_2027", "f1_validation_v1", "gariepinus_combined_v1"]
+    },
+
+    "label": {
+      "type": "string",
+      "description": "Human-readable display name."
+    },
+
+    "genome_id": {
+      "type": "string",
+      "description": "FK to genome.config.genome_id. The assembly the BAMs are aligned to. Coordinates in this cohort's results are valid only against this genome.",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]*$"
+    },
+
+    "samples_tsv": {
+      "type": "string",
+      "description": "Path (relative to a configured root, or absolute) to the per-sample metadata TSV. Each row is one sample. Schema for rows: sample_master.schema.json. Columns include sample_id, species, origin, phenotype, family_id, bam at minimum."
+    },
+
+    "species_composition": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Set of species_ids present in this cohort. DERIVED from the unique 'species' values in samples_tsv. The atlas validates at write time that the declared composition matches the TSV. Used for the combine rule: two cohorts can be combined only if they share both genome_id AND species_composition."
+    },
+
+    "n_samples": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of samples in the cohort. Should match the row count in samples_tsv."
+    },
+
+    "parent_cohort_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Optional FK list for derived cohorts (subset / combine). Empty for primary cohorts. For a subset: one parent. For a combine: two or more parents. The atlas validates at write time that combine parents satisfy the combine rule (same genome_id, same species_composition)."
+    },
+
+    "derivation": {
+      "type": "string",
+      "enum": ["primary", "subset", "combine"],
+      "default": "primary",
+      "description": "How this cohort relates to its parents. 'primary' = no parents (a fresh BAM list). 'subset' = derived by taking a subset of one parent's samples. 'combine' = derived by union of multiple parents' samples."
+    },
+
+    "derivation_notes": {
+      "type": "string",
+      "description": "Free-form description of how this cohort was derived. e.g. 'subset where samples_tsv.species == gariepinus' or 'union of hatchery + wild gariepinus cohorts'."
+    },
+
+    "metadata": {
+      "type": "object",
+      "description": "Cohort-level summary metadata. Sample-level metadata lives in samples_tsv, NOT here.",
+      "properties": {
+        "collection_year": {
+          "type": ["integer", "string"],
+          "description": "Year (or year range) the samples were collected."
+        },
+        "sequencing_batch": {
+          "type": "string",
+          "description": "Sequencing run / batch identifier."
+        },
+        "sequencing_platform": {
+          "type": "string",
+          "description": "e.g. 'Illumina NovaSeq X', 'PacBio HiFi Revio'."
+        },
+        "mean_coverage": {
+          "type": "number",
+          "description": "Mean per-sample coverage. e.g. 9.0 for 9x."
+        },
+        "description": {
+          "type": "string",
+          "description": "Free-form context: source population, project label, special considerations."
+        },
+        "owner": {
+          "type": "string",
+          "description": "Person or lab responsible for this cohort."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "default_groups": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional list of group_ids that should be created automatically when this cohort is registered. e.g. ['ALL'] (the trivial all-samples group) or ['hatchery_only', 'wild_only']. Each must reference a valid group_definition file."
+    },
+
+    "active_in_atlas": {
+      "type": "boolean",
+      "default": true,
+      "description": "True if this cohort is currently an analysis target. False = retained for reproducibility (old results still readable) but not loaded by default."
+    }
+  },
+
+  "_constraints": {
+    "_doc": "Validation constraints not directly expressible in JSON Schema. Engine enforces:",
+    "_constraint_1": "genome_id must reference an existing genome.config",
+    "_constraint_2": "species_composition must equal the unique set of 'species' values in samples_tsv",
+    "_constraint_3": "every species_id in species_composition must exist in a registered species.config",
+    "_constraint_4": "every species_id in species_composition must be in genome.species_composition (cohort cannot include species not present in its assembly)",
+    "_constraint_5_combine": "if derivation == 'combine', every parent_cohort_id must reference an existing cohort, AND for every pair (A, B) of parents: A.genome_id == B.genome_id AND set(A.species_composition) == set(B.species_composition); the same rule against this cohort's own genome_id and species_composition",
+    "_constraint_6_subset": "if derivation == 'subset', exactly one parent_cohort_id; this cohort's samples_tsv must be a subset of the parent's; this cohort's genome_id must equal the parent's genome_id; this cohort's species_composition must be a subset of the parent's"
+  },
+
+  "_examples": {
+    "primary_pure_cohort": {
+      "cohort_id":           "main_226_hatchery",
+      "label":               "C. gariepinus 226-sample hatchery cohort",
+      "genome_id":           "fClaGar_pure_v1",
+      "samples_tsv":         "cohorts/main_226_hatchery/samples.tsv",
+      "species_composition": ["gariepinus"],
+      "n_samples":           226,
+      "derivation":          "primary",
+      "metadata": {
+        "collection_year":     2024,
+        "sequencing_platform": "Illumina NovaSeq X",
+        "mean_coverage":       9.0,
+        "description":         "Hatchery broodlines, 5 farms in central Thailand. Mixed populations, substructure unresolved."
+      }
+    },
+
+    "subset_cohort": {
+      "cohort_id":           "gariepinus_pure_only_v1",
+      "label":               "Pure gariepinus samples from main_226_hatchery (subset for hybrid-aware analyses)",
+      "genome_id":           "fClaGar_pure_v1",
+      "samples_tsv":         "cohorts/gariepinus_pure_only_v1/samples.tsv",
+      "species_composition": ["gariepinus"],
+      "n_samples":           226,
+      "derivation":          "subset",
+      "parent_cohort_ids":   ["main_226_hatchery"],
+      "derivation_notes":    "subset where samples_tsv.species == 'gariepinus' (in this case, all 226 — illustrative; would normally drop some samples)"
+    },
+
+    "combined_cohort": {
+      "cohort_id":           "gariepinus_combined_v1",
+      "label":               "Combined hatchery + wild gariepinus cohort",
+      "genome_id":           "fClaGar_pure_v1",
+      "samples_tsv":         "cohorts/gariepinus_combined_v1/samples.tsv",
+      "species_composition": ["gariepinus"],
+      "n_samples":           376,
+      "derivation":          "combine",
+      "parent_cohort_ids":   ["main_226_hatchery", "wild_collection_2027"],
+      "derivation_notes":    "Union of hatchery + wild gariepinus. Both parents have genome_id=fClaGar_pure_v1 and species_composition=[gariepinus] — combine rule satisfied."
+    },
+
+    "hybrid_cohort": {
+      "cohort_id":           "f1_validation_v1",
+      "label":               "F1 hybrid validation cohort (F1 samples + pure parents alongside)",
+      "genome_id":           "fClaHyb_Gar_LG_v1",
+      "samples_tsv":         "cohorts/f1_validation_v1/samples.tsv",
+      "species_composition": ["F1_hybrid", "gariepinus", "macrocephalus"],
+      "n_samples":           60,
+      "derivation":          "primary",
+      "metadata": {
+        "description": "F1 progeny + pure parents, all aligned to the hybrid assembly. Used to validate subgenome separation before any inversion calling."
+      }
+    }
+  }
+}

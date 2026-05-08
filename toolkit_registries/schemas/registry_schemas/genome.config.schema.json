@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "genome.config.schema.json",
+  "title": "Atlas genome config v1",
+  "description": "An assembly file (one .fa). Coordinates only mean something against a genome — re-assembly produces a NEW genome_id; coordinates do not cross. Genomes carry species_composition (which species' DNA is in this assembly?) and per-chromosome subgenome tags (for hybrid assemblies). FK target for cohort.genome_id.",
+
+  "type": "object",
+  "required": ["genome_id", "fasta", "fai", "species_composition"],
+
+  "properties": {
+
+    "genome_id": {
+      "type": "string",
+      "description": "Unique short identifier. Used as folder slug under data/genomes/ and as FK from cohort.genome_id. Stable forever.",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]*$",
+      "examples": ["fClaHyb_Gar_LG_v1", "fClaGar_pure_v2", "Tiapia_NCBI_v1"]
+    },
+
+    "label": {
+      "type": "string",
+      "description": "Human-readable display name."
+    },
+
+    "fasta": {
+      "type": "string",
+      "description": "Filename of the reference FASTA, relative to the genome's data root (e.g. data/genomes/{genome_id}/fasta)."
+    },
+
+    "fai": {
+      "type": "string",
+      "description": "Filename of the .fai index, relative to the same root."
+    },
+
+    "version": {
+      "type": "string",
+      "description": "Assembly version label. Re-assemblies bump this AND must use a new genome_id (the registry treats genome_ids as immutable)."
+    },
+
+    "source": {
+      "type": "string",
+      "description": "Where this assembly came from: 'in_house_HiFi_2026', 'NCBI_GCF_xxx', 'Ensembl_release_113', 'unpublished_v1'. Free-form."
+    },
+
+    "species_composition": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Set of species_ids whose DNA is in this assembly. Size 1 for pure-species genomes (e.g. ['gariepinus']). Size 2+ for hybrid assemblies that contain multiple parental subgenomes concatenated (e.g. ['gariepinus', 'macrocephalus']). Each entry must reference an existing species.config.species_id."
+    },
+
+    "n_chromosomes": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of pseudochromosomes / contigs of interest in this assembly. Should match chromosomes[] length when chromosomes[] is provided."
+    },
+
+    "chrom_naming_pattern": {
+      "type": "string",
+      "description": "Pattern for chromosome names, used for documentation and validation. e.g. 'C_gar_LG{NN}' or 'LG{NN}'.",
+      "examples": ["C_gar_LG{NN}", "LG{NN}", "chr{N}"]
+    },
+
+    "chromosomes": {
+      "type": "array",
+      "description": "Per-chromosome metadata. Optional — but required if species_composition has more than one species (so subgenome tags are unambiguous). Each entry includes name, length, and optional subgenome_of for hybrid assemblies.",
+      "items": {
+        "type": "object",
+        "required": ["name", "length_bp"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Chromosome name as it appears in the .fai (e.g. 'C_gar_LG28', 'LG12')."
+          },
+          "length_bp": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Length in base pairs."
+          },
+          "subgenome_of": {
+            "type": ["string", "null"],
+            "description": "When the assembly is hybrid (species_composition size >= 2), tags which species' DNA this chromosome originated from. Must be one of species_composition[]. null for non-hybrid assemblies or when subgenome assignment is uncertain."
+          },
+          "label": {
+            "type": "string",
+            "description": "Optional display label distinct from the technical name."
+          }
+        }
+      }
+    },
+
+    "annotation": {
+      "type": "object",
+      "description": "Optional pointers to annotation files. Free-form; populate as needed.",
+      "properties": {
+        "gff": {
+          "type": "string",
+          "description": "Path to GFF/GTF annotation, relative to genome data root."
+        },
+        "repeat_masker": {
+          "type": "string",
+          "description": "Path to RepeatMasker output."
+        },
+        "edta": {
+          "type": "string",
+          "description": "Path to EDTA TE annotation."
+        },
+        "busco": {
+          "type": "string",
+          "description": "Path to BUSCO output."
+        }
+      }
+    },
+
+    "notes": {
+      "type": "string",
+      "description": "Free-form notes about this assembly: known issues, QV, contiguity stats."
+    }
+  },
+
+  "_constraints": {
+    "_doc": "Validation constraints not directly expressible in JSON Schema. Engine enforces:",
+    "_constraint_1": "every species_id in species_composition must exist in a registered species.config",
+    "_constraint_2": "if species_composition.length >= 2, every chromosomes[*].subgenome_of must be in species_composition[]",
+    "_constraint_3": "if chromosomes[] is provided, n_chromosomes (when present) must match its length"
+  },
+
+  "_examples": {
+    "pure_species_assembly": {
+      "genome_id":           "fClaGar_pure_v1",
+      "label":               "C. gariepinus pure assembly v1",
+      "fasta":               "fClaGar_pure_v1.fa",
+      "fai":                 "fClaGar_pure_v1.fa.fai",
+      "version":             "1",
+      "source":              "in_house_HiFi_2026",
+      "species_composition": ["gariepinus"],
+      "n_chromosomes":       28,
+      "chrom_naming_pattern":"C_gar_LG{NN}"
+    },
+
+    "hybrid_assembly": {
+      "genome_id":            "fClaHyb_Gar_LG_v1",
+      "label":                "F1 hybrid assembly (gariepinus x macrocephalus, gariepinus-named pseudochromosomes)",
+      "fasta":                "fClaHyb_Gar_LG.fa",
+      "fai":                  "fClaHyb_Gar_LG.fa.fai",
+      "version":              "1",
+      "source":               "in_house_haplotype_resolved_2026",
+      "species_composition":  ["gariepinus", "macrocephalus"],
+      "n_chromosomes":        56,
+      "chrom_naming_pattern": "C_{species}_LG{NN}",
+      "chromosomes": [
+        { "name": "C_gar_LG01", "length_bp": 35000000, "subgenome_of": "gariepinus" },
+        { "name": "C_gar_LG02", "length_bp": 32000000, "subgenome_of": "gariepinus" },
+        { "name": "C_mac_LG01", "length_bp": 33000000, "subgenome_of": "macrocephalus" }
+      ],
+      "notes": "QV60+, T2T-class. Both subgenomes concatenated in one fasta."
+    }
+  }
+}

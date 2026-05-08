@@ -1,0 +1,8 @@
+{
+  "pages": {
+    "hello": {
+      "requires_layers": ["hello_data"],
+      "preloads": ["hello_data"]
+    }
+  }
+}

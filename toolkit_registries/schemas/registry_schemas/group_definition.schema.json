@@ -1,0 +1,213 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "group_definition.schema.json",
+  "title": "Atlas group definition v1",
+  "description": "A named subset of ONE cohort, defined for an analytical question (karyotype, ancestry, family, phenotype, origin, intersect, subcluster, manual). Append-only: redefining a group means adding a new entry with a new group_id; the old one stays readable for reproducibility. FK to cohort.cohort_id. Members must be in the cohort's samples_tsv. See HIERARCHY_SPEC.md and DATABASE_DESIGN.md §'Sample group naming convention' for naming rules.",
+
+  "type": "object",
+  "required": ["group_id", "cohort_id", "members", "dimension", "status"],
+
+  "properties": {
+
+    "group_id": {
+      "type": "string",
+      "description": "Stable identifier for this group. Naming convention from DATABASE_DESIGN.md §'Sample group naming': inv_<cid>_<KARYOTYPE> for top-level karyotype groups, inv_<cid>_<KARYOTYPE>__sub<N> for sub-clusters, plus dimension-specific prefixes for ancestry / family / phenotype / origin groups. Stable forever; redefinitions get a new group_id.",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$",
+      "examples": [
+        "ALL",
+        "inv_LG28_INV_001_HOM_REF",
+        "inv_LG28_INV_001_HOM_INV",
+        "inv_LG28_INV_001_HOM_INV__sub1",
+        "ancestry_K8_cluster3",
+        "family_F042",
+        "origin_hatchery",
+        "phenotype_white_flesh"
+      ]
+    },
+
+    "cohort_id": {
+      "type": "string",
+      "description": "FK to cohort.config.cohort_id. The cohort this group is a subset of. A group belongs to exactly one cohort; cross-cohort groups are NOT supported (combine the cohorts first if the combine rule allows)."
+    },
+
+    "label": {
+      "type": "string",
+      "description": "Human-readable display name."
+    },
+
+    "members": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Inline list of sample_ids. Use for small or static groups."
+        },
+        {
+          "type": "string",
+          "description": "Path (relative to a configured root) to a one-sample-per-line members file. Use for large groups."
+        },
+        {
+          "const": "ALL",
+          "description": "All samples in the cohort's samples_tsv. The trivial group; useful as a placeholder."
+        }
+      ],
+      "description": "Group members. Either an inline list of sample_ids, a path to a members file, or the literal 'ALL' for the trivial all-samples group. Every sample_id referenced must exist in the cohort's samples_tsv (validated at write time)."
+    },
+
+    "n_members": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of samples in this group. Should match the resolved members[] length; recorded for fast inspection without reading the members file."
+    },
+
+    "dimension": {
+      "type": "string",
+      "enum": [
+        "trivial",
+        "karyotype",
+        "karyotype_subcluster",
+        "ancestry",
+        "family",
+        "phenotype",
+        "origin",
+        "intersect",
+        "manual",
+        "qc"
+      ],
+      "description": "What kind of subset this is. Used by analyses to filter for groups of interest (e.g. 'show me all karyotype groups for candidate X'). 'trivial' = the ALL group. 'intersect' = members are the intersection of two other groups (e.g. karyotype × ancestry); record the parents in source_methods or notes."
+    },
+
+    "parent_group_id": {
+      "type": ["string", "null"],
+      "description": "Optional FK to another group_definition.group_id. Used when this group is a sub-group of another (e.g. a karyotype_subcluster group inside its parent karyotype group). Both groups must share the same cohort_id."
+    },
+
+    "source_methods": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "How this group was defined. Used for provenance and for understanding the group's stability under re-analysis. Each entry is a short tag.",
+      "examples": [
+        ["placeholder"],
+        ["dbscan", "candidate_PCA"],
+        ["NGSadmix_K8"],
+        ["pedigree_curation"],
+        ["manual_curation"],
+        ["intersect", "karyotype:HOM_INV", "ancestry:K8_cluster3"]
+      ]
+    },
+
+    "candidate_id": {
+      "type": ["string", "null"],
+      "description": "Optional FK to a candidate. Populated for karyotype groups (which candidate's karyotypes are these?). null for cohort-wide groups (ancestry, family, origin, phenotype)."
+    },
+
+    "status": {
+      "type": "string",
+      "enum": ["active", "deprecated", "experimental"],
+      "default": "active",
+      "description": "Per-group status. 'active' = current canonical definition. 'deprecated' = older definition kept readable for reproducibility (a result computed against this group is still meaningful). 'experimental' = work in progress; results against experimental groups should be flagged in the manuscript."
+    },
+
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when this group was first defined. Used by group versioning (DATABASE_DESIGN.md §'Group versioning'): result rows that reference a group_id record this timestamp; if it changes, results are flagged stale."
+    },
+
+    "created_by": {
+      "type": "string",
+      "description": "Person, script, or analysis module that created the group."
+    },
+
+    "deprecated_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When deprecation was applied. null while active."
+    },
+
+    "supersedes": {
+      "type": ["string", "null"],
+      "description": "Optional FK to a previously-active group_id that this group replaces. The old one's status flips to 'deprecated' on this group's creation."
+    },
+
+    "notes": {
+      "type": "string",
+      "description": "Free-form notes."
+    }
+  },
+
+  "_constraints": {
+    "_doc": "Validation constraints not directly expressible in JSON Schema. Engine enforces:",
+    "_constraint_1": "cohort_id must reference an existing cohort.config",
+    "_constraint_2": "every member sample_id must exist in the cohort's samples_tsv",
+    "_constraint_3": "if parent_group_id is set, that group must exist AND must share the same cohort_id",
+    "_constraint_4": "if dimension == 'karyotype' or 'karyotype_subcluster', candidate_id should be set",
+    "_constraint_5": "if dimension == 'trivial', members must be 'ALL'",
+    "_constraint_6": "supersedes (when set) must reference an existing active group; that group's status auto-flips to 'deprecated'"
+  },
+
+  "_examples": {
+    "trivial_all_group": {
+      "group_id":       "ALL",
+      "cohort_id":      "main_226_hatchery",
+      "label":          "All 226 samples",
+      "members":        "ALL",
+      "n_members":      226,
+      "dimension":      "trivial",
+      "source_methods": ["placeholder"],
+      "status":         "active",
+      "created_at":     "2026-02-04T00:00:00Z"
+    },
+
+    "karyotype_group": {
+      "group_id":       "inv_LG28_INV_001_HOM_INV",
+      "cohort_id":      "main_226_hatchery",
+      "label":          "HOM_INV carriers for candidate LG28_INV_001",
+      "members":        "groups/inv_LG28_INV_001_HOM_INV.members.txt",
+      "n_members":      60,
+      "dimension":      "karyotype",
+      "candidate_id":   "LG28_INV_001",
+      "source_methods": ["candidate_PCA", "karyotype_assignment_v1"],
+      "status":         "active",
+      "created_at":     "2026-04-15T14:23:00Z"
+    },
+
+    "karyotype_subcluster": {
+      "group_id":        "inv_LG28_INV_001_HOM_INV__sub1",
+      "cohort_id":       "main_226_hatchery",
+      "members":         "groups/inv_LG28_INV_001_HOM_INV__sub1.members.txt",
+      "n_members":       18,
+      "dimension":       "karyotype_subcluster",
+      "candidate_id":    "LG28_INV_001",
+      "parent_group_id": "inv_LG28_INV_001_HOM_INV",
+      "source_methods":  ["dbscan", "candidate_PCA"],
+      "status":          "active",
+      "created_at":      "2026-04-15T14:25:00Z"
+    },
+
+    "ancestry_cluster": {
+      "group_id":       "ancestry_K8_cluster3",
+      "cohort_id":      "main_226_hatchery",
+      "label":          "Samples in NGSadmix K=8 cluster 3",
+      "members":        ["CGA001", "CGA014", "CGA042"],
+      "n_members":      3,
+      "dimension":      "ancestry",
+      "source_methods": ["NGSadmix_K8"],
+      "status":         "active",
+      "created_at":     "2026-03-20T00:00:00Z"
+    },
+
+    "intersect_group": {
+      "group_id":       "inv_LG28_INV_001_HOM_INV_AND_ancestry3",
+      "cohort_id":      "main_226_hatchery",
+      "label":          "HOM_INV carriers that are also in ancestry cluster 3",
+      "members":        ["CGA042"],
+      "n_members":      1,
+      "dimension":      "intersect",
+      "source_methods": ["intersect", "inv_LG28_INV_001_HOM_INV", "ancestry_K8_cluster3"],
+      "status":         "experimental",
+      "notes":          "Tiny — included for documentation; statistical power insufficient.",
+      "created_at":     "2026-04-20T00:00:00Z"
+    }
+  }
+}

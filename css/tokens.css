@@ -1,0 +1,101 @@
+/* atlas-core/css/tokens.css
+ * =====================================================================
+ * Design tokens — the shared color, typography, and spacing system.
+ *
+ * Three themes:
+ *   default (dark)    — applied when no data-theme attribute is set
+ *   data-theme=light  — light-mode override
+ *   data-theme=academic — paper-figure aesthetics for screenshots/figures
+ *
+ * Origin: extracted verbatim from legacy/Inversion_atlas.html lines 1-80.
+ * Token names and values are preserved exactly to avoid drift; if you
+ * need a new token, ADD it (don't rename existing ones).
+ *
+ * Used by:
+ *   atlas-core/css/base.css
+ *   atlas-core/css/shell.css
+ *   inversion-atlas/atlases/inversion/css/*
+ *   any future atlas package's css/*
+ * =====================================================================
+ */
+
+:root {
+  --bg: #0e1116;
+  --panel: #151a22;
+  --panel-2: #1c2330;
+  --panel-3: #2a3242;
+  --ink: #e7edf3;
+  --ink-dim: #8a94a3;
+  --ink-dimmer: #5a6472;
+  --accent: #f5a524;
+  --accent-2: #4fa3ff;
+  --good: #3cc08a;
+  --bad: #e0555c;
+  --neutral: #8a94a3;
+  --band-lo: #4fa3ff;   /* blue — group 0 / hom1 */
+  --band-mid: #b8b8b8;  /* grey — group 1 / het  */
+  --band-hi: #f5a524;   /* amber — group 2 / hom2 */
+  --l1-color: #4fa3ff;  /* blue (matches overlay PDFs envelope_color_l1=#0042FF) */
+  --l2-color: #00e676;  /* green (matches overlay PDFs envelope_color_l2=#00E676) */
+  --status-stable: #c8102e; /* red */
+  --status-marginal: #e07b3f; /* orange */
+  --status-decays: #999999;   /* gray */
+  --status-edge: #9b59b6;     /* purple */
+  --status-dedup: #555555;    /* dark gray */
+  --rule: #2a3242;
+  --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+/* Light theme — applied via <html data-theme="light"> */
+html[data-theme="light"] {
+  --bg:           #fafbfc;
+  --panel:        #ffffff;
+  --panel-2:      #f1f3f6;
+  --panel-3:      #e3e7ec;
+  --ink:          #1a1f26;
+  --ink-dim:      #5b6573;
+  --ink-dimmer:   #98a0ac;
+  --rule:         #d8dde3;
+  /* Accent colors — slightly darker so they stay legible against light bg */
+  --accent:       #d97706;     /* darker amber */
+  --accent-2:     #2563eb;     /* darker blue */
+  --good:         #16a34a;
+  --bad:          #dc2626;
+  --neutral:      #5b6573;
+  --band-lo:      #2563eb;     /* darker blue */
+  --band-mid:     #6b7280;     /* darker grey */
+  --band-hi:      #d97706;
+  --l1-color:     #2563eb;
+  --l2-color:     #059669;     /* darker green */
+}
+/* Academic theme — paper-figure aesthetics: cream/ivory paper background,
+   dark grey ink (not pure black — easier on the eyes for long sessions),
+   desaturated accent palette resembling Nature/Science figures. Use serif
+   for prose, mono for data — same as light/dark, but font weight is a touch
+   heavier to compensate for the lower contrast. */
+html[data-theme="academic"] {
+  --bg:           #f7f5ef;     /* warm ivory (printer-paper-ish) */
+  --panel:        #fefcf6;     /* slightly brighter cream */
+  --panel-2:      #efebe0;     /* shaded cream for secondary surfaces */
+  --panel-3:      #e5dfd1;     /* tertiary tray */
+  --ink:          #2b2d31;     /* near-black with warm tint */
+  --ink-dim:      #5e6168;
+  --ink-dimmer:   #97999f;
+  --rule:         #c9c4b6;     /* warm grey rule */
+  /* Desaturated, paper-like accent palette — slate, ochre, sage */
+  --accent:       #9a6420;     /* warm ochre (replaces orange) */
+  --accent-2:     #2c5d8c;     /* slate blue (replaces vivid blue) */
+  --good:         #4f7a4d;     /* sage green */
+  --bad:          #8c2f2f;     /* brick red (more muted than scarlet) */
+  --neutral:      #6e6f74;
+  --band-lo:      #2c5d8c;     /* slate */
+  --band-mid:     #6e6f74;     /* graphite */
+  --band-hi:      #9a6420;     /* ochre */
+  --l1-color:     #2c5d8c;
+  --l2-color:     #4f7a4d;     /* sage instead of vivid green */
+  --status-stable:   #8c2f2f;  /* brick instead of scarlet */
+  --status-marginal: #9a6420;
+  --status-decays:   #97999f;
+  --status-edge:     #5d3d6b;  /* aubergine */
+  --status-dedup:    #6e6f74;
+}

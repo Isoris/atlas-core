@@ -1,0 +1,283 @@
+# =============================================================================
+# atlas master_config.example.yaml
+# =============================================================================
+# THE ONE FILE that tells the atlas registry where everything lives on this
+# machine. Copy to master_config.yaml at the workspace root, edit paths for
+# your site, and the atlas adapts. No hardcoded paths anywhere in the atlas
+# code itself.
+#
+# Read by:
+#   - atlas-core/core/registry_core.js  (resolves layer paths via these roots)
+#   - popstats_server.py                (resolves engine binaries, beagle, BAMs,
+#                                         dosage cache, server-results cache)
+#   - any analysis module that interfaces with the registry
+#
+# Written by:
+#   - YOU. Once per machine. Then leave it alone.
+#
+# Structure:
+#   atlas:    project-wide identity + workspace
+#   roots:    named root directories (data lives there, NOT in the atlas tree)
+#   server:   popstats_server.py settings (host/port/CORS/engine bins)
+#   engines:  paths to compiled binaries (read by server)
+#   defaults: per-engine default parameters
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# ATLAS — workspace identity
+# -----------------------------------------------------------------------------
+atlas:
+  workspace_root: "."          # location of this config file; everything else
+                               # may be ${workspace_root}-relative or absolute
+  active_atlas: "inversion"    # which atlas the shell loads on startup
+  active_chrom: "LG28"         # default chromosome at first page load
+
+# -----------------------------------------------------------------------------
+# SPECIES — list of species this atlas instance knows about
+#
+# Each entry references a species.config.yaml file (one per species) that
+# declares species_id, cohort, populations, reference. The atlas templates
+# {species_id} into species-scoped layer paths.
+#
+# Single-species atlases: list one entry, mark it active. Multi-species
+# atlases: list all known species, mark which is "active" (the default
+# focus); the others remain loadable for cross-species analyses.
+#
+# Adding a new species:
+#   1. Drop a species.config.yaml under species/
+#   2. Append it to this list
+#   3. (If species-scoped read-only roots are used) add the new roots below
+# -----------------------------------------------------------------------------
+species:
+  - id:        "gariepinus"
+    config:    "species/gariepinus.config.yaml"
+    active:    true
+  # When the bighead catfish cohort lands:
+  # - id:      "macrocephalus"
+  #   config:  "species/macrocephalus.config.yaml"
+  #   active:  false
+
+# -----------------------------------------------------------------------------
+# ROOTS — named root directories the registry routes to
+#
+# Layer entries reference roots by NAME (e.g. root: "cohort_relatedness")
+# rather than by literal path. Adding a new data domain = add one root here +
+# add layer entries that reference it. Moving to a different machine = edit
+# the paths here, the layers stay unchanged.
+#
+# Three categories:
+#   1. read-only data roots   — upstream pipeline outputs the registry reads
+#   2. working_dir            — where new results land when computed in-session
+#   3. cache                  — ephemeral; safe to delete; rebuilt on demand
+# -----------------------------------------------------------------------------
+roots:
+
+  # ---- Read-only data roots (CATEGORY 1) ------------------------------------
+  # These are filled by upstream pipelines (LANTA SLURM, manual analyses,
+  # external tools). The registry reads from them; never writes.
+  #
+  # Path conventions:
+  #   - Each root holds ONE data domain (don't mix relatedness + ancestry under
+  #     one root)
+  #   - Sub-paths inside a root are decided per-layer by layer.path_under_root
+  #
+  # When data is missing, the corresponding layers' resolve() calls return
+  # null with a clear "no data at <root>/<sub>" warning rather than crashing.
+
+  precomp:
+    path: "./data/{species_id}/precomp"
+    role: "intervals"
+    species_scoped: true
+    description: "Per-chromosome precomp JSONs (scrubber_main, band_*, etc.). One file per chrom or per chrom/band-product. Path templates {species_id} from the active species (or args.species_id) so the same root entry serves all species the atlas knows about."
+
+  cohort:
+    path: "./data/{species_id}/cohort"
+    role: "samples"
+    species_scoped: true
+    description: "Cohort-wide sample tables: manifest, groups, NAToRA-pruned, sample-level FROH. Hatchery broodline structure for the active species' cohort."
+
+  cohort_relatedness:
+    path: "./data/{species_id}/cohort/relatedness"
+    role: "samples"
+    species_scoped: true
+    description: "ngsRelate / KING / hap-IBD raw outputs. 23-column TSVs read with field-subset filtering at parse time."
+    # Sub-layout:
+    #   ngsrelate/<run_id>/relatedness.tsv
+    #   ngsrelate/<run_id>/samples.txt
+    #   king/<run_id>/...
+
+  cohort_ancestry:
+    path: "./data/{species_id}/cohort/ancestry"
+    role: "samples"
+    species_scoped: true
+    description: "NGSadmix / pcangsd outputs. Global Q matrices + local Q windows. When ancestry resolves the cohort into K populations, the species.config.yaml's populations[] list is appended (not overwritten); old population_ids stay readable."
+    # Sub-layout:
+    #   global/K{K}/ngsadmix.qopt
+    #   global/K{K}/samples.txt
+    #   local/scale_{scale}/K{K}/{chrom}.local_Q_samples.tsv.gz
+
+  cohort_dosage:
+    path: "./data/{species_id}/cohort/dosage"
+    role: "intervals"
+    species_scoped: true
+    description: "Per-chromosome dosage tile store. Read by /api/dosage/chunk for the per-sample-lines panel."
+    # Sub-layout (per S6_dosage_heatmap_streaming_viewer.md):
+    #   <chrom>.sites.tsv.gz    pos, ref, alt, miss, diag, site_id
+    #   <chrom>.dosage.tsv.gz   n_sites x n_samples cells; -1 / NA / .
+
+  beagle:
+    path: "./data/{species_id}/beagle"
+    role: "intervals"
+    species_scoped: true
+    description: "main_qcpass.<CHR>.beagle.gz files. Input to popstats compute. Prefers dense BEAGLE over thin popstruct BEAGLE."
+
+  bams:
+    path: "./data/{species_id}/bams"
+    role: "samples"
+    species_scoped: true
+    description: "Per-sample BAMs used by ANGSD. Server resolves <sample>.<bam_suffix> with fallback to .bam / .markdup.bam."
+    bam_suffix: "markdup.bam"
+
+  reference:
+    path: "./data/{species_id}/reference"
+    role: "intervals"
+    species_scoped: true
+    description: "Reference FASTA + index. The actual filenames live in the species.config.yaml's reference: section so each species can declare its own."
+
+  candidates:
+    path: "./data/candidates"
+    role: "evidence"
+    description: "Per-candidate folders. lineage.json at the candidate root; per-version aspect files under {candidate_id}/{version_id}/. NOT species-scoped at the path level \u2014 candidates from any species share this root, with species_id recorded inside each candidate's lineage.json. WRITABLE \u2014 browser analysis modules persist results here."
+    # Sub-layout:
+    #   {candidate_id}/lineage.json    (carries species_id field)
+    #   {candidate_id}/{version_id}/boundaries_refined.json
+    #   ... (per-aspect files match toolkit_registries/schemas/structured_block_schemas/)
+
+  arrangement_calls:
+    path: "./data/arrangement_calls"
+    role: "evidence"
+    description: "Per-candidate per-version arrangement call outputs. Same versioning + flat-with-species_id-field model as candidates root."
+    # Sub-layout: {candidate_id}/{version_id}/arrangement_calls.json
+
+  comparative:
+    path: "./data/comparative"
+    role: "intervals"
+    description: "Cross-species synteny, breakpoint reuse, phylogeny, TE fragility. NOT species-scoped \u2014 inherently multi-species data."
+
+  review_sessions:
+    path: "./data/review/{active_atlas}/sessions"
+    role: "evidence"
+    description: "Per-session review state: manual overrides, candidate decisions, locked karyotype groups. WRITABLE. One folder per session_id."
+    # Sub-layout: {session_id}/manual_overrides.json, etc.
+
+  # ---- Working directory (CATEGORY 2) ---------------------------------------
+  # New analysis outputs that don't fit the per-candidate layout. Browser-side
+  # analysis modules (mendelian, breeding card) write here when their target
+  # isn't a candidate aspect. Atlas reads, atlas writes, persistent.
+
+  working_dir:
+    path: "./working_dir"
+    role: "results"
+    description: "Persistent working directory for browser-side analysis outputs not tied to a specific candidate version. Exports, cohort-wide derived tables, etc."
+
+  # ---- Cache (CATEGORY 3) ---------------------------------------------------
+  # Ephemeral results cache. The registry's persist hook writes server compute
+  # results here so a re-call hits cached JSON instead of re-running ANGSD.
+  # Safe to delete: gets rebuilt on next call.
+  #
+  # Default lives outside the project tree (on the user's big disk) so test
+  # runs don't bloat the source tree / tarballs.
+
+  cache:
+    path: "/mnt/e/inversion-atlas-cache"
+    role: "results"
+    writable: true
+    ephemeral: true
+    description: "Working cache for server compute results, browser-side intermediate computations, and any other ephemeral output. Layout: server_results/{op_id}/{hash}.json + free-form for the rest. SAFE TO DELETE."
+    excluded_from_tarballs: true
+
+# -----------------------------------------------------------------------------
+# SERVER — popstats_server.py settings
+#
+# Folded in from the previous popstats_server.config.yaml. The popstats server
+# reads master_config.yaml directly when launched with --master-config; for
+# back-compat it still accepts --config <legacy_path> pointing at the old
+# popstats_server.config.yaml shape.
+# -----------------------------------------------------------------------------
+server:
+
+  bind:
+    host: "127.0.0.1"
+    port: 8765
+    # DO NOT bind to 0.0.0.0 unless behind a firewall + auth. The server
+    # launches subprocesses and reads cohort BAMs.
+
+  cors_origins:
+    - "http://localhost:8765"
+    - "http://127.0.0.1:8765"
+    - "null"   # file:// origin shows as "null" in CORS preflight
+
+  validation:
+    min_group_n: 10
+    # Reject requests whose smallest group falls below this threshold.
+    # Q07's R helper uses 10 by default; live mode keeps the same floor.
+
+  popstats_cache:
+    # Server's INTERNAL content-addressable cache for engine outputs (FST,
+    # dXY, theta_pi, hobs). Distinct from roots.cache above — that one is
+    # the registry's cache for whole-result JSONs; this one is the server's
+    # cache for engine-binary intermediate runs.
+    path: "${roots.cache.path}/popstats_engine_cache"
+    max_bytes: 53687091200          # 50 GB
+    health_ttl_sec: 60              # refresh engine-hash cache every N sec
+
+  dosage:
+    max_region_bp: 50000000
+    # Hard cap on requested region size (bp). Above → 400 region_too_large.
+    samples_file: null
+    # Optional override of column-order samples file. null → uses the
+    # samples.ind under roots.cohort.
+
+# -----------------------------------------------------------------------------
+# ENGINES — compiled binary paths
+#
+# Each binary's SHA-256 is mixed into cache keys so a recompile auto-
+# invalidates dependent cache entries. Set to null to disable that engine.
+# -----------------------------------------------------------------------------
+engines:
+  region_popstats: null         # e.g. "/path/to/unified_ancestry/engines/fst_dxy/region_popstats"
+  hobs_windower:   null         # e.g. "/path/to/unified_ancestry/engines/hobs_hwe/scripts/hobs_windower"
+  angsd_patched:   null         # e.g. "/path/to/angsd_fixed_HWE/angsd"
+  instant_q:       null         # e.g. "/path/to/unified_ancestry/src/instant_q"
+
+# -----------------------------------------------------------------------------
+# DEFAULTS — per-engine default parameters
+# -----------------------------------------------------------------------------
+defaults:
+
+  popstats:
+    win_bp: 50000
+    step_bp: 10000
+    type: 2                # ANGSD-compatible fixed grid from chrom pos 0
+    downsample: 1
+    ncores: 4
+
+  hobs:
+    # label : win_bp : step_bp
+    scales:
+      - "5kb:5000:1000"
+      - "10kb:10000:2000"
+      - "50kb:50000:10000"
+      - "100kb:100000:20000"
+      - "250kb:250000:50000"
+      - "500kb:500000:100000"
+      - "1Mb:1000000:200000"
+
+  angsd:
+    threads: 2             # per group; 3 groups parallel = 6 cpus total
+    major_minor: 1         # -doMajorMinor 1 (from allele frequencies)
+    min_maf: 0.05
+    min_mapq: 20
+    min_q: 20
+    snp_pval: "1e-6"
+    max_het_freq: 1.0

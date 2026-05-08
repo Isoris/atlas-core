@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "species.config.schema.json",
+  "title": "Atlas species config v2",
+  "description": "Taxonomic identity for a species the atlas knows about. Pure metadata: species_id, label, scientific name, NCBI taxid. NO operational fields (cohort, populations, reference) — those moved to cohort.config and genome.config. Per HIERARCHY_SPEC.md, species is a tag the registry stamps on genomes and samples; nothing operational runs against a species directly.",
+
+  "type": "object",
+  "required": ["species_id", "label"],
+
+  "properties": {
+
+    "species_id": {
+      "type": "string",
+      "description": "Unique short identifier. Used as a tag in genome.species_composition[] and sample_master.species. Must be filesystem-safe and stable forever (don't rename).",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "examples": ["gariepinus", "macrocephalus", "bighead", "tilapia", "F1_hybrid"]
+    },
+
+    "label": {
+      "type": "string",
+      "description": "Human-readable display name. Used in UI labels and logs.",
+      "examples": ["C. gariepinus", "C. macrocephalus", "F1 hybrid (gariepinus x macrocephalus)"]
+    },
+
+    "scientific_name": {
+      "type": "string",
+      "description": "Full Latin binomial. Optional but recommended for unambiguous identification across the manuscript and reference databases."
+    },
+
+    "ncbi_taxid": {
+      "type": ["integer", "null"],
+      "description": "NCBI Taxonomy ID. Optional; useful for cross-referencing external resources."
+    },
+
+    "is_hybrid": {
+      "type": "boolean",
+      "default": false,
+      "description": "True for hybrid 'species' tags (e.g. F1_hybrid). The atlas treats hybrid species_ids the same as pure ones — this flag is for documentation and for analyses that want to filter."
+    },
+
+    "parent_species_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "When is_hybrid=true, the parental species_ids. e.g. for F1_hybrid this would be ['gariepinus', 'macrocephalus']. Empty for pure species."
+    },
+
+    "notes": {
+      "type": "string",
+      "description": "Free-form notes about this species: collection regions, taxonomic uncertainties, etc."
+    }
+  },
+
+  "_examples": {
+    "pure_species": {
+      "species_id":      "gariepinus",
+      "label":           "C. gariepinus",
+      "scientific_name": "Clarias gariepinus",
+      "ncbi_taxid":      13013
+    },
+    "hybrid_tag": {
+      "species_id":         "F1_hybrid",
+      "label":              "F1 hybrid (C. gariepinus x C. macrocephalus)",
+      "is_hybrid":          true,
+      "parent_species_ids": ["gariepinus", "macrocephalus"],
+      "notes":              "Used to tag hybrid samples in cohort samples_tsv. The hybrid genome assembly carries species_composition: ['gariepinus', 'macrocephalus']; hybrid SAMPLES carry species: 'F1_hybrid'."
+    }
+  }
+}

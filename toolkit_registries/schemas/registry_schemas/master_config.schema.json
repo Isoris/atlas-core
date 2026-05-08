@@ -1,0 +1,163 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "master_config.schema.json",
+  "title": "Atlas master config v1",
+  "description": "The single config file that tells the atlas registry where everything lives on this machine. Validated at atlas startup. Adding a new data domain = add a root + add layer entries that reference it. Moving to a different machine = edit paths here, layers stay unchanged.",
+
+  "type": "object",
+  "required": ["atlas", "roots"],
+
+  "properties": {
+
+    "atlas": {
+      "type": "object",
+      "required": ["workspace_root"],
+      "properties": {
+        "workspace_root": {
+          "type": "string",
+          "description": "Location of this config file. Relative roots are resolved against it. '.' means the current directory."
+        },
+        "active_atlas": {
+          "type": "string",
+          "description": "Which atlas the shell loads on startup. Optional; defaults to 'inversion'.",
+          "default": "inversion"
+        },
+        "active_chrom": {
+          "type": ["string", "null"],
+          "description": "Default chromosome on first page load. Optional.",
+          "default": null
+        }
+      }
+    },
+
+    "species": {
+      "type": "array",
+      "description": "List of species this atlas instance knows about. Each entry references a species.config.yaml file declaring species_id, cohort, populations, and reference. Single-species atlases list one entry. Multi-species atlases list all known species with exactly one marked active=true (the default focus); the others remain loadable for cross-species analyses.",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": ["id", "config"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Species ID. Must match the species_id field inside the referenced species.config.yaml. Used as the {species_id} slot in templated paths."
+          },
+          "config": {
+            "type": "string",
+            "description": "Path to the species.config.yaml file (relative to workspace_root, or absolute)."
+          },
+          "active": {
+            "type": "boolean",
+            "default": false,
+            "description": "True for the species the atlas defaults to focusing on. At most one species should be active=true; if more than one is true, the first wins. If none is true, the first listed species is used."
+          }
+        }
+      }
+    },
+
+    "roots": {
+      "type": "object",
+      "description": "Named root directories the registry routes to. Each layer entry references a root by name (e.g. root: 'cohort_relatedness') rather than by literal path. Roots with species_scoped: true allow {species_id} substitution in their path, so a single root entry serves all known species.",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/definitions/root_entry" }
+    },
+
+    "server": {
+      "type": "object",
+      "description": "popstats_server.py settings. Optional — server is not required for the atlas to load (file-source layers work without it).",
+      "properties": {
+        "bind":            { "$ref": "#/definitions/bind_entry" },
+        "cors_origins":    { "type": "array", "items": { "type": "string" } },
+        "validation":      { "type": "object" },
+        "popstats_cache":  { "$ref": "#/definitions/cache_entry" },
+        "dosage":          { "type": "object" }
+      }
+    },
+
+    "engines": {
+      "type": "object",
+      "description": "Paths to compiled engine binaries (region_popstats, hobs_windower, angsd_patched, instant_q). null disables that engine. Server reads this section.",
+      "additionalProperties": { "type": ["string", "null"] }
+    },
+
+    "defaults": {
+      "type": "object",
+      "description": "Per-engine default parameters: popstats / hobs / angsd. Optional; engines fall back to hardcoded defaults if absent.",
+      "properties": {
+        "popstats": { "type": "object" },
+        "hobs":     { "type": "object" },
+        "angsd":    { "type": "object" }
+      }
+    }
+  },
+
+  "definitions": {
+
+    "root_entry": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Filesystem path to this root. May be relative (resolved against atlas.workspace_root) or absolute. ${roots.X.path} substitution is supported. When species_scoped is true, the path may contain {species_id} which the registry resolves at fetch time."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["samples", "intervals", "evidence", "results"],
+          "description": "Which 4-role namespace this root contributes to. Layers under this root inherit the namespace by default."
+        },
+        "species_scoped": {
+          "type": "boolean",
+          "default": false,
+          "description": "True = the root's path contains {species_id} which the registry templates from the active species (or args.species_id) at fetch time. Use for read-only data roots that exist per-species (precomp, cohort, beagle, bams, reference). Leave false for roots shared across species (candidates, comparative, working_dir, cache) \u2014 species_id is recorded inside the data files in that case."
+        },
+        "writable": {
+          "type": "boolean",
+          "default": false,
+          "description": "True = Registry.write may target paths under this root (combined with the layer entry's writable flag and the server's path allowlist). Read-only data roots (precomp, cohort, beagle, bams, reference) leave this false."
+        },
+        "ephemeral": {
+          "type": "boolean",
+          "default": false,
+          "description": "True = contents are safe to delete; the registry expects to find them missing and rebuild on demand. cache root is the only ephemeral root by default."
+        },
+        "excluded_from_tarballs": {
+          "type": "boolean",
+          "default": false,
+          "description": "True = exclude this root from project tarballs by convention. Set on the cache root so test-run accumulation doesn't bloat handoff packages."
+        },
+        "description": {
+          "type": "string",
+          "description": "Free-form human-readable description of what this root contains."
+        },
+        "files": {
+          "type": "object",
+          "description": "Optional: named files within this root that other parts of the system reference by name (e.g. reference.files.fasta = 'fClaHyb_Gar_LG.fa').",
+          "additionalProperties": { "type": "string" }
+        },
+        "bam_suffix": {
+          "type": "string",
+          "description": "Only meaningful for the bams root. Suffix used for per-sample BAM resolution: '<sample>.<bam_suffix>' with fallback to '.bam' / '.markdup.bam'."
+        }
+      }
+    },
+
+    "bind_entry": {
+      "type": "object",
+      "properties": {
+        "host": { "type": "string", "default": "127.0.0.1" },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535, "default": 8765 }
+      }
+    },
+
+    "cache_entry": {
+      "type": "object",
+      "properties": {
+        "path":           { "type": "string" },
+        "max_bytes":      { "type": "integer", "minimum": 0 },
+        "health_ttl_sec": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

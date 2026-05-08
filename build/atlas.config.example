@@ -1,0 +1,30 @@
+# atlas-core/build/atlas.config.example
+# =====================================================================
+# Build config for assemble.sh.
+#
+# Copy this file to atlas-core/build/atlas.config and edit the paths to
+# match your machine. Then run:
+#
+#     bash atlas-core/build/assemble.sh
+#
+# Each atlas_<name> entry is a path to that atlas's source folder.
+# data is the path to the read-only data tree (typically on a big disk).
+# server_config is the path to popstats_server.config.yaml — optional;
+# leave commented out and the server will run with popstats disabled.
+#
+# Paths can be absolute (/mnt/e/...) or relative to atlas-core/build/.
+# Lines starting with # are comments. Blank lines are ignored.
+# =====================================================================
+
+# Atlas source folders (edit these to point at your git clones)
+atlas_core       = ..
+atlas_inversion  = ../../inversion-atlas
+# atlas_diversity  = ../../diversity-atlas
+# atlas_genome     = ../../genome-atlas
+# atlas_population = ../../population-atlas
+
+# Data folder (the read-only data tree, outside any git repo)
+data             = /mnt/e/01-catfish_assembly_CGA
+
+# Popstats server config (optional — comment out to disable popstats)
+# server_config    = /home/quentin/atlas/popstats_server.config.yaml

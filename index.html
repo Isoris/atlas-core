@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Atlas</title>
+<!-- Core stylesheets, in cascade order:
+       1. tokens.css  — design system variables (loaded first so everything else can use var(--…))
+       2. base.css    — html/body reset, header, generic typography
+       3. shell.css   — topbar, app-root, boot overlay
+     The assembled workspace places these at css/ (a sibling of core/),
+     mirroring the source layout in atlas-core/css/.
+     Atlas-specific stylesheets are loaded dynamically per-atlas
+     during boot — see the loadAtlasStylesheets() helper below. -->
+<link rel="stylesheet" href="css/tokens.css" />
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/shell.css" />
+</head>
+<body>
+
+<nav id="topbar"></nav>
+<nav id="scopebar"></nav>
+<main id="app-root">
+  <div id="boot">loading atlases…</div>
+</main>
+
+<script type="module">
+// =====================================================================
+// Atlas shell bootstrap.
+//
+// Order:
+//   1. Build AtlasState + Registry singletons.
+//   2. Discover installed atlases.
+//   3. Register each atlas with the registry + state.
+//   4. Attach prewarm scheduler.
+//   5. Attach router (which renders topbar + handles initial hash).
+//
+// On any error, replace #boot with a clear error message and stop.
+// =====================================================================
+
+import { AtlasState }        from './core/atlas_state.js';
+import { Registry }          from './core/registry_core.js';
+import { PrewarmScheduler }  from './core/prewarm_scheduler.js';
+import { AtlasRouter }       from './core/atlas_router.js';
+import { discover }          from './core/atlas_discovery.js';
+import { bootstrap }         from './core/atlas_api.js';
+import { loadMasterConfig }  from './core/master_config.js';
+
+(async () => {
+  try {
+    const SERVER_BASE_URL = window.ATLAS_SERVER_URL || 'http://localhost:5000';
+
+    // Master config is OPTIONAL. When present, layers can use
+    // `root: <name>` + `path_under_root: <template>` for portable paths.
+    // When absent, layers use bare `path:` (atlas-relative). See
+    // toolkit_registries/MASTER_CONFIG.md.
+    const masterConfig = await loadMasterConfig({ baseUrl: '' }).catch(err => {
+      console.error('master_config load failed:', err);
+      return null;
+    });
+
+    const state = new AtlasState({ serverBaseUrl: SERVER_BASE_URL });
+    const registry = new Registry({
+      atlasState: state,
+      serverBaseUrl: SERVER_BASE_URL,
+      masterConfig,
+    });
+    bootstrap({ registry, atlasState: state });
+
+    // Seed activeSpecies from master_config so species_scoped roots
+    // resolve at first fetch. Pages can override via the scopebar.
+    if (masterConfig && Array.isArray(masterConfig.species)) {
+      const active = masterConfig.species.find(s => s && s.active === true);
+      const firstId = active ? active.id : masterConfig.species[0]?.id;
+      if (firstId) state.shared.activeSpecies = firstId;
+    }
+    // Seed activeChrom from master_config.atlas.active_chrom (if set).
+    if (masterConfig && masterConfig.atlas && masterConfig.atlas.active_chrom) {
+      state.shared.activeChrom = masterConfig.atlas.active_chrom;
+    }
+
+    const manifests = await discover({ devMode: true });
+    if (manifests.size === 0) {
+      document.getElementById('boot').innerHTML =
+        '<h2>No atlases installed</h2>' +
+        '<p>Drop an atlas package folder into <code>atlases/</code> and reload.</p>' +
+        '<p>See <code>README_PAIRING.md</code>.</p>';
+      return;
+    }
+
+    // Register each atlas with state + registry
+    for (const [atlas_id, manifest] of manifests) {
+      const configs = await loadAtlasConfigs(atlas_id, manifest);
+      registry.register_atlas(atlas_id, configs);
+      state.registerAtlasSlots(atlas_id, configs.slots.slots || {});
+      // Load atlas-specific stylesheets if declared. Each atlas can
+      // declare a `stylesheets` array in its manifest; paths are relative
+      // to the workspace root (e.g. "atlases/inversion/css/widgets.css").
+      // Per-page styles are not loaded here — they're loaded by the
+      // router when the page mounts.
+      loadAtlasStylesheets(manifest);
+    }
+
+    // Wire prewarm scheduler
+    const scheduler = new PrewarmScheduler({ atlasState: state, registry });
+    scheduler.attach();
+
+    // Wire router (this also renders the topbar)
+    const router = new AtlasRouter({ atlasState: state, registry, manifests });
+    router.attach();
+
+    document.getElementById('boot')?.remove();
+  } catch (err) {
+    console.error('Atlas boot failed:', err);
+    const boot = document.getElementById('boot');
+    if (boot) {
+      boot.classList.add('error');
+      boot.innerHTML = `<h2>Atlas failed to start</h2><pre>${err.stack || err.message}</pre>`;
+    }
+  }
+})();
+
+async function loadAtlasConfigs(atlas_id, manifest) {
+  const reg = manifest.registries || {};
+  const out = {};
+  for (const [name, path] of Object.entries(reg)) {
+    const resp = await fetch(path);
+    if (!resp.ok) throw new Error(`atlas '${atlas_id}' missing config: ${path}`);
+    out[name] = await resp.json();
+  }
+  return out;
+}
+
+/**
+ * Inject <link rel="stylesheet"> tags for an atlas's declared stylesheets.
+ * The atlas's manifest may include:
+ *   "stylesheets": [
+ *     "atlases/inversion/css/theme.css",
+ *     "atlases/inversion/css/widgets.css"
+ *   ]
+ * These are atlas-wide styles that apply on every page of that atlas.
+ * Per-page styles are loaded by the router when the page mounts (see
+ * atlas_router.js — page entry can include a `stylesheet` field).
+ *
+ * If a stylesheet is already present in <head>, it's not re-added.
+ */
+function loadAtlasStylesheets(manifest) {
+  const list = Array.isArray(manifest.stylesheets) ? manifest.stylesheets : [];
+  for (const href of list) {
+    if (document.querySelector(`link[rel="stylesheet"][href="${href}"]`)) continue;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    link.dataset.atlas = manifest.atlas_id;
+    document.head.appendChild(link);
+  }
+}
+</script>
+
+</body>
+</html>

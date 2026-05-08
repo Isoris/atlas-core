@@ -1,0 +1,172 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Atlas registry meta-schema v1",
+  "description": "Validates every atlas's five registry config files. The shell rejects atlases whose configs don't pass this schema. See SPEC_registry_v1.md §5.",
+
+  "definitions": {
+
+    "tier": {
+      "type": "string",
+      "enum": ["hot", "warm", "cold"],
+      "description": "Cache tier. hot=RAM <1ms, warm=IndexedDB ~50ms, cold=file or server"
+    },
+
+    "preload_event": {
+      "type": "string",
+      "enum": ["chrom_change", "candidate_change", "page_mount", "viewport_change", "explicit"],
+      "description": "Trigger event for pre-warming. viewport_change is v2-only; v1 ignores it. explicit means no pre-warm."
+    },
+
+    "source_kind": {
+      "type": "string",
+      "enum": ["file", "operation", "inline", "analysis"],
+      "description": "file=fetch from disk, operation=server compute, inline=value inside config, analysis=browser-side compute via an analysis module"
+    },
+
+    "layer_entry": {
+      "type": "object",
+      "required": ["tier", "source"],
+      "properties": {
+        "tier":        { "$ref": "#/definitions/tier" },
+        "preload_on":  { "$ref": "#/definitions/preload_event" },
+        "source":      { "$ref": "#/definitions/source_kind" },
+        "path":        { "type": "string", "description": "File path with {slot} templating" },
+        "operation":   { "type": "string", "description": "Operation key when source=operation" },
+        "analysis":    { "type": "string", "description": "Analysis module path when source=analysis (e.g. 'analysis/mendelian.js#runMendelianTest')" },
+        "schema":      { "type": "string", "description": "JSON Schema path for validation" },
+        "schema_status": { "type": "string", "enum": ["validated", "pending", "any"], "default": "validated", "description": "validated=schema exists and is enforced; pending=schema path declared but file may not exist yet (logs warning, accepts any shape); any=skip validation entirely" },
+        "format":      { "type": "string", "enum": ["json", "tsv", "csv", "binary"], "default": "json" },
+        "chunked":     { "type": "boolean", "default": false, "description": "v2 hook for tile-based serving. v1 must accept but may ignore." },
+        "pin_to":      { "type": "string", "description": "AtlasState path to pin hot-tier values, with {slot} templating" },
+        "fields":      { "type": "array", "items": { "type": "string" } },
+        "owned_by":    { "type": "string", "description": "Which atlas should own this layer when fully implemented. If different from declaring atlas, that atlas can take over without a conflict error. E.g. 'population' for cohort-level layers currently squatting in inversion-atlas." },
+        "provisional": { "type": "boolean", "default": false, "description": "True = the declaring atlas knows this layer should belong elsewhere and is willing to be overridden silently when the proper owner registers it." },
+        "writable":    { "type": "boolean", "default": false, "description": "True = Registry.write(layer, args, payload) is permitted to write to this layer's path. The server's path allowlist must also accept the path. Without this flag, Registry.write throws a clear error before any HTTP call." },
+        "persist":     { "type": "boolean", "default": false, "description": "Only meaningful when source=operation. True = after the operation returns successfully, the registry calls write() in the background to persist the result to the server results cache. Subsequent identical calls skip the operation and read from cache. Use only for expensive operations; cheap pings (health) should leave this false." },
+        "cache_layout":{ "type": "string", "enum": ["content_addressed", "path_template"], "default": "content_addressed", "description": "Only meaningful when persist=true. content_addressed = path is _cache/server_results/{op_id}/{hash_of_args}.json (default; safe). path_template = use the layer's own path field (must contain {slot} placeholders that fully determine the result). Use path_template only when the args determinism is obvious from the path alone." }
+      }
+    },
+
+    "operation_entry": {
+      "type": "object",
+      "required": ["endpoint", "inputs", "cache_key", "cache_tier"],
+      "properties": {
+        "endpoint":              { "type": "string" },
+        "method":                { "type": "string", "enum": ["GET", "POST"], "default": "POST" },
+        "inputs":                { "type": "array", "items": { "type": "string" } },
+        "output_schema":         { "type": "string" },
+        "cache_key":             { "type": "string", "description": "Template with {slot} substitution" },
+        "cache_tier":            { "$ref": "#/definitions/tier" },
+        "estimated_latency_ms":  { "type": "integer" },
+        "engine":                { "type": "string", "description": "Path to compute engine, informational" }
+      }
+    },
+
+    "slot_entry": {
+      "type": "object",
+      "required": ["type", "default"],
+      "properties": {
+        "type":    { "type": "string", "enum": ["int", "float", "string", "bool", "array", "object", "Set", "Map", "Float32Array", "Float64Array", "Int32Array", "function"] },
+        "default": {},
+        "persist": { "type": "boolean", "default": false },
+        "scope":   { "type": "string", "enum": ["shared", "private"], "default": "private" }
+      }
+    },
+
+    "page_entry": {
+      "type": "object",
+      "properties": {
+        "requires_layers":     { "type": "array", "items": { "type": "string" } },
+        "requires_operations": { "type": "array", "items": { "type": "string" } },
+        "requires_slots":      { "type": "array", "items": { "type": "string" } },
+        "preloads":            { "type": "array", "items": { "type": "string" } },
+        "performance_critical":{ "type": "boolean", "default": false }
+      }
+    },
+
+    "file_entry": {
+      "type": "object",
+      "properties": {
+        "path":          { "type": "string" },
+        "path_template": { "type": "string" },
+        "path_pattern":  { "type": "string" },
+        "scope":         { "type": "string", "enum": ["global", "per_chrom", "per_candidate", "per_session"] },
+        "tier":          { "$ref": "#/definitions/tier" },
+        "preload_on":    { "$ref": "#/definitions/preload_event" },
+        "writable":      { "type": "boolean", "default": false },
+        "workflow":      { "type": "string" },
+        "list":          { "type": "array", "items": { "type": "string" } },
+        "expected_files":{ "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+
+  "_section": "==== Top-level shapes for each of the five config files ====",
+
+  "_layers_registry_shape": {
+    "description": "Shape of layers.registry.json",
+    "type": "object",
+    "required": ["layers"],
+    "properties": {
+      "layers": {
+        "type": "object",
+        "patternProperties": {
+          "^[a-z][a-z0-9_]*$":     { "$ref": "#/definitions/layer_entry" },
+          "^_": { "description": "underscore-prefixed keys are documentation comments; the engine ignores them" }
+        }
+      }
+    }
+  },
+
+  "_operations_registry_shape": {
+    "type": "object",
+    "required": ["operations"],
+    "properties": {
+      "operations": {
+        "type": "object",
+        "patternProperties": {
+          "^[a-z][a-z0-9_]*$": { "$ref": "#/definitions/operation_entry" }
+        }
+      }
+    }
+  },
+
+  "_slots_registry_shape": {
+    "type": "object",
+    "required": ["slots"],
+    "properties": {
+      "slots": {
+        "type": "object",
+        "patternProperties": {
+          "^[a-zA-Z][a-zA-Z0-9_]*$": { "$ref": "#/definitions/slot_entry" }
+        }
+      }
+    }
+  },
+
+  "_pages_registry_shape": {
+    "type": "object",
+    "required": ["pages"],
+    "properties": {
+      "pages": {
+        "type": "object",
+        "patternProperties": {
+          "^[a-zA-Z][a-zA-Z0-9_]*$": { "$ref": "#/definitions/page_entry" }
+        }
+      }
+    }
+  },
+
+  "_files_registry_shape": {
+    "type": "object",
+    "required": ["files"],
+    "properties": {
+      "files": {
+        "type": "object",
+        "patternProperties": {
+          "^[a-z][a-z0-9_]*$": { "$ref": "#/definitions/file_entry" }
+        }
+      }
+    }
+  }
+}

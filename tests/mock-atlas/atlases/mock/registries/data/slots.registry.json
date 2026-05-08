@@ -1,0 +1,5 @@
+{
+  "slots": {
+    "greetingShown": { "type": "bool", "default": false, "persist": false }
+  }
+}

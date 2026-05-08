@@ -1,0 +1,174 @@
+/* atlas-core/css/shell.css
+ * =====================================================================
+ * The shell chrome — topbar, app-root, boot overlay.
+ *
+ * The shell's topbar is the new-build equivalent of the legacy #tabBar.
+ * Visual style is derived from legacy/Inversion_atlas.html lines 301-615
+ * (#tabBar styling), retargeted at the new shell DOM:
+ *   legacy:  <nav id="tabBar"> ... <button>
+ *   new:     <nav id="topbar"> .atlas-section <button>
+ *
+ * Uses tokens from tokens.css.
+ * =====================================================================
+ */
+
+/* The topbar: pinned below header, fills width, scrollable horizontally
+ * if many pages. Layered atlas sections share the row when multiple
+ * atlases are loaded. */
+#topbar {
+  position: sticky; top: 0;
+  display: flex; gap: 0;
+  height: 32px; padding: 0 22px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--rule);
+  align-items: stretch;
+  flex-shrink: 0;
+  z-index: 100;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+#topbar .atlas-section {
+  display: flex; gap: 0;
+  align-items: stretch;
+}
+
+/* When multiple atlases are loaded, each section gets a header label
+ * with a subtle vertical rule separator. */
+#topbar .atlas-section + .atlas-section {
+  border-left: 1px solid var(--rule);
+  margin-left: 8px;
+  padding-left: 8px;
+}
+
+#topbar .atlas-label {
+  align-self: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-dimmer);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding-right: 12px;
+}
+
+#topbar button {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--ink-dim);
+  font-family: var(--serif);
+  font-size: 11.5px;
+  padding: 0 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  transition: color 80ms ease, border-color 80ms ease;
+}
+
+#topbar button:hover {
+  color: var(--ink);
+}
+
+#topbar button.active {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+/* The scopebar: a second sticky strip below the topbar, hosting per-atlas
+ * scope pickers (chromosome, candidate, sample-set, etc.). The shell
+ * renders pickers declared in each atlas manifest's `scope_pickers` array.
+ * Hidden when no atlas declares any. */
+#scopebar {
+  position: sticky; top: 32px;
+  display: flex; gap: 12px;
+  min-height: 28px; padding: 0 22px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--rule);
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 99;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+
+#scopebar:empty {
+  display: none;
+}
+
+#scopebar .scope-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#scopebar .scope-picker-label {
+  color: var(--ink-dimmer);
+  letter-spacing: 0.03em;
+}
+
+#scopebar select {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+#scopebar select:hover {
+  border-color: var(--accent-2);
+}
+
+#scopebar select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Page mount point — the shell injects fragments here */
+#app-root {
+  flex: 1;
+  overflow: auto;
+  background: var(--bg);
+}
+
+/* Boot overlay — shown while atlases are discovered + registered.
+ * Replaced by the first page on success, by an error block on failure. */
+#boot {
+  padding: 24px;
+  color: var(--ink-dim);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+#boot h2 {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-weight: 500;
+}
+
+#boot.error {
+  color: var(--bad);
+}
+
+#boot pre {
+  background: var(--panel-2);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 10px;
+  overflow: auto;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+#boot code {
+  font-family: var(--mono);
+  background: var(--panel-2);
+  padding: 1px 5px;
+  border-radius: 2px;
+}

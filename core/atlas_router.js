@@ -42,7 +42,6 @@ export class AtlasRouter {
 
   attach() {
     window.addEventListener('hashchange', () => this._navigateFromHash());
-    this._renderScopebar();
     this._navigateFromHash();
     this._renderTopbar();
   }
@@ -131,6 +130,7 @@ export class AtlasRouter {
       console.error(`Router navigate(${atlas_id}/${page_id}) failed:`, err);
     });
     this._renderTopbar(atlas_id, page_id);
+    this._renderScopebar(atlas_id);
   }
 
   /**
@@ -152,12 +152,18 @@ export class AtlasRouter {
    * Pickers are rendered in manifest order, grouped by atlas. If no atlas
    * declares any pickers, the scopebar stays empty (CSS hides it).
    */
-  _renderScopebar() {
+  _renderScopebar(currentAtlas) {
     const bar = document.getElementById('scopebar');
     if (!bar) return;
     bar.innerHTML = '';
 
-    for (const [atlas_id, manifest] of this.manifests) {
+    // Only render pickers for the currently-active atlas. Pickers from
+    // siblings would otherwise leak into the bar (e.g. relatedness's
+    // `activeChromosome` showing next to inversion's `activeChrom`).
+    const targets = currentAtlas && this.manifests.has(currentAtlas)
+      ? [[currentAtlas, this.manifests.get(currentAtlas)]]
+      : [...this.manifests];
+    for (const [atlas_id, manifest] of targets) {
       const pickers = Array.isArray(manifest.scope_pickers) ? manifest.scope_pickers : [];
       for (const picker of pickers) {
         if (!picker || !picker.slot) continue;

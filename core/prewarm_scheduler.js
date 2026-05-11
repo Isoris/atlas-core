@@ -53,7 +53,7 @@ export class PrewarmScheduler {
     const ctrl = new AbortController();
     this._abortControllers.set(`chrom:${gen}`, ctrl);
 
-    await this._preloadByEvent('chrom_change', { chrom: newChrom }, ctrl, gen, 'chrom');
+    await this._preloadByEvent('chrom_change', this._buildArgs({ chrom: newChrom }), ctrl, gen, 'chrom');
   }
 
   async onCandidateChange(newCand /*, oldCand */) {
@@ -63,7 +63,35 @@ export class PrewarmScheduler {
     this._abortControllers.set(`candidate:${gen}`, ctrl);
 
     if (!newCand || !newCand.id) return;
-    await this._preloadByEvent('candidate_change', { candidate_id: newCand.id }, ctrl, gen, 'candidate');
+    await this._preloadByEvent('candidate_change', this._buildArgs({ candidate_id: newCand.id }), ctrl, gen, 'candidate');
+  }
+
+  // Pull every primitive from shared state into the resolve args so layer
+  // path templates like 'data/precomp/{chrom}.json' or
+  // 'data/cohort/ancestry/windows/{chrom}_K{K}.tsv' can fill all placeholders
+  // without each event handler needing to know which keys matter.
+  //
+  // Aliases: shared state uses 'activeChrom' but legacy layer templates
+  // use {chrom}; same for {candidate_id} ← shared.activeCandidate.id.
+  _buildArgs(seed) {
+    const args = Object.assign({}, seed || {});
+    const sh = (this.state && this.state.shared) || {};
+    if (args.chrom === undefined && typeof sh.activeChrom === 'string') {
+      args.chrom = sh.activeChrom;
+    }
+    if (args.candidate_id === undefined && sh.activeCandidate && sh.activeCandidate.id) {
+      args.candidate_id = sh.activeCandidate.id;
+    }
+    if (args.species === undefined && typeof sh.activeSpecies === 'string') {
+      args.species = sh.activeSpecies;
+    }
+    for (const [k, v] of Object.entries(sh)) {
+      if (args[k] !== undefined) continue;
+      if (v != null && (typeof v === 'string' || typeof v === 'number')) {
+        args[k] = v;
+      }
+    }
+    return args;
   }
 
   async onPageMount(atlas_id, page_id) {
@@ -78,12 +106,21 @@ export class PrewarmScheduler {
     const pageEntry = (atlas.pages && atlas.pages[page_id]) || null;
     if (!pageEntry || !Array.isArray(pageEntry.preloads)) return;
 
+    const args = this._buildArgs();
+
     for (const layerKey of pageEntry.preloads) {
       if (ctrl.signal.aborted) return;
       try {
-        await this.registry.resolve(layerKey, {});
+        await this.registry.resolve(layerKey, args);
       } catch (e) {
-        console.warn(`Prewarm onPageMount: ${atlas_id}/${page_id} preload '${layerKey}' failed:`, e);
+        const msg = (e && e.message) || String(e);
+        if (msg.includes('HTTP 404')) {
+          if (typeof console.debug === 'function') {
+            console.debug(`Prewarm onPageMount: ${atlas_id}/${page_id} optional preload '${layerKey}' missing (404)`);
+          }
+        } else {
+          console.warn(`Prewarm onPageMount: ${atlas_id}/${page_id} preload '${layerKey}' failed:`, e);
+        }
       }
     }
   }
@@ -106,8 +143,19 @@ export class PrewarmScheduler {
       }
     }
     // Promise.all parallelizes; we don't await individual failures.
+    // 404s on side-car layers (band_*.tsv, repeat_density, candidate_tracks,
+    // etc.) are expected when the precomp ships only the main scrubber JSON.
+    // Downgrade those to debug-only so the console isn't drowned in noise;
+    // genuine errors (5xx, network, parse failures) still console.warn.
     await Promise.all(tasks.map(t => t.catch(e => {
-      console.warn(`Prewarm ${eventName}: layer preload failed:`, e);
+      const msg = (e && e.message) || String(e);
+      if (msg.includes('HTTP 404')) {
+        if (typeof console.debug === 'function') {
+          console.debug(`Prewarm ${eventName}: optional layer missing (404):`, msg);
+        }
+      } else {
+        console.warn(`Prewarm ${eventName}: layer preload failed:`, e);
+      }
     })));
 
     if (this._gens[genKind] === gen) {

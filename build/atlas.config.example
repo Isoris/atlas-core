@@ -23,9 +23,9 @@
 # Atlas source folders (edit these to point at your git clones)
 atlas_core       = ..
 atlas_inversion  = ../../inversion-atlas
-# atlas_diversity  = ../../diversity-atlas
-# atlas_genome     = ../../genome-atlas
-# atlas_population = ../../population-atlas
+atlas_diversity  = ../../diversity-atlas
+atlas_population = ../../population-atlas
+atlas_genome     = ../../genome-atlas
 
 # Data folder (the read-only data tree, outside any git repo)
 data             = /mnt/e

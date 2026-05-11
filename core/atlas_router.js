@@ -249,17 +249,70 @@ export class AtlasRouter {
     if (!bar) return;
     bar.innerHTML = '';
 
+    // Determine which stage to expand. If a page is active and we know
+    // its stage (from the manifest), expand that stage; else fall back
+    // to the first stage in manifest order. Stage pills CSS hides tabs
+    // whose data-stage doesn't match #topbar[data-active-stage].
+    let activeStageForBar = null;
+    if (currentAtlas && currentPage) {
+      const mf = this.manifests.get(currentAtlas);
+      if (mf && Array.isArray(mf.pages)) {
+        const p = mf.pages.find(x => x.id === currentPage);
+        if (p && p.stage) activeStageForBar = p.stage;
+      }
+    }
+    if (!activeStageForBar) {
+      const firstMf = this.manifests.values().next().value;
+      if (firstMf && Array.isArray(firstMf.stages) && firstMf.stages.length > 0) {
+        activeStageForBar = firstMf.stages[0].id;
+      }
+    }
+    if (activeStageForBar) bar.dataset.activeStage = activeStageForBar;
+    else delete bar.dataset.activeStage;
+
     const multi = this.manifests.size > 1;
+
+    // Multi-atlas switcher — small <select> at the left of the topbar
+    // when more than one atlas is registered. Mirrors the legacy
+    // atlasModeIndicator hover-dropdown (header line 4902+). Switching
+    // navigates to the chosen atlas's first page.
+    if (multi) {
+      const switcher = document.createElement('span');
+      switcher.className = 'atlas-switcher';
+      const label = document.createElement('span');
+      label.className = 'atlas-switcher-label';
+      label.textContent = 'atlas:';
+      switcher.appendChild(label);
+      const sel = document.createElement('select');
+      sel.className = 'atlas-switcher-select';
+      for (const [aid, mf] of this.manifests) {
+        const opt = document.createElement('option');
+        opt.value = aid;
+        opt.textContent = mf.atlas_name || aid;
+        if (aid === currentAtlas) opt.selected = true;
+        sel.appendChild(opt);
+      }
+      sel.addEventListener('change', () => {
+        const aid = sel.value;
+        const mf = this.manifests.get(aid);
+        const firstPage = mf && mf.pages && mf.pages[0] && mf.pages[0].id;
+        if (aid && firstPage) {
+          window.location.hash = `#/${aid}/${firstPage}`;
+        }
+      });
+      switcher.appendChild(sel);
+      bar.appendChild(switcher);
+    }
+
     for (const [atlas_id, manifest] of this.manifests) {
+      // Multi-atlas mode: render only the active atlas's tabs to keep
+      // the topbar uncluttered. The switcher above is the way to reach
+      // the other atlases — we don't also render an "INVERSION DETECTION
+      // ATLAS" text label because the switcher's current value already
+      // tells the user which atlas they're in.
+      if (multi && atlas_id !== currentAtlas) continue;
       const sec = document.createElement('div');
       sec.className = 'atlas-section';
-
-      if (multi) {
-        const label = document.createElement('span');
-        label.className = 'atlas-label';
-        label.textContent = manifest.atlas_name || atlas_id;
-        sec.appendChild(label);
-      }
 
       // Group pages by stage
       const byStage = new Map();
@@ -276,10 +329,89 @@ export class AtlasRouter {
         return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
       });
 
+      // Map manifest.stages metadata for label lookup.
+      const stageMeta = new Map();
+      for (const s of (manifest.stages || [])) stageMeta.set(s.id, s);
+
+      // Build a sequential display-number map keyed by page.id. Pages get
+      // their display number based on their position in manifest.pages
+      // (so reordering the manifest reorders the tab numbering), rather
+      // than extracting it from the raw `page1` / `page12` id. Pages can
+      // override with an explicit `displayNum` field in the manifest.
+      const displayNumByPage = new Map();
+      let seqIdx = 0;
+      for (const p of manifest.pages) {
+        seqIdx++;
+        if (p && p.id) {
+          displayNumByPage.set(p.id, p.displayNum != null ? String(p.displayNum) : String(seqIdx));
+        }
+      }
+
       for (const stage of stages) {
-        for (const page of byStage.get(stage)) {
+        const pagesInStage = byStage.get(stage);
+        // Stage pill — small label with a colored dot indicating workflow
+        // stage. Mirrors the legacy tabBar's tab-stage-pill (monolith line
+        // 5003+). No expand/collapse behavior in v1; pills are pure visual
+        // groupers between tab clusters. Pill counts the # of pages in the
+        // stage. Pills are non-clickable for now.
+        if (stage && stage !== 'default') {
+          const pill = document.createElement('button');
+          pill.type = 'button';
+          pill.className = 'tab-stage-pill';
+          pill.dataset.stage = stage;
+          if (stage === activeStageForBar) pill.dataset.expanded = '1';
+          const meta = stageMeta.get(stage);
+          const label = (meta && meta.label) || stage;
+          pill.title = (meta && meta.description)
+            || `Click to expand the "${label}" tab group`;
+          const dot = document.createElement('span');
+          dot.className = 'pill-dot';
+          dot.textContent = '●';
+          pill.appendChild(dot);
+          pill.appendChild(document.createTextNode(' ' + label));
+          const count = document.createElement('span');
+          count.className = 'pill-count';
+          count.textContent = '(' + pagesInStage.length + ')';
+          pill.appendChild(count);
+          // Click → toggle this stage's expansion. If the clicked pill is
+          // already the active stage, REMOVE the active-stage attribute so
+          // all tab clusters collapse (only pills visible). Otherwise focus
+          // on this stage. Mutates the topbar's data-active-stage attribute
+          // that the CSS reads to show/hide tabs. Does NOT navigate.
+          pill.addEventListener('click', () => {
+            const isActive = bar.dataset.activeStage === stage;
+            if (isActive) {
+              delete bar.dataset.activeStage;
+              bar.querySelectorAll('.tab-stage-pill').forEach(p => {
+                p.dataset.expanded = '0';
+              });
+            } else {
+              bar.dataset.activeStage = stage;
+              bar.querySelectorAll('.tab-stage-pill').forEach(p => {
+                p.dataset.expanded = (p.dataset.stage === stage) ? '1' : '0';
+              });
+            }
+          });
+          sec.appendChild(pill);
+        }
+        for (const page of pagesInStage) {
           const btn = document.createElement('button');
-          btn.textContent = page.label || page.id;
+          btn.dataset.stage = stage;
+          // Display number = position in manifest.pages (1-indexed) or
+          // explicit page.displayNum override. Renders as a small dim
+          // mono span before the label, matching the legacy convention
+          // of "1 local PCA |z|" / "2 candidate focus" tabs. Sequential
+          // numbering matches the atlas author's intent regardless of
+          // page id (e.g. "local PCA θπ" with id `page12` can display
+          // as tab "4" if it's the 4th page in the manifest).
+          const numStr = displayNumByPage.get(page.id);
+          if (numStr) {
+            const num = document.createElement('span');
+            num.className = 'num';
+            num.textContent = numStr;
+            btn.appendChild(num);
+          }
+          btn.appendChild(document.createTextNode(' ' + (page.label || page.id)));
           if (page.tooltip) btn.title = page.tooltip;
           if (atlas_id === currentAtlas && page.id === currentPage) {
             btn.classList.add('active');

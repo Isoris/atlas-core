@@ -16,7 +16,12 @@
 atlas:
   workspace_root: "."
   active_atlas:   "inversion"
-  active_chrom:   "C_gar_LG28"
+  # Use the bare chrom id ("LG28") here, matching the precomp file name
+  # data/precomp/LG28.json and the manifest's scope_picker options. The
+  # data file's internal data.chrom field is the species-prefixed form
+  # ("C_gar_LG28"); those are read from data after fetch, not used to
+  # build the fetch path.
+  active_chrom:   "LG28"
 
 species:
   - id:     "gariepinus"

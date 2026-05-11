@@ -22,20 +22,44 @@
 #topbar {
   position: sticky; top: 0;
   display: flex; gap: 0;
-  min-height: 32px; padding: 0 22px;
+  min-height: 28px; height: 28px; padding: 0 14px;
   background: var(--panel);
   border-bottom: 1px solid var(--rule);
   align-items: stretch;
   align-content: stretch;
   flex-shrink: 0;
-  /* Allow wrap to a 2nd row when the active stage's tabs + pills exceed
-   * the viewport width. With expand/collapse this is rare but always
-   * possible (e.g. multi-atlas + a busy stage). Wrap is preferred to
-   * scrollbars because users explicitly asked for no scroll. */
-  flex-wrap: wrap;
+  /* nowrap + overflow hidden. Quentin's directive: never scroll the
+   * topbar. Stage pills (discover / review / catalogue / comparative /
+   * synthesis / help) collapse the OTHER stages' tabs when clicked, so
+   * only the active stage's tabs are visible at any time. That's the
+   * `data-active-stage` mechanism below — fitting the bar to one row
+   * is the pills' job, not a scrollbar's. */
+  flex-wrap: nowrap;
   z-index: 100;
   overflow: hidden;
 }
+
+/* Orange settings gear — pinned at the left of the topbar so the user
+ * always has one-click access to the active page's parameters sidebar.
+ * Matches the legacy #globalSettingsBtn (monolith line 4983). */
+#topbar #globalSettingsBtn {
+  align-self: center; flex-shrink: 0;
+  background: #c2410c; color: #fff8e7;
+  border: 1px solid #9a3412; border-radius: 3px;
+  padding: 0 8px; margin: 2px 10px 2px 0;
+  font-family: var(--mono); font-size: 12px; line-height: 1;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 20px; min-width: 24px;
+  transition: background 120ms, border-color 120ms, box-shadow 120ms;
+}
+#topbar #globalSettingsBtn:hover {
+  background: #ea580c; border-color: #c2410c;
+  box-shadow: 0 0 0 2px rgba(194, 65, 12, 0.25);
+}
+#topbar::-webkit-scrollbar { height: 4px; }
+#topbar::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
+#topbar::-webkit-scrollbar-track { background: transparent; }
 
 #topbar .atlas-section {
   display: flex; gap: 0;
@@ -226,30 +250,69 @@
  * a colored top border matching the stage. Active tab keeps the accent
  * gradient (yellow) layered on top. Matches the user's request that
  * "the style must be the same for colors" — pill and tab both wear
- * their stage's hue. */
+ * their stage's hue.
+ *
+ * Alpha is 0.14: discovery's blue blended into the bluish #151a22 panel
+ * was too subtle at 0.08; bumped so it reads as clearly as review's teal. */
 #topbar button[data-stage="discovery"]:not(.tab-stage-pill) {
   border-top: 2px solid rgba(79, 163, 255, 0.55);
-  background: rgba(79, 163, 255, 0.08);
+  background: rgba(79, 163, 255, 0.14);
 }
 #topbar button[data-stage="review"]:not(.tab-stage-pill) {
   border-top: 2px solid rgba(122, 211, 219, 0.55);
-  background: rgba(122, 211, 219, 0.08);
+  background: rgba(122, 211, 219, 0.14);
 }
 #topbar button[data-stage="catalogue"]:not(.tab-stage-pill) {
   border-top: 2px solid rgba(232, 196, 76, 0.55);
-  background: rgba(232, 196, 76, 0.08);
+  background: rgba(232, 196, 76, 0.14);
 }
 #topbar button[data-stage="comparative"]:not(.tab-stage-pill) {
   border-top: 2px solid rgba(228, 138, 60, 0.55);
-  background: rgba(228, 138, 60, 0.08);
+  background: rgba(228, 138, 60, 0.14);
 }
 #topbar button[data-stage="synthesis"]:not(.tab-stage-pill) {
   border-top: 2px solid rgba(60, 192, 138, 0.55);
-  background: rgba(60, 192, 138, 0.08);
+  background: rgba(60, 192, 138, 0.14);
 }
 #topbar button[data-stage="help"]:not(.tab-stage-pill) {
   border-top: 2px solid rgba(138, 148, 163, 0.50);
-  background: rgba(138, 148, 163, 0.08);
+  background: rgba(138, 148, 163, 0.14);
+}
+
+/* Active tab override — uses the stage's own color at a stronger alpha so
+ * the focused tab pops against its dimmer siblings. Quentin's directive:
+ * the active highlight should match the stage color (e.g. blue for
+ * discovery), not the global accent. Specificity (1,0,3,1) beats the
+ * stage rules' (1,0,2,1). */
+#topbar button.active[data-stage="discovery"]:not(.tab-stage-pill) {
+  color: var(--ink);
+  background: rgba(79, 163, 255, 0.32);
+  border-bottom: 2px solid rgba(79, 163, 255, 0.95);
+}
+#topbar button.active[data-stage="review"]:not(.tab-stage-pill) {
+  color: var(--ink);
+  background: rgba(122, 211, 219, 0.32);
+  border-bottom: 2px solid rgba(122, 211, 219, 0.95);
+}
+#topbar button.active[data-stage="catalogue"]:not(.tab-stage-pill) {
+  color: var(--ink);
+  background: rgba(232, 196, 76, 0.32);
+  border-bottom: 2px solid rgba(232, 196, 76, 0.95);
+}
+#topbar button.active[data-stage="comparative"]:not(.tab-stage-pill) {
+  color: var(--ink);
+  background: rgba(228, 138, 60, 0.32);
+  border-bottom: 2px solid rgba(228, 138, 60, 0.95);
+}
+#topbar button.active[data-stage="synthesis"]:not(.tab-stage-pill) {
+  color: var(--ink);
+  background: rgba(60, 192, 138, 0.32);
+  border-bottom: 2px solid rgba(60, 192, 138, 0.95);
+}
+#topbar button.active[data-stage="help"]:not(.tab-stage-pill) {
+  color: var(--ink);
+  background: rgba(138, 148, 163, 0.32);
+  border-bottom: 2px solid rgba(138, 148, 163, 0.95);
 }
 
 /* Responsive font shrinks so labels stay legible at high zoom without
@@ -270,55 +333,53 @@
                    letter-spacing: 0; }
 }
 
-/* The scopebar: a second sticky strip below the topbar, hosting per-atlas
- * scope pickers (chromosome, candidate, sample-set, etc.). The shell
- * renders pickers declared in each atlas manifest's `scope_pickers` array.
- * Hidden when no atlas declares any. */
-#scopebar {
-  position: sticky; top: 32px;
-  display: flex; gap: 12px;
-  min-height: 28px; padding: 0 22px;
-  background: var(--panel-2);
-  border-bottom: 1px solid var(--rule);
-  align-items: center;
-  flex-shrink: 0;
-  z-index: 99;
+/* The scopebar lives INSIDE the header (per Quentin's request — chromosome
+ * picker at the top so it's always one click away). The previous design
+ * placed it as a separate sticky strip below the topbar; that's now
+ * removed. Inline flex sits between the badges and the right cluster. */
+header #scopebar {
+  display: inline-flex; align-items: center;
+  gap: 12px; flex-shrink: 0;
   font-family: var(--mono);
   font-size: 11px;
   color: var(--ink-dim);
+  margin-right: 12px;
 }
 
-#scopebar:empty {
+header #scopebar:empty {
   display: none;
 }
 
-#scopebar .scope-picker {
+header #scopebar .scope-picker {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-#scopebar .scope-picker-label {
+header #scopebar .scope-picker-label {
   color: var(--ink-dimmer);
   letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-size: 9.5px;
 }
 
-#scopebar select {
-  background: var(--panel);
+header #scopebar select {
+  background: var(--panel-2);
   border: 1px solid var(--rule);
-  border-radius: 2px;
+  border-radius: 3px;
   color: var(--ink);
   font-family: var(--mono);
   font-size: 11px;
-  padding: 2px 6px;
+  padding: 3px 8px;
   cursor: pointer;
+  letter-spacing: 0.04em;
 }
 
-#scopebar select:hover {
+header #scopebar select:hover {
   border-color: var(--accent-2);
 }
 
-#scopebar select:focus {
+header #scopebar select:focus {
   outline: none;
   border-color: var(--accent);
 }

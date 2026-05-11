@@ -24,8 +24,23 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
              font-family: var(--serif); font-size: 13.5px; overflow: hidden;
              height: 100vh; height: 100dvh;
              display: flex; flex-direction: column; }
-header { padding: 10px 22px; border-bottom: 1px solid var(--rule);
-         display: flex; align-items: baseline; gap: 18px; height: 44px; }
+
+/* The page mount point fills whatever vertical space remains after
+   header + topbar + scopebar. Without flex:1 the app-root collapsed to
+   its content height — the page1 fragment expected to drive layout from
+   the top of the viewport and was clipped on first paint until the user
+   zoomed out. min-height:0 lets the flex item shrink so inner grids can
+   resolve their fractions without overflowing. */
+main#app-root { flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden; }
+/* z-index above #topbar (100) so the session/mode/data folder popovers
+   and the atlas-switcher dropdown render IN FRONT of the topbar, not
+   tucked behind it. Position relative establishes a stacking context. */
+header { padding: 3px 14px; border-bottom: 1px solid var(--rule);
+         display: flex; align-items: center; gap: 8px; min-height: 30px; height: 30px;
+         position: relative; z-index: 200; }
+/* Title + meta are no longer rendered (Quentin's request — top header
+   shows scope + tool clusters only). Keep the dead rules as harmless
+   no-ops so anything else that ever uses these classes still styles. */
 header h1 { font-size: 16px; font-weight: 500; margin: 0; letter-spacing: 0.02em; }
 header .meta { color: var(--ink-dim); font-family: var(--mono); font-size: 11px; }
 header .meta b { color: var(--ink); font-weight: 500; }
@@ -228,6 +243,100 @@ header .header-folder-panel .atlas-tool-btn {
 header .header-folder-panel .atlas-tool-btn:hover {
   background: var(--panel-3) !important;
   border-color: var(--accent) !important;
+}
+
+/* Colored dot prefix inside the session/mode/data folder buttons. The dot's
+   color is set per-folder so the closed button shows its category color. */
+header .header-folder-btn .dot { opacity: 0.85; margin-right: 2px; font-size: 9px; }
+header .header-folder[data-color="blue"]   .header-folder-btn .dot { color: rgb(64, 144, 220); }
+header .header-folder[data-color="green"]  .header-folder-btn .dot { color: rgb(72, 200, 120); }
+header .header-folder[data-color="yellow"] .header-folder-btn .dot { color: rgb(232, 196, 76); }
+
+/* Atlas switcher (hover dropdown) — moved from the topbar into the header. */
+#atlasModeIndicator {
+  position: relative; align-self: center; margin: 0 6px;
+  font-family: var(--mono); font-size: 10.5px;
+  flex-shrink: 0;
+}
+#atlasActiveBtn {
+  background: rgba(64, 144, 220, 0.18); color: var(--ink);
+  border: 1px solid rgba(64, 144, 220, 0.55);
+  border-radius: 3px; padding: 4px 12px;
+  cursor: pointer; line-height: 1.2;
+  font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: 0.04em; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+#atlasActiveBtn:hover {
+  background: rgba(64, 144, 220, 0.30);
+  border-color: rgba(64, 144, 220, 0.85);
+}
+#atlasActiveBtn .arrow { opacity: 0.6; font-size: 9px; }
+#atlasDropdown {
+  display: none; position: absolute; top: 100%; left: 0; right: 0;
+  min-width: 100%; background: var(--panel-2); border: 1px solid var(--rule);
+  border-radius: 0 0 3px 3px; padding: 2px 0; z-index: 200;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+#atlasModeIndicator:hover #atlasDropdown,
+#atlasModeIndicator:focus-within #atlasDropdown { display: block; }
+#atlasDropdown .atlas-row {
+  display: block; width: 100%; text-align: left;
+  background: transparent; color: var(--ink-dim); border: none;
+  padding: 4px 12px; cursor: pointer;
+  font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: 0.04em; white-space: nowrap;
+  text-decoration: none;
+  transition: background 80ms, color 80ms;
+  box-sizing: border-box;
+}
+#atlasDropdown .atlas-row[data-color="blue"]   { border-left: 3px solid rgba(64, 144, 220, 0.85); }
+#atlasDropdown .atlas-row[data-color="green"]  { border-left: 3px solid rgba(72, 200, 120, 0.85); }
+#atlasDropdown .atlas-row[data-color="orange"] { border-left: 3px solid rgba(228, 138, 60, 0.85); }
+#atlasDropdown .atlas-row[data-color="yellow"] { border-left: 3px solid rgba(232, 196, 76, 0.85); }
+#atlasDropdown .atlas-row:hover { color: var(--ink); }
+#atlasDropdown .atlas-row[data-color="blue"]:hover   { background: rgba(64, 144, 220, 0.18); }
+#atlasDropdown .atlas-row[data-color="green"]:hover  { background: rgba(72, 200, 120, 0.18); }
+#atlasDropdown .atlas-row[data-color="orange"]:hover { background: rgba(228, 138, 60, 0.18); }
+#atlasDropdown .atlas-row[data-color="yellow"]:hover { background: rgba(232, 196, 76, 0.18); }
+
+/* Server status standalone button — lifted out of the data folder for
+   one-click visibility (per turn 145). */
+#atlasServerStandaloneBtn {
+  align-self: center; margin: 0 6px;
+  background: #1c2231; color: #7a8398;
+  border: 1px solid #2a3245; border-radius: 3px;
+  padding: 4px 10px; font-family: var(--mono); font-size: 11px;
+  cursor: pointer; line-height: 1;
+  display: inline-flex; align-items: center;
+  flex-shrink: 0;
+}
+#atlasServerStandaloneDot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; background: #6b7388; margin-right: 6px;
+}
+#atlasServerStandaloneBtn[data-status="up"] #atlasServerStandaloneDot { background: var(--good); }
+#atlasServerStandaloneBtn[data-status="down"] #atlasServerStandaloneDot { background: var(--bad); }
+
+/* Direct header buttons (compact / reset layout) — sized to match the
+   other compact header buttons. Forward clicks to the page-owned button
+   via the CMD_TO_PAGE_ID map in shell_chrome.js. */
+header .header-direct-btn {
+  align-self: center; flex-shrink: 0;
+  background: var(--panel-2); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 3px;
+  padding: 3px 10px; font-family: var(--mono); font-size: 10.5px;
+  letter-spacing: 0.03em; cursor: pointer;
+  line-height: 1; white-space: nowrap;
+  display: inline-flex; align-items: center;
+  transition: background 100ms, border-color 100ms;
+}
+header .header-direct-btn:hover {
+  background: var(--panel-3); border-color: var(--accent);
+}
+header .header-direct-btn[data-active="1"] {
+  background: var(--accent); color: #0e1116; border-color: var(--accent);
+  font-weight: 600;
 }
 
 /* Tab bar pinned below header */

@@ -18,8 +18,82 @@
 </head>
 <body>
 
+<header id="shell-header">
+  <!-- Chromosome (and any other) scope pickers live at the top of the
+       header per Quentin's request. The router renders pickers into
+       this <nav id="scopebar"> at navigate time. -->
+  <nav id="scopebar"></nav>
+  <span id="schemaBadge" style="display: none;"></span>
+  <span id="jsScriptsBadge" title="Loaded JavaScript modules registered as window globals.">JS · 0 scripts</span>
+
+  <!-- Flex spacer pushes the right-side cluster to the right edge -->
+  <div style="flex: 1;"></div>
+
+  <!-- BLUE folder — session / layout -->
+  <div class="header-folder" data-color="blue" title="Session and layout controls">
+    <button class="header-folder-btn" type="button">
+      <span class="dot">●</span>&nbsp;session
+      <span class="arrow">▾</span>
+    </button>
+    <div class="header-folder-panel" id="sessionPanel">
+      <button class="folder-btn" data-cmd="save-session" title="Save session JSON">💾 save</button>
+      <button class="folder-btn" data-cmd="load-session" title="Load session JSON">📂 load</button>
+      <button class="folder-btn" data-cmd="layout-mode" title="Toggle layout (fixed / free / compact)">📐 fixed</button>
+      <button class="folder-btn" data-cmd="reset-layout" title="Reset layout to defaults">↺ reset layout</button>
+    </div>
+  </div>
+
+  <!-- GREEN folder — modes -->
+  <div class="header-folder" data-color="green" title="Working modes">
+    <button class="header-folder-btn" type="button">
+      <span class="dot">●</span>&nbsp;mode
+      <span class="arrow">▾</span>
+    </button>
+    <div class="header-folder-panel" id="modePanel">
+      <button class="folder-btn" data-cmd="candidate-mode" title="Toggle candidate drafting mode">🏗 candidate mode</button>
+      <button class="folder-btn" data-cmd="auto-fill" title="Auto-fill haplotype labels">🪄 auto-fill</button>
+      <button class="folder-btn" data-cmd="ig-labels" title="Toggle I·g labels strip">I·g labels: on</button>
+    </div>
+  </div>
+
+  <!-- YELLOW folder — data -->
+  <div class="header-folder" data-color="yellow" title="Data tools">
+    <button class="header-folder-btn" type="button">
+      <span class="dot">●</span>&nbsp;data
+      <span class="arrow">▾</span>
+    </button>
+    <div class="header-folder-panel" id="dataPanel">
+      <button class="folder-btn" data-cmd="export-data" title="Download full atlas context as JSON">📥 export</button>
+      <button class="folder-btn" data-cmd="open-matrix" title="Open candidate × candidate Cramér's V matrix">🔗 matrix</button>
+      <button class="folder-btn" data-cmd="active-samples" title="Active samples subset">active: —</button>
+    </div>
+  </div>
+
+  <!-- Direct layout-mode + reset-layout buttons (also in the session folder,
+       surfaced here so the user can click them without opening the folder).
+       Clicks forward to the page-owned #layoutModeBtn / #resetLayoutBtn via
+       the same data-cmd relay that the session folder uses. -->
+  <button id="headerLayoutModeBtn" class="header-direct-btn" type="button"
+          data-cmd="layout-mode"
+          title="Toggle layout — fixed / free / compact">📐 compact</button>
+  <button id="headerResetLayoutBtn" class="header-direct-btn" type="button"
+          data-cmd="reset-layout"
+          title="Reset layout to defaults">↺ reset layout</button>
+
+  <!-- Server status standalone button -->
+  <button id="atlasServerStandaloneBtn" type="button" title="Atlas server status">
+    <span id="atlasServerStandaloneDot"></span><span id="atlasServerStandaloneLabel">server</span>
+  </button>
+
+  <!-- The atlas switcher lives in the topbar (left of the tabs) — the
+       user prefers that placement so pages render to its right on the
+       same row. Don't render a duplicate switcher here. -->
+
+  <!-- Theme toggle — cycles dark → light → academic -->
+  <button id="themeToggleBtn" type="button" title="Cycle theme">☀ light</button>
+</header>
+
 <nav id="topbar"></nav>
-<nav id="scopebar"></nav>
 <main id="app-root">
   <div id="boot">loading atlases…</div>
 </main>
@@ -45,6 +119,7 @@ import { AtlasRouter }       from './core/atlas_router.js';
 import { discover }          from './core/atlas_discovery.js';
 import { bootstrap }         from './core/atlas_api.js';
 import { loadMasterConfig }  from './core/master_config.js';
+import { attachShellChrome } from './core/shell_chrome.js';
 
 (async () => {
   try {
@@ -108,6 +183,11 @@ import { loadMasterConfig }  from './core/master_config.js';
     // Wire router (this also renders the topbar)
     const router = new AtlasRouter({ atlasState: state, registry, manifests });
     router.attach();
+
+    // Wire shell chrome (theme toggle + folder-button command relay).
+    // After the router so the header DOM elements exist by the time we
+    // bind listeners.
+    attachShellChrome();
 
     document.getElementById('boot')?.remove();
   } catch (err) {

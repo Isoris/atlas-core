@@ -42,8 +42,11 @@ export class AtlasRouter {
 
   attach() {
     window.addEventListener('hashchange', () => this._navigateFromHash());
+    // _navigateFromHash already calls _renderTopbar + _renderScopebar with
+    // the active atlas/page. Don't double-render here without args —
+    // _renderTopbar() with no atlas would clear the bar in multi-atlas mode
+    // (every section gets `continue`d because atlas_id !== undefined).
     this._navigateFromHash();
-    this._renderTopbar();
   }
 
   async navigate(atlas_id, page_id) {
@@ -255,6 +258,28 @@ export class AtlasRouter {
     if (!bar) return;
     bar.innerHTML = '';
 
+    // Orange settings gear — leftmost element on the topbar. Legacy: see
+    // monolith line 4983 (#globalSettingsBtn). Clicking it toggles the
+    // page's parameters sidebar (most pages render an <aside> with their
+    // own #sidebarToggleBtn; we forward the click).
+    const gear = document.createElement('button');
+    gear.id = 'globalSettingsBtn';
+    gear.type = 'button';
+    gear.title = 'Toggle the parameters sidebar';
+    gear.setAttribute('aria-label', 'Toggle parameters sidebar');
+    gear.textContent = '⚙';
+    gear.addEventListener('click', () => {
+      const pageToggle = document.getElementById('sidebarToggleBtn');
+      if (pageToggle) {
+        pageToggle.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      } else {
+        // Fallback: collapse the active page's <aside> directly.
+        const aside = document.querySelector('#app-root aside, main aside');
+        if (aside) aside.classList.toggle('collapsed');
+      }
+    });
+    bar.appendChild(gear);
+
     // Determine which stage to expand. If a page is active and we know
     // its stage (from the manifest), expand that stage; else fall back
     // to the first stage in manifest order. Stage pills CSS hides tabs
@@ -279,8 +304,8 @@ export class AtlasRouter {
     const multi = this.manifests.size > 1;
 
     // Multi-atlas switcher — small <select> at the left of the topbar
-    // when more than one atlas is registered. Mirrors the legacy
-    // atlasModeIndicator hover-dropdown (header line 4902+). Switching
+    // when more than one atlas is registered. Pages render to its right
+    // on the same row (topbar uses flex-wrap: nowrap). Switching
     // navigates to the chosen atlas's first page.
     if (multi) {
       const switcher = document.createElement('span');
@@ -430,6 +455,49 @@ export class AtlasRouter {
       }
 
       bar.appendChild(sec);
+    }
+  }
+
+  /**
+   * Render the header's atlas switcher dropdown — the legacy
+   * #atlasModeIndicator hover-dropdown. Color codes each row by atlas
+   * (inversion=blue, diversity=green, genome=orange, population=yellow);
+   * unrecognized atlases get a neutral color. The active row is the
+   * current atlas, surfaced as the always-visible button label.
+   */
+  _renderAtlasSwitcher(currentAtlas) {
+    const wrap   = document.getElementById('atlasModeIndicator');
+    const label  = document.getElementById('atlasActiveLabel');
+    const drop   = document.getElementById('atlasDropdown');
+    if (!wrap || !label || !drop) return;
+
+    const ATLAS_COLOR = {
+      inversion:    'blue',
+      diversity:    'green',
+      genome:       'orange',
+      population:   'yellow',
+      relatedness:  'green',
+    };
+
+    const activeMf = currentAtlas && this.manifests.get(currentAtlas);
+    label.textContent = (activeMf && activeMf.atlas_name) || currentAtlas || 'Atlas';
+    const activeColor = ATLAS_COLOR[currentAtlas] || 'blue';
+    wrap.dataset.color = activeColor;
+
+    drop.innerHTML = '';
+    for (const [aid, mf] of this.manifests) {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'atlas-row';
+      row.dataset.atlasMode = aid;
+      row.dataset.color = ATLAS_COLOR[aid] || 'blue';
+      row.title = mf.atlas_description || mf.atlas_name || aid;
+      row.textContent = (mf.atlas_name || aid) + (aid === currentAtlas ? '' : ' →');
+      row.addEventListener('click', () => {
+        const firstPage = mf.pages && mf.pages[0] && mf.pages[0].id;
+        if (firstPage) window.location.hash = `#/${aid}/${firstPage}`;
+      });
+      drop.appendChild(row);
     }
   }
 }

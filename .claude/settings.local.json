@@ -90,12 +90,30 @@
       "Bash(node --check shared/pop_tree.js)",
       "Bash(python3 -c \"import json; json.load\\(open\\('manifest.json'\\)\\); [json.load\\(open\\('registries/data/'+f\\)\\) for f in ['pages.registry.json','layers.registry.json','files.registry.json','operations.registry.json','slots.registry.json']]; print\\('JSON OK'\\)\")",
       "Bash(grep -nE \"color:|background:|border-left:|border-color:|#[0-9a-fA-F]{3,6}|rgb\" \"c:/Users/quent/Desktop/diversity-atlas/atlases/diversity/css/diversity.css\")",
-      "Bash(grep -onE \"#[0-9a-fA-F]{6}|rgba?\\\\\\([0-9, .]+\\\\\\)\" \"c:/Users/quent/Desktop/diversity-atlas/atlases/diversity/css/diversity.css\")"
+      "Bash(grep -onE \"#[0-9a-fA-F]{6}|rgba?\\\\\\([0-9, .]+\\\\\\)\" \"c:/Users/quent/Desktop/diversity-atlas/atlases/diversity/css/diversity.css\")",
+      "Bash(git -C \"c:/Users/quent/Desktop/inversion-atlas\" remote -v)",
+      "Bash(git -C \"c:/Users/quent/Desktop/inversion-atlas\" log --oneline -5)",
+      "Bash(git config *)",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/LICENSE\" \"c:/Users/quent/Desktop/genome-atlas/LICENSE\" && head -3 \"c:/Users/quent/Desktop/genome-atlas/LICENSE\")",
+      "Bash(git -C c:/Users/quent/Desktop/genome-atlas commit -m ' *)",
+      "Bash(git -C \"c:/Users/quent/Desktop/genome-atlas\" log --oneline)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(cp \"c:/Users/quent/Desktop/population-atlas/LICENSE\" \"c:/Users/quent/Desktop/diversity-atlas/LICENSE\")",
+      "Bash(cp \"c:/Users/quent/Desktop/population-atlas/.gitignore\" \"c:/Users/quent/Desktop/diversity-atlas/.gitignore\")",
+      "Bash(git -C c:/Users/quent/Desktop/diversity-atlas commit -m ' *)",
+      "Bash(git -C \"c:/Users/quent/Desktop/diversity-atlas\" log --oneline)",
+      "Bash(git -C \"c:/Users/quent/Desktop/diversity-atlas\" status -sb)",
+      "Bash(git -C \"c:/Users/quent/Desktop/diversity-atlas\" log --oneline -3)",
+      "Bash(git -C \"c:/Users/quent/Desktop/genome-atlas\" fetch --dry-run)",
+      "Bash(git -C \"c:/Users/quent/Desktop/genome-atlas\" log --oneline -3)",
+      "Bash(git -C \"c:/Users/quent/Desktop/genome-atlas\" status -sb)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",
       "C:\\Users\\quent\\Desktop\\relatedness-atlas\\atlases\\relatedness\\pages\\hub",
-      "C:\\Users\\quent\\Desktop\\diversity-atlas\\atlases\\diversity\\pages"
+      "C:\\Users\\quent\\Desktop\\diversity-atlas\\atlases\\diversity\\pages",
+      "c:\\Users\\quent\\Desktop\\genome-atlas"
     ]
   }
 }

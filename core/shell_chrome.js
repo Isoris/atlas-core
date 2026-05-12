@@ -100,7 +100,7 @@ function _wireFolderButtons() {
 }
 
 // =====================================================================
-// Server status probe — pings the atlas server's /healthz endpoint
+// Server status probe — pings the atlas server's /health endpoint
 // every 15s and reflects the result on the #atlasServerStandaloneBtn
 // indicator (green dot + "up", red "down", grey "probing"). Click opens
 // a small popup with the current status + the launcher command.
@@ -125,7 +125,7 @@ function _wireServerPing(baseUrl) {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), SERVER_PROBE_TIMEOUT_MS);
     try {
-      const r = await fetch(`${baseUrl.replace(/\/$/, '')}/healthz`, {
+      const r = await fetch(`${baseUrl.replace(/\/$/, '')}/health`, {
         method: 'GET', signal: ctrl.signal, cache: 'no-store',
       });
       setStatus(r.ok ? 'up' : 'down');

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "operation_entry.schema.json",
+  "title": "Operation entry — activator definition (server compute)",
+  "description": "One row in <atlas>/registries/data/operations.registry.json. Defines how to call an atlas backend endpoint (e.g. atlas_server.py) that produces a result the registry can serve. The activator counterpart to a 'source: file' layer entry: a 'source: operation' layer references one of these by name through its 'operation' field. See ACTIVATOR_EXTRACTOR.md for the conceptual mapping and core/registry_core.schema.json (definitions.operation_entry) for the mirrored inline definition used by the runtime meta-schema. This file is the canonical version; the inline copy in core/ tracks it.",
+  "type": "object",
+  "required": ["endpoint", "inputs", "cache_key", "cache_tier"],
+  "properties": {
+    "endpoint": {
+      "type": "string",
+      "description": "HTTP path on the atlas backend server (e.g. '/popstats/region'). Concatenated with the server's base URL by OperationRunner."
+    },
+    "method": {
+      "type": "string",
+      "enum": ["GET", "POST"],
+      "default": "POST",
+      "description": "HTTP method. POST is the default for compute endpoints (request body = JSON inputs). GET is for cheap pings or query-string endpoints."
+    },
+    "inputs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Names of slots / args that get assembled into the request body (POST) or query string (GET). The runner first checks args[name], then falls back to AtlasState.shared[name] and per-atlas buckets."
+    },
+    "output_schema": {
+      "type": "string",
+      "description": "Path to the JSON Schema that validates the response payload. Validation is soft — if the schema file resolves and is not flagged _status: 'pending', a minimal type + required-keys check runs. See OperationRunner._validateSoft in core/operation_runner.js."
+    },
+    "cache_key": {
+      "type": "string",
+      "description": "Template with {slot} substitution used to key the response in the registry's cache. Distinct argument combinations must produce distinct keys."
+    },
+    "cache_tier": {
+      "type": "string",
+      "enum": ["hot", "warm", "cold"],
+      "description": "Cache tier the response lives in (hot=RAM, warm=IndexedDB, cold=re-fetch each call). Most compute operations are warm."
+    },
+    "estimated_latency_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Informational; lets the shell decide whether to show a spinner or pre-warm. Not enforced."
+    },
+    "engine": {
+      "type": "string",
+      "description": "Informational reference to the C engine binary that backs this operation server-side (region_popstats, hobs_windower, angsd, instant_q, ...). The actual binary path comes from master_config.engines.<name>."
+    },
+    "query_params": {
+      "type": "object",
+      "description": "Only meaningful for method=GET. Map of query-string parameter name to (optional) description. Values are filled from args / AtlasState at call time. See core/operation_runner.js _buildUrl."
+    }
+  }
+}

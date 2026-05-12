@@ -49,6 +49,7 @@
 
     "operation_entry": {
       "type": "object",
+      "description": "Mirror of the canonical operation_entry schema at toolkit_registries/schemas/registry_schemas/operation_entry.schema.json. Keep these aligned — that file is the authoritative version; this inline copy exists so the meta-schema is self-contained.",
       "required": ["endpoint", "inputs", "cache_key", "cache_tier"],
       "properties": {
         "endpoint":              { "type": "string" },
@@ -58,7 +59,8 @@
         "cache_key":             { "type": "string", "description": "Template with {slot} substitution" },
         "cache_tier":            { "$ref": "#/definitions/tier" },
         "estimated_latency_ms":  { "type": "integer" },
-        "engine":                { "type": "string", "description": "Path to compute engine, informational" }
+        "engine":                { "type": "string", "description": "Path to compute engine, informational" },
+        "query_params":          { "type": "object", "description": "Only meaningful for method=GET. See operation_entry.schema.json." }
       }
     },
 

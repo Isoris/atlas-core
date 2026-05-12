@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "action_manifest.schema.json",
+  "title": "Action manifest — minimal request to run something",
+  "description": "JSON body submitted to POST /api/actions. The server validates the manifest, dispatches to the named runner (a per-atlas Python module), then runs the matching extractor to wrap the raw output in a layer envelope. Every accepted manifest is appended to registry/actions.log.jsonl. Kept intentionally small per PIPELINE_FLOW.md §'Minimal stable core'. Atlases may extend with extra top-level fields — additionalProperties is true.",
+  "type": "object",
+  "required": ["action_id", "type", "dataset_id", "runner"],
+  "additionalProperties": true,
+  "properties": {
+    "action_id":    { "type": "string", "pattern": "^act_[A-Za-z0-9_]+$", "description": "Stable id. Convention: 'act_' + timestamp_ms + '_' + 3-char suffix." },
+    "type":         { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Action kind (e.g. 'run_popstats', 'import_raw_result', 'normalize_layer'). Maps 1:1 to a runner in the atlas's dispatcher." },
+    "dataset_id":   { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Cohort_id (HIERARCHY_SPEC) or species_id (legacy). Scopes the action and its produced layers." },
+    "runner":       { "type": "string", "description": "Runner identifier; either a registry name in <atlas>/registries/data/actions.registry.json or a python module path like 'runners.popstats.run_fst'." },
+    "target":       { "type": "object", "description": "What slice the action runs against (chrom, start_bp, end_bp, groups, candidate_id, etc.). Runner-specific; validated against schema_in/<type>_v<N>.schema.json by the dispatcher.", "additionalProperties": true },
+    "params":       { "type": "object", "description": "Free-form runner parameters.", "additionalProperties": true },
+    "expected_outputs": {
+      "type": "array",
+      "description": "Declared output layer types. The dispatcher uses these to pick the right extractor and to validate the produced envelopes.",
+      "items": {
+        "type": "object",
+        "required": ["layer_type", "schema_version"],
+        "additionalProperties": false,
+        "properties": {
+          "layer_type":     { "type": "string" },
+          "schema_version": { "type": "string", "description": "e.g. 'fst_windows_v1' or 'staging_inversion_candidate_v0'." },
+          "stage":          { "type": "string", "enum": ["staging", "normalized"], "default": "normalized" }
+        }
+      }
+    },
+    "submitted_by": { "type": "string" },
+    "submitted_at": { "type": "string", "format": "date-time" },
+    "notes":        { "type": "string" }
+  }
+}

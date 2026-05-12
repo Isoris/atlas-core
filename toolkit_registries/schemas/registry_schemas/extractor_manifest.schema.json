@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "extractor_manifest.schema.json",
+  "title": "Extractor manifest — recipe for converting raw output files into a layer payload",
+  "description": "JSON entry the server uses to convert raw outputs (TSV, Excel, RDS, VCF, BED, custom JSON, …) into a layer payload that gets wrapped in layer_envelope.schema.json. Declared in <atlas>/registries/data/extractors.registry.json and picked by the dispatcher based on the action's expected_outputs[*].layer_type. The parser is a Python function with signature parse(input_files: dict[str, str], params: dict) -> dict. Kept intentionally small per PIPELINE_FLOW.md §'Minimal stable core'.",
+  "type": "object",
+  "required": ["extractor_id", "layer_type", "schema_version", "parser"],
+  "additionalProperties": true,
+  "properties": {
+    "extractor_id":   { "type": "string", "pattern": "^extract_[a-z][a-z0-9_]*$", "description": "Stable id. Convention: 'extract_' + layer_type + '_v' + N." },
+    "layer_type":     { "type": "string", "description": "Layer type tag this extractor produces (e.g. 'fst_windows', 'inversion_candidate'). Matches action_manifest.expected_outputs[*].layer_type." },
+    "schema_version": { "type": "string", "description": "Output schema (e.g. 'fst_windows_v1' for normalized, 'staging_inversion_candidate_v0' for staging). The dispatcher validates the parser's return against <atlas>/registries/schemas/schema_out/<schema_version>.schema.json." },
+    "stage":          { "type": "string", "enum": ["staging", "normalized"], "default": "normalized", "description": "Which envelope stage the parser output belongs to." },
+    "parser":         { "type": "string", "description": "Python identifier 'module.path.function_name'. Function signature: parse(input_files, params) -> dict." },
+    "input_files":    { "type": "object", "description": "Default input file slot map; the dispatcher may override per-action. Keys are runner-known names, values are paths or {action_workdir}-relative templates.", "additionalProperties": { "type": "string" } },
+    "input_format":   { "type": "string", "enum": ["tsv", "csv", "excel", "rds", "vcf", "bed", "json", "ndjson", "html", "custom"] },
+    "params":         { "type": "object", "additionalProperties": true }
+  }
+}

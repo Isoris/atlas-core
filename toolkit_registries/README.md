@@ -17,6 +17,8 @@ contract layer between them.
 | **HIERARCHY_SPEC.md** | Definitive data model: species → genome → cohort → group hierarchy, combine rule, hybrid F1 case, FK chain | active, v1 (chat ~34 fifth pass) |
 | **MASTER_CONFIG.md** | Spec for the master config — the one file that tells the registry where everything is on this machine | active, v1 (now documents `cohort_scoped` / `genome_scoped` per HIERARCHY_SPEC.md) |
 | **ACTIVATOR_EXTRACTOR.md** | Mental-model doc: maps "activator" (compute) and "extractor" (file read) onto the existing `source_kind` enum (file / operation / analysis / inline) | active |
+| **PIPELINE_FLOW.md** | Full action-pipeline contract: action manifest → runner → raw output → extractor → layer envelope → registry → Atlas. Includes worked examples (popstats end-to-end, Excel staging) and the per-atlas `schema_in/` + `schema_out/` + dispatcher convention. | active, v1 |
+| **ATLAS_WIRING_PROMPTS.md** | Paste-ready prompts to send to each downstream atlas / engine repo (inversion-atlas, unified-ancestry, any new atlas) telling them what to add on their side | active, v1 |
 | **DATABASE_DESIGN.md** | The 4-role mental model (samples / intervals / evidence / results) + FK discipline + integrity contract | active, canonical (refreshed chat ~34: R-API code preserved as illustrative; concepts canonical) |
 | **SPEC_DEFERRED.md** | Forward-looking specs for compute features that originated in the LANTA-era pipeline | each spec's Status line was rewritten in atlas-registry terms; bodies kept as scientific reference |
 | **schemas/registry_schemas/** | Core registry schemas. See breakdown below | active |
@@ -38,6 +40,10 @@ contract layer between them.
 | `result_row.schema.json` | Result manifest row | active |
 | `master_config.schema.json` | The master_config.yaml shape | active |
 | `operation_entry.schema.json` | Activator definition — one row in `<atlas>/registries/data/operations.registry.json` (canonical; mirrored inline in `atlas-core/core/registry_core.schema.json`) | active |
+| `action_manifest.schema.json` | Action-pipeline request body for `POST /api/actions` — see PIPELINE_FLOW.md | active, v1 |
+| `extractor_manifest.schema.json` | Recipe for converting raw outputs into a layer payload | active, v1 |
+| `layer_envelope.schema.json` | One envelope for both staging and normalized layers; `stage` field discriminates. Minimal stable core. | active, v1 |
+| `action_log_entry.schema.json` | One line in `registry/actions.log.jsonl` (append-only action audit log) | active, v1 |
 
 ---
 

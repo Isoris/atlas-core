@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "layer_envelope.schema.json",
+  "title": "Layer envelope — minimal stable core for any Atlas-registered layer",
+  "description": "ONE envelope shape for both staging and normalized layers. Discriminator is the 'stage' field. Per PIPELINE_FLOW.md §'Minimal stable core': dataset_id, layer_id, layer_type, schema_version, coordinate scope, sample scope, source files, provenance, status. The 'payload' field is loose for staging (any JSON) and validated against <atlas>/registries/schemas/schema_out/<schema_version>.schema.json for normalized. Atlases may extend with extra top-level fields — additionalProperties is true. Reversible: a staging layer can later be normalized into one (or many) normalized layers; provenance.source_layer_ids preserves the lineage.",
+  "type": "object",
+  "required": ["layer_id", "layer_type", "schema_version", "stage", "dataset_id", "status", "created_at"],
+  "additionalProperties": true,
+  "properties": {
+    "layer_id":       { "type": "string", "pattern": "^[A-Za-z0-9_]+$", "description": "Stable id, globally unique within the atlas registry." },
+    "layer_type":     { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Type tag (e.g. 'fst_windows', 'inversion_candidate', 'ancestry_q')." },
+    "schema_version": { "type": "string", "description": "Name of the schema this payload validates against, e.g. 'fst_windows_v1' (normalized) or 'staging_inversion_candidate_v0' (staging). Lives in <atlas>/registries/schemas/schema_out/<schema_version>.schema.json." },
+    "stage":          { "type": "string", "enum": ["staging", "normalized"], "description": "staging = loose capture, payload not strictly validated; normalized = Atlas-renderable, payload validated against schema_version." },
+    "dataset_id":     { "type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Cohort_id (HIERARCHY_SPEC) or species_id (legacy)." },
+
+    "coordinate": {
+      "type": ["object", "null"],
+      "description": "Optional coordinate scope. Null/absent = genome-wide or non-coordinate (e.g. sample metadata).",
+      "additionalProperties": false,
+      "properties": {
+        "chrom":    { "type": "string" },
+        "start_bp": { "type": "integer", "minimum": 0 },
+        "end_bp":   { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "sample_scope": {
+      "type": ["object", "null"],
+      "description": "Optional sample scope. Null/absent = whole-dataset.",
+      "additionalProperties": false,
+      "properties": {
+        "group_id":   { "type": "string" },
+        "group_ids":  { "type": "array", "items": { "type": "string" } },
+        "sample_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "source_files": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Paths to the raw files this layer was extracted from. Never lose this — it's the link back to the upstream pipeline."
+    },
+
+    "provenance": {
+      "type": "object",
+      "description": "Where this layer came from.",
+      "additionalProperties": true,
+      "properties": {
+        "action_id":        { "type": "string", "description": "FK into registry/actions.log.jsonl." },
+        "source_layer_ids": { "type": "array", "items": { "type": "string" }, "description": "FKs into the registry — staging or other normalized layers this was derived from. Lets a converter trace back to the staging capture." },
+        "runner":           { "type": "string" },
+        "extractor":        { "type": "string" },
+        "engine":           { "type": "string", "description": "Compute engine tag (e.g. 'region_popstats', 'instant_q', 'angsd_patched')." },
+        "engine_version":   { "type": "string" },
+        "config_hash":      { "type": "string", "description": "sha256 of the action params. Lets integrity checks detect param drift." }
+      }
+    },
+
+    "status":     { "type": "string", "enum": ["review", "active", "deprecated", "stale", "superseded"], "default": "active", "description": "Lifecycle. 'review' = new/unaudited; 'active' = serve to Atlas; 'stale' = integrity check flagged drift; 'superseded' = a newer normalized layer covers this; 'deprecated' = hide." },
+    "created_at": { "type": "string", "format": "date-time" },
+    "created_by": { "type": "string" },
+
+    "payload": {
+      "description": "The typed data the Atlas renders. For stage='normalized' the dispatcher validates this against schema_out/<schema_version>.schema.json. For stage='staging' the payload is any JSON (loose capture)."
+    }
+  }
+}

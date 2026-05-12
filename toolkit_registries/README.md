@@ -15,11 +15,12 @@ contract layer between them.
 | File | Purpose | Status |
 |---|---|---|
 | **HIERARCHY_SPEC.md** | Definitive data model: species → genome → cohort → group hierarchy, combine rule, hybrid F1 case, FK chain | active, v1 (chat ~34 fifth pass) |
-| **MASTER_CONFIG.md** | Spec for the master config — the one file that tells the registry where everything is on this machine | active, v1 |
+| **MASTER_CONFIG.md** | Spec for the master config — the one file that tells the registry where everything is on this machine | active, v1 (now documents `cohort_scoped` / `genome_scoped` per HIERARCHY_SPEC.md) |
+| **ACTIVATOR_EXTRACTOR.md** | Mental-model doc: maps "activator" (compute) and "extractor" (file read) onto the existing `source_kind` enum (file / operation / analysis / inline) | active |
 | **DATABASE_DESIGN.md** | The 4-role mental model (samples / intervals / evidence / results) + FK discipline + integrity contract | active, canonical (refreshed chat ~34: R-API code preserved as illustrative; concepts canonical) |
 | **SPEC_DEFERRED.md** | Forward-looking specs for compute features that originated in the LANTA-era pipeline | each spec's Status line was rewritten in atlas-registry terms; bodies kept as scientific reference |
 | **schemas/registry_schemas/** | Core registry schemas. See breakdown below | active |
-| **schemas/structured_block_schemas/** | 41 per-aspect schemas for evidence blocks (boundary_refined, gene_cargo, mendelian, etc.) + `BK_KEYS_EXPLAINED.md` | draft; polished per-page during atlas migration |
+| **schemas/structured_block_schemas/** | 40 per-aspect schemas for evidence blocks (boundary_refined, gene_cargo, mendelian, etc.) + `BK_KEYS_EXPLAINED.md` + `INDEX_remaining_blocks.json` | draft; polished per-page during atlas migration |
 | **schemas/specs/** | 3 deeper specs: `INVERSION_REGISTRY_SPECIFICATION_v2.md`, `STRUCTURED_BLOCK_SCHEMAS.md`, `CHARACTERIZATION_CONVERGENCE_RULES.md` | canonical scientific contracts; no LANTA-API contamination |
 
 ### registry_schemas/ breakdown
@@ -36,6 +37,7 @@ contract layer between them.
 | `evidence_key.schema.json` | Per-key evidence extraction contract | active |
 | `result_row.schema.json` | Result manifest row | active |
 | `master_config.schema.json` | The master_config.yaml shape | active |
+| `operation_entry.schema.json` | Activator definition — one row in `<atlas>/registries/data/operations.registry.json` (canonical; mirrored inline in `atlas-core/core/registry_core.schema.json`) | active |
 
 ---
 

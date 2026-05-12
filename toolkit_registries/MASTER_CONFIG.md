@@ -76,7 +76,7 @@ Discovery order (engine startup, in `atlas-core/core/`):
 
 | Section | Required | Purpose |
 |---|---|---|
-| `atlas`    | yes | workspace identity (root, default atlas, default chrom) |
+| `atlas`    | yes | workspace identity (root, default atlas, default chrom, active cohort) |
 | `species`  | no  | list of species this atlas knows about (multi-species support) |
 | `roots`    | yes | named root directories the registry routes to |
 | `server`   | no  | popstats_server.py settings (bind, CORS, caches) |
@@ -140,6 +140,17 @@ When the active species is `gariepinus`, `precomp` resolves to
 entry resolves to `./data/macrocephalus/precomp`. **One root entry,
 two species, no duplication in the config.**
 
+> **Status (per HIERARCHY_SPEC.md):** `species_scoped` is the legacy
+> flag. The current model in HIERARCHY_SPEC.md §"Where data physically
+> lives" supersedes it with **`cohort_scoped: true`** (templates
+> `{cohort_id}`) and **`genome_scoped: true`** (templates `{genome_id}`).
+> The three flags are mutually exclusive on any one root. The example
+> above stays as a back-compat illustration; new roots should pick the
+> cohort/genome flags. See §"Cohort-scoped and genome-scoped roots"
+> below for the current contract. Per-page migration flips roots from
+> `species_scoped` to the appropriate cohort/genome flag as each page
+> is touched (not all-at-once).
+
 **4. Roots NOT species-scoped are shared across species.**
 Candidates, working_dir, cache, comparative — flat roots; species_id
 is recorded as a field inside the data, not in the path. A candidate
@@ -194,8 +205,9 @@ Each root is a named directory with a 4-role assignment:
 ```yaml
 roots:
   cohort_relatedness:
-    path: "./data/cohort/relatedness"
+    path: "./data/cohorts/{cohort_id}/relatedness"
     role: "samples"
+    cohort_scoped: true
     description: "ngsRelate / KING raw outputs."
 ```
 
@@ -289,6 +301,65 @@ atlas registry inherit the role from their root, and the registry's
 `reg.results.X()` as friendly wrappers around `reg.resolve(...)`.
 
 A root that mixes roles is a smell: split it.
+
+---
+
+## Cohort-scoped and genome-scoped roots
+
+Per HIERARCHY_SPEC.md, the current model assigns each path-templated
+root one of three mutually exclusive scoping flags:
+
+| Flag | Slot in path | Resolved from | Use for |
+|---|---|---|---|
+| `species_scoped: true` | `{species_id}` | active species | **legacy**; per-page back-compat only |
+| `cohort_scoped: true`  | `{cohort_id}`  | `atlas.active_cohort` (or `args.cohort_id`) | `relatedness`, `ancestry`, `popstats`, `candidates`, `groups` |
+| `genome_scoped: true`  | `{genome_id}`  | active cohort's `genome_id` FK (or `args.genome_id`) | `precomp`, `dosage`, anything coordinate-system-bound |
+| (none)                 | flat           | —              | `comparative`, `working_dir`, `cache` |
+
+At most one of the three may be true on any root. When none is true,
+the path is flat and shared across species / cohorts / genomes; the
+relevant ids live inside the data files, not in the path.
+
+```yaml
+# atlas-section addition for cohort/genome resolution
+atlas:
+  workspace_root: "."
+  active_atlas:   "inversion"
+  active_cohort:  "main_226_hatchery"   # ← drives {cohort_id} and {genome_id}
+
+roots:
+  precomp:
+    path:          "./data/genomes/{genome_id}/precomp"
+    role:          "intervals"
+    genome_scoped: true
+
+  cohort_relatedness:
+    path:          "./data/cohorts/{cohort_id}/relatedness"
+    role:          "samples"
+    cohort_scoped: true
+
+  candidates:
+    path:          "./data/cohorts/{cohort_id}/candidates"
+    role:          "evidence"
+    cohort_scoped: true
+    writable:      true
+
+  comparative:
+    path:          "./data/comparative"
+    role:          "intervals"
+    # no scoping flag — cross-species surface
+```
+
+`{genome_id}` is resolved through the active cohort's FK (cohort →
+genome) so callers only have to set `active_cohort`. An explicit
+`args.genome_id` overrides for cross-cohort queries.
+
+**Migration is per-page, not all-at-once.** The current
+`master_config.example.yaml` still ships with `species_scoped: true`
+on most roots — that stays valid for layers that haven't been touched
+yet. When a page1+ migration step touches a layer, that layer's root
+flips from `species_scoped` to the appropriate cohort/genome flag in
+one PR.
 
 ---
 

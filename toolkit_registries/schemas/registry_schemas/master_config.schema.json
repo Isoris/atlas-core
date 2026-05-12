@@ -26,6 +26,11 @@
           "type": ["string", "null"],
           "description": "Default chromosome on first page load. Optional.",
           "default": null
+        },
+        "active_cohort": {
+          "type": ["string", "null"],
+          "description": "Cohort_id the registry resolves {cohort_id} against for cohort_scoped roots, and through which {genome_id} is resolved (via the cohort's genome_id FK) for genome_scoped roots. Optional for atlases that don't yet use the cohort/genome scoping flags. Per HIERARCHY_SPEC.md.",
+          "default": null
         }
       }
     },
@@ -58,7 +63,7 @@
 
     "roots": {
       "type": "object",
-      "description": "Named root directories the registry routes to. Each layer entry references a root by name (e.g. root: 'cohort_relatedness') rather than by literal path. Roots with species_scoped: true allow {species_id} substitution in their path, so a single root entry serves all known species.",
+      "description": "Named root directories the registry routes to. Each layer entry references a root by name (e.g. root: 'cohort_relatedness') rather than by literal path. Roots may declare one of three mutually-exclusive scoping flags: species_scoped (legacy, single {species_id} substitution), cohort_scoped (current — {cohort_id} substitution per HIERARCHY_SPEC.md), or genome_scoped (current — {genome_id} substitution). Per HIERARCHY_SPEC.md the cohort/genome flags supersede species_scoped; species_scoped is retained for per-page migration back-compat. At most one of the three may be true on a single root.",
       "minProperties": 1,
       "additionalProperties": { "$ref": "#/definitions/root_entry" }
     },
@@ -100,7 +105,7 @@
       "properties": {
         "path": {
           "type": "string",
-          "description": "Filesystem path to this root. May be relative (resolved against atlas.workspace_root) or absolute. ${roots.X.path} substitution is supported. When species_scoped is true, the path may contain {species_id} which the registry resolves at fetch time."
+          "description": "Filesystem path to this root. May be relative (resolved against atlas.workspace_root) or absolute. ${roots.X.path} substitution is supported. The path may contain at most one templating slot resolved at fetch time: {species_id} when species_scoped is true, {cohort_id} when cohort_scoped is true, {genome_id} when genome_scoped is true."
         },
         "role": {
           "type": "string",
@@ -110,7 +115,17 @@
         "species_scoped": {
           "type": "boolean",
           "default": false,
-          "description": "True = the root's path contains {species_id} which the registry templates from the active species (or args.species_id) at fetch time. Use for read-only data roots that exist per-species (precomp, cohort, beagle, bams, reference). Leave false for roots shared across species (candidates, comparative, working_dir, cache) \u2014 species_id is recorded inside the data files in that case."
+          "description": "LEGACY (per HIERARCHY_SPEC.md \u00a7'Where data physically lives', superseded by cohort_scoped / genome_scoped). True = the root's path contains {species_id} which the registry templates from the active species (or args.species_id) at fetch time. Retained for per-page migration back-compat; new roots should use cohort_scoped or genome_scoped instead. Mutually exclusive with cohort_scoped and genome_scoped."
+        },
+        "cohort_scoped": {
+          "type": "boolean",
+          "default": false,
+          "description": "True = the root's path contains {cohort_id} which the registry templates from the active cohort (or args.cohort_id) at fetch time. Use for roots whose contents are cohort-scoped per HIERARCHY_SPEC.md: relatedness, ancestry, popstats, candidates, groups. The active cohort_id is read from master_config.atlas.active_cohort (or args). Mutually exclusive with species_scoped and genome_scoped."
+        },
+        "genome_scoped": {
+          "type": "boolean",
+          "default": false,
+          "description": "True = the root's path contains {genome_id} which the registry templates from the active cohort's genome_id (or args.genome_id) at fetch time. Use for roots whose contents are genome-scoped per HIERARCHY_SPEC.md: precomp, dosage (anything tied to a specific assembly's coordinates). Resolved via the active cohort's FK to genome. Mutually exclusive with species_scoped and cohort_scoped."
         },
         "writable": {
           "type": "boolean",

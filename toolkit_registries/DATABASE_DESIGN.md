@@ -38,7 +38,7 @@ tables.
   checks at write time) is the right discipline for any registry,
   not just an R toolkit.
 - The schemas (sample_group, candidate_interval, evidence_key,
-  result_row, plus 41 structured-block schemas under
+  result_row, plus 40 structured-block schemas under
   `schemas/structured_block_schemas/`) are the canonical contracts
   the atlas registry validates writes against. Most are still draft
   and get polished per-page during migration.
@@ -82,7 +82,7 @@ on-disk R-managed tables.
 
 The on-disk layout sections below describe what the LANTA pipeline's
 `<role>_registry/` directories looked like. They remain useful as
-reference for the 41 structured-block schemas (which validate
+reference for the 40 structured-block schemas (which validate
 per-candidate evidence files in the new `candidates` root) and for
 the `result_row` schema (which now describes the JSON shape of items
 in the `results` root). **They are no longer the authoritative

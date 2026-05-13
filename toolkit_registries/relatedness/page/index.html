@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Relatedness registry — chains and compatibility</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #6c727f;
+    --bg: #fafafa;
+    --bg-card: #fff;
+    --border: #d8dce3;
+    --accent: #2b6cb0;
+
+    --chain-ngsrelate:   #2f855a;
+    --chain-ngspedigree: #2c7a7b;
+    --chain-mendelian:   #5a3d99;
+
+    --ok:    #2f855a;
+    --warn:  #b7791f;
+    --fail:  #c53030;
+    --info:  #4c51bf;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+               font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 16px 24px 10px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+  h1 { margin: 0; font-size: 16px; font-weight: 600; }
+  .sub { color: var(--muted); margin-top: 3px; font-size: 12.5px; }
+
+  .controls { padding: 10px 24px; background: var(--bg-card); border-bottom: 1px solid var(--border);
+              display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+  .controls label { display: flex; align-items: center; gap: 6px; }
+  .controls select, .controls input { padding: 5px 9px; border: 1px solid var(--border); border-radius: 4px;
+                                       background: var(--bg-card); color: var(--fg); font-size: 12.5px; }
+  .controls .stat { margin-left: auto; }
+
+  section { padding: 18px 24px; }
+  h2 { font-size: 14px; font-weight: 600; margin: 6px 0 10px; }
+
+  /* ------ chain visualization ------ */
+  .chain {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 18px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  .chain-meta { font-size: 12px; color: var(--muted); }
+  .chain-meta .heading { color: var(--fg); font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+  .chain-meta .row { margin: 1px 0; }
+  .chain-meta code { font-size: 11.5px; }
+  .chain-steps { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
+
+  .step {
+    flex: 0 0 auto;
+    min-width: 220px;
+    background: var(--bg-card);
+    border: 2px solid;
+    border-radius: 6px;
+    padding: 9px 12px;
+    margin-bottom: 6px;
+    position: relative;
+  }
+  .step.ngsrelate    { border-color: var(--chain-ngsrelate); }
+  .step.ngspedigree  { border-color: var(--chain-ngspedigree); }
+  .step.mendelian    { border-color: var(--chain-mendelian); }
+  .step.other        { border-color: var(--muted); }
+
+  .step .ana {
+    display: inline-block; padding: 1px 8px; border-radius: 3px;
+    color: white; font-size: 10.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .step.ngsrelate    .ana { background: var(--chain-ngsrelate); }
+  .step.ngspedigree  .ana { background: var(--chain-ngspedigree); }
+  .step.mendelian    .ana { background: var(--chain-mendelian); }
+  .step.other        .ana { background: var(--muted); }
+
+  .step .rid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+               font-size: 12px; font-weight: 600; word-break: break-all; }
+  .step .meta { color: var(--muted); font-size: 11.5px; margin-top: 4px; line-height: 1.4; }
+  .step .meta .k { display: inline-block; min-width: 70px; }
+
+  .arrow {
+    align-self: center;
+    padding: 0 8px;
+    font-size: 18px;
+    color: var(--ok);
+    user-select: none;
+  }
+
+  .step .badge {
+    display: inline-block; padding: 1px 7px; border-radius: 3px;
+    font-size: 10.5px; font-weight: 500; margin-right: 4px; margin-top: 4px;
+  }
+  .badge.compat-in   { background: #c6f6d5; color: var(--ok); }
+  .badge.compat-out  { background: #c6f6d5; color: var(--ok); }
+  .badge.ready-for   { background: #bee3f8; color: var(--info); }
+  .badge.orphan      { background: #fefcbf; color: var(--warn); }
+  .badge.contract-fail { background: #fed7d7; color: var(--fail); }
+
+  /* ------ all-results table ------ */
+  .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead th { background: var(--bg-card); text-align: left; padding: 8px 12px; color: var(--muted);
+             font-weight: 600; font-size: 11.5px; border-bottom: 1px solid var(--border);
+             text-transform: uppercase; letter-spacing: 0.03em; }
+  tbody td { padding: 7px 12px; border-bottom: 1px solid #eef0f4; vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody td.code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; }
+
+  .empty { padding: 30px; color: var(--muted); }
+  .error { padding: 30px; color: var(--fail); }
+  .footer { padding: 12px 24px; color: var(--muted); font-size: 11.5px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Relatedness registry — chains and compatibility</h1>
+  <div class="sub">ngsRelate → ngsPedigree → mendelian. Highlighted in green when the contract holds end-to-end.</div>
+</header>
+
+<div class="controls">
+  <label>filter by sample_set
+    <select id="filter-sample"><option value="">(any)</option></select>
+  </label>
+  <label>filter by interval
+    <select id="filter-interval"><option value="">(any)</option></select>
+  </label>
+  <span class="stat" id="counts"></span>
+</div>
+
+<section>
+  <h2>Chains (existing + ready-to-run)</h2>
+  <div id="chains"></div>
+</section>
+
+<section>
+  <h2>All registered results</h2>
+  <div class="table-wrap"><div id="all-results"></div></div>
+</section>
+
+<div class="footer" id="footer"></div>
+
+<script>
+// ===== TSV loader =================================================== //
+
+function parseTSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.length > 0);
+  if (lines.length === 0) return [];
+  const header = lines[0].split("\t");
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split("\t");
+    const row = {};
+    header.forEach((h, j) => row[h] = cols[j] !== undefined ? cols[j] : "");
+    rows.push(row);
+  }
+  return rows;
+}
+
+async function fetchTsv(rel) {
+  const resp = await fetch(rel, { cache: "no-store" });
+  if (!resp.ok) throw new Error(`${rel} → HTTP ${resp.status}`);
+  return parseTSV(await resp.text());
+}
+
+const TSVS = [
+  ["sample_sets",      "../01_registry/sample_sets.tsv",      "sample_set_id"],
+  ["group_sets",       "../01_registry/group_sets.tsv",       "group_set_id"],
+  ["interval_sets",    "../01_registry/interval_sets.tsv",    "interval_set_id"],
+  ["site_sets",        "../01_registry/site_sets.tsv",        "site_set_id"],
+  ["input_values",     "../01_registry/input_values.tsv",     "value_id"],
+  ["analysis_results", "../01_registry/analysis_results.tsv", "result_id"],
+  ["analysis_modes",   "../01_registry/analysis_modes.tsv",   null], // composite key
+];
+
+let DB = {};
+
+async function loadAll() {
+  for (const [name, path, key] of TSVS) {
+    try {
+      const rows = await fetchTsv(path);
+      if (key) {
+        const m = {}; for (const r of rows) if (r[key]) m[r[key]] = r;
+        DB[name] = { rows, by: m };
+      } else {
+        DB[name] = { rows };
+      }
+    } catch (e) {
+      const c = document.getElementById("chains");
+      c.innerHTML = `<div class="error">Could not load ${path} — ${e.message}.<br>
+        Run <code>python -m http.server -d toolkit_registries/relatedness 8000</code> from
+        the repo root, then open <code>http://127.0.0.1:8000/page/</code>.</div>`;
+      throw e;
+    }
+  }
+}
+
+// ===== Compatibility logic ============================================= //
+
+// PRODUCES_BY_TYPE — what does each analysis_type emit (from analysis_modes.tsv)
+function produceTagOf(analysisType) {
+  const modes = (DB.analysis_modes && DB.analysis_modes.rows) || [];
+  for (const m of modes) {
+    if (m.analysis_type === analysisType) return m.produces;
+  }
+  return "";
+}
+
+// CONSUMES_BY_TYPE — which analysis_types take a produced tag as upstream input
+function consumersOf(producedTag) {
+  if (!producedTag) return [];
+  const out = [];
+  const modes = (DB.analysis_modes && DB.analysis_modes.rows) || [];
+  for (const m of modes) {
+    const req = (m.required_dimensions || "").split(",").map(s => s.trim());
+    if (req.includes(producedTag.replace("_res", "_result"))
+        || req.includes(producedTag)
+        || (producedTag === "relatedness_res" && req.includes("ngsrelate_result"))
+        || (producedTag === "pedigree_result"  && req.includes("pedigree_result"))) {
+      out.push(`${m.analysis_type}/${m.mode}`);
+    }
+  }
+  return [...new Set(out)];
+}
+
+// CHAINS — group results by walking input_result_id pointers.
+// Returns an array of arrays (each inner array = one chain, ordered upstream → downstream).
+function buildChains() {
+  const results = (DB.analysis_results && DB.analysis_results.rows) || [];
+  const byId = Object.fromEntries(results.map(r => [r.result_id, r]));
+
+  // For each result, find its downstream consumers (rows whose input_result_id == this id)
+  const downstream = {};
+  for (const r of results) {
+    if (r.input_result_id) {
+      (downstream[r.input_result_id] = downstream[r.input_result_id] || []).push(r.result_id);
+    }
+  }
+
+  // Find chain heads — results with no upstream input_result_id
+  const heads = results.filter(r => !r.input_result_id);
+
+  // Walk forward from each head
+  const chains = [];
+  function walk(rid, path) {
+    path = [...path, rid];
+    const kids = downstream[rid] || [];
+    if (kids.length === 0) { chains.push(path); return; }
+    for (const k of kids) walk(k, path);
+  }
+  for (const h of heads) walk(h.result_id, []);
+
+  // Drop singleton "chains" that are also part of longer chains
+  const longerCovers = new Set();
+  for (const c of chains) {
+    if (c.length > 1) for (const id of c) longerCovers.add(id);
+  }
+  return chains.filter(c => c.length > 1 || !longerCovers.has(c[0]));
+}
+
+function contractStatus(r) {
+  // Light contract check (subset of check_result_contract.py): every FK resolves.
+  const checks = [
+    ["sample_set_id",   "sample_sets"],
+    ["group_set_id",    "group_sets"],
+    ["interval_set_id", "interval_sets"],
+    ["site_set_id",     "site_sets"],
+    ["input_value_id",  "input_values"],
+    ["input_result_id", "analysis_results"],
+  ];
+  for (const [col, table] of checks) {
+    const v = r[col];
+    if (v && !DB[table].by[v]) return { ok: false, why: `unknown ${col}: ${v}` };
+  }
+  return { ok: true };
+}
+
+// Find OTHER results that COULD chain to/from this one but currently don't.
+// Compatible = same sample_set + matching analysis-type pairing per analysis_modes.
+function readyForFor(r) {
+  const out = [];
+  const myProduces = produceTagOf(r.analysis_type);
+  if (!myProduces) return out;
+  const consumers = consumersOf(myProduces);
+  for (const consumerKey of consumers) {
+    const [consumerType] = consumerKey.split("/");
+    // Already wired? Look for existing downstream result of that type.
+    const wired = (DB.analysis_results.rows || []).some(other =>
+      other.analysis_type === consumerType && other.input_result_id === r.result_id
+    );
+    if (wired) continue;
+    out.push(consumerKey);
+  }
+  return out;
+}
+
+// ===== Rendering ====================================================== //
+
+function classFor(analysisType) {
+  if (analysisType === "ngsrelate" || analysisType === "ngspedigree" || analysisType === "mendelian") {
+    return analysisType;
+  }
+  return "other";
+}
+
+function stepCard(r) {
+  const cls = classFor(r.analysis_type);
+  const cs = contractStatus(r);
+  const readyFor = readyForFor(r);
+
+  const upstream = r.input_result_id ? `<span class="badge compat-in">upstream ✓</span>` : "";
+  const ready    = readyFor.map(c => `<span class="badge ready-for">ready for ${c}</span>`).join("");
+  const failBadge = !cs.ok ? `<span class="badge contract-fail">${cs.why}</span>` : "";
+
+  return `
+    <div class="step ${cls}">
+      <div class="ana">${r.analysis_type}</div>
+      <div class="rid">${r.result_id}</div>
+      <div class="meta">
+        <div><span class="k">samples</span> ${r.sample_set_id || "—"}</div>
+        <div><span class="k">interval</span> ${r.interval_set_id || "—"}</div>
+        <div><span class="k">sites</span> ${r.site_set_id || "—"}</div>
+        <div><span class="k">value</span> ${r.input_value_id || "—"}</div>
+        ${r.input_result_id ? `<div><span class="k">input_result</span> ${r.input_result_id}</div>` : ""}
+      </div>
+      <div>${upstream}${ready}${failBadge}</div>
+    </div>`;
+}
+
+function arrow() {
+  return `<div class="arrow">→</div>`;
+}
+
+function renderChains(filtered) {
+  const chains = buildChains();
+  const visible = chains.filter(c => c.some(rid => filtered.has(rid)));
+
+  const root = document.getElementById("chains");
+  if (visible.length === 0) {
+    root.innerHTML = `<div class="empty">No chains match the current filters.</div>`;
+    return;
+  }
+
+  let html = "";
+  for (const ridList of visible) {
+    const results = ridList.map(rid => DB.analysis_results.by[rid]);
+    const head = results[0];
+    const last = results[results.length - 1];
+
+    const chainKind = results.map(r => r.analysis_type).join(" → ");
+    const allOk = results.every(r => contractStatus(r).ok);
+    const headSamples = head.sample_set_id;
+    const headInterval = head.interval_set_id;
+
+    html += `<div class="chain">
+      <div class="chain-meta">
+        <div class="heading">${chainKind}</div>
+        <div class="row"><code>${ridList.length}</code> step(s)</div>
+        <div class="row">samples: <code>${headSamples}</code></div>
+        <div class="row">interval: <code>${headInterval}</code></div>
+        <div class="row">contract: ${allOk ? '<span style="color:var(--ok)">✓ OK end-to-end</span>'
+                                            : '<span style="color:var(--fail)">✗ at least one step has unresolved FK</span>'}</div>
+      </div>
+      <div class="chain-steps">`;
+    for (let i = 0; i < results.length; i++) {
+      html += stepCard(results[i]);
+      if (i < results.length - 1) html += arrow();
+    }
+    html += `</div></div>`;
+  }
+  root.innerHTML = html;
+}
+
+function renderTable(filtered) {
+  const rows = (DB.analysis_results.rows || []).filter(r => filtered.has(r.result_id));
+  if (rows.length === 0) {
+    document.getElementById("all-results").innerHTML = `<div class="empty">No results match the current filters.</div>`;
+    return;
+  }
+  let html = `<table>
+    <thead><tr>
+      <th>result_id</th><th>type</th><th>samples</th><th>interval</th><th>sites</th>
+      <th>value / upstream</th><th>method</th><th>compatibility</th>
+    </tr></thead><tbody>`;
+  for (const r of rows) {
+    const cs = contractStatus(r);
+    const readyFor = readyForFor(r);
+    const compat = [];
+    if (r.input_result_id) compat.push(`<span class="badge compat-in">upstream ✓</span>`);
+    for (const k of readyFor) compat.push(`<span class="badge ready-for">ready for ${k}</span>`);
+    if (compat.length === 0 && !readyFor.length) compat.push(`<span class="badge orphan">no downstream wired yet</span>`);
+    if (!cs.ok) compat.push(`<span class="badge contract-fail">${cs.why}</span>`);
+    html += `<tr>
+      <td class="code">${r.result_id}</td>
+      <td>${r.analysis_type}</td>
+      <td class="code">${r.sample_set_id || ""}</td>
+      <td class="code">${r.interval_set_id || ""}</td>
+      <td class="code">${r.site_set_id || ""}</td>
+      <td class="code">${r.input_value_id || r.input_result_id || ""}</td>
+      <td>${r.method_id || ""}</td>
+      <td>${compat.join(" ")}</td>
+    </tr>`;
+  }
+  html += `</tbody></table>`;
+  document.getElementById("all-results").innerHTML = html;
+}
+
+function applyFilters() {
+  const fs = document.getElementById("filter-sample").value;
+  const fi = document.getElementById("filter-interval").value;
+  const all = (DB.analysis_results.rows || []);
+  const filtered = new Set(
+    all.filter(r => (!fs || r.sample_set_id === fs) && (!fi || r.interval_set_id === fi))
+       .map(r => r.result_id)
+  );
+  renderChains(filtered);
+  renderTable(filtered);
+  document.getElementById("counts").textContent =
+    `${filtered.size} / ${all.length} result(s)  •  `
+    + `${(DB.sample_sets.rows || []).length} sample set(s)  •  `
+    + `${(DB.interval_sets.rows || []).length} interval set(s)  •  `
+    + `${(DB.input_values.rows || []).length} input value(s)`;
+}
+
+function populateFilters() {
+  const all = (DB.analysis_results.rows || []);
+  const samples   = [...new Set(all.map(r => r.sample_set_id).filter(Boolean))].sort();
+  const intervals = [...new Set(all.map(r => r.interval_set_id).filter(Boolean))].sort();
+  for (const s of samples) {
+    const o = document.createElement("option"); o.value = o.textContent = s;
+    document.getElementById("filter-sample").appendChild(o);
+  }
+  for (const v of intervals) {
+    const o = document.createElement("option"); o.value = o.textContent = v;
+    document.getElementById("filter-interval").appendChild(o);
+  }
+}
+
+document.getElementById("filter-sample").addEventListener("input", applyFilters);
+document.getElementById("filter-interval").addEventListener("input", applyFilters);
+
+(async () => {
+  await loadAll();
+  populateFilters();
+  applyFilters();
+  document.getElementById("footer").innerHTML =
+    `Loaded from <code>../01_registry/*.tsv</code> · `
+    + `analysis_modes drives compatibility: a result of analysis_type X is "ready for" `
+    + `analysis_type Y when Y's mode requires X's <code>produces</code> as upstream input.`;
+})();
+</script>
+
+</body>
+</html>

@@ -197,6 +197,45 @@ For chained analyses (ngspedigree consumes a relatedness_res), use
 (sample_set, group_set, interval_set, site_set) from the upstream row.
 No re-typing.
 
+## The page — open and see the chains
+
+A single-file HTML viewer at `page/index.html`. Loads the six TSVs
+directly (no Python build step), groups results into chains, and
+highlights compatibility:
+
+- **Wired chains** — every `analysis_results` row that points at an
+  upstream via `input_result_id` is grouped with its upstream and
+  downstream rows. The whole chain renders as a coloured row of
+  cards with green arrows between them. Each cell is colour-coded by
+  analysis type (ngsRelate green, ngsPedigree teal, mendelian
+  purple). The header says **"contract: ✓ OK end-to-end"** when every
+  step's FKs resolve.
+
+- **Ready-for badges** — orphan results (no current consumer) get a
+  blue **"ready for ngspedigree/global"** badge when their
+  `produces` (looked up in `analysis_modes.tsv`) matches a downstream
+  analysis's `required_dimensions`. So you immediately see *"this
+  ngsRelate result has no pedigree downstream yet, but it could feed one"*.
+
+- **Failed contracts** — any FK that doesn't resolve renders as a red
+  badge so you spot stale rows at a glance.
+
+Open it:
+
+```bash
+python3 -m http.server -d toolkit_registries/relatedness 8765
+# → http://127.0.0.1:8765/page/
+```
+
+For the synthetic example the page shows two chains:
+
+| Chain | Steps |
+|---|---|
+| ngsrelate → ngspedigree → mendelian | `ngsrelate_global_v1` → `ngspedigree_global_v1` → `mendelian_LG12_v1` (all green, contract OK end-to-end) |
+| ngsrelate (alone) | `ngsrelate_LG12_v1` — flagged **"ready for ngspedigree/global"** |
+
+Filter bar at the top: by sample_set or by interval.
+
 ## How to use this in your real workspace
 
 1. **Copy the folder** (or just `01_registry/` + `scripts/`) into your

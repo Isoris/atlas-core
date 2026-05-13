@@ -1,0 +1,14 @@
+# Python build / cache artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Editor swap files
+*.swp
+*~
+
+# OS junk
+.DS_Store
+Thumbs.db

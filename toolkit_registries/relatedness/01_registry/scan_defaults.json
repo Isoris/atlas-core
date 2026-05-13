@@ -1,0 +1,31 @@
+{
+  "_comment": "Defaults the scanner uses when proposing analysis_results.tsv rows. Keys map chrom-tokens (parsed from filenames) to existing registry ids. Replace the sample values with your own ids. Run: scan_results.py --results-dir <dir> --defaults <this_file>.",
+
+  "sample_set_id": "samples_226_v1",
+  "group_set_id":  "groups_main_v1",
+
+  "method_id_by_analysis": {
+    "ngsrelate":   "ngsrelate_v2",
+    "ngspedigree": "ngspedigree_v1",
+    "mendelian":   "mendelian_v1",
+    "ngsadmix":    "ngsadmix_v33"
+  },
+
+  "interval_set_for_chrom": {
+    "global":       "genome_all_v1",
+    "C_gar_LG12":   "C_gar_LG12_full_v1",
+    "C_gar_LG28":   "genome_all_v1"
+  },
+
+  "site_set_for_chrom": {
+    "global":       "sites_thin500_global_v1",
+    "C_gar_LG12":   "sites_LG12_thin500_v1",
+    "C_gar_LG28":   "sites_thin500_global_v1"
+  },
+
+  "input_value_for_chrom": {
+    "global":       "beagle_thin500_global_v1",
+    "C_gar_LG12":   "beagle_LG12_thin500_v1",
+    "C_gar_LG28":   "beagle_thin500_global_v1"
+  }
+}

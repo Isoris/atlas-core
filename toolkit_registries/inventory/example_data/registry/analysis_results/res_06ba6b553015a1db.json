@@ -1,0 +1,23 @@
+{
+  "result_id": "res_06ba6b553015a1db",
+  "analysis_id": "theta_pi",
+  "analysis_version": "v0.4.1",
+  "sample_set_id": "sset_95c013b2ffc07ce9",
+  "input_artifact_ids": [
+    "beagle_LG28_main_qcpass_v1"
+  ],
+  "params_hash": "sha256:b2d7d55e39285dfbfd9f30d3fc906d3af0cbf2cc180295b6c9b0af8ce134db9d",
+  "params": {
+    "win_bp": 10000,
+    "step_bp": 5000
+  },
+  "output_layer_id": "theta_pi_95c013b2_C_gar_LG28_v1",
+  "coordinate_scope": {
+    "chrom": "C_gar_LG28",
+    "start_bp": 14815000,
+    "end_bp": 18305000
+  },
+  "status": "active",
+  "created_at": "2026-05-12T09:30:00Z",
+  "created_by_action_id": "act_1715000250000_x33"
+}

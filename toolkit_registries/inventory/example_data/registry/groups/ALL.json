@@ -1,0 +1,10 @@
+{
+  "group_id": "ALL",
+  "cohort_id": "main_226_hatchery",
+  "label": "All 226 samples",
+  "members": "ALL",
+  "n_members": 226,
+  "dimension": "trivial",
+  "status": "active",
+  "created_at": "2026-02-04T00:00:00Z"
+}

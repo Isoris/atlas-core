@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Registry inventory — sets, analyses, results, chains</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #777;
+    --bg: #fafafa;
+    --bg-row: #fff;
+    --bg-row-alt: #f3f4f6;
+    --bg-row-hover: #e7eef7;
+    --bg-row-open: #e2eaf3;
+    --border: #d8dce3;
+    --accent: #2b6cb0;
+    --accent-bg: #ebf3fb;
+    --chip-bg: #edf2f7;
+    --chip-fg: #2d3748;
+    --status-active: #2f855a;
+    --status-experimental: #4c51bf;
+    --status-stale:  #b7791f;
+    --status-failed: #c53030;
+    --status-other:  #4a5568;
+    --cached: #2f855a;
+    --todo:   #b7791f;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+               font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 14px 20px 8px; border-bottom: 1px solid var(--border); background: var(--bg-row); }
+  h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin-top: 2px; font-size: 12px; }
+
+  .tabs { display: flex; gap: 4px; padding: 8px 20px 0; background: var(--bg-row);
+          border-bottom: 1px solid var(--border); }
+  .tab { padding: 7px 14px; cursor: pointer; border: 1px solid transparent;
+         border-bottom: none; border-radius: 4px 4px 0 0;
+         font-size: 13px; color: var(--muted); user-select: none; }
+  .tab:hover { color: var(--accent); background: var(--bg-row-hover); }
+  .tab.active { background: var(--bg); color: var(--fg); border-color: var(--border);
+                margin-bottom: -1px; font-weight: 500; }
+  .tab .count { color: var(--muted); font-size: 11px; margin-left: 4px; }
+
+  .controls { padding: 10px 20px; display: flex; gap: 12px; align-items: center;
+              background: var(--bg-row); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .controls label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .controls input[type="text"] {
+    padding: 6px 10px; font-size: 13px; border: 1px solid var(--border); border-radius: 4px;
+    width: 280px; background: var(--bg-row); color: var(--fg);
+  }
+  .controls select, .controls button {
+    padding: 5px 10px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg-row); color: var(--fg); cursor: pointer;
+  }
+  .controls button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .controls .stat { font-size: 12px; color: var(--muted); margin-left: auto; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--bg-row); position: sticky; top: 0; z-index: 1;
+    text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 600;
+    color: var(--muted); border-bottom: 2px solid var(--border); cursor: pointer; user-select: none;
+    white-space: nowrap;
+  }
+  thead th:hover { color: var(--accent); }
+  thead th .arrow { display: inline-block; width: 10px; color: var(--accent); }
+
+  tbody tr.row { background: var(--bg-row); border-bottom: 1px solid var(--border); cursor: pointer; }
+  tbody tr.row:nth-child(4n+3) { background: var(--bg-row-alt); }
+  tbody tr.row:hover { background: var(--bg-row-hover); }
+  tbody tr.row.open { background: var(--bg-row-open); }
+  tbody td { padding: 7px 12px; vertical-align: top; font-size: 13px; }
+  tbody td.code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  tbody td .chip {
+    display: inline-block; padding: 1px 7px; border-radius: 3px;
+    background: var(--chip-bg); color: var(--chip-fg);
+    font-size: 11px; font-weight: 500; line-height: 1.5;
+  }
+  .status-active       { color: var(--status-active); }
+  .status-experimental { color: var(--status-experimental); }
+  .status-stale        { color: var(--status-stale); }
+  .status-failed       { color: var(--status-failed); }
+  .status-other        { color: var(--status-other); }
+
+  tr.detail td { background: var(--bg-row-open); padding: 10px 12px 14px; border-bottom: 1px solid var(--border); }
+  tr.detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 0; font-size: 12px; }
+  tr.detail dt { color: var(--muted); font-weight: 500; }
+  tr.detail dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  tr.detail dd.params { white-space: pre; background: var(--bg-row); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--border); }
+  tr.detail .artifacts li, tr.detail .lst li { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+  .empty { padding: 30px 20px; color: var(--muted); }
+  .error { padding: 30px 20px; color: var(--status-failed); }
+
+  /* Chain view */
+  .chain { padding: 16px 20px; }
+  .chain h2 { font-size: 14px; font-weight: 600; margin: 16px 0 8px; }
+  .chain .step {
+    border: 1px solid var(--border); border-radius: 6px; background: var(--bg-row);
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .chain .step.cached { border-left: 4px solid var(--cached); }
+  .chain .step.todo   { border-left: 4px solid var(--todo); }
+  .chain .step-head { display: flex; align-items: center; gap: 10px; }
+  .chain .step-head .badge {
+    padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.02em;
+  }
+  .chain .step.cached .badge { background: #c6f6d5; color: var(--cached); }
+  .chain .step.todo   .badge { background: #fefcbf; color: var(--todo); }
+  .chain .step-head .num { color: var(--muted); font-size: 12px; }
+  .chain .step-head .ana { font-weight: 600; font-size: 13px; }
+  .chain .step-head .arrow { color: var(--muted); }
+  .chain .step .body { margin-top: 10px; font-size: 12px; }
+  .chain .step .body details summary { cursor: pointer; color: var(--accent); font-size: 12px; padding: 2px 0; }
+  .chain .step pre {
+    background: var(--bg); padding: 8px 10px; border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
+    overflow-x: auto; margin: 6px 0 2px; border: 1px solid var(--border);
+  }
+  .chain .step .contracts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .chain .step .contracts h4 { margin: 0 0 4px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.02em; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Registry inventory</h1>
+  <div class="sub">analysis × group × samples × interval — plus the sets, the analyses, and the chains that compose them</div>
+</header>
+
+<nav class="tabs">
+  <div class="tab active" data-tab="results">Results <span class="count" id="count-results"></span></div>
+  <div class="tab"        data-tab="sets">Sets <span class="count" id="count-sets"></span></div>
+  <div class="tab"        data-tab="derivations">Derivations <span class="count" id="count-derivations"></span></div>
+  <div class="tab"        data-tab="params">Params <span class="count" id="count-params"></span></div>
+  <div class="tab"        data-tab="analyses">Analyses <span class="count" id="count-analyses"></span></div>
+  <div class="tab"        data-tab="chain">Chain</div>
+</nav>
+
+<div id="view-results"    class="view"></div>
+<div id="view-sets"       class="view" style="display:none"></div>
+<div id="view-derivations"class="view" style="display:none"></div>
+<div id="view-params"     class="view" style="display:none"></div>
+<div id="view-analyses"   class="view" style="display:none"></div>
+<div id="view-chain"      class="view" style="display:none"></div>
+
+<script>
+// =========================================================================
+// Data loading
+// =========================================================================
+
+const SRC = new URLSearchParams(location.search).get("src") || "example_data/inventory.json";
+let DATA = { results: [], sets: [], derivations: [], operation_params: [], analyses: [] };
+let CURRENT_TAB = "results";
+
+async function loadData() {
+  try {
+    const resp = await fetch(SRC, { cache: "no-store" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching ${SRC}`);
+    const payload = await resp.json();
+    if (Array.isArray(payload)) {
+      DATA = { results: payload, sets: [], derivations: [], operation_params: [], analyses: [] };
+    } else {
+      DATA = {
+        results:          payload.results          || [],
+        sets:             payload.sets             || [],
+        derivations:      payload.derivations      || [],
+        operation_params: payload.operation_params || [],
+        analyses:         payload.analyses         || [],
+      };
+    }
+  } catch (e) {
+    const root = document.getElementById("view-results");
+    root.innerHTML = `<div class="error">Could not load <code>${SRC}</code> — ${e.message}.<br>
+      Open the page with <code>?src=path/to/inventory.json</code> to point at a different file.</div>`;
+    return;
+  }
+  document.getElementById("count-results").textContent     = `(${DATA.results.length})`;
+  document.getElementById("count-sets").textContent        = `(${DATA.sets.length})`;
+  document.getElementById("count-derivations").textContent = `(${DATA.derivations.length})`;
+  document.getElementById("count-params").textContent      = `(${DATA.operation_params.length})`;
+  document.getElementById("count-analyses").textContent    = `(${DATA.analyses.length})`;
+  renderAll();
+}
+
+function switchTab(tab) {
+  CURRENT_TAB = tab;
+  for (const t of document.querySelectorAll(".tab")) {
+    t.classList.toggle("active", t.dataset.tab === tab);
+  }
+  for (const v of document.querySelectorAll(".view")) {
+    v.style.display = (v.id === "view-" + tab) ? "" : "none";
+  }
+}
+
+document.querySelector(".tabs").addEventListener("click", (e) => {
+  const t = e.target.closest(".tab");
+  if (t) switchTab(t.dataset.tab);
+});
+
+
+// =========================================================================
+// Generic sortable / filterable table
+// =========================================================================
+
+function makeTable(rootEl, rows, columns, opts) {
+  opts = opts || {};
+  const state = {
+    rows: rows,
+    columns: columns,
+    sortKey: opts.defaultSortKey || columns[0].key,
+    sortDir: opts.defaultSortDir || 1,
+    openIdx: null,
+    filters: {},
+    filterText: "",
+    detail: opts.detail,
+    idKey: opts.idKey || columns[0].key,
+  };
+  rootEl._state = state;
+  rootEl.innerHTML = "";
+
+  // Controls bar
+  const ctrls = document.createElement("div");
+  ctrls.className = "controls";
+  const filterIn = document.createElement("input");
+  filterIn.type = "text"; filterIn.placeholder = "match any column…";
+  filterIn.addEventListener("input", () => { state.filterText = filterIn.value.trim().toLowerCase(); render(); });
+  const filterLbl = document.createElement("label");
+  filterLbl.textContent = "filter "; filterLbl.appendChild(filterIn);
+  ctrls.appendChild(filterLbl);
+
+  // Per-column select filters
+  for (const c of columns) {
+    if (!c.facet) continue;
+    const lbl = document.createElement("label"); lbl.textContent = c.label + " ";
+    const sel = document.createElement("select");
+    sel.innerHTML = `<option value="">(any)</option>`;
+    const values = [...new Set(rows.map(r => r[c.key]).filter(v => v != null))].sort();
+    for (const v of values) {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = v;
+      sel.appendChild(opt);
+    }
+    sel.addEventListener("input", () => { state.filters[c.key] = sel.value; render(); });
+    lbl.appendChild(sel);
+    ctrls.appendChild(lbl);
+  }
+  const stat = document.createElement("span");
+  stat.className = "stat"; ctrls.appendChild(stat);
+  rootEl.appendChild(ctrls);
+
+  const tableHolder = document.createElement("div");
+  rootEl.appendChild(tableHolder);
+
+  function render() {
+    let filtered = state.rows.filter(r => {
+      for (const k in state.filters) {
+        if (state.filters[k] && r[k] !== state.filters[k]) return false;
+      }
+      if (!state.filterText) return true;
+      const hay = state.columns.map(c => String(r[c.key] ?? "")).join(" ").toLowerCase();
+      return hay.includes(state.filterText);
+    });
+    filtered.sort((a, b) => {
+      const av = a[state.sortKey], bv = b[state.sortKey];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      if (typeof av === "number" && typeof bv === "number") return (av - bv) * state.sortDir;
+      return String(av).localeCompare(String(bv)) * state.sortDir;
+    });
+
+    stat.textContent = `${filtered.length} / ${state.rows.length} row(s)`;
+
+    let html = `<table><colgroup>`;
+    for (const c of state.columns) html += `<col${c.width ? ` style="width:${c.width}"` : ''}>`;
+    html += `</colgroup><thead><tr>`;
+    for (const c of state.columns) {
+      const arrow = state.sortKey === c.key ? (state.sortDir === 1 ? "▲" : "▼") : "";
+      html += `<th data-sort="${c.key}">${c.label} <span class="arrow">${arrow}</span></th>`;
+    }
+    html += `</tr></thead><tbody>`;
+    filtered.forEach((r) => {
+      const id = r[state.idKey];
+      const isOpen = state.openIdx === id;
+      html += `<tr class="row ${isOpen ? 'open' : ''}" data-idx="${id}">`;
+      for (const c of state.columns) {
+        let v = r[c.key];
+        let cls = c.code ? "code" : "";
+        if (c.render) { v = c.render(v, r); }
+        else {
+          if (c.key === "status" && v) {
+            const sc = v === "active" ? "status-active"
+                     : v === "experimental" ? "status-experimental"
+                     : v === "stale"  ? "status-stale"
+                     : v === "failed" ? "status-failed" : "status-other";
+            v = `<span class="${sc}">●</span> ${v}`;
+          }
+          if (v == null) v = "";
+        }
+        html += `<td class="${cls}">${v}</td>`;
+      }
+      html += `</tr>`;
+      if (isOpen && state.detail) {
+        html += `<tr class="detail"><td colspan="${state.columns.length}">${state.detail(r)}</td></tr>`;
+      }
+    });
+    html += `</tbody></table>`;
+    if (filtered.length === 0) html = `<div class="empty">No rows match the current filters.</div>`;
+    tableHolder.innerHTML = html;
+  }
+
+  tableHolder.addEventListener("click", (e) => {
+    const th = e.target.closest("th[data-sort]");
+    if (th) {
+      const k = th.dataset.sort;
+      if (state.sortKey === k) state.sortDir = -state.sortDir;
+      else { state.sortKey = k; state.sortDir = 1; }
+      render();
+      return;
+    }
+    const tr = e.target.closest("tr.row");
+    if (tr) {
+      state.openIdx = (state.openIdx === tr.dataset.idx) ? null : tr.dataset.idx;
+      render();
+    }
+  });
+  render();
+}
+
+
+// =========================================================================
+// Results tab
+// =========================================================================
+
+function renderResults() {
+  const cols = [
+    { key: "analysis",    label: "Analysis",  width: "14%", facet: true,
+      render: (v, r) => r.analysis_version ? `${v} <span class="chip">${r.analysis_version}</span>` : (v ?? "") },
+    { key: "group_label", label: "Group",     width: "30%" },
+    { key: "n_samples",   label: "N",         width: "5%"  },
+    { key: "interval",    label: "Interval",  width: "18%", facet: true },
+    { key: "status",      label: "Status",    width: "9%", facet: true },
+    { key: "created_at",  label: "Created",   width: "14%" },
+    { key: "layer_id",    label: "Layer",     width: "10%", code: true },
+  ];
+  makeTable(document.getElementById("view-results"), DATA.results, cols, {
+    idKey: "result_id",
+    defaultSortKey: "created_at",
+    defaultSortDir: -1,
+    detail: (r) => `<dl>
+      <dt>result_id</dt><dd>${r.result_id || "—"}</dd>
+      <dt>sample_set_id</dt><dd>${r.sample_set_id || "—"}</dd>
+      <dt>layer_id</dt><dd>${r.layer_id || "—"}</dd>
+      <dt>input_artifact_ids</dt><dd><ul class="lst">${(r.input_artifact_ids||[]).map(a => `<li>${a}</li>`).join("")}</ul></dd>
+      <dt>params</dt><dd class="params">${JSON.stringify(r.params || {}, null, 2)}</dd>
+    </dl>`,
+  });
+}
+
+
+// =========================================================================
+// Sets tab
+// =========================================================================
+
+function renderSets() {
+  const cols = [
+    { key: "set_id",            label: "Set ID",            width: "22%", code: true },
+    { key: "entity_type",       label: "Entity type",       width: "11%", facet: true },
+    { key: "label",             label: "Label",             width: "24%" },
+    { key: "n_entities",        label: "N",                 width: "6%" },
+    { key: "derivation_id",     label: "Derivation",        width: "18%", code: true,
+      render: (_, r) => r.derivation_id ? r.derivation_id : (r.derived_op ? `<span class="chip">${r.derived_op}</span>` : "") },
+    { key: "coordinate_system", label: "Coord system",      width: "11%", facet: true },
+    { key: "status",            label: "Status",            width: "8%", facet: true },
+  ];
+  makeTable(document.getElementById("view-sets"), DATA.sets, cols, {
+    idKey: "set_id",
+    defaultSortKey: "entity_type",
+    defaultSortDir: 1,
+    detail: (r) => {
+      const derived = r.derived_op
+        ? `<dt>derived_from (set algebra)</dt><dd>${r.derived_op} ( ${(r.derived_parents||[]).join(", ")} )${r.derived_predicate ? ` predicate:${r.derived_predicate}` : ""}</dd>`
+        : "";
+      const derivationLink = r.derivation_id
+        ? `<dt>derivation_id</dt><dd><a href="#" onclick="jumpTo('derivations','${r.derivation_id}');return false">${r.derivation_id}</a> &rarr; see Derivations tab for the full recipe</dd>`
+        : "";
+      return `<dl>
+        <dt>set_id</dt><dd>${r.set_id}</dd>
+        <dt>entity_type</dt><dd>${r.entity_type}</dd>
+        <dt>label</dt><dd>${r.label || "—"}</dd>
+        <dt>n_entities</dt><dd>${r.n_entities ?? "—"}</dd>
+        <dt>parent_set_id</dt><dd>${r.parent_set_id || "—"}</dd>
+        ${derivationLink}
+        ${derived}
+        <dt>filter_profile_id</dt><dd>${r.filter_profile_id || "—"}</dd>
+        <dt>coordinate_system</dt><dd>${r.coordinate_system || "—"}</dd>
+        <dt>intended_use</dt><dd>${r.intended_use || "—"}</dd>
+        <dt>path</dt><dd>${r.path || "—"}</dd>
+      </dl>`;
+    },
+  });
+}
+
+
+// =========================================================================
+// Derivations tab
+// =========================================================================
+
+function renderDerivations() {
+  const cols = [
+    { key: "derivation_id",     label: "Derivation ID",   width: "20%", code: true },
+    { key: "operation_type",    label: "Op",              width: "11%", facet: true },
+    { key: "parent_set_id",     label: "Parent set",      width: "16%", code: true },
+    { key: "operation_params_id",label:"Params",          width: "16%", code: true,
+      render: (v, r) => v ? `<a href="#" onclick="jumpTo('params','${v}');return false">${v}</a>` : "" },
+    { key: "produces_set_id",   label: "Produces",        width: "16%", code: true,
+      render: (v, r) => v ? `<a href="#" onclick="jumpTo('sets','${v}');return false">${v}</a>` : "" },
+    { key: "analysis_purpose",  label: "Purpose",         width: "13%" },
+    { key: "status",            label: "Status",          width: "8%", facet: true },
+  ];
+  makeTable(document.getElementById("view-derivations"), DATA.derivations, cols, {
+    idKey: "derivation_id",
+    defaultSortKey: "operation_type",
+    defaultSortDir: 1,
+    detail: (r) => `<dl>
+      <dt>derivation_id</dt><dd>${r.derivation_id}</dd>
+      <dt>label</dt><dd style="font-family:inherit">${r.label || "—"}</dd>
+      <dt>operation_type</dt><dd>${r.operation_type || "—"}</dd>
+      <dt>parent_set_id</dt><dd>${r.parent_set_id || "—"}</dd>
+      ${(r.parent_set_ids||[]).length ? `<dt>parent_set_ids</dt><dd>${(r.parent_set_ids||[]).join(", ")}</dd>` : ""}
+      <dt>operation_params_id</dt><dd>${r.operation_params_id || "—"}</dd>
+      <dt>filter_profile_id</dt><dd>${r.filter_profile_id || "—"}</dd>
+      <dt>coordinate_system</dt><dd>${r.coordinate_system || "—"}</dd>
+      <dt>analysis_purpose</dt><dd style="font-family:inherit">${r.analysis_purpose || "—"}</dd>
+      <dt>software</dt><dd>${r.software || "—"}${r.software_version ? " " + r.software_version : ""}</dd>
+      <dt>produces_set_id</dt><dd>${r.produces_set_id || "—"}</dd>
+      <dt>output_hash</dt><dd>${r.output_hash || "—"}</dd>
+    </dl>`,
+  });
+}
+
+
+// =========================================================================
+// Operation params tab
+// =========================================================================
+
+function renderOperationParams() {
+  const cols = [
+    { key: "operation_params_id", label: "Params ID",       width: "26%", code: true },
+    { key: "operation_type",      label: "Op",              width: "13%", facet: true },
+    { key: "label",               label: "Label",           width: "30%" },
+    { key: "deterministic",       label: "Deterministic",   width: "11%", facet: true,
+      render: (v) => v == null ? "" : (v ? "true" : "false") },
+    { key: "seed",                label: "Seed",            width: "8%" },
+    { key: "created_at",          label: "Created",         width: "12%" },
+  ];
+  makeTable(document.getElementById("view-params"), DATA.operation_params, cols, {
+    idKey: "operation_params_id",
+    defaultSortKey: "operation_type",
+    defaultSortDir: 1,
+    detail: (r) => {
+      const usedBy = DATA.derivations.filter(d => d.operation_params_id === r.operation_params_id);
+      const usedByHtml = usedBy.length
+        ? usedBy.map(d => `<li><a href="#" onclick="jumpTo('derivations','${d.derivation_id}');return false">${d.derivation_id}</a></li>`).join("")
+        : `<li style="color:var(--muted)">(unused)</li>`;
+      return `<dl>
+        <dt>operation_params_id</dt><dd>${r.operation_params_id}</dd>
+        <dt>operation_type</dt><dd>${r.operation_type || "—"}</dd>
+        <dt>label</dt><dd style="font-family:inherit">${r.label || "—"}</dd>
+        <dt>deterministic</dt><dd>${r.deterministic == null ? "—" : (r.deterministic ? "true" : "false")}</dd>
+        <dt>seed</dt><dd>${r.seed == null ? "—" : r.seed}</dd>
+        <dt>params</dt><dd class="params">${escapeHtml(JSON.stringify(r.params || {}, null, 2))}</dd>
+        <dt>used by</dt><dd><ul class="lst">${usedByHtml}</ul></dd>
+      </dl>`;
+    },
+  });
+}
+
+
+// Helper: switch to a tab and try to open a specific row
+function jumpTo(tab, idValue) {
+  switchTab(tab);
+  // Find the matching row in the appropriate view and toggle it open.
+  const view = document.getElementById("view-" + tab);
+  if (!view || !view._state) return;
+  view._state.openIdx = idValue;
+  // Re-trigger the table render by simulating an input event on filter
+  const tableHolder = view.querySelector("table") && view.querySelector("table").parentNode;
+  // Easiest path: dispatch a click on the existing row, or re-call render via the input
+  // Workaround: nudge filter input
+  const filterInput = view.querySelector("input[type='text']");
+  if (filterInput) filterInput.dispatchEvent(new Event("input"));
+}
+
+
+// =========================================================================
+// Analyses tab
+// =========================================================================
+
+function renderAnalyses() {
+  const cols = [
+    { key: "analysis_id",     label: "Analysis",    width: "13%", code: true,
+      render: (v, r) => r.analysis_version ? `${v} <span class="chip">${r.analysis_version}</span>` : v },
+    { key: "label",           label: "Label",       width: "27%" },
+    { key: "input_entity_types", label: "Input sets",   width: "13%",
+      render: (_, r) => (r.inputs_sets || []).map(s => `<span class="chip">${s.entity_type}${s.cardinality && s.cardinality !== "one" ? "×" + s.cardinality : ""}</span>`).join(" ") },
+    { key: "input_layer_types",  label: "Artifacts",    width: "16%",
+      render: (_, r) => (r.inputs_artifacts || []).map(a => `<span class="chip">${a.layer_type}</span>`).join(" ") },
+    { key: "produces",        label: "Produces",    width: "13%",
+      render: (_, r) => (r.produces || []).map(p => `<span class="chip">${p.layer_type}</span>`).join(" ") },
+    { key: "engine",          label: "Engine",      width: "9%", facet: true },
+    { key: "status",          label: "Status",      width: "7%", facet: true },
+  ];
+  makeTable(document.getElementById("view-analyses"), DATA.analyses, cols, {
+    idKey: "analysis_id",
+    defaultSortKey: "analysis_id",
+    defaultSortDir: 1,
+    detail: (r) => `<dl>
+      <dt>analysis_id</dt><dd>${r.analysis_id}</dd>
+      <dt>description</dt><dd style="font-family:inherit">${r.description || "—"}</dd>
+      <dt>inputs.sets</dt><dd>${JSON.stringify(r.inputs_sets || [])}</dd>
+      <dt>inputs.artifacts</dt><dd>${JSON.stringify(r.inputs_artifacts || [])}</dd>
+      <dt>produces</dt><dd>${JSON.stringify(r.produces || [])}</dd>
+      <dt>requires</dt><dd>${(r.requires || []).join(", ") || "—"}</dd>
+      <dt>engine</dt><dd>${r.engine || "—"}</dd>
+      <dt>endpoint</dt><dd>${r.endpoint || "—"}</dd>
+      <dt>default_runner</dt><dd>${r.default_runner || "—"}</dd>
+      <dt>intended_use</dt><dd style="font-family:inherit">${r.intended_use || "—"}</dd>
+    </dl>`,
+  });
+}
+
+
+// =========================================================================
+// Chain tab — local composition
+// =========================================================================
+
+function renderChain() {
+  const view = document.getElementById("view-chain");
+  view.innerHTML = "";
+
+  const analyses = DATA.analyses;
+  const sampleSets = DATA.sets.filter(s => s.entity_type === "sample");
+
+  if (analyses.length === 0) {
+    view.innerHTML = `<div class="empty">No analyses registered. Add JSONs under <code>&lt;registry_root&gt;/analyses/</code>, then re-run <code>registry_inventory.py</code>.</div>`;
+    return;
+  }
+
+  // Controls
+  const ctrls = document.createElement("div");
+  ctrls.className = "controls";
+
+  const targetLbl = document.createElement("label"); targetLbl.textContent = "Target analysis ";
+  const target = document.createElement("select");
+  for (const a of analyses) {
+    const opt = document.createElement("option");
+    opt.value = a.analysis_id;
+    opt.textContent = `${a.analysis_id}${a.analysis_version ? " " + a.analysis_version : ""}`;
+    target.appendChild(opt);
+  }
+  targetLbl.appendChild(target); ctrls.appendChild(targetLbl);
+
+  const setLbl = document.createElement("label"); setLbl.textContent = "Sample set ";
+  const setSel = document.createElement("select");
+  if (sampleSets.length === 0) {
+    const opt = document.createElement("option"); opt.value = ""; opt.textContent = "(no sample sets registered)";
+    setSel.appendChild(opt);
+  } else {
+    for (const s of sampleSets) {
+      const opt = document.createElement("option");
+      opt.value = s.set_id;
+      opt.textContent = `${s.set_id}${s.n_entities ? " (" + s.n_entities + ")" : ""}`;
+      setSel.appendChild(opt);
+    }
+  }
+  setLbl.appendChild(setSel); ctrls.appendChild(setLbl);
+
+  const datasetLbl = document.createElement("label"); datasetLbl.textContent = "dataset_id ";
+  const datasetIn = document.createElement("input");
+  datasetIn.type = "text"; datasetIn.placeholder = "main_226_hatchery"; datasetIn.style.width = "200px";
+  datasetIn.value = "main_226_hatchery";
+  datasetLbl.appendChild(datasetIn); ctrls.appendChild(datasetLbl);
+
+  const composeBtn = document.createElement("button");
+  composeBtn.textContent = "Compose chain →"; composeBtn.className = "primary";
+  ctrls.appendChild(composeBtn);
+
+  view.appendChild(ctrls);
+
+  const chainHolder = document.createElement("div");
+  chainHolder.className = "chain";
+  view.appendChild(chainHolder);
+
+  composeBtn.addEventListener("click", () => {
+    composeAndRender(target.value, setSel.value, datasetIn.value, chainHolder);
+  });
+
+  // Initial render
+  composeAndRender(target.value, setSel.value, datasetIn.value, chainHolder);
+}
+
+function composeAndRender(targetId, sampleSetId, datasetId, holder) {
+  const analysesById = Object.fromEntries(DATA.analyses.map(a => [a.analysis_id, a]));
+  const chain = walkChain(targetId, analysesById);
+
+  if (chain.error) {
+    holder.innerHTML = `<div class="error">${chain.error}</div>`;
+    return;
+  }
+
+  // Check cache: which steps already have a result for this sample_set_id?
+  // We use a fuzzy match: same analysis_id + same sample_set_id. The server
+  // would do the full content-hash lookup including artifact ids + params.
+  const cacheByAnalysisAndSset = {};
+  for (const r of DATA.results) {
+    const k = `${r.analysis}::${r.sample_set_id}`;
+    cacheByAnalysisAndSset[k] = r;
+  }
+
+  let html = `<h2>Composed chain for <code>${targetId}</code> on <code>${sampleSetId || "(no set)"}</code></h2>`;
+  html += `<div class="sub" style="color:var(--muted);font-size:12px;margin-bottom:14px">
+    Walks <code>analysis.requires</code> backward. Each step's <code>produces</code> wires into the next step's
+    <code>inputs.artifacts</code>. Cache check is a heuristic (analysis_id + sample_set_id); the server does the
+    full content-hash lookup at submit time.</div>`;
+
+  chain.steps.forEach((a, i) => {
+    const cacheKey = `${a.analysis_id}::${sampleSetId}`;
+    const cached = cacheByAnalysisAndSset[cacheKey];
+    const status = cached ? "cached" : "todo";
+    const upstreams = chain.steps.slice(0, i).map(x => x.produces[0] && x.produces[0].layer_type).filter(Boolean);
+
+    html += `<div class="step ${status}">
+      <div class="step-head">
+        <span class="num">step ${i + 1} of ${chain.steps.length}</span>
+        <span class="ana">${a.analysis_id}${a.analysis_version ? " " + a.analysis_version : ""}</span>
+        ${i < chain.steps.length - 1 ? `<span class="arrow">→</span>` : ""}
+        <span class="badge">${status}</span>
+        ${cached ? `<span style="color:var(--cached);font-size:12px">layer_id: <code>${cached.layer_id}</code></span>` : ""}
+      </div>
+      <div class="body">
+        <div class="contracts">
+          <div>
+            <h4>input contract (action_manifest)</h4>
+            <pre>${escapeHtml(JSON.stringify(buildActionManifest(a, sampleSetId, datasetId, chain.steps.slice(0, i)), null, 2))}</pre>
+          </div>
+          <div>
+            <h4>output contract (expected layer_envelope)</h4>
+            <pre>${escapeHtml(JSON.stringify(buildExpectedEnvelope(a, sampleSetId, datasetId), null, 2))}</pre>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // "Download chain.json" — concatenated action manifests
+  html += `<div style="margin-top:10px">
+    <button id="dl-chain">Download chain.json (${chain.steps.length} manifests)</button>
+  </div>`;
+
+  holder.innerHTML = html;
+
+  document.getElementById("dl-chain").addEventListener("click", () => {
+    const manifests = chain.steps.map((a, i) =>
+      buildActionManifest(a, sampleSetId, datasetId, chain.steps.slice(0, i))
+    );
+    const blob = new Blob([JSON.stringify({
+      target: targetId, sample_set_id: sampleSetId, dataset_id: datasetId,
+      steps: manifests
+    }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `chain_${targetId}_${(sampleSetId || "noset")}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+function walkChain(targetId, byId) {
+  // Topological order: walk requires backward, deepest first.
+  const out = [];
+  const seen = new Set();
+  function visit(id, path) {
+    if (path.includes(id)) {
+      throw new Error(`Cycle in analysis chain: ${path.join(" → ")} → ${id}`);
+    }
+    if (seen.has(id)) return;
+    const a = byId[id];
+    if (!a) throw new Error(`Unknown analysis_id '${id}' (referenced by ${path.join(" → ") || "target"})`);
+    for (const req of (a.requires || [])) {
+      visit(req, [...path, id]);
+    }
+    seen.add(id);
+    out.push(a);
+  }
+  try { visit(targetId, []); }
+  catch (e) { return { error: e.message, steps: [] }; }
+  return { steps: out };
+}
+
+function buildActionManifest(a, sampleSetId, datasetId, upstreams) {
+  // Map upstream produces.layer_type → upstream's expected layer_id (placeholder)
+  const upstreamByLayerType = {};
+  for (const u of upstreams) {
+    for (const p of (u.produces || [])) {
+      upstreamByLayerType[p.layer_type] = `<${p.layer_type}_layer_id>`;
+    }
+  }
+  const artifacts = (a.inputs_artifacts || []).map(art => ({
+    role:           art.role,
+    layer_type:     art.layer_type,
+    schema_version: art.schema_version,
+    layer_id:       upstreamByLayerType[art.layer_type] || `<${art.layer_type}_layer_id>`,
+  }));
+  return {
+    action_id:  "act_<timestamp>_<suffix>",
+    type:       "run_" + a.analysis_id,
+    dataset_id: datasetId || "<dataset_id>",
+    runner:     a.default_runner || "runners." + a.analysis_id + ".run",
+    target: {
+      sample_set_id: sampleSetId || "<sample_set_id>",
+      input_artifacts: artifacts,
+    },
+    params: "<see schema_in/run_" + a.analysis_id + "_v1.schema.json>",
+    expected_outputs: a.produces || [],
+  };
+}
+
+function buildExpectedEnvelope(a, sampleSetId, datasetId) {
+  const produced = (a.produces && a.produces[0]) || { layer_type: "?", schema_version: "?" };
+  return {
+    layer_id:       `<${produced.layer_type}_<hash>_v1>`,
+    layer_type:     produced.layer_type,
+    schema_version: produced.schema_version,
+    stage:          produced.stage || "normalized",
+    dataset_id:     datasetId || "<dataset_id>",
+    sample_scope:   sampleSetId ? { sample_set_id: sampleSetId } : "<sample_scope>",
+    provenance: {
+      action_id:        "<filled by server>",
+      engine:           a.engine || null,
+      engine_version:   "<filled by runner>",
+      config_hash:      "<filled by server>",
+    },
+    status:     "active",
+    created_at: "<ISO 8601>",
+    payload:    "<see schema_out/" + produced.schema_version + ".schema.json>",
+  };
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+
+// =========================================================================
+// Boot
+// =========================================================================
+
+function renderAll() {
+  renderResults();
+  renderSets();
+  renderDerivations();
+  renderOperationParams();
+  renderAnalyses();
+  renderChain();
+}
+
+loadData();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Conversation — refine analysis with the LLM</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #6c727f;
+    --bg: #fafafa;
+    --bg-card: #fff;
+    --border: #d8dce3;
+    --accent: #2b6cb0;
+    --warn: #b7791f;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+               font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  header { padding: 16px 24px 10px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+  h1 { margin: 0; font-size: 16px; font-weight: 600; }
+  .sub { color: var(--muted); margin-top: 3px; font-size: 12.5px; }
+
+  section { padding: 22px 24px; max-width: 880px; }
+  h2 { font-size: 14px; font-weight: 600; margin: 26px 0 8px; }
+  p  { margin: 0 0 10px; }
+  ol { padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  code, .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+  .banner {
+    margin: 0 0 18px; padding: 12px 16px; background: #fffbeb; border: 1px solid #f6e05e;
+    border-radius: 6px; color: #744210; font-size: 13px;
+  }
+  .banner strong { color: #5c3408; }
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 14px 18px; margin-bottom: 14px;
+  }
+  .stage { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .stage .num { color: var(--muted); font-weight: 600; font-size: 12px; min-width: 22px; }
+  .stage .name { font-weight: 600; font-size: 13.5px; }
+  .stage .out  { color: var(--muted); font-size: 12px; }
+  .footer { padding: 12px 24px; color: var(--muted); font-size: 11.5px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html" class="current"><span class="num">1.</span> Conversation</a>
+  <a href="action.html"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html"><span class="num">4.</span> Catalogue</a>
+  <span class="tag">atlas-core dashboard</span>
+</nav>
+
+<header>
+  <h1>Conversation — refine analysis with the LLM</h1>
+  <div class="sub">Free-text request → cleaned decomposition → controlled vocabulary → registry contracts → action plan.</div>
+</header>
+
+<section>
+
+<div class="banner">
+  <strong>Status: deferred.</strong> The LLM-driven request resolver is designed but not wired today.
+  Use <a href="action.html">page 2 (Action)</a> to compose runs by hand against the existing
+  registry. When the LLM funnel is built, its output will land on this page and feed directly into
+  page 2.
+</div>
+
+<h2>What this page will be</h2>
+
+<p>A staged resolver that funnels a vague human request into a concrete action plan, without
+asking one big LLM to do everything in one shot. Per the design discussion:</p>
+
+<div class="card">
+  <div class="stage"><span class="num">1.</span> <span class="name">Cleanup &amp; decomposition</span>
+    <span class="out">→ goal, targets, exclusions, vague terms</span></div>
+  <p>"Find Mendelian inversions on chr12 but not from old families."<br>
+  → Restated as: <em>goal</em>=identify inversions with Mendelian-compatible inheritance;
+  <em>target</em>=chromosome 12; <em>exclusion</em>=old families.</p>
+</div>
+
+<div class="card">
+  <div class="stage"><span class="num">2.</span> <span class="name">Domain selection</span>
+    <span class="out">→ which keyword banks to load</span></div>
+  <p>Picks high-level domains from a controlled menu (genetics, relatedness, inheritance,
+  structural_variation, population_history, …). Loads only those domains' keyword banks for the
+  next stage — prevents the LLM from searching the whole vocabulary.</p>
+</div>
+
+<div class="card">
+  <div class="stage"><span class="num">3.</span> <span class="name">Keyword mapping</span>
+    <span class="out">→ controlled vocabulary terms</span></div>
+  <p>Maps human words onto registry concepts: "mendelian" →
+  <code>analysis_id=mendelian</code>; "old families" →
+  <code>set_filter=old_family_population_history_v1</code>; "chromosome 12" →
+  <code>interval_set_id pattern</code>.</p>
+</div>
+
+<div class="card">
+  <div class="stage"><span class="num">4.</span> <span class="name">Contract resolution</span>
+    <span class="out">→ action plan or missing/spawnable list</span></div>
+  <p>Resolves the mapped vocabulary against the actual registries on disk. Outputs:
+  required sets, required results, what's missing, what can be spawned, the recommended
+  ordered chain of action manifests. The page-2 dashboard then visualizes the readiness ladder.</p>
+</div>
+
+<h2>Why staged (not one-shot)</h2>
+
+<p>Each stage has a single job. The LLM doesn't jump from vague words to files. Stage outputs
+are inspectable, editable, and stable across sessions — so you can replay or tweak any stage
+without redoing the rest. The contract resolver is deterministic; only stages 1–3 are LLM
+calls.</p>
+
+<h2>Today, do this instead</h2>
+
+<ol>
+  <li>Use <a href="action.html">page 2 (Action)</a> to pick a target analysis + scope. The dashboard
+  walks the chain backward via <code>analysis_modes.tsv</code> and tells you what's
+  <code>RESULT_READY</code> (reuse), <code>RUN_READY</code>, <code>MISSING</code>, or
+  <code>BLOCKED</code>.</li>
+  <li>Use <a href="index.html">page 3 (Registries)</a> to see existing chains and which orphan
+  results are ready to feed downstream analyses.</li>
+  <li>Use <code>scripts/resolve.py</code> from the CLI for the same logic without the browser.</li>
+</ol>
+
+</section>
+
+<div class="footer">
+  When this page is wired, it produces the same contract output that page 2 already understands.
+  No re-typing.
+</div>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+[
+  {
+    "name": "ngsrelate_pairwise_v2",
+    "version": "2.0.0",
+    "family": "relatedness",
+    "status": "stable",
+    "installed": true,
+    "ready": true,
+    "stale": false,
+    "stale_reason": null,
+    "parent": null,
+    "derivatives": ["ngsrelate_pairwise_v2_strict"],
+    "conda_env_path": "~/.biomod/envs/default/conda/ngsrelate_pairwise_v2/",
+    "last_run": {
+      "run_id": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+      "started_at": "2026-05-12T10:00:00Z",
+      "finished_at": "2026-05-12T10:40:00Z",
+      "runtime_seconds": 2400,
+      "n_samples": 6,
+      "output_bytes": 4096,
+      "status": "success",
+      "qc_status": "pass"
+    }
+  },
+  {
+    "name": "ngspedigree_v1",
+    "version": "1.0.0",
+    "family": "pedigree",
+    "status": "stable",
+    "installed": true,
+    "ready": true,
+    "stale": false,
+    "stale_reason": null,
+    "parent": null,
+    "derivatives": [],
+    "conda_env_path": "~/.biomod/envs/default/conda/ngspedigree_v1/",
+    "last_run": {
+      "run_id": "b2c3d4e5-6789-01bc-def0-2345678901bc",
+      "started_at": "2026-05-12T11:00:00Z",
+      "finished_at": "2026-05-12T11:03:00Z",
+      "runtime_seconds": 180,
+      "n_samples": 6,
+      "output_bytes": 512,
+      "status": "success",
+      "qc_status": "pass"
+    }
+  },
+  {
+    "name": "mendelian_trio_v1",
+    "version": "1.0.0",
+    "family": "inheritance",
+    "status": "experimental",
+    "installed": true,
+    "ready": false,
+    "stale": false,
+    "stale_reason": null,
+    "parent": null,
+    "derivatives": ["mendelian_trio_v1_strict"],
+    "conda_env_path": "~/.biomod/envs/default/conda/mendelian_trio_v1/",
+    "last_run": {
+      "run_id": "c3d4e5f6-789a-12cd-ef01-3456789012cd",
+      "started_at": "2026-05-12T11:30:00Z",
+      "finished_at": "2026-05-12T11:30:22Z",
+      "runtime_seconds": 22,
+      "n_samples": null,
+      "output_bytes": null,
+      "status": "failed",
+      "qc_status": null
+    }
+  }
+]

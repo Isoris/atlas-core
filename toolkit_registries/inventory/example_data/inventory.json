@@ -1,0 +1,600 @@
+{
+  "results": [
+    {
+      "result_id": "res_06ba6b553015a1db",
+      "analysis": "theta_pi",
+      "analysis_version": "v0.4.1",
+      "group_label": "HOM_INV carriers for LG28_INV_001",
+      "sample_set_id": "sset_95c013b2ffc07ce9",
+      "n_samples": 8,
+      "interval": "C_gar_LG28:14_815_000-18_305_000",
+      "input_artifact_ids": [
+        "beagle_LG28_main_qcpass_v1"
+      ],
+      "status": "active",
+      "created_at": "2026-05-12T09:30:00Z",
+      "layer_id": "theta_pi_95c013b2_C_gar_LG28_v1",
+      "params": {
+        "win_bp": 10000,
+        "step_bp": 5000
+      }
+    },
+    {
+      "result_id": "res_ecc78ff7cfdacc81",
+      "analysis": "ngspedigree",
+      "analysis_version": "v0.9.0",
+      "group_label": "ALL \\ family_F042 (unrelateds)",
+      "sample_set_id": "sset_1999b1dbf7dafa4e",
+      "n_samples": 222,
+      "interval": "whole-genome",
+      "input_artifact_ids": [
+        "beagle_wholegenome_main_qcpass_v1",
+        "sites_wholegenome_thin1k_v1"
+      ],
+      "status": "active",
+      "created_at": "2026-05-12T08:10:00Z",
+      "layer_id": "ngspedigree_1999b1db_wg_v1",
+      "params": {
+        "theta_cut": 0.0625
+      }
+    },
+    {
+      "result_id": "res_1b1a6a730de030a6",
+      "analysis": "mendelian",
+      "analysis_version": "v1.2.0",
+      "group_label": "Family F042 (CGA042 + offspring)",
+      "sample_set_id": "sset_c6e37713a16622bf",
+      "n_samples": 4,
+      "interval": "whole-genome",
+      "input_artifact_ids": [
+        "beagle_wholegenome_main_qcpass_v1",
+        "sites_wholegenome_thin1k_v1"
+      ],
+      "status": "active",
+      "created_at": "2026-05-11T15:42:00Z",
+      "layer_id": "mendelian_c6e37713_wg_v1",
+      "params": {
+        "mode": "trio_check",
+        "min_depth": 4
+      }
+    },
+    {
+      "result_id": "res_f748a2157ee82081",
+      "analysis": "ngsrelate",
+      "analysis_version": "v2.0.0",
+      "group_label": "HOM_INV \u2229 ancestry_K8_cluster3",
+      "sample_set_id": "sset_bad9c3534f8edf73",
+      "n_samples": 3,
+      "interval": "C_gar_LG28",
+      "input_artifact_ids": [
+        "beagle_LG28_main_qcpass_v1",
+        "sites_LG28_thin1k_v1"
+      ],
+      "status": "active",
+      "created_at": "2026-05-10T13:02:00Z",
+      "layer_id": "ngsrelate_bad9c353_C_gar_LG28_v1",
+      "params": {
+        "F_unknown": -1,
+        "p": "ALL",
+        "haploid": false,
+        "minimum_freq": 0.05
+      }
+    },
+    {
+      "result_id": "res_7e7eb7e27a41df01",
+      "analysis": "ngsrelate",
+      "analysis_version": "v2.0.0",
+      "group_label": "HOM_INV carriers for LG28_INV_001",
+      "sample_set_id": "sset_95c013b2ffc07ce9",
+      "n_samples": 8,
+      "interval": "C_gar_LG28",
+      "input_artifact_ids": [
+        "beagle_LG28_main_qcpass_v1",
+        "sites_LG28_thin1k_v1"
+      ],
+      "status": "active",
+      "created_at": "2026-05-10T12:30:00Z",
+      "layer_id": "ngsrelate_95c013b2_C_gar_LG28_v1",
+      "params": {
+        "F_unknown": -1,
+        "p": "ALL",
+        "haploid": false,
+        "minimum_freq": 0.05
+      }
+    },
+    {
+      "result_id": "res_302736061f4c4354",
+      "analysis": "ngsrelate",
+      "analysis_version": "v2.0.0",
+      "group_label": "All 226 samples",
+      "sample_set_id": "sset_2f17041eb0d98bc9",
+      "n_samples": 226,
+      "interval": "whole-genome",
+      "input_artifact_ids": [
+        "beagle_wholegenome_main_qcpass_v1",
+        "sites_wholegenome_thin1k_v1"
+      ],
+      "status": "active",
+      "created_at": "2026-05-08T11:30:00Z",
+      "layer_id": "ngsrelate_2f17041e_wg_v1",
+      "params": {
+        "F_unknown": -1,
+        "p": "ALL",
+        "haploid": false,
+        "minimum_freq": 0.05
+      }
+    },
+    {
+      "result_id": "res_a9bdd883af3989f9",
+      "analysis": "ngsrelate",
+      "analysis_version": "v2.0.0",
+      "group_label": "All 226 samples",
+      "sample_set_id": "sset_2f17041eb0d98bc9",
+      "n_samples": 226,
+      "interval": "C_gar_LG28",
+      "input_artifact_ids": [
+        "beagle_LG28_main_qcpass_v1",
+        "sites_LG28_thin1k_v1"
+      ],
+      "status": "active",
+      "created_at": "2026-05-08T09:14:00Z",
+      "layer_id": "ngsrelate_2f17041e_C_gar_LG28_v1",
+      "params": {
+        "F_unknown": -1,
+        "p": "ALL",
+        "haploid": false,
+        "minimum_freq": 0.05
+      }
+    }
+  ],
+  "sets": [
+    {
+      "set_id": "breakpoints_D17_PASS_v1",
+      "entity_type": "breakpoint",
+      "label": "Breakpoints of D17 PASS inversions",
+      "n_entities": 94,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": "candidates_D17_PASS_v1",
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": null,
+      "intended_use": "TE / SD substrate analysis",
+      "status": "active",
+      "created_at": "2026-04-25T09:30:00Z",
+      "path": "sets/breakpoint/D17_PASS.breakpoints.tsv"
+    },
+    {
+      "set_id": "genes_near_breakpoints_50kb_v1",
+      "entity_type": "gene",
+      "label": "Genes within 50 kb of an inversion breakpoint",
+      "n_entities": 312,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": null,
+      "derived_op": "filter",
+      "derived_parents": [
+        "genes_all_v1"
+      ],
+      "derived_predicate": "distance_to_any_breakpoint_bp <= 50000",
+      "filter_profile_id": null,
+      "intended_use": "annotation context for the inversion atlas",
+      "status": "experimental",
+      "created_at": "2026-05-03T16:30:00Z",
+      "path": null
+    },
+    {
+      "set_id": "candidates_D17_PASS_v1",
+      "entity_type": "inversion_candidate",
+      "label": "D17 PASS inversions (cohort-level)",
+      "n_entities": 47,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": null,
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": null,
+      "intended_use": "atlas review, manuscript Fig 2",
+      "status": "active",
+      "created_at": "2026-04-25T09:00:00Z",
+      "path": "sets/inversion_candidate/D17_PASS.tsv"
+    },
+    {
+      "set_id": "samples_broodstock226_v1",
+      "entity_type": "sample",
+      "label": "Broodstock 226 \u2014 all sequenced individuals",
+      "n_entities": 226,
+      "coordinate_system": null,
+      "parent_set_id": "all_samples_v1",
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": null,
+      "intended_use": "population genomics, ngsRelate, ngsAdmix",
+      "status": "active",
+      "created_at": "2026-02-04T00:00:00Z",
+      "path": "sets/sample/broodstock226.tsv"
+    },
+    {
+      "set_id": "sites_LG28_localpca_v1",
+      "entity_type": "variant_site",
+      "label": "LG28 sites \u2014 MAF\u22650.05, thinned to 1 SNP / kb",
+      "n_entities": 48211,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": "snps_maf005_v1",
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": "maf005_thin1k_v1",
+      "intended_use": "local PCA, scrubber landscape",
+      "status": "active",
+      "created_at": "2026-04-10T12:00:00Z",
+      "path": "sets/variant_site/LG28.localpca.sites.tsv.gz"
+    },
+    {
+      "set_id": "sites_beagle_thin500_global_v1",
+      "entity_type": "variant_site",
+      "label": "Whole-genome BEAGLE sites \u2014 1 site / 500 bp (deterministic, first per chrom)",
+      "n_entities": 512847,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": "snps_maf005_v1",
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": null,
+      "intended_use": "BEAGLE input for ngsRelate / NGSadmix / PCA",
+      "status": "active",
+      "created_at": "2026-04-08T11:42:00Z",
+      "path": "sets/variant_site/beagle.thin500.global.v1.tsv.gz"
+    },
+    {
+      "set_id": "sites_beagle_thin500_random_v1",
+      "entity_type": "variant_site",
+      "label": "Whole-genome BEAGLE sites \u2014 1 site / 500 bp (random per bin, seed 123)",
+      "n_entities": 512912,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": "snps_maf005_v1",
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": null,
+      "intended_use": "sensitivity check vs deterministic thin500",
+      "status": "experimental",
+      "created_at": "2026-04-08T11:50:00Z",
+      "path": "sets/variant_site/beagle.thin500.random.v1.tsv.gz"
+    },
+    {
+      "set_id": "sites_lostruct_LG28_v1",
+      "entity_type": "variant_site",
+      "label": "LG28 lostruct windows (100-site)",
+      "n_entities": 9871,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": "snps_maf005_v1",
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": null,
+      "intended_use": "local PCA inversion scan",
+      "status": "active",
+      "created_at": "2026-04-10T12:00:00Z",
+      "path": "sets/variant_site/LG28.lostruct.tsv.gz"
+    },
+    {
+      "set_id": "sites_wholegenome_thin1k_v1",
+      "entity_type": "variant_site",
+      "label": "Whole-genome sites \u2014 MAF\u22650.05, thinned to 1 SNP / kb",
+      "n_entities": 1289400,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": "snps_maf005_v1",
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": "maf005_thin1k_v1",
+      "intended_use": "ngsRelate / ngsAdmix whole-genome runs",
+      "status": "active",
+      "created_at": "2026-04-10T12:00:00Z",
+      "path": "sets/variant_site/wholegenome.thin1k.sites.tsv.gz"
+    },
+    {
+      "set_id": "windows_LG28_50kb_v1",
+      "entity_type": "window",
+      "label": "LG28 50 kb tiling windows",
+      "n_entities": 784,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": null,
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": null,
+      "intended_use": "FST / theta-pi windowed scans on LG28",
+      "status": "active",
+      "created_at": "2026-04-10T12:00:00Z",
+      "path": "sets/window/LG28.50kb.tsv"
+    }
+  ],
+  "derivations": [
+    {
+      "derivation_id": "derive_beagle_thin500_global_v1",
+      "label": "BEAGLE thinning \u2014 first valid site / 500 bp, per chromosome (global popstructure)",
+      "operation_type": "thin_by_distance",
+      "parent_set_id": "snps_maf005_v1",
+      "parent_set_ids": [],
+      "operation_params_id": "thin500_first_per_chrom_v1",
+      "filter_profile_id": "popstruct_angsd_sites_v1",
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "analysis_purpose": "BEAGLE input for ngsRelate / NGSadmix / PCA",
+      "software": "custom-thin.py",
+      "software_version": "v1.0.0",
+      "produces_set_id": "sites_beagle_thin500_global_v1",
+      "output_hash": "sha256:8a7c9d5e4b2f1a3c6e0d9b8a7c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d",
+      "status": "active",
+      "created_at": "2026-04-08T11:42:00Z"
+    },
+    {
+      "derivation_id": "derive_beagle_thin500_random_v1",
+      "label": "BEAGLE thinning \u2014 random per 500-bp bin, seed 123",
+      "operation_type": "thin_by_distance",
+      "parent_set_id": "snps_maf005_v1",
+      "parent_set_ids": [],
+      "operation_params_id": "thin500_random_seed123_v1",
+      "filter_profile_id": "popstruct_angsd_sites_v1",
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "analysis_purpose": "sensitivity check against the deterministic thin500",
+      "software": "custom-thin.py",
+      "software_version": "v1.0.0",
+      "produces_set_id": "sites_beagle_thin500_random_v1",
+      "output_hash": null,
+      "status": "experimental",
+      "created_at": "2026-04-08T11:50:00Z"
+    },
+    {
+      "derivation_id": "derive_lostruct_LG28_v1",
+      "label": "lostruct LG28 100-site windows",
+      "operation_type": "window_extract",
+      "parent_set_id": "snps_maf005_v1",
+      "parent_set_ids": [],
+      "operation_params_id": "lostruct_LG28_params_v1",
+      "filter_profile_id": "lostruct_site_filter_v1",
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "analysis_purpose": "local PCA inversion scan",
+      "software": "lostruct",
+      "software_version": "v0.0.0.9000",
+      "produces_set_id": "sites_lostruct_LG28_v1",
+      "output_hash": null,
+      "status": "active",
+      "created_at": "2026-04-10T12:00:00Z"
+    }
+  ],
+  "operation_params": [
+    {
+      "operation_params_id": "thin500_first_per_chrom_v1",
+      "operation_type": "thin_by_distance",
+      "label": "Thin to 1 site / 500 bp \u2014 first valid, per chromosome",
+      "params": {
+        "distance_bp": 500,
+        "reset_scope": "chromosome",
+        "sort_key": "chrom,pos",
+        "choice_rule": "first_valid_site_after_previous_kept_site"
+      },
+      "deterministic": true,
+      "seed": null,
+      "created_at": "2026-04-08T11:40:00Z"
+    },
+    {
+      "operation_params_id": "thin500_random_seed123_v1",
+      "operation_type": "thin_by_distance",
+      "label": "Thin to 1 site / 500 bp \u2014 random per 500-bp bin, seed 123",
+      "params": {
+        "distance_bp": 500,
+        "reset_scope": "chromosome",
+        "sort_key": "chrom,pos",
+        "choice_rule": "random_one_per_bin"
+      },
+      "deterministic": false,
+      "seed": 123,
+      "created_at": "2026-04-08T11:41:00Z"
+    },
+    {
+      "operation_params_id": "lostruct_LG28_params_v1",
+      "operation_type": "window_extract",
+      "label": "lostruct LG28 100-site windows",
+      "params": {
+        "window_size_sites": 100,
+        "chrom_filter": "C_gar_LG28",
+        "min_sites_per_window": 10,
+        "min_callability": 0.5
+      },
+      "deterministic": true,
+      "seed": null,
+      "created_at": "2026-04-10T11:55:00Z"
+    }
+  ],
+  "analyses": [
+    {
+      "analysis_id": "fst_pairwise",
+      "analysis_version": "v1",
+      "label": "Pairwise FST in windows (region_popstats)",
+      "description": "Window-wise pairwise FST between TWO sample sets along a coordinate scope. Wraps the existing /api/popstats/groupwise endpoint (Engine F = region_popstats).",
+      "inputs_sets": [
+        {
+          "role": "group_a",
+          "entity_type": "sample",
+          "cardinality": "one"
+        },
+        {
+          "role": "group_b",
+          "entity_type": "sample",
+          "cardinality": "one"
+        },
+        {
+          "role": "windows",
+          "entity_type": "window",
+          "cardinality": "one"
+        }
+      ],
+      "inputs_artifacts": [
+        {
+          "role": "beagle",
+          "layer_type": "beagle_file",
+          "schema_version": "beagle_file_v1"
+        }
+      ],
+      "produces": [
+        {
+          "layer_type": "fst_windows",
+          "schema_version": "fst_windows_v1"
+        }
+      ],
+      "engine": "region_popstats",
+      "endpoint": "/api/popstats/groupwise",
+      "default_runner": "runners.popstats.run_fst",
+      "requires": [],
+      "intended_use": "scan a candidate / cohort for population differentiation",
+      "status": "active"
+    },
+    {
+      "analysis_id": "mendelian",
+      "analysis_version": "v1",
+      "label": "Mendelian inheritance check",
+      "description": "Per-trio Mendelian-error rate along the genome. Inputs: pedigree (trios) + genotype likelihoods (BEAGLE).",
+      "inputs_sets": [
+        {
+          "role": "samples",
+          "entity_type": "sample",
+          "cardinality": "one"
+        }
+      ],
+      "inputs_artifacts": [
+        {
+          "role": "pedigree",
+          "layer_type": "ngspedigree_result",
+          "schema_version": "ngspedigree_result_v1"
+        },
+        {
+          "role": "beagle",
+          "layer_type": "beagle_file",
+          "schema_version": "beagle_file_v1"
+        }
+      ],
+      "produces": [
+        {
+          "layer_type": "mendelian_result",
+          "schema_version": "mendelian_result_v1"
+        }
+      ],
+      "engine": "ngsTract",
+      "endpoint": null,
+      "default_runner": "runners.mendelian.run",
+      "requires": [
+        "ngspedigree"
+      ],
+      "intended_use": "QC trios; flag mis-assigned families",
+      "status": "active"
+    },
+    {
+      "analysis_id": "ngspedigree",
+      "analysis_version": "v1",
+      "label": "ngsPedigree \u2014 pedigree reconstruction from relatedness",
+      "description": "Builds the most-likely pedigree (trios / sib groups) from a pairwise-relatedness matrix produced by ngsRelate.",
+      "inputs_sets": [
+        {
+          "role": "samples",
+          "entity_type": "sample",
+          "cardinality": "one"
+        }
+      ],
+      "inputs_artifacts": [
+        {
+          "role": "relatedness",
+          "layer_type": "ngsrelate_result",
+          "schema_version": "ngsrelate_result_v1"
+        }
+      ],
+      "produces": [
+        {
+          "layer_type": "ngspedigree_result",
+          "schema_version": "ngspedigree_result_v1"
+        }
+      ],
+      "engine": "ngsPedigree",
+      "endpoint": null,
+      "default_runner": "runners.ngspedigree.run",
+      "requires": [
+        "ngsrelate"
+      ],
+      "intended_use": "trio/family discovery from kinship matrix",
+      "status": "active"
+    },
+    {
+      "analysis_id": "ngsrelate",
+      "analysis_version": "v1",
+      "label": "ngsRelate \u2014 pairwise relatedness from genotype likelihoods",
+      "description": "Estimates pairwise relatedness coefficients (theta, IBS0/1/2, KING) from a BEAGLE genotype-likelihood file restricted to a sites file. Per-pair scores for all N\u00d7(N-1)/2 sample pairs.",
+      "inputs_sets": [
+        {
+          "role": "samples",
+          "entity_type": "sample",
+          "cardinality": "one"
+        }
+      ],
+      "inputs_artifacts": [
+        {
+          "role": "beagle",
+          "layer_type": "beagle_file",
+          "schema_version": "beagle_file_v1"
+        },
+        {
+          "role": "sites",
+          "layer_type": "sites_file",
+          "schema_version": "sites_file_v1"
+        }
+      ],
+      "produces": [
+        {
+          "layer_type": "ngsrelate_result",
+          "schema_version": "ngsrelate_result_v1"
+        }
+      ],
+      "engine": "ngsRelate",
+      "endpoint": null,
+      "default_runner": "runners.ngsrelate.run",
+      "requires": [],
+      "intended_use": "kinship QC, family detection, pedigree input",
+      "status": "active"
+    },
+    {
+      "analysis_id": "theta_pi",
+      "analysis_version": "v1",
+      "label": "Nucleotide diversity \u03b8\u03c0 in windows",
+      "description": "Window-wise \u03c0 over one sample set on a coordinate scope. Wraps region_popstats's single-group mode.",
+      "inputs_sets": [
+        {
+          "role": "samples",
+          "entity_type": "sample"
+        },
+        {
+          "role": "windows",
+          "entity_type": "window"
+        }
+      ],
+      "inputs_artifacts": [
+        {
+          "role": "beagle",
+          "layer_type": "beagle_file",
+          "schema_version": "beagle_file_v1"
+        }
+      ],
+      "produces": [
+        {
+          "layer_type": "theta_pi_windows",
+          "schema_version": "theta_pi_windows_v1"
+        }
+      ],
+      "engine": "region_popstats",
+      "endpoint": "/api/popstats/groupwise",
+      "default_runner": "runners.popstats.run_theta",
+      "requires": [],
+      "intended_use": "diversity scans",
+      "status": "active"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "set_id":             "sites_beagle_thin500_global_v1",
+  "entity_type":        "variant_site",
+  "label":              "Whole-genome BEAGLE sites — 1 site / 500 bp (deterministic, first per chrom)",
+  "path":               "sets/variant_site/beagle.thin500.global.v1.tsv.gz",
+  "n_entities":         512847,
+  "hash":               "sha256:8a7c9d5e4b2f1a3c6e0d9b8a7c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d",
+  "parent_set_id":      "snps_maf005_v1",
+  "derivation_id":      "derive_beagle_thin500_global_v1",
+  "coordinate_system":  "fClaHyb_Gar_LG_v1",
+  "intended_use":       "BEAGLE input for ngsRelate / NGSadmix / PCA",
+  "status":             "active",
+  "created_at":         "2026-04-08T11:42:00Z"
+}

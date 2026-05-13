@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "action_log_entry.schema.json",
+  "title": "Action log entry — one line in registry/actions.log.jsonl",
+  "description": "Append-only record of every action submitted to POST /api/actions. Captures the original manifest plus runtime status, produced layer_ids, and any error. Written as JSONL (one entry per line) for cheap streaming and grep. NEVER edit or delete; supersede with a new action if reprocessing is needed.",
+  "type": "object",
+  "required": ["action_id", "manifest", "submitted_at", "status"],
+  "additionalProperties": true,
+  "properties": {
+    "action_id":       { "type": "string", "pattern": "^act_[A-Za-z0-9_]+$" },
+    "manifest":        { "$ref": "action_manifest.schema.json", "description": "Full action_manifest as submitted." },
+    "submitted_at":    { "type": "string", "format": "date-time" },
+    "started_at":      { "type": ["string", "null"], "format": "date-time" },
+    "finished_at":     { "type": ["string", "null"], "format": "date-time" },
+    "status":          { "type": "string", "enum": ["queued", "running", "success", "error", "cancelled"] },
+    "produced_layers": { "type": "array", "items": { "type": "string" }, "default": [], "description": "layer_ids the extractor(s) produced." },
+    "error":           { "type": ["object", "null"], "description": "Populated when status='error'. { kind, message, trace }." },
+    "runner_logs_path":{ "type": "string", "description": "Optional path to runner stdout/stderr capture." },
+    "duration_ms":     { "type": "integer", "minimum": 0 }
+  }
+}

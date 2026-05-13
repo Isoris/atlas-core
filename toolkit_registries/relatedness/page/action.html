@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Action — readiness & routing dashboard</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #6c727f;
+    --bg: #fafafa;
+    --bg-card: #fff;
+    --border: #d8dce3;
+    --accent: #2b6cb0;
+
+    --st-result-ready: #2f855a;
+    --st-run-ready:    #2b6cb0;
+    --st-spawnable:    #5a3d99;
+    --st-data-ready:   #4c51bf;
+    --st-blocked:      #c53030;
+    --st-missing:      #b7791f;
+    --st-conceptual:   #718096;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+               font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 16px 24px 10px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+  h1 { margin: 0; font-size: 16px; font-weight: 600; }
+  .sub { color: var(--muted); margin-top: 3px; font-size: 12.5px; }
+
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  .form { padding: 16px 24px; background: var(--bg-card); border-bottom: 1px solid var(--border);
+          display: grid; grid-template-columns: repeat(5, max-content) 1fr; gap: 12px; align-items: end; }
+  .form label { display: flex; flex-direction: column; font-size: 11px; color: var(--muted);
+                text-transform: uppercase; letter-spacing: 0.04em; gap: 3px; }
+  .form select, .form input {
+    padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px;
+    background: var(--bg-card); color: var(--fg); min-width: 180px;
+  }
+  .form button {
+    padding: 7px 16px; border: 1px solid var(--accent); background: var(--accent);
+    color: white; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500;
+  }
+  .form button:hover { background: #225a96; }
+
+  section { padding: 18px 24px; }
+  h2 { font-size: 14px; font-weight: 600; margin: 6px 0 14px; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 0 24px 12px; font-size: 11.5px; color: var(--muted); }
+  .legend .pill { display: inline-block; padding: 2px 8px; border-radius: 3px;
+                  font-weight: 600; font-size: 10.5px; text-transform: uppercase;
+                  letter-spacing: 0.04em; color: white; margin-right: 5px; }
+  .pill.RESULT_READY { background: var(--st-result-ready); }
+  .pill.RUN_READY    { background: var(--st-run-ready); }
+  .pill.SPAWNABLE    { background: var(--st-spawnable); }
+  .pill.DATA_READY   { background: var(--st-data-ready); }
+  .pill.BLOCKED      { background: var(--st-blocked); }
+  .pill.MISSING      { background: var(--st-missing); }
+  .pill.CONCEPTUAL   { background: var(--st-conceptual); }
+
+  /* Module pills (biomod side) — outlined to distinguish from data pills */
+  .pill.MOD_READY        { background: transparent; color: var(--st-result-ready);
+                            border: 1.5px solid var(--st-result-ready); }
+  .pill.MOD_STALE        { background: transparent; color: var(--st-spawnable);
+                            border: 1.5px solid var(--st-spawnable); }
+  .pill.MOD_FAILED       { background: transparent; color: var(--st-blocked);
+                            border: 1.5px solid var(--st-blocked); }
+  .pill.MOD_AVAILABLE    { background: transparent; color: var(--st-run-ready);
+                            border: 1.5px solid var(--st-run-ready); }
+  .pill.MOD_CONCEPTUAL   { background: transparent; color: var(--st-conceptual);
+                            border: 1.5px solid var(--st-conceptual); }
+  .pill.MOD_NOT_INSTALLED{ background: transparent; color: var(--st-missing);
+                            border: 1.5px solid var(--st-missing); }
+
+  .step-card {
+    background: var(--bg-card); border-left: 6px solid var(--border); border-radius: 6px;
+    padding: 14px 18px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .step-card.RESULT_READY { border-left-color: var(--st-result-ready); }
+  .step-card.RUN_READY    { border-left-color: var(--st-run-ready); }
+  .step-card.SPAWNABLE    { border-left-color: var(--st-spawnable); }
+  .step-card.BLOCKED      { border-left-color: var(--st-blocked); }
+  .step-card.MISSING      { border-left-color: var(--st-missing); }
+
+  .step-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .step-num  { color: var(--muted); font-size: 12px; }
+  .step-ana  { font-weight: 600; font-size: 14px; }
+  .step-ana .mode { color: var(--muted); font-weight: 400; font-size: 12.5px; margin-left: 6px; }
+
+  .step-body { margin-top: 10px; display: grid; grid-template-columns: 200px 1fr; gap: 4px 14px;
+               font-size: 12.5px; }
+  .step-body dt { color: var(--muted); }
+  .step-body dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                  font-size: 12px; word-break: break-all; }
+
+  .step-rec {
+    margin-top: 12px; padding: 10px 12px; border-radius: 4px; font-size: 12.5px;
+    background: #f1f5f9;
+  }
+  .step-rec h4 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase;
+                 letter-spacing: 0.04em; color: var(--muted); font-weight: 600; }
+  .step-rec code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; }
+  .step-rec pre { margin: 4px 0 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                  font-size: 11.5px; background: var(--bg); padding: 8px 10px; border-radius: 3px;
+                  overflow-x: auto; border: 1px solid var(--border); }
+  .step-rec ul { margin: 4px 0 0 18px; padding: 0; }
+  .step-rec li { font-size: 12px; }
+
+  .empty { padding: 30px; color: var(--muted); }
+  .error { padding: 16px 24px; color: var(--st-blocked); background: #fff5f5;
+           border-bottom: 1px solid var(--border); font-size: 12.5px; }
+
+  .footer { padding: 12px 24px; color: var(--muted); font-size: 11.5px; border-top: 1px solid var(--border); }
+  .footer code { font-size: 11px; }
+
+  .summary {
+    padding: 12px 24px; background: var(--bg-card); border-bottom: 1px solid var(--border);
+    font-size: 13px; display: flex; gap: 22px; flex-wrap: wrap;
+  }
+  .summary .item { color: var(--muted); }
+  .summary .item strong { color: var(--fg); }
+  .summary .item .pill { margin-left: 4px; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html"><span class="num">1.</span> Conversation</a>
+  <a href="action.html" class="current"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html"><span class="num">4.</span> Catalogue</a>
+  <span class="tag">atlas-core dashboard</span>
+</nav>
+
+<header>
+  <h1>Action — readiness &amp; routing dashboard</h1>
+  <div class="sub">Pick a target. The dashboard walks the chain backward and shows each step's status. It does <strong>not</strong> run anything — it tells you what to reuse, what's run-ready, what's spawnable, and what's blocked.</div>
+</header>
+
+<form class="form" onsubmit="event.preventDefault(); resolveAndRender();">
+  <label>Target analysis
+    <select id="f-analysis"></select>
+  </label>
+  <label>Mode
+    <select id="f-mode"></select>
+  </label>
+  <label>Sample set
+    <select id="f-sample"></select>
+  </label>
+  <label>Chromosome
+    <input id="f-chrom" placeholder="e.g. C_gar_LG12" />
+  </label>
+  <label>Candidate id
+    <input id="f-candidate" placeholder="e.g. LG12_INV_001" />
+  </label>
+  <button type="submit">Resolve →</button>
+</form>
+
+<div class="summary" id="summary" style="display:none"></div>
+
+<div class="legend">
+  <span><span class="pill RESULT_READY">result_ready</span> output exists & matches → reuse</span>
+  <span><span class="pill RUN_READY">run_ready</span> all inputs exist & checks pass → run</span>
+  <span><span class="pill SPAWNABLE">spawnable</span> some inputs missing but derivable</span>
+  <span><span class="pill BLOCKED">blocked</span> existing result conflicts or contracts mismatch</span>
+  <span><span class="pill MISSING">missing</span> required input doesn't exist & isn't spawnable</span>
+  <span style="margin-left:18px;color:var(--st-conceptual);font-weight:600">module:</span>
+  <span><span class="pill MOD_READY">mod_ready</span> installed, last run passed</span>
+  <span><span class="pill MOD_STALE">mod_stale</span> installed but inputs changed</span>
+  <span><span class="pill MOD_FAILED">mod_failed</span> installed, last run failed</span>
+  <span><span class="pill MOD_NOT_INSTALLED">not installed</span> module missing from biomod env</span>
+  <span><span class="pill MOD_CONCEPTUAL">conceptual</span> module name set in analysis_modes but unknown to biomod</span>
+</div>
+
+<section>
+  <div id="steps"></div>
+</section>
+
+<div class="footer" id="footer"></div>
+
+<script>
+// ===== TSV loader (same as page 3) ===================================== //
+
+function parseTSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.length > 0);
+  if (lines.length === 0) return [];
+  const header = lines[0].split("\t");
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split("\t");
+    const row = {};
+    header.forEach((h, j) => row[h] = cols[j] !== undefined ? cols[j] : "");
+    rows.push(row);
+  }
+  return rows;
+}
+
+async function fetchTsv(rel) {
+  const resp = await fetch(rel, { cache: "no-store" });
+  if (!resp.ok) throw new Error(`${rel} → HTTP ${resp.status}`);
+  return parseTSV(await resp.text());
+}
+
+const TSVS = [
+  ["sample_sets",      "../01_registry/sample_sets.tsv",      "sample_set_id"],
+  ["group_sets",       "../01_registry/group_sets.tsv",       "group_set_id"],
+  ["interval_sets",    "../01_registry/interval_sets.tsv",    "interval_set_id"],
+  ["site_sets",        "../01_registry/site_sets.tsv",        "site_set_id"],
+  ["input_values",     "../01_registry/input_values.tsv",     "value_id"],
+  ["analysis_results", "../01_registry/analysis_results.tsv", "result_id"],
+  ["analysis_modes",   "../01_registry/analysis_modes.tsv",   null],
+  ["module_registry",  "../01_registry/module_registry.tsv",  "module_name"],
+];
+
+let DB = {};
+
+async function loadAll() {
+  for (const [name, path, key] of TSVS) {
+    let rows;
+    try {
+      rows = await fetchTsv(path);
+    } catch (e) {
+      // module_registry.tsv is optional — degrade gracefully when biomod
+      // isn't synced yet. Everything else is required.
+      if (name === "module_registry") {
+        rows = [];
+      } else {
+        throw e;
+      }
+    }
+    if (key) {
+      const m = {}; for (const r of rows) if (r[key]) m[r[key]] = r;
+      DB[name] = { rows, by: m };
+    } else {
+      DB[name] = { rows };
+    }
+  }
+}
+
+// ===== Policy resolvers (port from resolve.py) ========================== //
+
+function _interval(tag, args) {
+  const rows = DB.interval_sets.rows;
+  if (tag === "genome_all") {
+    const cs = rows.filter(r => r.interval_type === "genome");
+    return cs.length === 1 ? { id: cs[0].interval_set_id, why: "interval_type=genome" }
+                           : { cands: cs.map(c => c.interval_set_id), why: "interval_type=genome (need exactly 1)" };
+  }
+  if (tag === "chromosome_full") {
+    if (!args.chromosome) return { why: "need --chromosome" };
+    const cs = rows.filter(r => r.interval_type === "chromosome"
+                                && (r.interval_set_id || "").includes(args.chromosome));
+    return cs.length === 1 ? { id: cs[0].interval_set_id, why: `interval_type=chromosome containing '${args.chromosome}'` }
+                           : { cands: cs.map(c => c.interval_set_id), why: `interval_type=chromosome matching '${args.chromosome}'` };
+  }
+  if (tag === "candidate_interval") {
+    if (!args.candidate_id) return { why: "need --candidate-id" };
+    const cs = rows.filter(r => r.interval_type === "candidate"
+                                && (r.interval_set_id || "").includes(args.candidate_id));
+    return cs.length === 1 ? { id: cs[0].interval_set_id, why: `interval_type=candidate matching '${args.candidate_id}'` }
+                           : { cands: cs.map(c => c.interval_set_id), why: `no unique candidate match` };
+  }
+  return { why: `unknown interval_policy '${tag}'` };
+}
+
+function _site(tag, intervalId) {
+  const rows = DB.site_sets.rows;
+  if (tag === "thin500_global") {
+    const cs = rows.filter(r => r.site_set_id.includes("thin500") && r.site_set_id.includes("global"));
+    return cs.length === 1 ? { id: cs[0].site_set_id, why: "site_set name contains thin500+global" }
+                           : { cands: cs.map(c => c.site_set_id), why: "thin500+global (need exactly 1)" };
+  }
+  if (tag === "thin500_per_chr") {
+    const cs = rows.filter(r => r.site_set_id.includes("thin500") && r.interval_set_id === intervalId);
+    return cs.length === 1 ? { id: cs[0].site_set_id, why: `thin500 site_set with interval_set_id=${intervalId}` }
+                           : { cands: cs.map(c => c.site_set_id), why: `thin500 + interval=${intervalId}` };
+  }
+  if (tag === "candidate_sites") {
+    const cs = rows.filter(r => r.interval_set_id === intervalId && r.operation === "intersect");
+    return cs.length === 1 ? { id: cs[0].site_set_id, why: `site_set on interval=${intervalId}, operation=intersect` }
+                           : { cands: cs.map(c => c.site_set_id), why: `intersect on ${intervalId}` };
+  }
+  return { why: `unknown site_policy '${tag}'` };
+}
+
+function _group(tag, sampleId) {
+  const rows = DB.group_sets.rows;
+  const relevant = rows.filter(r => r.sample_set_id === sampleId);
+  if (tag === "family_population") {
+    const cs = relevant.filter(r => (r.group_columns || "").includes("family") && (r.group_columns || "").includes("population"));
+    return cs.length === 1 ? { id: cs[0].group_set_id, why: "family+population in group_columns" }
+                           : { cands: cs.map(c => c.group_set_id), why: "family+population (need exactly 1)" };
+  }
+  if (tag === "family_karyotype") {
+    const cs = relevant.filter(r => (r.group_columns || "").includes("family") && (r.group_columns || "").includes("karyotype"));
+    if (cs.length === 1) return { id: cs[0].group_set_id, why: "family+karyotype" };
+    if (cs.length > 1)  return { cands: cs.map(c => c.group_set_id), why: "family+karyotype (need exactly 1)" };
+    return { why: "no group_set with family+karyotype columns; --group-set explicitly", cands: [] };
+  }
+  if (tag === "optional_groups") return { id: "", why: "groups optional" };
+  return { why: `unknown group_policy '${tag}'` };
+}
+
+function _value(tag, sampleId, siteId, intervalId) {
+  if (tag === "none") return { id: "", why: "this analysis consumes an upstream result, not a value file" };
+  if (tag === "beagle_matching") {
+    const cs = DB.input_values.rows.filter(r =>
+      (r.value_type || "").startsWith("BEAGLE")
+      && r.sample_set_id === sampleId
+      && r.site_set_id === siteId
+      && (!intervalId || r.interval_set_id === intervalId)
+    );
+    return cs.length === 1 ? { id: cs[0].value_id, why: `BEAGLE matching (${sampleId}, ${siteId}, ${intervalId})` }
+                           : { cands: cs.map(c => c.value_id), why: `BEAGLE matching (${sampleId}, ${siteId}, ${intervalId})` };
+  }
+  return { why: `unknown value_policy '${tag}'` };
+}
+
+// ===== Mode chain walking ============================================== //
+
+function findMode(analysis, mode) {
+  return DB.analysis_modes.rows.find(m => m.analysis_type === analysis && m.mode === mode);
+}
+
+const REQ_TO_PRODUCES = {
+  "ngsrelate_result": "relatedness_res",
+  "pedigree_result":  "pedigree_result",
+  "mendelian_result": "mendelian_result",
+  "relatedness_res":  "relatedness_res",
+};
+
+// Walk dependencies upstream (deepest first → target last).
+function walkChain(targetAnalysis, targetMode) {
+  const chain = []; const seen = new Set();
+  function walk(a, mo) {
+    const k = a + "/" + mo;
+    if (seen.has(k)) return;
+    seen.add(k);
+    const m = findMode(a, mo);
+    if (!m) return;
+    const req = (m.required_dimensions || "").split(",").map(s => s.trim());
+    for (const dim of req) {
+      const producesTag = REQ_TO_PRODUCES[dim];
+      if (!producesTag) continue;
+      // Find the upstream mode that produces this tag.
+      // For simplicity we pick the first mode of the producing analysis_type.
+      // (Could disambiguate with another field later.)
+      const candidate = DB.analysis_modes.rows.find(mm => mm.produces === producesTag);
+      if (candidate) walk(candidate.analysis_type, candidate.mode);
+    }
+    chain.push(m);
+  }
+  walk(targetAnalysis, targetMode);
+  return chain;
+}
+
+// ===== Resolve one step's contract ===================================== //
+
+function resolveStep(mode, args, inherited) {
+  const log = [];
+  const contract = {
+    analysis_type: mode.analysis_type,
+    mode:          mode.mode,
+    produces:      mode.produces,
+  };
+  const missing = [];
+  const ambiguous = [];
+
+  // Required dimensions
+  const required = (mode.required_dimensions || "").split(",").map(s => s.trim()).filter(Boolean);
+  const have = {
+    sample_set:        args.sample_set,
+    chromosome:        args.chromosome,
+    candidate_id:      args.candidate_id,
+    ngsrelate_result:  inherited.ngsrelate_result,
+    pedigree_result:   inherited.pedigree_result,
+  };
+  for (const dim of required) {
+    if (!have[dim] && !inherited["_inherited_" + dim]) {
+      missing.push(`required dimension '${dim}' not provided`);
+    }
+  }
+
+  const sampleId = args.sample_set || inherited.sample_set_id || "";
+  contract.sample_set_id = sampleId;
+  if (inherited.input_result_id) contract.input_result_id = inherited.input_result_id;
+
+  // interval policy
+  const ip = mode.interval_policy || "";
+  if (ip === "same_as_input" && inherited.interval_set_id) {
+    contract.interval_set_id = inherited.interval_set_id;
+    log.push(`interval (inherited): ${contract.interval_set_id}`);
+  } else if (ip) {
+    const r = _interval(ip, args);
+    log.push(`interval_policy='${ip}': ${r.why} → ${r.id || "(none)"}`);
+    if (r.id !== undefined) contract.interval_set_id = r.id;
+    else if ((r.cands || []).length) ambiguous.push(`interval: ${r.why} — ${(r.cands || []).join(", ")}`);
+    else missing.push(`interval: ${r.why}`);
+  }
+
+  // site policy
+  const sp = mode.site_policy || "";
+  if (sp === "same_as_input" && inherited.site_set_id) {
+    contract.site_set_id = inherited.site_set_id;
+    log.push(`site (inherited): ${contract.site_set_id}`);
+  } else if (sp) {
+    const r = _site(sp, contract.interval_set_id || "");
+    log.push(`site_policy='${sp}': ${r.why} → ${r.id || "(none)"}`);
+    if (r.id !== undefined) contract.site_set_id = r.id;
+    else if ((r.cands || []).length) ambiguous.push(`site: ${r.why} — ${(r.cands || []).join(", ")}`);
+    else missing.push(`site: ${r.why}`);
+  }
+
+  // group policy
+  const gp = mode.group_policy || "";
+  if (gp === "same_as_input" && inherited.group_set_id) {
+    contract.group_set_id = inherited.group_set_id;
+    log.push(`group (inherited): ${contract.group_set_id}`);
+  } else if (gp) {
+    const r = _group(gp, sampleId);
+    log.push(`group_policy='${gp}': ${r.why} → ${r.id !== undefined ? r.id : "(none)"}`);
+    if (r.id !== undefined) contract.group_set_id = r.id;
+    else if ((r.cands || []).length) ambiguous.push(`group: ${r.why} — ${(r.cands || []).join(", ")}`);
+    else missing.push(`group: ${r.why}`);
+  }
+
+  // value policy
+  const vp = mode.value_policy || "";
+  if (vp) {
+    const r = _value(vp, sampleId, contract.site_set_id || "", contract.interval_set_id || "");
+    log.push(`value_policy='${vp}': ${r.why} → ${r.id || "(none)"}`);
+    if (r.id !== undefined) contract.input_value_id = r.id;
+    else if ((r.cands || []).length) ambiguous.push(`value: ${r.why} — ${(r.cands || []).join(", ")}`);
+    else missing.push(`value: ${r.why}`);
+  }
+
+  return { contract, missing, ambiguous, log };
+}
+
+// ===== Result-lookup: does a row already exist matching this contract? ===
+
+function findMatchingResult(contract) {
+  return DB.analysis_results.rows.find(r =>
+    r.analysis_type === contract.analysis_type
+    && r.sample_set_id === (contract.sample_set_id || "")
+    && r.interval_set_id === (contract.interval_set_id || "")
+    && r.site_set_id === (contract.site_set_id || "")
+    // Either same input_value or same upstream input_result
+    && (
+      (r.input_value_id || "") === (contract.input_value_id || "")
+      || (r.input_result_id && r.input_result_id === contract.input_result_id)
+    )
+  );
+}
+
+// ===== Status assignment =============================================== //
+
+function statusFor(stepResolution) {
+  const { contract, missing, ambiguous } = stepResolution;
+  // 1. Result already exists matching this contract → RESULT_READY
+  const hit = findMatchingResult(contract);
+  if (hit) return { state: "RESULT_READY", existing: hit };
+  // 2. Any unambiguous resolution but contract has missing required dims
+  if (missing.length) return { state: "MISSING", missing, ambiguous };
+  // 3. Ambiguous policy → BLOCKED (need human disambiguation)
+  if (ambiguous.length) return { state: "BLOCKED", ambiguous };
+  // 4. All inputs resolved → RUN_READY
+  return { state: "RUN_READY" };
+}
+
+// ===== Render ========================================================== //
+
+function pill(state) { return `<span class="pill ${state}">${state.toLowerCase()}</span>`; }
+
+// Module status for a mode → biomod-side readiness.
+// Returns { state, label, row } where row is the module_registry row (or null).
+function moduleStatus(mode) {
+  const name = (mode.module_name || "").trim();
+  if (!name) return { state: "MOD_CONCEPTUAL", label: "(no module_name set)", row: null };
+  const row = DB.module_registry.by[name];
+  if (!row) return { state: "MOD_CONCEPTUAL", label: name + " (not in module_registry)", row: null };
+  if (row.installed !== "true") return { state: "MOD_NOT_INSTALLED", label: `${name} ${row.version || ""}`, row };
+  if (row.last_run_status === "failed") return { state: "MOD_FAILED", label: `${name} ${row.version || ""} — last run failed`, row };
+  if (row.stale === "true") return { state: "MOD_STALE", label: `${name} — stale: ${row.stale_reason || "inputs changed"}`, row };
+  if (row.ready === "true") return { state: "MOD_READY", label: `${name} ${row.version || ""} — last QC: ${row.last_run_qc || "?"}`, row };
+  return { state: "MOD_AVAILABLE", label: `${name} ${row.version || ""}`, row };
+}
+
+function recoBlock(step) {
+  const { state, existing, missing, ambiguous } = step.status;
+  const c = step.resolution.contract;
+
+  if (state === "RESULT_READY") {
+    return `<div class="step-rec">
+      <h4>Recommended action — REUSE</h4>
+      Use existing layer: <code>${existing.result_id}</code><br>
+      <code>path: ${existing.path}</code>
+    </div>`;
+  }
+  if (state === "RUN_READY") {
+    const cmd = `python3 register_result.py \\
+  --result-id        <new_id> \\
+  --analysis-type    ${c.analysis_type} \\
+  --path             04_results/${c.analysis_type}/<filename> \\
+  --sample-set-id    ${c.sample_set_id || ""} \\
+  ${c.group_set_id ? "--group-set-id     " + c.group_set_id + " \\\n  " : ""}--interval-set-id  ${c.interval_set_id || ""} \\
+  ${c.site_set_id ? "--site-set-id      " + c.site_set_id + " \\\n  " : ""}${c.input_value_id ? "--input-value-id   " + c.input_value_id + " \\\n  " : ""}${c.input_result_id ? "--input-result-id  " + c.input_result_id + " \\\n  " : ""}--method-id        ${c.analysis_type}_v?`;
+    return `<div class="step-rec">
+      <h4>Recommended action — RUN</h4>
+      All inputs resolved. Run the tool, then register the output:
+      <pre>${cmd.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>
+    </div>`;
+  }
+  if (state === "MISSING") {
+    return `<div class="step-rec">
+      <h4>Recommended action — RESOLVE MISSING</h4>
+      <ul>${missing.map(m => `<li>${m}</li>`).join("")}</ul>
+    </div>`;
+  }
+  if (state === "BLOCKED") {
+    return `<div class="step-rec">
+      <h4>Recommended action — DISAMBIGUATE</h4>
+      Pick one explicitly:
+      <ul>${(ambiguous || []).map(m => `<li>${m}</li>`).join("")}</ul>
+    </div>`;
+  }
+  return "";
+}
+
+function renderSteps(chain, args) {
+  const steps = [];
+  let inherited = {};
+  for (let i = 0; i < chain.length; i++) {
+    const m = chain[i];
+    const resolution = resolveStep(m, args, inherited);
+    const status = statusFor(resolution);
+    steps.push({ mode: m, resolution, status });
+
+    // Inheritance: downstream steps inherit from this step's resolved contract
+    // (or from an existing result if RESULT_READY).
+    const c = resolution.contract;
+    inherited = {
+      sample_set_id:   c.sample_set_id || inherited.sample_set_id,
+      group_set_id:    c.group_set_id   || inherited.group_set_id,
+      interval_set_id: c.interval_set_id || inherited.interval_set_id,
+      site_set_id:     c.site_set_id    || inherited.site_set_id,
+      // Pass produced result_id forward
+      ngsrelate_result: m.produces === "relatedness_res" ? (status.existing ? status.existing.result_id : "<future>" + m.analysis_type + "_id") : inherited.ngsrelate_result,
+      pedigree_result:  m.produces === "pedigree_result"  ? (status.existing ? status.existing.result_id : "<future>" + m.analysis_type + "_id") : inherited.pedigree_result,
+      input_result_id:  status.existing ? status.existing.result_id : inherited.input_result_id,
+    };
+  }
+
+  // Render
+  let html = "";
+  steps.forEach((s, i) => {
+    const c = s.resolution.contract;
+    const ex = s.status.existing;
+    const mod = moduleStatus(s.mode);
+    html += `<div class="step-card ${s.status.state}">
+      <div class="step-head">
+        <span class="step-num">step ${i + 1} of ${steps.length}</span>
+        <span class="step-ana">${s.mode.analysis_type}<span class="mode">/${s.mode.mode}</span></span>
+        ${pill(s.status.state)}
+        ${pill(mod.state)}
+        <span style="color:var(--muted);font-size:11.5px">${mod.label}</span>
+        ${ex ? `<span style="color:var(--muted);font-size:12px">→ <code>${ex.result_id}</code></span>` : ""}
+      </div>
+      <dl class="step-body">
+        <dt>sample_set</dt><dd>${c.sample_set_id || "—"}</dd>
+        <dt>group_set</dt><dd>${c.group_set_id || "—"}</dd>
+        <dt>interval_set</dt><dd>${c.interval_set_id || "—"}</dd>
+        <dt>site_set</dt><dd>${c.site_set_id || "—"}</dd>
+        <dt>input_value</dt><dd>${c.input_value_id || "—"}</dd>
+        ${c.input_result_id ? `<dt>input_result</dt><dd>${c.input_result_id}</dd>` : ""}
+        <dt>produces</dt><dd>${c.produces}</dd>
+        <dt>module</dt><dd>${(s.mode.module_name || "—") + (mod.row && mod.row.version ? "  @ " + mod.row.version : "")}${mod.row && mod.row.last_run_id ? `  · last_run=<code>${mod.row.last_run_id.slice(0,8)}…</code>` : ""}</dd>
+      </dl>
+      ${recoBlock(s)}
+    </div>`;
+  });
+
+  // Summary line
+  const counts = {};
+  for (const s of steps) counts[s.status.state] = (counts[s.status.state] || 0) + 1;
+  const summary = Object.entries(counts)
+    .sort()
+    .map(([k, n]) => `<span class="item"><strong>${n}</strong> step(s) ${pill(k)}</span>`)
+    .join("");
+  document.getElementById("summary").innerHTML = summary;
+  document.getElementById("summary").style.display = "flex";
+
+  document.getElementById("steps").innerHTML = html || `<div class="empty">No steps to resolve.</div>`;
+}
+
+// ===== Form wiring ===================================================== //
+
+function populateForm() {
+  // analysis dropdown
+  const analyses = [...new Set(DB.analysis_modes.rows.map(r => r.analysis_type))];
+  const fa = document.getElementById("f-analysis");
+  for (const a of analyses) {
+    const o = document.createElement("option");
+    o.value = o.textContent = a;
+    fa.appendChild(o);
+  }
+  fa.addEventListener("change", populateModes);
+  populateModes();
+
+  // sample dropdown
+  const fs = document.getElementById("f-sample");
+  for (const s of DB.sample_sets.rows) {
+    const o = document.createElement("option");
+    o.value = s.sample_set_id; o.textContent = `${s.sample_set_id} (${s.n_samples})`;
+    fs.appendChild(o);
+  }
+
+  // sensible defaults: target = mendelian per_candidate, sample = first set
+  fa.value = "mendelian"; populateModes();
+  document.getElementById("f-mode").value = "per_candidate";
+  document.getElementById("f-chrom").value = "C_gar_LG12";
+  document.getElementById("f-candidate").value = "LG12_INV_001";
+}
+
+function populateModes() {
+  const a = document.getElementById("f-analysis").value;
+  const fm = document.getElementById("f-mode");
+  fm.innerHTML = "";
+  for (const m of DB.analysis_modes.rows.filter(r => r.analysis_type === a)) {
+    const o = document.createElement("option");
+    o.value = m.mode; o.textContent = `${m.mode} — ${m.label || ""}`;
+    fm.appendChild(o);
+  }
+}
+
+function resolveAndRender() {
+  const args = {
+    analysis:     document.getElementById("f-analysis").value,
+    mode:         document.getElementById("f-mode").value,
+    sample_set:   document.getElementById("f-sample").value,
+    chromosome:   document.getElementById("f-chrom").value.trim(),
+    candidate_id: document.getElementById("f-candidate").value.trim(),
+  };
+  const chain = walkChain(args.analysis, args.mode);
+  renderSteps(chain, args);
+}
+
+// ===== Boot ============================================================ //
+
+(async () => {
+  try {
+    await loadAll();
+    populateForm();
+    resolveAndRender();
+    document.getElementById("footer").innerHTML =
+      `Loaded from <code>../01_registry/*.tsv</code> · ` +
+      `Status logic: <code>RESULT_READY</code> if a result row matches the resolved contract; ` +
+      `<code>RUN_READY</code> if all inputs exist and policies resolve uniquely; ` +
+      `<code>MISSING</code> if a required dimension is unfilled; ` +
+      `<code>BLOCKED</code> if a policy has multiple candidates and needs human disambiguation. ` +
+      `<strong>This page does not run anything</strong> — it tells you what to reuse, what's run-ready, and what's blocked.`;
+  } catch (e) {
+    const banner = document.createElement("div");
+    banner.className = "error";
+    banner.innerHTML = `Failed to load registry TSVs: ${e.message}.<br>` +
+      `Run <code>python3 -m http.server -d toolkit_registries/relatedness 8765</code> ` +
+      `from the repo root, then open <code>http://127.0.0.1:8765/page/action.html</code>.`;
+    document.body.insertBefore(banner, document.querySelector(".form"));
+  }
+})();
+</script>
+
+</body>
+</html>

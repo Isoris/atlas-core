@@ -1,0 +1,37 @@
+{
+  "layer_id": "theta_pi_95c013b2_C_gar_LG28_v1",
+  "layer_type": "theta_pi_result",
+  "schema_version": "theta_pi_result_v1",
+  "stage": "normalized",
+  "dataset_id": "main_226_hatchery",
+  "coordinate": {
+    "chrom": "C_gar_LG28",
+    "start_bp": 14815000,
+    "end_bp": 18305000
+  },
+  "sample_scope": {
+    "sample_ids": [
+      "CGA001",
+      "CGA007",
+      "CGA012",
+      "CGA042",
+      "CGA071",
+      "CGA118",
+      "CGA133",
+      "CGA189"
+    ]
+  },
+  "source_files": [],
+  "provenance": {
+    "action_id": "act_1715000250000_x33",
+    "engine": "theta_pi",
+    "engine_version": "v0.4.1",
+    "config_hash": "sha256:b2d7d55e39285dfbfd9f30d3fc906d3af0cbf2cc180295b6c9b0af8ce134db9d"
+  },
+  "status": "active",
+  "created_at": "2026-05-12T09:30:00Z",
+  "payload": {
+    "_stub": true,
+    "note": "synthetic payload for inventory demo"
+  }
+}

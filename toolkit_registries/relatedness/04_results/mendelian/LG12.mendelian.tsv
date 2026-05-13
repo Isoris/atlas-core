@@ -1,0 +1,3 @@
+trio_id	offspring	parent1	parent2	n_sites	n_mendelian_errors	rate
+T1	GAR003	GAR001	GAR002	6	0	0.000
+T2	GAR004	GAR001	GAR002	6	1	0.167

@@ -1,0 +1,11 @@
+{
+  "set_id":             "candidates_D17_PASS_v1",
+  "entity_type":        "inversion_candidate",
+  "label":              "D17 PASS inversions (cohort-level)",
+  "path":               "sets/inversion_candidate/D17_PASS.tsv",
+  "n_entities":         47,
+  "coordinate_system":  "fClaHyb_Gar_LG_v1",
+  "intended_use":       "atlas review, manuscript Fig 2",
+  "status":             "active",
+  "created_at":         "2026-04-25T09:00:00Z"
+}

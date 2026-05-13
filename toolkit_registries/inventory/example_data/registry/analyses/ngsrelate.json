@@ -1,0 +1,25 @@
+{
+  "analysis_id":      "ngsrelate",
+  "analysis_version": "v1",
+  "label":            "ngsRelate — pairwise relatedness from genotype likelihoods",
+  "description":      "Estimates pairwise relatedness coefficients (theta, IBS0/1/2, KING) from a BEAGLE genotype-likelihood file restricted to a sites file. Per-pair scores for all N×(N-1)/2 sample pairs.",
+  "inputs": {
+    "sets": [
+      { "role": "samples", "entity_type": "sample", "cardinality": "one" }
+    ],
+    "artifacts": [
+      { "role": "beagle", "layer_type": "beagle_file", "schema_version": "beagle_file_v1" },
+      { "role": "sites",  "layer_type": "sites_file",  "schema_version": "sites_file_v1" }
+    ]
+  },
+  "params_schema":  "schema_in/run_ngsrelate_v1.schema.json",
+  "produces": [
+    { "layer_type": "ngsrelate_result", "schema_version": "ngsrelate_result_v1" }
+  ],
+  "engine":         "ngsRelate",
+  "engine_repo":    "https://github.com/ANGSD/NgsRelate",
+  "default_runner": "runners.ngsrelate.run",
+  "status":         "active",
+  "intended_use":   "kinship QC, family detection, pedigree input",
+  "created_at":     "2026-05-12T00:00:00Z"
+}

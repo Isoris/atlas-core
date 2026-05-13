@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "set_registry_row_v1.schema.json",
+  "title": "Set registry row — one TSV row in set_registry.tsv",
+  "description": "Flat catalogue row, one per registered set. set_registry.tsv has these columns in order (tab-separated, header on the first line). Use TSV for grep / pandas / shell-piping; use the per-set JSON (set_v1.schema.json) under sets/<entity_type>/<set_id>.json for the full structured form (derived_from, set algebra, predicate, etc.). Per SETS_AND_ANALYSES.md §'The TSV catalogues'.",
+  "type": "object",
+  "required": ["set_id", "entity_type", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "set_id":            { "type": "string", "description": "Stable id. Matches set_v1.set_id." },
+    "entity_type":       { "type": "string", "description": "Kind of thing in the set. Per entity_type_v1." },
+    "label":             { "type": "string", "description": "Human-readable label. Empty allowed." },
+    "path":              { "type": "string", "description": "Relative or absolute path to the members file. Empty when the set is derived (definition_path points at the JSON)." },
+    "n_entities":        { "type": ["integer", "null"], "description": "Member count. Empty allowed (recomputed by lib/registry_index.py when missing)." },
+    "hash":              { "type": "string", "description": "sha256:<hex> of canonical members. Empty allowed for derived sets that haven't been materialized." },
+    "parent_set_id":     { "type": "string", "description": "Single-parent FK, empty if no parent or if derived_from with multiple parents (use definition_path then)." },
+    "filter_profile_id": { "type": "string", "description": "Optional filter profile name. Empty allowed." },
+    "coordinate_system": { "type": "string", "description": "Genome assembly id when entity_type is coordinate_aware. Empty for sample / bam / chromosome." },
+    "intended_use":      { "type": "string", "description": "Free-form. Empty allowed." },
+    "status":            { "type": "string", "enum": ["active", "experimental", "deprecated", "stale", "superseded"] },
+    "created_at":        { "type": "string", "description": "ISO 8601 date. Empty allowed." },
+    "definition_path":   { "type": "string", "description": "Path to the per-set JSON (set_v1) when the set has set-algebra lineage (derived_from with multiple parents, filter predicate, etc.). Empty for atomic sets where everything fits in TSV columns." }
+  },
+  "_tsv_column_order": [
+    "set_id", "entity_type", "label", "path", "n_entities", "hash",
+    "parent_set_id", "filter_profile_id", "coordinate_system",
+    "intended_use", "status", "created_at", "definition_path"
+  ],
+  "_tsv_empty_value": "Empty cells are rendered as the string '' (zero-length, NOT 'NA'/'.'/'NULL') so split('\\t') has the right column count. The parser fills missing fields with None."
+}

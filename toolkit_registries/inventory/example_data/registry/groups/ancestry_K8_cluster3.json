@@ -1,0 +1,10 @@
+{
+  "group_id": "ancestry_K8_cluster3",
+  "cohort_id": "main_226_hatchery",
+  "label": "NGSadmix K=8 cluster 3",
+  "members": ["CGA042", "CGA071", "CGA118", "CGA204", "CGA216"],
+  "n_members": 5,
+  "dimension": "ancestry",
+  "status": "active",
+  "created_at": "2026-03-20T00:00:00Z"
+}

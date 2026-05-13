@@ -1,0 +1,10 @@
+{
+  "group_id": "family_F042",
+  "cohort_id": "main_226_hatchery",
+  "label": "Family F042 (CGA042 + offspring)",
+  "members": ["CGA042", "CGA189", "CGA192", "CGA204"],
+  "n_members": 4,
+  "dimension": "family",
+  "status": "active",
+  "created_at": "2026-03-25T00:00:00Z"
+}

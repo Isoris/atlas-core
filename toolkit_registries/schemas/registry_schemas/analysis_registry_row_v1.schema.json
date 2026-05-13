@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "analysis_registry_row_v1.schema.json",
+  "title": "Analysis registry row — one TSV row in analysis_registry.tsv",
+  "description": "Flat catalogue row, one per registered analysis_id. analysis_registry.tsv has these columns in order (tab-separated, header on the first line). Use TSV for grep / pandas; use the per-analysis JSON (analysis_v1.schema.json) under analyses/<analysis_id>.json for the full structured form (nested inputs.sets / inputs.artifacts arrays). Per SETS_AND_ANALYSES.md §'The TSV catalogues'.",
+  "type": "object",
+  "required": ["analysis_id", "analysis_version", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "analysis_id":       { "type": "string" },
+    "analysis_version":  { "type": "string" },
+    "label":             { "type": "string" },
+    "description":       { "type": "string", "description": "One line; multi-line descriptions live in the JSON." },
+    "input_entity_types":{ "type": "string", "description": "Comma-separated entity_type names this analysis consumes as sets (e.g. 'sample,variant_site'). Order doesn't matter." },
+    "input_layer_types": { "type": "string", "description": "Comma-separated layer_type names this analysis consumes as artifacts (e.g. 'beagle_file,sites_file')." },
+    "produces":          { "type": "string", "description": "Comma-separated output layer_type names (e.g. 'ngsrelate_result')." },
+    "engine":            { "type": "string" },
+    "endpoint":          { "type": "string", "description": "Optional /api/... path." },
+    "default_runner":    { "type": "string" },
+    "status":            { "type": "string", "enum": ["active", "experimental", "deprecated"] },
+    "requires":          { "type": "string", "description": "Comma-separated upstream analysis_ids (informational dependency)." },
+    "intended_use":      { "type": "string" },
+    "definition_path":   { "type": "string", "description": "Path to the per-analysis JSON (analysis_v1) when more detail is needed." }
+  },
+  "_tsv_column_order": [
+    "analysis_id", "analysis_version", "label", "description",
+    "input_entity_types", "input_layer_types", "produces",
+    "engine", "endpoint", "default_runner",
+    "status", "requires", "intended_use", "definition_path"
+  ]
+}

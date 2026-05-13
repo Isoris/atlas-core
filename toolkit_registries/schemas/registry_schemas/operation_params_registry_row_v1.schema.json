@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "operation_params_registry_row_v1.schema.json",
+  "title": "Operation params registry row — one TSV row in operation_params_registry.tsv",
+  "description": "Flat catalogue row, one per parameter bundle. The full params dict (whose shape depends on operation_type) lives in operation_params_v1 JSON; the TSV row carries the top-line identity + a flat JSON-string of params for grep-ability. definition_path points at the JSON for readers who want the structured form.",
+  "type": "object",
+  "required": ["operation_params_id", "operation_type", "deterministic"],
+  "additionalProperties": false,
+  "properties": {
+    "operation_params_id":   { "type": "string" },
+    "operation_type":        { "type": "string" },
+    "label":                 { "type": "string" },
+    "params_json":           { "type": "string", "description": "Canonical JSON of the params object (sorted keys, no whitespace). For grep-ability." },
+    "deterministic":         { "type": "string", "description": "'true' / 'false' as TSV string." },
+    "seed":                  { "type": "string", "description": "RNG seed when non-deterministic." },
+    "version_of_definition": { "type": "string" },
+    "created_at":            { "type": "string" },
+    "definition_path":       { "type": "string", "description": "Path to the operation_params_v1 JSON." }
+  },
+  "_tsv_column_order": [
+    "operation_params_id", "operation_type", "label", "params_json",
+    "deterministic", "seed", "version_of_definition", "created_at",
+    "definition_path"
+  ]
+}

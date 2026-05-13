@@ -1,0 +1,15 @@
+{
+  "set_id":             "genes_near_breakpoints_50kb_v1",
+  "entity_type":        "gene",
+  "label":              "Genes within 50 kb of an inversion breakpoint",
+  "n_entities":         312,
+  "derived_from": {
+    "op":        "filter",
+    "parents":   ["genes_all_v1"],
+    "predicate": "distance_to_any_breakpoint_bp <= 50000"
+  },
+  "coordinate_system":  "fClaHyb_Gar_LG_v1",
+  "intended_use":       "annotation context for the inversion atlas",
+  "status":             "experimental",
+  "created_at":         "2026-05-03T16:30:00Z"
+}

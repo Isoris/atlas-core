@@ -1,0 +1,16 @@
+{
+  "derivation_id":       "derive_beagle_thin500_random_v1",
+  "label":               "BEAGLE thinning — random per 500-bp bin, seed 123",
+  "operation_type":      "thin_by_distance",
+  "parent_set_id":       "snps_maf005_v1",
+  "operation_params_id": "thin500_random_seed123_v1",
+  "filter_profile_id":   "popstruct_angsd_sites_v1",
+  "coordinate_system":   "fClaHyb_Gar_LG_v1",
+  "analysis_purpose":    "sensitivity check against the deterministic thin500",
+  "software":            "custom-thin.py",
+  "software_version":    "v1.0.0",
+  "produces_set_id":     "sites_beagle_thin500_random_v1",
+  "created_at":          "2026-04-08T11:50:00Z",
+  "status":              "experimental",
+  "notes":               "Same distance_bp as derive_beagle_thin500_global_v1 but different operation_params → different file → different hash. The 'thin500' name alone is not enough."
+}

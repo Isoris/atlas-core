@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "group_sets_row.schema.json",
+  "title": "group_sets.tsv row — LABELS over WHO",
+  "description": "One group-label table for a sample set. Carries family / population / batch / karyotype assignments. FK: group_set → sample_set.",
+  "type": "object",
+  "required": ["group_set_id", "path", "sample_set_id"],
+  "additionalProperties": false,
+  "properties": {
+    "group_set_id":   { "type": "string" },
+    "path":           { "type": "string", "description": "Path to the groups TSV (sample_id + group columns)." },
+    "sample_set_id":  { "type": "string", "description": "FK into sample_sets.tsv." },
+    "group_columns":  { "type": "string", "description": "Comma-separated list of group columns in the file (e.g. 'family,population,batch')." },
+    "hash":           { "type": "string" },
+    "notes":          { "type": "string" }
+  },
+  "_tsv_column_order": ["group_set_id", "path", "sample_set_id", "group_columns", "hash", "notes"]
+}

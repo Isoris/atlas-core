@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "sample_set_v1.schema.json",
+  "title": "Sample set — content-hashed sample list with optional set-algebra lineage",
+  "description": "The universal identifier for 'a set of samples an analysis was run against'. Identity is by content (sorted member hash), NOT by the name of the group(s) used to express it. Two different group-naming routes that produce the same members hit the same sample_set_id, so analyses don't recompute. Sample sets are typically auto-derived: when an analysis is asked to run against a group_id or a set expression, the system materializes the members, hashes them, and creates this record only if it didn't already exist. See REGISTRY_LOOKUP.md §'Content identity collapses the explosion'.",
+  "type": "object",
+  "required": ["sample_set_id", "members_hash", "n_members"],
+  "additionalProperties": true,
+  "properties": {
+    "sample_set_id": {
+      "type": "string",
+      "pattern": "^sset_[a-f0-9]{16}$",
+      "description": "Content-derived id. Convention: 'sset_' + first 16 hex chars of sha256(sorted(member_sample_ids).join('\\n')). Deterministic for the same member list regardless of provenance. Lookup key for analysis_result_v1."
+    },
+    "members_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "Full sha256 of the canonical members string (sorted sample_ids, one per line, UTF-8, newline-terminated). Documented here so external producers can compute the same id."
+    },
+    "n_members": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Cardinality. Lets queries filter empty / too-small sets without loading the members file."
+    },
+    "members": {
+      "description": "The actual members. Either inline (small sets) or a path to a file (large sets, one sample_id per line). When derived_from is present, members are RECOMPUTABLE from parents — storing them is optional but recommended for fast resolution.",
+      "oneOf": [
+        { "type": "array", "items": { "type": "string" } },
+        { "type": "string" }
+      ]
+    },
+    "derived_from": {
+      "type": ["object", "null"],
+      "description": "If this sample set was produced by a set operation, the lineage. Null/absent for atomic sets (those backed directly by a named group_id). Resolves recursively: parents may themselves be derived sets or named groups.",
+      "additionalProperties": false,
+      "required": ["op", "parents"],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": ["intersect", "union", "difference", "from_group", "from_inline", "filter"],
+          "description": "intersect / union / difference = standard set ops over parents. from_group = backed by a single named group_definition (parents is [group_id]). from_inline = explicit list (parents is empty; members[] is canonical). filter = subset of one parent by a predicate (e.g. drop samples missing a phenotype) — predicate recorded in 'predicate'."
+        },
+        "parents": {
+          "type": "array",
+          "items": { "type": "string", "description": "Either a group_definition.group_id or another sample_set_id." },
+          "description": "Input identifiers for op. For intersect/union: order doesn't matter. For difference: parents[0] minus the union of parents[1..]. For from_group / filter: single parent."
+        },
+        "predicate": {
+          "type": ["string", "null"],
+          "description": "Only meaningful when op='filter'. Human/script tag identifying the filter (e.g. 'has_phenotype:white_flesh', 'pass_qc:NaTORA_v2'). The materializer is responsible for applying it — registry only records the tag."
+        }
+      }
+    },
+    "cohort_id": {
+      "type": "string",
+      "description": "Optional FK to cohort.config. Recorded for convenience (atlas integrity checks can verify members are in the cohort's samples_tsv)."
+    },
+    "label": {
+      "type": "string",
+      "description": "Optional human label. Free-form. Distinct from sample_set_id (which is hash-derived)."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Action_id, script, or user that first materialized this sample set."
+    }
+  },
+  "_examples": [
+    {
+      "_description": "From an atomic named group.",
+      "sample_set_id": "sset_a3f9e1c2d4b7e028",
+      "members_hash":  "sha256:a3f9e1c2d4b7e028…",
+      "n_members":     60,
+      "members":       "sets/sset_a3f9e1c2d4b7e028.members.txt",
+      "derived_from":  { "op": "from_group", "parents": ["inv_LG28_INV_001_HOM_INV"] },
+      "cohort_id":     "main_226_hatchery",
+      "label":         "HOM_INV carriers for LG28_INV_001",
+      "created_at":    "2026-04-15T14:23:00Z"
+    },
+    {
+      "_description": "Intersection of two named groups. Computed once, reused forever.",
+      "sample_set_id": "sset_c8d4e2a1f6e09387",
+      "members_hash":  "sha256:c8d4e2a1f6e09387…",
+      "n_members":     12,
+      "members":       ["CGA042", "CGA071", "CGA118"],
+      "derived_from": {
+        "op": "intersect",
+        "parents": ["inv_LG28_INV_001_HOM_INV", "ancestry_K8_cluster3"]
+      },
+      "cohort_id":  "main_226_hatchery",
+      "label":      "HOM_INV ∩ ancestry_K8_cluster3",
+      "created_at": "2026-04-20T09:14:00Z",
+      "created_by": "act_1715000999000_h73"
+    },
+    {
+      "_description": "Difference: cohort minus family F042. Useful for unrelateds-only analyses.",
+      "sample_set_id": "sset_d9e2c4a8b3f1e5d6",
+      "members_hash":  "sha256:d9e2c4a8b3f1e5d6…",
+      "n_members":     203,
+      "derived_from":  { "op": "difference", "parents": ["ALL", "family_F042"] },
+      "cohort_id":     "main_226_hatchery",
+      "label":         "All samples minus family F042",
+      "created_at":    "2026-05-01T11:02:30Z"
+    }
+  ]
+}

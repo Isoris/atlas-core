@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Catalogue — modules &amp; analyses</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #6c727f;
+    --bg: #fafafa;
+    --bg-card: #fff;
+    --border: #d8dce3;
+    --accent: #2b6cb0;
+
+    --ok:    #2f855a;
+    --warn:  #b7791f;
+    --fail:  #c53030;
+    --info:  #4c51bf;
+    --conceptual: #718096;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+               font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  header { padding: 16px 24px 10px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+  h1 { margin: 0; font-size: 16px; font-weight: 600; }
+  .sub { color: var(--muted); margin-top: 3px; font-size: 12.5px; }
+
+  .tabs { display: flex; gap: 4px; padding: 8px 24px 0; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+  .tab  { padding: 7px 14px; cursor: pointer; border: 1px solid transparent; border-bottom: none;
+          border-radius: 4px 4px 0 0; font-size: 13px; color: var(--muted); user-select: none; }
+  .tab:hover  { color: var(--accent); background: #e7eef7; }
+  .tab.active { background: var(--bg); color: var(--fg); border-color: var(--border); margin-bottom: -1px; font-weight: 500; }
+  .tab .count { color: var(--muted); font-size: 11px; margin-left: 4px; }
+
+  .controls { padding: 10px 24px; display: flex; gap: 14px; align-items: center; background: var(--bg-card);
+              border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
+  .controls input[type="text"] { padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px;
+                                 width: 240px; font-size: 12.5px; background: var(--bg-card); color: var(--fg); }
+  .controls .stat { margin-left: auto; }
+
+  section { padding: 18px 24px; }
+
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    border-left: 5px solid var(--border); padding: 14px 18px; margin-bottom: 12px;
+  }
+  .card.mod-ready        { border-left-color: var(--ok); }
+  .card.mod-stale        { border-left-color: var(--warn); }
+  .card.mod-failed       { border-left-color: var(--fail); }
+  .card.mod-available    { border-left-color: var(--info); }
+  .card.mod-not-installed{ border-left-color: var(--warn); }
+  .card.mod-conceptual   { border-left-color: var(--conceptual); }
+
+  .card .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .card .head .name {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px;
+    font-weight: 600;
+  }
+  .card .head .meta { color: var(--muted); font-size: 12px; }
+  .card .pill {
+    display: inline-block; padding: 2px 8px; border-radius: 3px;
+    font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .card.mod-ready          .pill { background: var(--ok);    color: white; }
+  .card.mod-stale          .pill { background: var(--warn);  color: white; }
+  .card.mod-failed         .pill { background: var(--fail);  color: white; }
+  .card.mod-available      .pill { background: var(--info);  color: white; }
+  .card.mod-not-installed  .pill { background: var(--warn);  color: white; }
+  .card.mod-conceptual     .pill { background: var(--conceptual); color: white; }
+
+  .card dl { margin: 10px 0 0; display: grid; grid-template-columns: 140px 1fr; gap: 4px 14px; font-size: 12.5px; }
+  .card dt { color: var(--muted); }
+  .card dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-word; }
+  .card dd ul { margin: 0; padding-left: 18px; }
+  .card dd .chip {
+    display: inline-block; padding: 1px 7px; border-radius: 3px; background: #edf2f7; color: #2d3748;
+    font-size: 11px; margin-right: 4px; font-family: inherit;
+  }
+  .card .lineage { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .card .lineage .arrow { color: var(--ok); margin: 0 6px; }
+  .card .lineage code  { font-size: 11.5px; }
+
+  .empty { padding: 30px; color: var(--muted); }
+  .error { padding: 30px; color: var(--fail); }
+  .footer { padding: 12px 24px; color: var(--muted); font-size: 11.5px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html"><span class="num">1.</span> Conversation</a>
+  <a href="action.html"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html" class="current"><span class="num">4.</span> Catalogue</a>
+  <span class="tag">atlas-core dashboard</span>
+</nav>
+
+<header>
+  <h1>Catalogue — modules &amp; analyses</h1>
+  <div class="sub">All biomod modules and all analysis modes the registry knows about. Click a module to see the analyses it backs; click an analysis to see the module it runs on.</div>
+</header>
+
+<nav class="tabs">
+  <div class="tab active" data-tab="modules">Modules <span class="count" id="count-modules"></span></div>
+  <div class="tab"        data-tab="analyses">Analyses <span class="count" id="count-analyses"></span></div>
+</nav>
+
+<div class="controls">
+  <label>filter <input id="filter" type="text" placeholder="match name / family / mode…" autocomplete="off"></label>
+  <span class="stat" id="stat"></span>
+</div>
+
+<section>
+  <div id="modules" class="view"></div>
+  <div id="analyses" class="view" style="display:none"></div>
+</section>
+
+<div class="footer" id="footer"></div>
+
+<script>
+// ===== TSV loader ===================================================== //
+
+function parseTSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.length > 0);
+  if (lines.length === 0) return [];
+  const header = lines[0].split("\t");
+  return lines.slice(1).map(line => {
+    const cols = line.split("\t");
+    const row = {};
+    header.forEach((h, j) => row[h] = cols[j] !== undefined ? cols[j] : "");
+    return row;
+  });
+}
+
+async function fetchTsv(rel, optional = false) {
+  try {
+    const resp = await fetch(rel, { cache: "no-store" });
+    if (!resp.ok) throw new Error(`${rel} → HTTP ${resp.status}`);
+    return parseTSV(await resp.text());
+  } catch (e) {
+    if (optional) return [];
+    throw e;
+  }
+}
+
+let DB = { modules: [], modes: [], moduleBy: {} };
+
+async function loadAll() {
+  DB.modules = await fetchTsv("../01_registry/module_registry.tsv", true);
+  DB.modes   = await fetchTsv("../01_registry/analysis_modes.tsv");
+  DB.moduleBy = Object.fromEntries(DB.modules.map(m => [m.module_name, m]));
+}
+
+// ===== Wiring helpers ================================================== //
+
+// For a module: which (analysis_type, mode) rows reference it
+function modesUsingModule(moduleName) {
+  return DB.modes.filter(m => m.module_name === moduleName);
+}
+
+// For a module: which OTHER modules consume the produces tag of analyses
+// backed by this module. (e.g. ngsrelate.produces=relatedness_res; ngspedigree
+// requires ngsrelate_result → it's a downstream consumer)
+const REQ_TO_PRODUCES = {
+  "ngsrelate_result": "relatedness_res",
+  "pedigree_result":  "pedigree_result",
+  "mendelian_result": "mendelian_result",
+  "relatedness_res":  "relatedness_res",
+};
+
+function downstreamOfModule(moduleName) {
+  const produced = new Set();
+  for (const m of modesUsingModule(moduleName)) {
+    if (m.produces) produced.add(m.produces);
+  }
+  if (produced.size === 0) return [];
+  const out = [];
+  for (const mode of DB.modes) {
+    const required = (mode.required_dimensions || "").split(",").map(s => s.trim());
+    for (const dim of required) {
+      const tag = REQ_TO_PRODUCES[dim];
+      if (tag && produced.has(tag)) {
+        if (mode.module_name && mode.module_name !== moduleName) {
+          out.push({ module: mode.module_name, via_mode: `${mode.analysis_type}/${mode.mode}`, via_dim: dim });
+        }
+      }
+    }
+  }
+  // Deduplicate by module name
+  const seen = new Set();
+  return out.filter(o => seen.has(o.module) ? false : (seen.add(o.module), true));
+}
+
+function upstreamOfModule(moduleName) {
+  // Modules that PRODUCE something this module's modes REQUIRE
+  const myModes = modesUsingModule(moduleName);
+  const requiredTags = new Set();
+  for (const m of myModes) {
+    for (const dim of (m.required_dimensions || "").split(",").map(s => s.trim())) {
+      const tag = REQ_TO_PRODUCES[dim];
+      if (tag) requiredTags.add(tag);
+    }
+  }
+  if (requiredTags.size === 0) return [];
+  const out = [];
+  for (const mode of DB.modes) {
+    if (requiredTags.has(mode.produces) && mode.module_name && mode.module_name !== moduleName) {
+      out.push({ module: mode.module_name, via_mode: `${mode.analysis_type}/${mode.mode}`, via_tag: mode.produces });
+    }
+  }
+  const seen = new Set();
+  return out.filter(o => seen.has(o.module) ? false : (seen.add(o.module), true));
+}
+
+function moduleStatusClass(m) {
+  if (!m) return "mod-conceptual";
+  if (m.installed !== "true") return "mod-not-installed";
+  if (m.last_run_status === "failed") return "mod-failed";
+  if (m.stale === "true") return "mod-stale";
+  if (m.ready === "true") return "mod-ready";
+  return "mod-available";
+}
+
+function moduleStatusLabel(m) {
+  if (!m) return "conceptual";
+  if (m.installed !== "true") return "not installed";
+  if (m.last_run_status === "failed") return "last run failed";
+  if (m.stale === "true") return "stale";
+  if (m.ready === "true") return "ready";
+  return "available";
+}
+
+// ===== Render — modules tab ============================================ //
+
+function renderModuleCard(m) {
+  const cls    = moduleStatusClass(m);
+  const label  = moduleStatusLabel(m);
+  const modes  = modesUsingModule(m.module_name);
+  const ups    = upstreamOfModule(m.module_name);
+  const downs  = downstreamOfModule(m.module_name);
+
+  const modesList = modes.length
+    ? modes.map(mo => `<span class="chip">${mo.analysis_type}/${mo.mode}</span>`).join("")
+    : `<span style="color:var(--muted)">(no analysis_modes row references this module yet)</span>`;
+
+  const lineage = (ups.length || downs.length) ? `<div class="lineage">
+    ${ups.map(u => `<span><code>${u.module}</code> <span class="arrow">→</span></span>`).join("")}
+    <code style="font-weight:600">${m.module_name}</code>
+    ${downs.map(d => `<span><span class="arrow">→</span> <code>${d.module}</code></span>`).join("")}
+  </div>` : "";
+
+  return `
+    <div class="card ${cls}">
+      <div class="head">
+        <span class="name">${m.module_name}</span>
+        <span class="meta">v${m.version} · family=${m.family} · biomod_status=${m.biomod_status || "?"}</span>
+        <span class="pill">${label}</span>
+      </div>
+      ${lineage}
+      <dl>
+        <dt>used by</dt><dd>${modesList}</dd>
+        <dt>produces</dt><dd>${[...new Set(modes.map(mo => mo.produces).filter(Boolean))].map(p => `<span class="chip">${p}</span>`).join("") || "—"}</dd>
+        <dt>parent</dt><dd>${m.parent || "—"}</dd>
+        <dt>derivatives</dt><dd>${m.derivatives ? m.derivatives.split(",").map(d => `<span class="chip">${d}</span>`).join("") : "—"}</dd>
+        <dt>last run</dt><dd>${m.last_run_id
+            ? `${m.last_run_status} · QC ${m.last_run_qc || "?"} · ${m.last_run_seconds || "?"}s · n_samples=${m.n_samples || "?"} · <code>${m.last_run_id.slice(0,8)}…</code>`
+            : "—"}</dd>
+        <dt>conda env</dt><dd>${m.conda_env_path || "—"}</dd>
+      </dl>
+    </div>`;
+}
+
+function renderModules(filter) {
+  const root = document.getElementById("modules");
+  if (DB.modules.length === 0) {
+    root.innerHTML = `<div class="empty">No modules in <code>module_registry.tsv</code> yet.<br>
+      Run <code>python3 scripts/sync_biomod_status.py --from-json 01_registry/biomod_status.example.json</code>
+      to populate the example.</div>`;
+    return;
+  }
+  const q = (filter || "").toLowerCase();
+  const ms = DB.modules.filter(m => !q || (m.module_name + " " + m.family + " " + m.biomod_status).toLowerCase().includes(q));
+  if (ms.length === 0) { root.innerHTML = `<div class="empty">No modules match the filter.</div>`; return; }
+  root.innerHTML = ms.map(renderModuleCard).join("");
+}
+
+// ===== Render — analyses tab =========================================== //
+
+function renderAnalysisCard(mode) {
+  const m = DB.moduleBy[mode.module_name];
+  const cls = moduleStatusClass(m);
+  const label = moduleStatusLabel(m);
+
+  const upstream = (mode.required_dimensions || "").split(",")
+    .map(s => s.trim())
+    .filter(s => REQ_TO_PRODUCES[s])
+    .map(s => `<span class="chip">${s}</span>`).join("");
+
+  return `
+    <div class="card ${cls}">
+      <div class="head">
+        <span class="name">${mode.analysis_type}/${mode.mode}</span>
+        <span class="meta">${mode.label || ""}</span>
+        <span class="pill">${label}</span>
+      </div>
+      <dl>
+        <dt>module</dt><dd>${mode.module_name ? `<code>${mode.module_name}</code>` + (m ? ` v${m.version}` : "") : "—"}</dd>
+        <dt>requires</dt><dd>${(mode.required_dimensions || "").split(",").map(s => `<span class="chip">${s.trim()}</span>`).join("") || "—"}</dd>
+        <dt>upstream tags</dt><dd>${upstream || "—"}</dd>
+        <dt>produces</dt><dd><span class="chip">${mode.produces || "—"}</span></dd>
+        <dt>interval policy</dt><dd>${mode.interval_policy || "—"}</dd>
+        <dt>site policy</dt><dd>${mode.site_policy || "—"}</dd>
+        <dt>group policy</dt><dd>${mode.group_policy || "—"}</dd>
+        <dt>value policy</dt><dd>${mode.value_policy || "—"}</dd>
+      </dl>
+    </div>`;
+}
+
+function renderAnalyses(filter) {
+  const root = document.getElementById("analyses");
+  const q = (filter || "").toLowerCase();
+  const ms = DB.modes.filter(m => !q || (`${m.analysis_type}/${m.mode} ${m.label} ${m.module_name}`).toLowerCase().includes(q));
+  if (ms.length === 0) { root.innerHTML = `<div class="empty">No analyses match the filter.</div>`; return; }
+  root.innerHTML = ms.map(renderAnalysisCard).join("");
+}
+
+// ===== Tab + filter wiring ============================================= //
+
+let CURRENT = "modules";
+
+function applyFilter() {
+  const f = document.getElementById("filter").value.trim();
+  renderModules(f);
+  renderAnalyses(f);
+  const visible = CURRENT === "modules" ? document.getElementById("modules") : document.getElementById("analyses");
+  const total = CURRENT === "modules" ? DB.modules.length : DB.modes.length;
+  const shown = visible.querySelectorAll(".card").length;
+  document.getElementById("stat").textContent = `${shown} / ${total} shown`;
+}
+
+document.querySelector(".tabs").addEventListener("click", e => {
+  const t = e.target.closest(".tab"); if (!t) return;
+  CURRENT = t.dataset.tab;
+  for (const x of document.querySelectorAll(".tab"))  x.classList.toggle("active", x.dataset.tab === CURRENT);
+  for (const x of document.querySelectorAll(".view")) x.style.display = (x.id === CURRENT) ? "" : "none";
+  applyFilter();
+});
+document.getElementById("filter").addEventListener("input", applyFilter);
+
+(async () => {
+  try {
+    await loadAll();
+    document.getElementById("count-modules").textContent  = `(${DB.modules.length})`;
+    document.getElementById("count-analyses").textContent = `(${DB.modes.length})`;
+    applyFilter();
+    document.getElementById("footer").innerHTML =
+      `<strong>Modules</strong> loaded from <code>../01_registry/module_registry.tsv</code> (mirror of <code>biomod status --json</code>) · ` +
+      `<strong>Analyses</strong> loaded from <code>../01_registry/analysis_modes.tsv</code> · ` +
+      `Wiring derived from <code>analysis_modes.required_dimensions</code> ↔ <code>analysis_modes.produces</code> (e.g. <code>ngsrelate</code> produces <code>relatedness_res</code>, which <code>ngspedigree</code> requires as <code>ngsrelate_result</code>).`;
+  } catch (e) {
+    document.body.insertAdjacentHTML("beforeend",
+      `<div class="error">Failed to load registry: ${e.message}.<br>Run <code>python3 -m http.server -d toolkit_registries/relatedness 8765</code>.</div>`);
+  }
+})();
+</script>
+
+</body>
+</html>

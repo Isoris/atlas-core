@@ -1,25 +1,25 @@
 # inventory/ — click and see what the registry has
 
-The "small page we click we see". One sentence:
+The "small page we click we see". Four tabs:
 
-> Every distinct computation in the registry is one row: `analysis | group | samples | interval`.
-
-## What's here
-
-| File | What it does |
+| Tab | Shows |
 |---|---|
-| `index.html` | Single-file vanilla-JS viewer. Open in a browser. Sort by clicking column headers, filter via the toolbar, click a row to expand provenance. |
-| `example_data/registry/` | Synthetic registry (4 groups, 5 sample sets, 7 analysis results, 7 layers). Demonstrates the content-hash collapse: row 6 and 7 below share `sample_set_id 2f17041e` (same `ALL` sample list) but have different intervals (LG28 vs whole-genome), so they're two distinct results. |
-| `example_data/inventory.json` | The flat table the page reads, produced by `lib/registry_inventory.py`. |
+| **Results**  | One row per `analysis_result_v1` — `analysis × group × samples × interval`. Click a row to expand to full provenance. |
+| **Sets**     | Every named set from the set_registry, grouped by entity_type (sample / variant_site / window / inversion_candidate / gene / breakpoint / …). |
+| **Analyses** | The analysis vocabulary — what `ngsrelate`, `ngspedigree`, `mendelian`, `fst_pairwise`, `theta_pi`, … take as inputs, what they produce, what they require upstream. |
+| **Chain**    | Local chain composer. Pick a target analysis + a sample set, the page walks `requires` backward, builds the ordered chain, and writes the **input contract** (action manifest) and the **output contract** (expected layer envelope) for each step. Marks each step **cached ✓** or **todo ⊳**. |
 
-## Quickstart (with the synthetic data)
+One JSON file feeds all four tabs (`example_data/inventory.json`,
+written by `lib/registry_inventory.py`).
+
+## Quickstart (synthetic data)
 
 ```bash
-# regenerate the inventory.json from the example registry
+# 1. regenerate the inventory.json from the example registry
 python toolkit_registries/lib/registry_inventory.py --example \
   --json toolkit_registries/inventory/example_data/inventory.json
 
-# open the page locally (any static server works)
+# 2. serve and open
 python -m http.server -d toolkit_registries/inventory 8000
 # → http://127.0.0.1:8000/
 ```
@@ -30,60 +30,78 @@ python -m http.server -d toolkit_registries/inventory 8000
 python toolkit_registries/lib/registry_inventory.py --example --print
 ```
 
-Output:
-
-```
-Analysis    │ Group                             │ N   │ Interval                         │ Status │ Layer
-────────────┼───────────────────────────────────┼─────┼──────────────────────────────────┼────────┼────────────────────────────────
-theta_pi    │ HOM_INV carriers for LG28_INV_001 │ 8   │ C_gar_LG28:14_815_000-18_305_000 │ active │ theta_pi_…_C_gar_LG28_v1
-ngspedigree │ ALL \ family_F042 (unrelateds)    │ 222 │ whole-genome                     │ active │ ngspedigree_…_wg_v1
-mendelian   │ Family F042 (CGA042 + offspring)  │ 4   │ whole-genome                     │ active │ mendelian_…_wg_v1
-ngsrelate   │ HOM_INV ∩ ancestry_K8_cluster3    │ 3   │ C_gar_LG28                       │ active │ ngsrelate_…_C_gar_LG28_v1
-ngsrelate   │ HOM_INV carriers for LG28_INV_001 │ 8   │ C_gar_LG28                       │ active │ ngsrelate_…_C_gar_LG28_v1
-ngsrelate   │ All 226 samples                   │ 226 │ whole-genome                     │ active │ ngsrelate_…_wg_v1
-ngsrelate   │ All 226 samples                   │ 226 │ C_gar_LG28                       │ active │ ngsrelate_…_C_gar_LG28_v1
-```
-
 ## Against a real registry
-
-Point the scanner at your actual registry root:
 
 ```bash
 python toolkit_registries/lib/registry_inventory.py /mnt/e/atlas_workspace/registry \
   --json /tmp/inventory.json
 ```
 
-Then open the viewer with `?src=/tmp/inventory.json` (or copy the file
-into `inventory/example_data/` and refresh).
+Open with `?src=/tmp/inventory.json`, or copy the file into
+`inventory/example_data/` and reload.
 
 Expected layout under `<registry_root>/`:
 
 ```
 <registry_root>/
-├── analysis_results/*.json   ← one analysis_result_v1 per file
-├── sample_sets/*.json        ← one sample_set_v1 per file
-├── groups/*.json             ← one group_definition per file (optional)
-└── layers/**/*.json          ← layer envelopes, any depth
+├── analysis_results/*.json   ← analysis_result_v1 → Results tab
+├── sample_sets/*.json        ← sample_set_v1
+├── groups/*.json             ← group_definition (optional)
+├── sets/<entity_type>/*.json ← set_v1            → Sets tab
+├── analyses/*.json           ← analysis_v1       → Analyses tab + Chain composer
+└── layers/**/*.json          ← layer envelopes
 ```
 
-Missing folders are OK — the scanner returns rows for whatever exists.
+Missing folders are OK — each tab shows whatever exists.
 
-## How groups are rendered
+## How groups are rendered (Results tab)
 
-The "Group" column tries to be the most human-readable thing available,
-in this order:
+In order of preference:
 
 1. `sample_set.label` if set.
-2. If the set is `from_group`, the named group's `label` (or `group_id`).
-3. If the set is `intersect` / `union` / `difference`, the operation
-   rendered with the proper glyph (`∩` / `∪` / `\`).
-4. If the set is `from_inline`, `(inline N samples)`.
-5. If `filter`, `parent | filter:predicate_tag`.
+2. Named group's `label` when `derived_from.op == "from_group"`.
+3. `intersect` / `union` / `difference` rendered with `∩` / `∪` / `\`.
+4. `(inline N samples)` for `from_inline`.
+5. `parent | filter:predicate_tag` for `filter`.
+
+## Chain composer — what it does
+
+When you select a target analysis (e.g. `mendelian`) and a sample set:
+
+1. **Walks `requires` backward** through the analysis_registry. For
+   `mendelian` that's `mendelian ← ngspedigree ← ngsrelate`. Cycles
+   are detected and rejected.
+2. **Topological-sorts** the chain (deepest first → the chain runs in
+   that order).
+3. **For each step, generates two contracts:**
+   - **Input contract:** an `action_manifest` skeleton with
+     `target.input_artifacts` wired from upstream steps' `produces[*].layer_type`,
+     ready for the user to fill in `<sample_set_id>` / `<beagle_layer_id>` etc.
+   - **Output contract:** the expected `layer_envelope` shape — what
+     the runner+extractor must emit, what schema_out it must validate against.
+4. **Checks the cache.** For each step, compares
+   `(analysis_id, sample_set_id)` against `analysis_results`. If a
+   match exists, the step is marked **cached ✓** with the existing
+   `layer_id`. Otherwise **todo ⊳**.
+5. **Download chain.json.** Concatenates the action manifests in
+   order so you can submit them via `POST /api/actions` one at a
+   time, or batch them into a runner.
+
+The cache check is a heuristic — it matches on
+`analysis_id + sample_set_id` only. The real server-side lookup
+(via `lib/set_algebra.plan()`) uses the full
+`(analysis_id, sample_set_id, sorted(input_artifact_ids), params_hash)`
+content hash, which is stricter. The page's heuristic is good enough to
+plan against in the browser; the server has the final word at submit time.
 
 ## The point
 
-Once the registry exists, you don't have to track results by memory.
-You see the seven (or seven hundred) rows, you click the one that
-matches what you want, and you get its `layer_id`. Same thing the
-dispatcher does internally with `lib/set_algebra.plan()` — this page is
-just the human-facing version of the same lookup.
+Once the registry exists, you don't have to track anything by memory.
+
+- **What do we have?** — Results tab.
+- **What sets exist?** — Sets tab.
+- **Which analyses are wired?** — Analyses tab.
+- **What does it take to get a mendelian result for these samples?** — Chain tab.
+
+Same lookup the dispatcher does internally with
+`lib/set_algebra.plan()` — this page is the human-facing version.

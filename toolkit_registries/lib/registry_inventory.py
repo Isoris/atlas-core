@@ -239,6 +239,86 @@ def scan(registry_root: pathlib.Path) -> List[Dict]:
 
 
 # --------------------------------------------------------------------------- #
+# Sets and analyses — sibling sections for the inventory page                  #
+# --------------------------------------------------------------------------- #
+
+def scan_sets(registry_root: pathlib.Path) -> List[Dict]:
+    """Scan <registry_root>/sets/**/*.json for set_v1 records.
+    Returns a list of light rows suitable for the inventory page's Sets tab."""
+    registry_root = pathlib.Path(registry_root)
+    sets_root = registry_root / "sets"
+    out = []
+    if not sets_root.is_dir():
+        return out
+    for p in sorted(sets_root.rglob("*.json")):
+        try:
+            r = json.loads(p.read_text())
+        except Exception:
+            continue
+        derived = r.get("derived_from") or {}
+        out.append({
+            "set_id":            r.get("set_id"),
+            "entity_type":       r.get("entity_type"),
+            "label":             r.get("label"),
+            "n_entities":        r.get("n_entities"),
+            "coordinate_system": r.get("coordinate_system"),
+            "parent_set_id":     r.get("parent_set_id"),
+            "derived_op":        derived.get("op"),
+            "derived_parents":   derived.get("parents", []),
+            "derived_predicate": derived.get("predicate"),
+            "filter_profile_id": r.get("filter_profile_id"),
+            "intended_use":      r.get("intended_use"),
+            "status":            r.get("status", "active"),
+            "created_at":        r.get("created_at"),
+            "path":              r.get("path"),
+        })
+    out.sort(key=lambda x: (x.get("entity_type") or "", x.get("set_id") or ""))
+    return out
+
+
+def scan_analyses(registry_root: pathlib.Path) -> List[Dict]:
+    """Scan <registry_root>/analyses/*.json for analysis_v1 records."""
+    registry_root = pathlib.Path(registry_root)
+    analyses_root = registry_root / "analyses"
+    out = []
+    if not analyses_root.is_dir():
+        return out
+    for p in sorted(analyses_root.glob("*.json")):
+        try:
+            r = json.loads(p.read_text())
+        except Exception:
+            continue
+        inputs = r.get("inputs") or {}
+        out.append({
+            "analysis_id":      r.get("analysis_id"),
+            "analysis_version": r.get("analysis_version"),
+            "label":            r.get("label"),
+            "description":      r.get("description"),
+            "inputs_sets":      inputs.get("sets", []),
+            "inputs_artifacts": inputs.get("artifacts", []),
+            "produces":         r.get("produces", []),
+            "engine":           r.get("engine"),
+            "endpoint":         r.get("endpoint"),
+            "default_runner":   r.get("default_runner"),
+            "requires":         r.get("requires", []),
+            "intended_use":     r.get("intended_use"),
+            "status":           r.get("status", "active"),
+        })
+    out.sort(key=lambda x: x.get("analysis_id") or "")
+    return out
+
+
+def scan_all(registry_root: pathlib.Path) -> Dict[str, List[Dict]]:
+    """Return a combined {results, sets, analyses} payload for the
+    inventory page."""
+    return {
+        "results":  scan(registry_root),
+        "sets":     scan_sets(registry_root),
+        "analyses": scan_analyses(registry_root),
+    }
+
+
+# --------------------------------------------------------------------------- #
 # CLI                                                                          #
 # --------------------------------------------------------------------------- #
 
@@ -295,8 +375,19 @@ def main(argv=None) -> int:
     rows = scan(registry)
 
     if args.json:
-        pathlib.Path(args.json).write_text(json.dumps(rows, indent=2))
-        print(f"wrote {len(rows)} rows → {args.json}", file=sys.stderr)
+        # Multi-section payload: results + sets + analyses. The HTML page
+        # reads this single file to populate all four tabs (Results, Sets,
+        # Analyses, Chain).
+        payload = {
+            "results":  rows,
+            "sets":     scan_sets(registry),
+            "analyses": scan_analyses(registry),
+        }
+        pathlib.Path(args.json).write_text(json.dumps(payload, indent=2))
+        print(f"wrote {len(rows)} results + "
+              f"{len(payload['sets'])} sets + "
+              f"{len(payload['analyses'])} analyses → {args.json}",
+              file=sys.stderr)
     if args.do_print or not args.json:
         _print_table(rows)
     return 0

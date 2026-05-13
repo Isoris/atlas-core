@@ -1,3 +1,4 @@
 interval_set_id	path	coordinate_system	interval_type	n_intervals	hash	notes
 genome_all_v1	02_sets/intervals/genome_all.tsv	C_gar_v1	genome	2	sha256:c0c0a1a1b2b2d3d3e4e4f5f5a6a6b7b7c8c8d9d9e0e0f1f1a2a2b3b3c4c4d5d5	all gar chromosomes (demo: LG12 + LG28)
 C_gar_LG12_full_v1	02_sets/intervals/C_gar_LG12.tsv	C_gar_v1	chromosome	1	sha256:d1d1e2e2f3f3a4a4b5b5c6c6d7d7e8e8f9f9a0a0b1b1c2c2d3d3e4e4f5f5a6a6	full LG12
+inv_LG28_INV_001_v1	02_sets/intervals/inv_LG28_INV_001.tsv	C_gar_v1	candidate	1	sha256:e3e3f4f4a5a5b6b6c7c7d8d8e9e9f0f0a1a1b2b2c3c3d4d4e5e5f6f6a7a7b8b8	manuscript candidate inversion on LG28 (synthetic 10kb window for the demo)

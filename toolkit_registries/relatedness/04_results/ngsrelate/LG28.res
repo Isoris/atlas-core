@@ -1,2 +1,3 @@
-a	b	nSites	theta
-fake	data	100	0.05
+a	b	nSites	theta	rab	IBS0	IBS1	IBS2	KING
+0	1	6	0.05	0.10	100	250	150	0.02
+0	2	6	0.04	0.09	60	140	90	0.01

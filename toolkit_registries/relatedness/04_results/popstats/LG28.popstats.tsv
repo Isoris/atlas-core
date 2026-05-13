@@ -1,0 +1,3 @@
+chrom	start_bp	end_bp	n_sites	fst	dxy	piN	piS
+C_gar_LG28	1000000	1005000	3	0.18	0.0042	0.0008	0.0016
+C_gar_LG28	1005000	1010000	3	0.22	0.0051	0.0011	0.0019

@@ -245,7 +245,75 @@ the tool, you don't have the inputs") or **`RUN_READY` + `mod_failed`**
 ("inputs are all set, but the tool crashed last time — investigate
 before rerunning").
 
-## The dashboard — three pages, one nav
+## The two manuscript paths — end-to-end stress test
+
+Both paths the manuscript needs are wired and exercised by
+`scripts/stress_test_paths.py`. The test takes one candidate (default
+`inv_LG28_INV_001`) + one sample set (`samples_226_v1`) and walks both
+chains through the full resolver → cache-check → dispatcher → register
+loop.
+
+```
+Path A — relatedness chain
+  candidate + karyotype groups
+       → ngsrelate / per_candidate     produces  relatedness_res
+       → ngspedigree / global          consumes  relatedness_res
+       → mendelian / per_candidate     consumes  pedigree_result + BEAGLE
+
+Path B — popstats chain
+  candidate + karyotype groups
+       → popstats / per_candidate      FST / dxy / piN / piS between karyotype groups
+```
+
+Run:
+
+```bash
+cd scripts
+python3 stress_test_paths.py              # dry walk-through (no execution)
+python3 stress_test_paths.py --dispatch   # also run stub runners + register rows
+```
+
+After one `--dispatch`, re-running shows all four steps as CACHE hits
+(`existing result_id = …`) — this is the "did we already do this?"
+short-circuit the resolver design depends on.
+
+What the stress test verifies, across both paths, in one run:
+
+| Registry / Mechanism | Verified by |
+|---|---|
+| group_registry → sample subsets | `groups_karyotype_inv_LG28_INV_001_v1` row, resolved via `family_karyotype` policy |
+| interval_registry → candidate scope | `inv_LG28_INV_001_v1`, resolved via `candidate_interval` policy |
+| site_registry → candidate-scoped sites | `sites_inv_LG28_INV_001_v1`, resolved via `candidate_sites` policy (parent=thin500_global, operation=intersect) |
+| input_values → matching BEAGLE | `beagle_inv_LG28_INV_001_v1`, resolved via `beagle_matching` policy |
+| analysis_registry → mode-driven contract | every `analysis_modes.tsv` row exercised by the resolver |
+| module_registry → biomod state | each step's required module shown by `module_registry.tsv` (page 4) |
+| **cache check** | per-step "do we already have this?" via `(analysis_type, sample_set, interval, site)` |
+| **chain inheritance** | step 2 of Path A pulls `input_result_id = ngsrelate_LG28_v2` from step 1's output |
+| **dispatcher → action endpoint contract** | `dispatcher.py` at the workspace root satisfies PR #3's `dispatch_action(manifest, context)` |
+
+## Runners (stubs today, swap for real binaries tomorrow)
+
+`scripts/runners/` ships four thin wrappers that share a common harness
+(`_base.py`). Each runner: reads the manifest's `target` to find input
+ids, calls a real binary OR writes a contract-true synthetic file in
+stub mode, then appends a row to `analysis_results.tsv`.
+
+| Runner | manifest.type | Stub output |
+|---|---|---|
+| `run_ngsrelate.py` | `run_ngsrelate` | `.res` with `a/b/nSites/theta/IBS0/IBS1/IBS2/KING` |
+| `run_ngspedigree.py` | `run_ngspedigree` | `.pedigree.tsv` with `offspring/parent1/parent2/likelihood` |
+| `run_mendelian.py` | `run_mendelian` | `.mendelian.tsv` with per-trio error rates |
+| `run_popstats.py` | `run_popstats` | `.popstats.tsv` with `chrom/start/end/n_sites/fst/dxy/piN/piS` |
+
+When you wire real binaries: open the runner, replace
+`real_executor=None` with a `subprocess.run([...])` call, and the
+stress test starts producing real outputs. The contract checker
+(`check_result_contract.py`) validates each new result identically.
+
+`dispatcher.py` at the workspace root routes manifests to the right
+runner by `manifest.type`. It satisfies the contract from PR #3 so the
+atlas server's `POST /api/actions` calls it automatically — no more
+"documentation mode" once you copy this folder into your real workspace.
 
 ## The most important command
 

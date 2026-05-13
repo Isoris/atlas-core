@@ -27,5 +27,25 @@
     "global":       "beagle_thin500_global_v1",
     "C_gar_LG12":   "beagle_LG12_thin500_v1",
     "C_gar_LG28":   "beagle_thin500_global_v1"
+  },
+
+  "inputs": {
+    "_comment": "Used by scan_inputs.py. site_tag_for_chrom shapes the value_id (e.g. beagle_<tag>_v1). sample_set_id is the canonical sample order the inputs are aligned to; site_set_for_chrom + interval_set_for_chrom point at existing registry rows.",
+    "sample_set_id": "samples_226_v1",
+    "site_set_for_chrom": {
+      "global":     "sites_thin500_global_v1",
+      "C_gar_LG12": "sites_LG12_thin500_v1",
+      "C_gar_LG28": "sites_thin500_global_v1"
+    },
+    "interval_set_for_chrom": {
+      "global":     "genome_all_v1",
+      "C_gar_LG12": "C_gar_LG12_full_v1",
+      "C_gar_LG28": "genome_all_v1"
+    },
+    "site_tag_for_chrom": {
+      "global":     "thin500_global",
+      "C_gar_LG12": "LG12_thin500",
+      "C_gar_LG28": "LG28_thin500"
+    }
   }
 }

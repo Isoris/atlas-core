@@ -68,7 +68,79 @@ relatedness/
     ├── check_result_contract.py               (the master check)
     ├── resolve.py                             (mode-driven contract resolver)
     ├── register_result.py
-    └── sync_biomod_status.py                  (refresh module_registry.tsv from `biomod status --json`)
+    ├── sync_biomod_status.py                  (refresh module_registry.tsv from `biomod status --json`)
+    └── scan_results.py                        (walk a results dir, infer & propose analysis_results.tsv rows)
+```
+
+## Bulk-load existing results: `scan_results.py`
+
+Pointing `register_result.py` at every existing `.res` by hand is
+unworkable when you have dozens. `scan_results.py` walks a results
+tree, infers `analysis_type` from path + `chromosome` from filename
+tokens, looks up FKs in a small JSON defaults file, and proposes
+`analysis_results.tsv` rows.
+
+```bash
+cd scripts
+
+# Dry run — see what would be registered without writing
+python3 scan_results.py \
+  --results-dir ../04_results \
+  --defaults    ../01_registry/scan_defaults.json
+
+# Actually append (refuses rows with unresolved FKs)
+python3 scan_results.py \
+  --results-dir ../04_results \
+  --defaults    ../01_registry/scan_defaults.json \
+  --apply
+```
+
+The defaults file maps **chromosome tokens** (parsed from filenames:
+`LG12`, `C_gar_LG28`, `global`, `whole_genome`) to existing registry
+ids. Example:
+
+```jsonc
+{
+  "sample_set_id": "samples_226_v1",
+  "group_set_id":  "groups_main_v1",
+  "method_id_by_analysis": {
+    "ngsrelate": "ngsrelate_v2", "ngspedigree": "ngspedigree_v1", "mendelian": "mendelian_v1"
+  },
+  "interval_set_for_chrom":  { "global": "genome_all_v1", "C_gar_LG12": "C_gar_LG12_full_v1" },
+  "site_set_for_chrom":      { "global": "sites_thin500_global_v1", "C_gar_LG12": "sites_LG12_thin500_v1" },
+  "input_value_for_chrom":   { "global": "beagle_thin500_global_v1", "C_gar_LG12": "beagle_LG12_thin500_v1" }
+}
+```
+
+File-pattern recognition (out of the box):
+
+| File pattern             | analysis_type |
+|---|---|
+| `*.res`                  | `ngsrelate` |
+| `pedigree*.tsv`          | `ngspedigree` |
+| `*mendelian*.tsv`        | `mendelian` |
+| `*.qopt`                 | `ngsadmix` |
+
+Properties:
+
+- **Idempotent.** Files whose `path` already appears in `analysis_results.tsv` are skipped.
+- **Refuses to silently guess.** If a chromosome token doesn't map to a known interval / site / value in the defaults file, the row is BLOCKED and `--apply` refuses to write. Fix the defaults, re-run.
+- **Computes sha256.** Each accepted row gets a real content hash in the `hash` column.
+- **Auto-versioning.** `result_id` collisions auto-bump (`ngsrelate_LG28_v1` → `_v2` if `_v1` already taken).
+- **Stdlib only.** No PyYAML / pandas / etc.
+
+Smoke-tested end-to-end on the bundled synthetic data:
+
+```
+$ scan_results.py --results-dir ../04_results --defaults ../01_registry/scan_defaults.json
+0 new · 4 already registered · 0 blocked            ← baseline (4 example rows already in)
+
+$ # drop two new files (LG28.res, LG28.mendelian.tsv) into ../04_results
+$ scan_results.py … --apply
+✓ OK appended 2 row(s) → analysis_results.tsv
+
+$ scan_results.py …                                  ← re-run
+0 new · 6 already registered · 0 blocked            ← idempotent
 ```
 
 ## Biomod bridge — what backs each analysis

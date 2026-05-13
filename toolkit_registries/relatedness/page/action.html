@@ -63,6 +63,20 @@
   .pill.MISSING      { background: var(--st-missing); }
   .pill.CONCEPTUAL   { background: var(--st-conceptual); }
 
+  /* Module pills (biomod side) — outlined to distinguish from data pills */
+  .pill.MOD_READY        { background: transparent; color: var(--st-result-ready);
+                            border: 1.5px solid var(--st-result-ready); }
+  .pill.MOD_STALE        { background: transparent; color: var(--st-spawnable);
+                            border: 1.5px solid var(--st-spawnable); }
+  .pill.MOD_FAILED       { background: transparent; color: var(--st-blocked);
+                            border: 1.5px solid var(--st-blocked); }
+  .pill.MOD_AVAILABLE    { background: transparent; color: var(--st-run-ready);
+                            border: 1.5px solid var(--st-run-ready); }
+  .pill.MOD_CONCEPTUAL   { background: transparent; color: var(--st-conceptual);
+                            border: 1.5px solid var(--st-conceptual); }
+  .pill.MOD_NOT_INSTALLED{ background: transparent; color: var(--st-missing);
+                            border: 1.5px solid var(--st-missing); }
+
   .step-card {
     background: var(--bg-card); border-left: 6px solid var(--border); border-radius: 6px;
     padding: 14px 18px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);
@@ -154,6 +168,12 @@
   <span><span class="pill SPAWNABLE">spawnable</span> some inputs missing but derivable</span>
   <span><span class="pill BLOCKED">blocked</span> existing result conflicts or contracts mismatch</span>
   <span><span class="pill MISSING">missing</span> required input doesn't exist & isn't spawnable</span>
+  <span style="margin-left:18px;color:var(--st-conceptual);font-weight:600">module:</span>
+  <span><span class="pill MOD_READY">mod_ready</span> installed, last run passed</span>
+  <span><span class="pill MOD_STALE">mod_stale</span> installed but inputs changed</span>
+  <span><span class="pill MOD_FAILED">mod_failed</span> installed, last run failed</span>
+  <span><span class="pill MOD_NOT_INSTALLED">not installed</span> module missing from biomod env</span>
+  <span><span class="pill MOD_CONCEPTUAL">conceptual</span> module name set in analysis_modes but unknown to biomod</span>
 </div>
 
 <section>
@@ -193,13 +213,25 @@ const TSVS = [
   ["input_values",     "../01_registry/input_values.tsv",     "value_id"],
   ["analysis_results", "../01_registry/analysis_results.tsv", "result_id"],
   ["analysis_modes",   "../01_registry/analysis_modes.tsv",   null],
+  ["module_registry",  "../01_registry/module_registry.tsv",  "module_name"],
 ];
 
 let DB = {};
 
 async function loadAll() {
   for (const [name, path, key] of TSVS) {
-    const rows = await fetchTsv(path);
+    let rows;
+    try {
+      rows = await fetchTsv(path);
+    } catch (e) {
+      // module_registry.tsv is optional — degrade gracefully when biomod
+      // isn't synced yet. Everything else is required.
+      if (name === "module_registry") {
+        rows = [];
+      } else {
+        throw e;
+      }
+    }
     if (key) {
       const m = {}; for (const r of rows) if (r[key]) m[r[key]] = r;
       DB[name] = { rows, by: m };
@@ -444,6 +476,20 @@ function statusFor(stepResolution) {
 
 function pill(state) { return `<span class="pill ${state}">${state.toLowerCase()}</span>`; }
 
+// Module status for a mode → biomod-side readiness.
+// Returns { state, label, row } where row is the module_registry row (or null).
+function moduleStatus(mode) {
+  const name = (mode.module_name || "").trim();
+  if (!name) return { state: "MOD_CONCEPTUAL", label: "(no module_name set)", row: null };
+  const row = DB.module_registry.by[name];
+  if (!row) return { state: "MOD_CONCEPTUAL", label: name + " (not in module_registry)", row: null };
+  if (row.installed !== "true") return { state: "MOD_NOT_INSTALLED", label: `${name} ${row.version || ""}`, row };
+  if (row.last_run_status === "failed") return { state: "MOD_FAILED", label: `${name} ${row.version || ""} — last run failed`, row };
+  if (row.stale === "true") return { state: "MOD_STALE", label: `${name} — stale: ${row.stale_reason || "inputs changed"}`, row };
+  if (row.ready === "true") return { state: "MOD_READY", label: `${name} ${row.version || ""} — last QC: ${row.last_run_qc || "?"}`, row };
+  return { state: "MOD_AVAILABLE", label: `${name} ${row.version || ""}`, row };
+}
+
 function recoBlock(step) {
   const { state, existing, missing, ambiguous } = step.status;
   const c = step.resolution.contract;
@@ -514,11 +560,14 @@ function renderSteps(chain, args) {
   steps.forEach((s, i) => {
     const c = s.resolution.contract;
     const ex = s.status.existing;
+    const mod = moduleStatus(s.mode);
     html += `<div class="step-card ${s.status.state}">
       <div class="step-head">
         <span class="step-num">step ${i + 1} of ${steps.length}</span>
         <span class="step-ana">${s.mode.analysis_type}<span class="mode">/${s.mode.mode}</span></span>
         ${pill(s.status.state)}
+        ${pill(mod.state)}
+        <span style="color:var(--muted);font-size:11.5px">${mod.label}</span>
         ${ex ? `<span style="color:var(--muted);font-size:12px">→ <code>${ex.result_id}</code></span>` : ""}
       </div>
       <dl class="step-body">
@@ -529,6 +578,7 @@ function renderSteps(chain, args) {
         <dt>input_value</dt><dd>${c.input_value_id || "—"}</dd>
         ${c.input_result_id ? `<dt>input_result</dt><dd>${c.input_result_id}</dd>` : ""}
         <dt>produces</dt><dd>${c.produces}</dd>
+        <dt>module</dt><dd>${(s.mode.module_name || "—") + (mod.row && mod.row.version ? "  @ " + mod.row.version : "")}${mod.row && mod.row.last_run_id ? `  · last_run=<code>${mod.row.last_run_id.slice(0,8)}…</code>` : ""}</dd>
       </dl>
       ${recoBlock(s)}
     </div>`;

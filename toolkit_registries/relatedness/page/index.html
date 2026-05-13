@@ -102,6 +102,13 @@
   .badge.ready-for   { background: #bee3f8; color: var(--info); }
   .badge.orphan      { background: #fefcbf; color: var(--warn); }
   .badge.contract-fail { background: #fed7d7; color: var(--fail); }
+  /* Module-status badges (biomod). Outlined to distinguish from data badges. */
+  .badge.mod-ready         { background: transparent; color: var(--ok);    border: 1px solid var(--ok); }
+  .badge.mod-available     { background: transparent; color: var(--info);  border: 1px solid var(--info); }
+  .badge.mod-stale         { background: transparent; color: var(--warn);  border: 1px solid var(--warn); }
+  .badge.mod-failed        { background: transparent; color: var(--fail);  border: 1px solid var(--fail); }
+  .badge.mod-not-installed { background: transparent; color: var(--warn);  border: 1px solid var(--warn); }
+  .badge.mod-conceptual    { background: transparent; color: var(--muted); border: 1px solid var(--muted); }
 
   /* ------ all-results table ------ */
   .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
@@ -193,26 +200,33 @@ const TSVS = [
   ["input_values",     "../01_registry/input_values.tsv",     "value_id"],
   ["analysis_results", "../01_registry/analysis_results.tsv", "result_id"],
   ["analysis_modes",   "../01_registry/analysis_modes.tsv",   null], // composite key
+  ["module_registry",  "../01_registry/module_registry.tsv",  "module_name"],
 ];
 
 let DB = {};
 
 async function loadAll() {
   for (const [name, path, key] of TSVS) {
+    let rows;
     try {
-      const rows = await fetchTsv(path);
-      if (key) {
-        const m = {}; for (const r of rows) if (r[key]) m[r[key]] = r;
-        DB[name] = { rows, by: m };
-      } else {
-        DB[name] = { rows };
-      }
+      rows = await fetchTsv(path);
     } catch (e) {
-      const c = document.getElementById("chains");
-      c.innerHTML = `<div class="error">Could not load ${path} — ${e.message}.<br>
-        Run <code>python -m http.server -d toolkit_registries/relatedness 8000</code> from
-        the repo root, then open <code>http://127.0.0.1:8000/page/</code>.</div>`;
-      throw e;
+      // module_registry.tsv is optional — biomod may not be synced yet.
+      if (name === "module_registry") {
+        rows = [];
+      } else {
+        const c = document.getElementById("chains");
+        c.innerHTML = `<div class="error">Could not load ${path} — ${e.message}.<br>
+          Run <code>python -m http.server -d toolkit_registries/relatedness 8000</code> from
+          the repo root, then open <code>http://127.0.0.1:8000/page/</code>.</div>`;
+        throw e;
+      }
+    }
+    if (key) {
+      const m = {}; for (const r of rows) if (r[key]) m[r[key]] = r;
+      DB[name] = { rows, by: m };
+    } else {
+      DB[name] = { rows };
     }
   }
 }
@@ -299,6 +313,31 @@ function contractStatus(r) {
 
 // Find OTHER results that COULD chain to/from this one but currently don't.
 // Compatible = same sample_set + matching analysis-type pairing per analysis_modes.
+// Look up the biomod module for a given analysis_type (via analysis_modes.tsv
+// → module_name → module_registry row). Falls back gracefully if absent.
+function moduleStatusForAnalysisType(analysisType) {
+  if (!analysisType) return null;
+  const modeRow = (DB.analysis_modes && DB.analysis_modes.rows || [])
+    .find(m => m.analysis_type === analysisType && m.module_name);
+  if (!modeRow) return null;
+  const moduleRow = (DB.module_registry && DB.module_registry.by || {})[modeRow.module_name];
+  return { module_name: modeRow.module_name, row: moduleRow || null };
+}
+
+function moduleBadge(analysisType) {
+  const m = moduleStatusForAnalysisType(analysisType);
+  if (!m) return "";
+  if (!m.row) {
+    return `<span class="badge mod-conceptual" title="${m.module_name} not in module_registry.tsv">mod: ${m.module_name} (conceptual)</span>`;
+  }
+  const r = m.row;
+  if (r.installed !== "true") return `<span class="badge mod-not-installed">mod: not installed</span>`;
+  if (r.last_run_status === "failed") return `<span class="badge mod-failed">mod: ${r.module_name} ${r.version} — last run failed</span>`;
+  if (r.stale === "true") return `<span class="badge mod-stale">mod: ${r.module_name} stale</span>`;
+  if (r.ready === "true") return `<span class="badge mod-ready">mod: ${r.module_name} ${r.version} ✓</span>`;
+  return `<span class="badge mod-available">mod: ${r.module_name} ${r.version}</span>`;
+}
+
 function readyForFor(r) {
   const out = [];
   const myProduces = produceTagOf(r.analysis_type);
@@ -345,7 +384,7 @@ function stepCard(r) {
         <div><span class="k">value</span> ${r.input_value_id || "—"}</div>
         ${r.input_result_id ? `<div><span class="k">input_result</span> ${r.input_result_id}</div>` : ""}
       </div>
-      <div>${upstream}${ready}${failBadge}</div>
+      <div>${upstream}${ready}${failBadge}${moduleBadge(r.analysis_type)}</div>
     </div>`;
 }
 
@@ -412,6 +451,8 @@ function renderTable(filtered) {
     for (const k of readyFor) compat.push(`<span class="badge ready-for">ready for ${k}</span>`);
     if (compat.length === 0 && !readyFor.length) compat.push(`<span class="badge orphan">no downstream wired yet</span>`);
     if (!cs.ok) compat.push(`<span class="badge contract-fail">${cs.why}</span>`);
+    const mb = moduleBadge(r.analysis_type);
+    if (mb) compat.push(mb);
     html += `<tr>
       <td class="code">${r.result_id}</td>
       <td>${r.analysis_type}</td>

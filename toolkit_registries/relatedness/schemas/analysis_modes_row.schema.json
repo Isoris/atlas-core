@@ -16,7 +16,8 @@
     "group_policy":        { "type": "string", "description": "Tag matched against group_sets. Recognized: family_population, family_karyotype, optional_groups, same_as_input." },
     "value_policy":        { "type": "string", "description": "Tag matched against input_values. Default: BEAGLE matching the resolved (sample_set, site_set, interval_set). Recognized: beagle_matching, none." },
     "produces":            { "type": "string", "description": "Output kind tag (e.g. 'relatedness_res', 'pedigree_result', 'mendelian_result'). Used to chain modes (ngspedigree.required_dimensions includes 'ngsrelate_result' which means 'a previous analysis_results row whose produces == relatedness_res')." },
+    "module_name":         { "type": "string", "description": "FK into module_registry.tsv — the biomod module that implements this analysis. The page combines DATA readiness (RESULT_READY / RUN_READY / …) with MODULE readiness (installed / ready / stale) when displaying a step. Empty allowed for purely conceptual modes." },
     "notes":               { "type": "string" }
   },
-  "_tsv_column_order": ["analysis_type", "mode", "label", "required_dimensions", "interval_policy", "site_policy", "group_policy", "value_policy", "produces", "notes"]
+  "_tsv_column_order": ["analysis_type", "mode", "label", "required_dimensions", "interval_policy", "site_policy", "group_policy", "value_policy", "produces", "module_name", "notes"]
 }

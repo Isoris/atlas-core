@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Registry inventory — analysis × group × samples × interval</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #777;
+    --bg: #fafafa;
+    --bg-row: #fff;
+    --bg-row-alt: #f3f4f6;
+    --bg-row-hover: #e7eef7;
+    --bg-row-open: #e2eaf3;
+    --border: #d8dce3;
+    --accent: #2b6cb0;
+    --chip-bg: #edf2f7;
+    --chip-fg: #2d3748;
+    --status-active: #2f855a;
+    --status-stale:  #b7791f;
+    --status-failed: #c53030;
+    --status-other:  #4a5568;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+               font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 14px 20px 8px; border-bottom: 1px solid var(--border); background: var(--bg-row); }
+  h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin-top: 2px; font-size: 12px; }
+  .controls { padding: 10px 20px; display: flex; gap: 12px; align-items: center;
+              background: var(--bg-row); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .controls label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .controls input[type="text"] {
+    padding: 6px 10px; font-size: 13px; border: 1px solid var(--border); border-radius: 4px;
+    width: 280px; background: var(--bg-row); color: var(--fg);
+  }
+  .controls .stat { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .controls select { padding: 5px 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--bg-row); position: sticky; top: 0; z-index: 1;
+    text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 600;
+    color: var(--muted); border-bottom: 2px solid var(--border); cursor: pointer; user-select: none;
+    white-space: nowrap;
+  }
+  thead th:hover { color: var(--accent); }
+  thead th .arrow { display: inline-block; width: 10px; color: var(--accent); }
+
+  tbody tr.row { background: var(--bg-row); border-bottom: 1px solid var(--border); cursor: pointer; }
+  tbody tr.row:nth-child(4n+3) { background: var(--bg-row-alt); }
+  tbody tr.row:hover { background: var(--bg-row-hover); }
+  tbody tr.row.open { background: var(--bg-row-open); }
+  tbody td { padding: 7px 12px; vertical-align: top; font-size: 13px; }
+  tbody td.code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  tbody td .chip {
+    display: inline-block; padding: 1px 7px; border-radius: 3px;
+    background: var(--chip-bg); color: var(--chip-fg);
+    font-size: 11px; font-weight: 500; line-height: 1.5;
+  }
+  .status-active { color: var(--status-active); }
+  .status-stale  { color: var(--status-stale); }
+  .status-failed { color: var(--status-failed); }
+  .status-other  { color: var(--status-other); }
+
+  tr.detail td { background: var(--bg-row-open); padding: 10px 12px 14px; border-bottom: 1px solid var(--border); }
+  tr.detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 0; font-size: 12px; }
+  tr.detail dt { color: var(--muted); font-weight: 500; }
+  tr.detail dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  tr.detail dd.params { white-space: pre; background: var(--bg-row); padding: 6px 8px; border-radius: 4px; border: 1px solid var(--border); }
+  tr.detail .artifacts li { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+  .empty { padding: 30px 20px; color: var(--muted); }
+  .error { padding: 30px 20px; color: var(--status-failed); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Registry inventory</h1>
+  <div class="sub">analysis × group × samples × interval — one row per distinct computation</div>
+</header>
+
+<div class="controls">
+  <label>filter <input id="filter" type="text" placeholder="match any column…" autocomplete="off"></label>
+  <label>analysis
+    <select id="filter-analysis"><option value="">(any)</option></select>
+  </label>
+  <label>interval
+    <select id="filter-interval"><option value="">(any)</option></select>
+  </label>
+  <label>status
+    <select id="filter-status"><option value="">(any)</option></select>
+  </label>
+  <span class="stat" id="counts"></span>
+</div>
+
+<div id="content"></div>
+
+<script>
+const SRC = new URLSearchParams(location.search).get("src") || "example_data/inventory.json";
+const COLS = [
+  { key: "analysis",     label: "Analysis",  width: "14%" },
+  { key: "group_label",  label: "Group",     width: "32%" },
+  { key: "n_samples",    label: "N",         width: "5%", num: true },
+  { key: "interval",     label: "Interval",  width: "18%" },
+  { key: "status",       label: "Status",    width: "9%" },
+  { key: "created_at",   label: "Created",   width: "14%" },
+  { key: "layer_id",     label: "Layer",     width: "8%", code: true },
+];
+
+let allRows = [];
+let sortKey = "created_at";
+let sortDir = -1; // -1 desc, +1 asc
+let openIdx = null;
+
+async function load() {
+  try {
+    const resp = await fetch(SRC, { cache: "no-store" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching ${SRC}`);
+    allRows = await resp.json();
+  } catch (e) {
+    document.getElementById("content").innerHTML =
+      `<div class="error">Could not load <code>${SRC}</code> — ${e.message}.<br>
+      Open the page with <code>?src=path/to/inventory.json</code> to point at a different file.</div>`;
+    return;
+  }
+  populateFilters();
+  render();
+}
+
+function populateFilters() {
+  for (const [selId, key] of [["filter-analysis", "analysis"],
+                              ["filter-interval", "interval"],
+                              ["filter-status", "status"]]) {
+    const sel = document.getElementById(selId);
+    const values = [...new Set(allRows.map(r => r[key]).filter(v => v != null))].sort();
+    for (const v of values) {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = v;
+      sel.appendChild(opt);
+    }
+  }
+}
+
+function render() {
+  const q = document.getElementById("filter").value.trim().toLowerCase();
+  const fA = document.getElementById("filter-analysis").value;
+  const fI = document.getElementById("filter-interval").value;
+  const fS = document.getElementById("filter-status").value;
+
+  let rows = allRows.filter(r => {
+    if (fA && r.analysis !== fA) return false;
+    if (fI && r.interval !== fI) return false;
+    if (fS && r.status !== fS) return false;
+    if (!q) return true;
+    const hay = COLS.map(c => String(r[c.key] ?? "")).join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+
+  rows.sort((a, b) => {
+    const av = a[sortKey], bv = b[sortKey];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === "number" && typeof bv === "number") return (av - bv) * sortDir;
+    return String(av).localeCompare(String(bv)) * sortDir;
+  });
+
+  document.getElementById("counts").textContent =
+    `${rows.length} / ${allRows.length} row(s)`;
+
+  let html = `<table><colgroup>`;
+  for (const c of COLS) html += `<col style="width:${c.width}">`;
+  html += `</colgroup><thead><tr>`;
+  for (const c of COLS) {
+    const arrow = sortKey === c.key ? (sortDir === 1 ? "▲" : "▼") : "";
+    html += `<th data-sort="${c.key}">${c.label} <span class="arrow">${arrow}</span></th>`;
+  }
+  html += `</tr></thead><tbody>`;
+
+  rows.forEach((r, i) => {
+    const isOpen = openIdx === r.result_id;
+    html += `<tr class="row ${isOpen ? 'open' : ''}" data-idx="${r.result_id}">`;
+    for (const c of COLS) {
+      let v = r[c.key];
+      let cls = c.code ? "code" : "";
+      if (c.key === "status" && v) {
+        const sc = v === "active" ? "status-active"
+                 : v === "stale"  ? "status-stale"
+                 : v === "failed" ? "status-failed" : "status-other";
+        v = `<span class="${sc}">●</span> ${v}`;
+      }
+      if (c.key === "analysis" && r.analysis_version) {
+        v = `${v} <span class="chip">${r.analysis_version}</span>`;
+      }
+      if (v == null) v = "";
+      html += `<td class="${cls}">${v}</td>`;
+    }
+    html += `</tr>`;
+    if (isOpen) {
+      html += `<tr class="detail"><td colspan="${COLS.length}">${renderDetail(r)}</td></tr>`;
+    }
+  });
+  html += `</tbody></table>`;
+
+  if (rows.length === 0) {
+    html = `<div class="empty">No rows match the current filters.</div>`;
+  }
+
+  document.getElementById("content").innerHTML = html;
+}
+
+function renderDetail(r) {
+  const artifacts = (r.input_artifact_ids || []).map(a => `<li>${a}</li>`).join("");
+  const params = JSON.stringify(r.params || {}, null, 2);
+  return `<dl>
+    <dt>result_id</dt><dd>${r.result_id || "—"}</dd>
+    <dt>sample_set_id</dt><dd>${r.sample_set_id || "—"}</dd>
+    <dt>layer_id</dt><dd>${r.layer_id || "—"}</dd>
+    <dt>input_artifact_ids</dt><dd><ul class="artifacts">${artifacts}</ul></dd>
+    <dt>params</dt><dd class="params">${params}</dd>
+  </dl>`;
+}
+
+document.addEventListener("click", (e) => {
+  const th = e.target.closest("th[data-sort]");
+  if (th) {
+    const k = th.dataset.sort;
+    if (sortKey === k) sortDir = -sortDir;
+    else { sortKey = k; sortDir = (k === "created_at" || k === "n_samples") ? -1 : 1; }
+    render();
+    return;
+  }
+  const tr = e.target.closest("tr.row");
+  if (tr) {
+    const idx = tr.dataset.idx;
+    openIdx = (openIdx === idx) ? null : idx;
+    render();
+  }
+});
+
+for (const id of ["filter", "filter-analysis", "filter-interval", "filter-status"]) {
+  document.getElementById(id).addEventListener("input", render);
+}
+
+load();
+</script>
+
+</body>
+</html>

@@ -77,6 +77,14 @@ Skip SPEC_DEFERRED unless you're working on a deferred feature.
 | File | Purpose |
 |---|---|
 | `set_algebra.py` | Materialize sample-set expressions (intersect / union / difference / filter), compute `sample_set_id` and `result_id` content hashes, answer "do we already have this result?". See REGISTRY_LOOKUP.md. Runnable smoke test: `python toolkit_registries/lib/set_algebra.py`. |
+| `registry_inventory.py` | Scan a registry root and emit a flat `analysis × group × samples × interval` table — JSON for the viewer, or ASCII for the terminal. See `inventory/`. |
+
+### inventory/ — click and see what's in the registry
+
+Single-file HTML page (`index.html`) that reads the JSON dump from
+`registry_inventory.py` and renders a sortable / filterable / expandable
+table. `example_data/registry/` holds a small synthetic registry so the
+page works out of the box. See `inventory/README.md`.
 
 ---
 

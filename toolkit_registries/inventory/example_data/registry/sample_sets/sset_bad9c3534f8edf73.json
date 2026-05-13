@@ -1,0 +1,21 @@
+{
+  "sample_set_id": "sset_bad9c3534f8edf73",
+  "members_hash": "sha256:bad9c3534f8edf73b0e7cbdbf6ab1eb798b8ca378911e43f7398ec86ab3997b2",
+  "n_members": 3,
+  "members": [
+    "CGA042",
+    "CGA071",
+    "CGA118"
+  ],
+  "derived_from": {
+    "op": "intersect",
+    "parents": [
+      "inv_LG28_INV_001_HOM_INV",
+      "ancestry_K8_cluster3"
+    ],
+    "predicate": null
+  },
+  "cohort_id": "main_226_hatchery",
+  "label": "HOM_INV ∩ ancestry_K8_cluster3",
+  "created_at": "2026-05-10T13:02:00Z"
+}

@@ -1,23 +1,20 @@
 """
 toolkit_registries/lib/registry_index.py
 
-Build the two flat-TSV catalogues from the JSON-per-record registry:
+Build the flat-TSV catalogues from the JSON-per-record registry:
 
-  - set_registry.tsv          ← from <root>/sets/<entity_type>/*.json (set_v1)
-  - analysis_registry.tsv     ← from <root>/analyses/*.json           (analysis_v1)
+  - set_registry.tsv               ← from <root>/sets/<entity_type>/*.json (set_v1)
+  - derivation_registry.tsv        ← from <root>/derivations/*.json        (derivation_v1)
+  - operation_params_registry.tsv  ← from <root>/operation_params/*.json   (operation_params_v1)
+  - analysis_registry.tsv          ← from <root>/analyses/*.json           (analysis_v1)
 
-Column orders are pinned by set_registry_row_v1.schema.json and
-analysis_registry_row_v1.schema.json. Empty cells are zero-length strings
-(not 'NA' / '.') so split('\\t') has the right column count.
+Column orders are pinned by the *_row_v1.schema.json sibling schemas.
+Empty cells are zero-length strings (not 'NA' / '.') so split('\\t') has
+the right column count.
 
 Usage (CLI):
     python registry_index.py /path/to/registry [--out-dir <dir>]
     python registry_index.py --example     # scan inventory/example_data/registry
-
-Usage (lib):
-    from registry_index import build_set_registry, build_analysis_registry
-    rows = build_set_registry(registry_root)
-    write_tsv(rows, set_registry_row_columns, out_path)
 """
 
 from __future__ import annotations
@@ -32,8 +29,23 @@ from typing import Dict, Iterable, List, Optional
 
 SET_REGISTRY_COLUMNS = [
     "set_id", "entity_type", "label", "path", "n_entities", "hash",
-    "parent_set_id", "filter_profile_id", "coordinate_system",
-    "intended_use", "status", "created_at", "definition_path",
+    "parent_set_id", "derivation_id", "filter_profile_id",
+    "coordinate_system", "intended_use", "status", "created_at",
+    "definition_path",
+]
+
+DERIVATION_REGISTRY_COLUMNS = [
+    "derivation_id", "label", "operation_type", "parent_set_id",
+    "operation_params_id", "filter_profile_id", "coordinate_system",
+    "analysis_purpose", "software", "software_version",
+    "produces_set_id", "output_hash", "status", "created_at",
+    "definition_path",
+]
+
+OPERATION_PARAMS_REGISTRY_COLUMNS = [
+    "operation_params_id", "operation_type", "label", "params_json",
+    "deterministic", "seed", "version_of_definition", "created_at",
+    "definition_path",
 ]
 
 ANALYSIS_REGISTRY_COLUMNS = [
@@ -112,6 +124,7 @@ def build_set_registry(registry_root: pathlib.Path) -> List[Dict]:
             "n_entities":        "" if r.get("n_entities") is None else str(r.get("n_entities")),
             "hash":              r.get("hash", ""),
             "parent_set_id":     single_parent or "",
+            "derivation_id":     r.get("derivation_id", "") or "",
             "filter_profile_id": r.get("filter_profile_id", ""),
             "coordinate_system": r.get("coordinate_system", ""),
             "intended_use":      r.get("intended_use", ""),
@@ -122,6 +135,75 @@ def build_set_registry(registry_root: pathlib.Path) -> List[Dict]:
         rows.append(row)
 
     rows.sort(key=lambda x: (x["entity_type"] or "", x["set_id"] or ""))
+    return rows
+
+
+# --------------------------------------------------------------------------- #
+# derivation_registry.tsv                                                      #
+# --------------------------------------------------------------------------- #
+
+def build_derivation_registry(registry_root: pathlib.Path) -> List[Dict]:
+    """Scan <registry_root>/derivations/*.json for derivation_v1 records."""
+    registry_root = pathlib.Path(registry_root)
+    derivations_root = registry_root / "derivations"
+    records = _load_json_dir(derivations_root)
+
+    rows = []
+    for r in records:
+        # If parent_set_ids[] has more than one entry, the TSV row can't carry
+        # the full list — point at the JSON instead.
+        parents = r.get("parent_set_ids") or []
+        needs_def_path = len(parents) > 1
+        primary_parent = r.get("parent_set_id") or (parents[0] if parents else "")
+        rows.append({
+            "derivation_id":       r.get("derivation_id", ""),
+            "label":               r.get("label", ""),
+            "operation_type":      r.get("operation_type", ""),
+            "parent_set_id":       primary_parent or "",
+            "operation_params_id": r.get("operation_params_id", "") or "",
+            "filter_profile_id":   r.get("filter_profile_id", "") or "",
+            "coordinate_system":   r.get("coordinate_system", "") or "",
+            "analysis_purpose":    r.get("analysis_purpose", ""),
+            "software":            r.get("software", "") or "",
+            "software_version":    r.get("software_version", "") or "",
+            "produces_set_id":     r.get("produces_set_id", "") or "",
+            "output_hash":         r.get("output_hash", "") or "",
+            "status":              r.get("status", "active"),
+            "created_at":          r.get("created_at", ""),
+            "definition_path":     _short(r["_path"], registry_root) if needs_def_path else "",
+        })
+    rows.sort(key=lambda x: (x["operation_type"] or "", x["derivation_id"] or ""))
+    return rows
+
+
+# --------------------------------------------------------------------------- #
+# operation_params_registry.tsv                                                #
+# --------------------------------------------------------------------------- #
+
+def build_operation_params_registry(registry_root: pathlib.Path) -> List[Dict]:
+    """Scan <registry_root>/operation_params/*.json for operation_params_v1 records."""
+    registry_root = pathlib.Path(registry_root)
+    params_root = registry_root / "operation_params"
+    records = _load_json_dir(params_root)
+
+    rows = []
+    for r in records:
+        params_obj = r.get("params") or {}
+        # Canonical JSON of params (sorted keys, no whitespace) — grep-friendly.
+        params_json = json.dumps(params_obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+        det = r.get("deterministic")
+        rows.append({
+            "operation_params_id":   r.get("operation_params_id", ""),
+            "operation_type":        r.get("operation_type", ""),
+            "label":                 r.get("label", ""),
+            "params_json":           params_json if params_json != "{}" else "",
+            "deterministic":         "" if det is None else ("true" if det else "false"),
+            "seed":                  "" if r.get("seed") is None else str(r.get("seed")),
+            "version_of_definition": r.get("version_of_definition", ""),
+            "created_at":            r.get("created_at", ""),
+            "definition_path":       _short(r["_path"], registry_root),
+        })
+    rows.sort(key=lambda x: (x["operation_type"] or "", x["operation_params_id"] or ""))
     return rows
 
 
@@ -224,12 +306,22 @@ def main(argv=None) -> int:
     set_path = out_dir / "set_registry.tsv"
     n_sets = write_tsv(set_rows, SET_REGISTRY_COLUMNS, set_path)
 
+    deriv_rows = build_derivation_registry(registry)
+    deriv_path = out_dir / "derivation_registry.tsv"
+    n_deriv = write_tsv(deriv_rows, DERIVATION_REGISTRY_COLUMNS, deriv_path)
+
+    params_rows = build_operation_params_registry(registry)
+    params_path = out_dir / "operation_params_registry.tsv"
+    n_params = write_tsv(params_rows, OPERATION_PARAMS_REGISTRY_COLUMNS, params_path)
+
     analysis_rows = build_analysis_registry(registry)
     analysis_path = out_dir / "analysis_registry.tsv"
     n_analyses = write_tsv(analysis_rows, ANALYSIS_REGISTRY_COLUMNS, analysis_path)
 
-    print(f"set_registry.tsv      {n_sets:>3} rows → {set_path}", file=sys.stderr)
-    print(f"analysis_registry.tsv {n_analyses:>3} rows → {analysis_path}", file=sys.stderr)
+    print(f"set_registry.tsv               {n_sets:>3} rows → {set_path}",        file=sys.stderr)
+    print(f"derivation_registry.tsv        {n_deriv:>3} rows → {deriv_path}",     file=sys.stderr)
+    print(f"operation_params_registry.tsv  {n_params:>3} rows → {params_path}",   file=sys.stderr)
+    print(f"analysis_registry.tsv          {n_analyses:>3} rows → {analysis_path}", file=sys.stderr)
     return 0
 
 

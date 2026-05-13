@@ -39,9 +39,13 @@
       "type": ["string", "null"],
       "description": "Optional single-parent FK to another set (e.g. 'sites_LG28_localpca_v1' has parent 'snps_maf005_v1'). When the set was derived by a more complex op, use derived_from instead."
     },
+    "derivation_id": {
+      "type": ["string", "null"],
+      "description": "Optional FK into derivation_v1.derivation_id. Used when the set was produced by an OPERATION (thin_by_distance, window_extract, random_sample, callability_filter, …) — anything that has parameters, software version, possibly a random seed. The full recipe (operation_type + operation_params_id + filter_profile_id + analysis_purpose + software) lives in the derivation record. Mutually exclusive with 'derived_from': use derivation_id for operations, derived_from for pure set algebra. See SETS_AND_ANALYSES.md §'Derivation as a first-class record'."
+    },
     "derived_from": {
       "type": ["object", "null"],
-      "description": "Set algebra lineage. Null/absent for atomic sets (members are inline or read from path). Same shape as sample_set_v1.derived_from but generalized — parents may be any set_id of any entity_type that makes sense for the op.",
+      "description": "Set-algebra lineage (intersect / union / difference / filter / from_set / from_inline / from_group). Pure logical combinations of other sets — no parameters, no random seed, no software dependency. For OPERATIONS like thinning or window extraction use the derivation_id FK instead. Mutually exclusive with derivation_id.",
       "additionalProperties": false,
       "required": ["op", "parents"],
       "properties": {

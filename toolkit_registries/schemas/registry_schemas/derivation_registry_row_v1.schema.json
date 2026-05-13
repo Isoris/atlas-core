@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "derivation_registry_row_v1.schema.json",
+  "title": "Derivation registry row — one TSV row in derivation_registry.tsv",
+  "description": "Flat catalogue row, one per registered derivation. Generated from derivation_v1 JSONs by lib/registry_index.py. The full definition (including parent_set_ids[] for multi-parent ops) lives in the JSON; definition_path points there when the row alone isn't sufficient.",
+  "type": "object",
+  "required": ["derivation_id", "operation_type", "parent_set_id", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "derivation_id":       { "type": "string" },
+    "label":               { "type": "string" },
+    "operation_type":      { "type": "string" },
+    "parent_set_id":       { "type": "string", "description": "Primary parent. For multi-parent ops, definition_path points at the JSON." },
+    "operation_params_id": { "type": "string", "description": "FK into operation_params. Empty when the op has no params." },
+    "filter_profile_id":   { "type": "string" },
+    "coordinate_system":   { "type": "string" },
+    "analysis_purpose":    { "type": "string" },
+    "software":            { "type": "string" },
+    "software_version":    { "type": "string" },
+    "produces_set_id":     { "type": "string", "description": "Primary child set_id. May be empty until the child set is registered." },
+    "output_hash":         { "type": "string", "description": "sha256:<hex> of canonical produced-set members. Empty if not yet computed." },
+    "status":              { "type": "string", "enum": ["active", "experimental", "deprecated", "stale"] },
+    "created_at":          { "type": "string" },
+    "definition_path":     { "type": "string", "description": "Path to the derivation_v1 JSON when multi-parent or nested fields exceed TSV columns." }
+  },
+  "_tsv_column_order": [
+    "derivation_id", "label", "operation_type", "parent_set_id",
+    "operation_params_id", "filter_profile_id", "coordinate_system",
+    "analysis_purpose", "software", "software_version",
+    "produces_set_id", "output_hash", "status", "created_at",
+    "definition_path"
+  ]
+}

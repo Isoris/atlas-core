@@ -1,13 +1,15 @@
 # inventory/ — click and see what the registry has
 
-The "small page we click we see". Four tabs:
+The "small page we click we see". Six tabs:
 
 | Tab | Shows |
 |---|---|
-| **Results**  | One row per `analysis_result_v1` — `analysis × group × samples × interval`. Click a row to expand to full provenance. |
-| **Sets**     | Every named set from the set_registry, grouped by entity_type (sample / variant_site / window / inversion_candidate / gene / breakpoint / …). |
-| **Analyses** | The analysis vocabulary — what `ngsrelate`, `ngspedigree`, `mendelian`, `fst_pairwise`, `theta_pi`, … take as inputs, what they produce, what they require upstream. |
-| **Chain**    | Local chain composer. Pick a target analysis + a sample set, the page walks `requires` backward, builds the ordered chain, and writes the **input contract** (action manifest) and the **output contract** (expected layer envelope) for each step. Marks each step **cached ✓** or **todo ⊳**. |
+| **Results**     | One row per `analysis_result_v1` — `analysis × group × samples × interval`. Click a row to expand to full provenance. |
+| **Sets**        | Every named set from the set_registry, grouped by entity_type. The Derivation column links to the matching row in the Derivations tab. |
+| **Derivations** | One row per derivation recipe: `operation_type + parent_set + operation_params + filter_profile + analysis_purpose + software`. Links bidirectionally to Sets (parent + produces) and to Params. |
+| **Params**      | The parameter bundles. Distinguishes e.g. `thin500_first_per_chrom_v1` (deterministic) from `thin500_random_seed123_v1` (random with seed) — same distance, different identity. Each row's expand shows which derivations use it. |
+| **Analyses**    | The analysis vocabulary — what `ngsrelate`, `ngspedigree`, `mendelian`, `fst_pairwise`, `theta_pi`, … take as inputs, what they produce, what they require upstream. |
+| **Chain**       | Local chain composer. Pick a target analysis + a sample set, the page walks `requires` backward, builds the ordered chain, and writes the **input contract** (action manifest) and the **output contract** (expected layer envelope) for each step. Marks each step **cached ✓** or **todo ⊳**. |
 
 One JSON file feeds all four tabs (`example_data/inventory.json`,
 written by `lib/registry_inventory.py`).

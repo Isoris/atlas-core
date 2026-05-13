@@ -1,0 +1,13 @@
+{
+  "operation_params_id": "lostruct_LG28_params_v1",
+  "operation_type":      "window_extract",
+  "label":               "lostruct LG28 100-site windows",
+  "params": {
+    "window_size_sites":    100,
+    "chrom_filter":         "C_gar_LG28",
+    "min_sites_per_window": 10,
+    "min_callability":      0.5
+  },
+  "deterministic": true,
+  "created_at":    "2026-04-10T11:55:00Z"
+}

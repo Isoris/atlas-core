@@ -131,15 +131,19 @@
 
 <nav class="tabs">
   <div class="tab active" data-tab="results">Results <span class="count" id="count-results"></span></div>
-  <div class="tab"        data-tab="sets">Sets    <span class="count" id="count-sets"></span></div>
+  <div class="tab"        data-tab="sets">Sets <span class="count" id="count-sets"></span></div>
+  <div class="tab"        data-tab="derivations">Derivations <span class="count" id="count-derivations"></span></div>
+  <div class="tab"        data-tab="params">Params <span class="count" id="count-params"></span></div>
   <div class="tab"        data-tab="analyses">Analyses <span class="count" id="count-analyses"></span></div>
   <div class="tab"        data-tab="chain">Chain</div>
 </nav>
 
-<div id="view-results" class="view"></div>
-<div id="view-sets"    class="view" style="display:none"></div>
-<div id="view-analyses"class="view" style="display:none"></div>
-<div id="view-chain"   class="view" style="display:none"></div>
+<div id="view-results"    class="view"></div>
+<div id="view-sets"       class="view" style="display:none"></div>
+<div id="view-derivations"class="view" style="display:none"></div>
+<div id="view-params"     class="view" style="display:none"></div>
+<div id="view-analyses"   class="view" style="display:none"></div>
+<div id="view-chain"      class="view" style="display:none"></div>
 
 <script>
 // =========================================================================
@@ -147,7 +151,7 @@
 // =========================================================================
 
 const SRC = new URLSearchParams(location.search).get("src") || "example_data/inventory.json";
-let DATA = { results: [], sets: [], analyses: [] };
+let DATA = { results: [], sets: [], derivations: [], operation_params: [], analyses: [] };
 let CURRENT_TAB = "results";
 
 async function loadData() {
@@ -155,14 +159,15 @@ async function loadData() {
     const resp = await fetch(SRC, { cache: "no-store" });
     if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching ${SRC}`);
     const payload = await resp.json();
-    // Back-compat: if payload is an array, treat it as the legacy results-only file.
     if (Array.isArray(payload)) {
-      DATA = { results: payload, sets: [], analyses: [] };
+      DATA = { results: payload, sets: [], derivations: [], operation_params: [], analyses: [] };
     } else {
       DATA = {
-        results:  payload.results  || [],
-        sets:     payload.sets     || [],
-        analyses: payload.analyses || [],
+        results:          payload.results          || [],
+        sets:             payload.sets             || [],
+        derivations:      payload.derivations      || [],
+        operation_params: payload.operation_params || [],
+        analyses:         payload.analyses         || [],
       };
     }
   } catch (e) {
@@ -171,9 +176,11 @@ async function loadData() {
       Open the page with <code>?src=path/to/inventory.json</code> to point at a different file.</div>`;
     return;
   }
-  document.getElementById("count-results").textContent  = `(${DATA.results.length})`;
-  document.getElementById("count-sets").textContent     = `(${DATA.sets.length})`;
-  document.getElementById("count-analyses").textContent = `(${DATA.analyses.length})`;
+  document.getElementById("count-results").textContent     = `(${DATA.results.length})`;
+  document.getElementById("count-sets").textContent        = `(${DATA.sets.length})`;
+  document.getElementById("count-derivations").textContent = `(${DATA.derivations.length})`;
+  document.getElementById("count-params").textContent      = `(${DATA.operation_params.length})`;
+  document.getElementById("count-analyses").textContent    = `(${DATA.analyses.length})`;
   renderAll();
 }
 
@@ -359,13 +366,14 @@ function renderResults() {
 
 function renderSets() {
   const cols = [
-    { key: "set_id",            label: "Set ID",            width: "26%", code: true },
-    { key: "entity_type",       label: "Entity type",       width: "13%", facet: true },
-    { key: "label",             label: "Label",             width: "26%" },
-    { key: "n_entities",        label: "N",                 width: "7%" },
-    { key: "coordinate_system", label: "Coord system",      width: "13%", facet: true },
-    { key: "status",            label: "Status",            width: "9%", facet: true },
-    { key: "created_at",        label: "Created",           width: "12%" },
+    { key: "set_id",            label: "Set ID",            width: "22%", code: true },
+    { key: "entity_type",       label: "Entity type",       width: "11%", facet: true },
+    { key: "label",             label: "Label",             width: "24%" },
+    { key: "n_entities",        label: "N",                 width: "6%" },
+    { key: "derivation_id",     label: "Derivation",        width: "18%", code: true,
+      render: (_, r) => r.derivation_id ? r.derivation_id : (r.derived_op ? `<span class="chip">${r.derived_op}</span>` : "") },
+    { key: "coordinate_system", label: "Coord system",      width: "11%", facet: true },
+    { key: "status",            label: "Status",            width: "8%", facet: true },
   ];
   makeTable(document.getElementById("view-sets"), DATA.sets, cols, {
     idKey: "set_id",
@@ -373,7 +381,10 @@ function renderSets() {
     defaultSortDir: 1,
     detail: (r) => {
       const derived = r.derived_op
-        ? `<dt>derived_from</dt><dd>${r.derived_op} ( ${(r.derived_parents||[]).join(", ")} )${r.derived_predicate ? ` predicate:${r.derived_predicate}` : ""}</dd>`
+        ? `<dt>derived_from (set algebra)</dt><dd>${r.derived_op} ( ${(r.derived_parents||[]).join(", ")} )${r.derived_predicate ? ` predicate:${r.derived_predicate}` : ""}</dd>`
+        : "";
+      const derivationLink = r.derivation_id
+        ? `<dt>derivation_id</dt><dd><a href="#" onclick="jumpTo('derivations','${r.derivation_id}');return false">${r.derivation_id}</a> &rarr; see Derivations tab for the full recipe</dd>`
         : "";
       return `<dl>
         <dt>set_id</dt><dd>${r.set_id}</dd>
@@ -381,6 +392,7 @@ function renderSets() {
         <dt>label</dt><dd>${r.label || "—"}</dd>
         <dt>n_entities</dt><dd>${r.n_entities ?? "—"}</dd>
         <dt>parent_set_id</dt><dd>${r.parent_set_id || "—"}</dd>
+        ${derivationLink}
         ${derived}
         <dt>filter_profile_id</dt><dd>${r.filter_profile_id || "—"}</dd>
         <dt>coordinate_system</dt><dd>${r.coordinate_system || "—"}</dd>
@@ -389,6 +401,97 @@ function renderSets() {
       </dl>`;
     },
   });
+}
+
+
+// =========================================================================
+// Derivations tab
+// =========================================================================
+
+function renderDerivations() {
+  const cols = [
+    { key: "derivation_id",     label: "Derivation ID",   width: "20%", code: true },
+    { key: "operation_type",    label: "Op",              width: "11%", facet: true },
+    { key: "parent_set_id",     label: "Parent set",      width: "16%", code: true },
+    { key: "operation_params_id",label:"Params",          width: "16%", code: true,
+      render: (v, r) => v ? `<a href="#" onclick="jumpTo('params','${v}');return false">${v}</a>` : "" },
+    { key: "produces_set_id",   label: "Produces",        width: "16%", code: true,
+      render: (v, r) => v ? `<a href="#" onclick="jumpTo('sets','${v}');return false">${v}</a>` : "" },
+    { key: "analysis_purpose",  label: "Purpose",         width: "13%" },
+    { key: "status",            label: "Status",          width: "8%", facet: true },
+  ];
+  makeTable(document.getElementById("view-derivations"), DATA.derivations, cols, {
+    idKey: "derivation_id",
+    defaultSortKey: "operation_type",
+    defaultSortDir: 1,
+    detail: (r) => `<dl>
+      <dt>derivation_id</dt><dd>${r.derivation_id}</dd>
+      <dt>label</dt><dd style="font-family:inherit">${r.label || "—"}</dd>
+      <dt>operation_type</dt><dd>${r.operation_type || "—"}</dd>
+      <dt>parent_set_id</dt><dd>${r.parent_set_id || "—"}</dd>
+      ${(r.parent_set_ids||[]).length ? `<dt>parent_set_ids</dt><dd>${(r.parent_set_ids||[]).join(", ")}</dd>` : ""}
+      <dt>operation_params_id</dt><dd>${r.operation_params_id || "—"}</dd>
+      <dt>filter_profile_id</dt><dd>${r.filter_profile_id || "—"}</dd>
+      <dt>coordinate_system</dt><dd>${r.coordinate_system || "—"}</dd>
+      <dt>analysis_purpose</dt><dd style="font-family:inherit">${r.analysis_purpose || "—"}</dd>
+      <dt>software</dt><dd>${r.software || "—"}${r.software_version ? " " + r.software_version : ""}</dd>
+      <dt>produces_set_id</dt><dd>${r.produces_set_id || "—"}</dd>
+      <dt>output_hash</dt><dd>${r.output_hash || "—"}</dd>
+    </dl>`,
+  });
+}
+
+
+// =========================================================================
+// Operation params tab
+// =========================================================================
+
+function renderOperationParams() {
+  const cols = [
+    { key: "operation_params_id", label: "Params ID",       width: "26%", code: true },
+    { key: "operation_type",      label: "Op",              width: "13%", facet: true },
+    { key: "label",               label: "Label",           width: "30%" },
+    { key: "deterministic",       label: "Deterministic",   width: "11%", facet: true,
+      render: (v) => v == null ? "" : (v ? "true" : "false") },
+    { key: "seed",                label: "Seed",            width: "8%" },
+    { key: "created_at",          label: "Created",         width: "12%" },
+  ];
+  makeTable(document.getElementById("view-params"), DATA.operation_params, cols, {
+    idKey: "operation_params_id",
+    defaultSortKey: "operation_type",
+    defaultSortDir: 1,
+    detail: (r) => {
+      const usedBy = DATA.derivations.filter(d => d.operation_params_id === r.operation_params_id);
+      const usedByHtml = usedBy.length
+        ? usedBy.map(d => `<li><a href="#" onclick="jumpTo('derivations','${d.derivation_id}');return false">${d.derivation_id}</a></li>`).join("")
+        : `<li style="color:var(--muted)">(unused)</li>`;
+      return `<dl>
+        <dt>operation_params_id</dt><dd>${r.operation_params_id}</dd>
+        <dt>operation_type</dt><dd>${r.operation_type || "—"}</dd>
+        <dt>label</dt><dd style="font-family:inherit">${r.label || "—"}</dd>
+        <dt>deterministic</dt><dd>${r.deterministic == null ? "—" : (r.deterministic ? "true" : "false")}</dd>
+        <dt>seed</dt><dd>${r.seed == null ? "—" : r.seed}</dd>
+        <dt>params</dt><dd class="params">${escapeHtml(JSON.stringify(r.params || {}, null, 2))}</dd>
+        <dt>used by</dt><dd><ul class="lst">${usedByHtml}</ul></dd>
+      </dl>`;
+    },
+  });
+}
+
+
+// Helper: switch to a tab and try to open a specific row
+function jumpTo(tab, idValue) {
+  switchTab(tab);
+  // Find the matching row in the appropriate view and toggle it open.
+  const view = document.getElementById("view-" + tab);
+  if (!view || !view._state) return;
+  view._state.openIdx = idValue;
+  // Re-trigger the table render by simulating an input event on filter
+  const tableHolder = view.querySelector("table") && view.querySelector("table").parentNode;
+  // Easiest path: dispatch a click on the existing row, or re-call render via the input
+  // Workaround: nudge filter input
+  const filterInput = view.querySelector("input[type='text']");
+  if (filterInput) filterInput.dispatchEvent(new Event("input"));
 }
 
 
@@ -658,6 +761,8 @@ function escapeHtml(s) {
 function renderAll() {
   renderResults();
   renderSets();
+  renderDerivations();
+  renderOperationParams();
   renderAnalyses();
   renderChain();
 }

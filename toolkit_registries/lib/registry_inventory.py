@@ -308,13 +308,73 @@ def scan_analyses(registry_root: pathlib.Path) -> List[Dict]:
     return out
 
 
+def scan_derivations(registry_root: pathlib.Path) -> List[Dict]:
+    """Scan <registry_root>/derivations/*.json for derivation_v1 records."""
+    registry_root = pathlib.Path(registry_root)
+    deriv_root = registry_root / "derivations"
+    out = []
+    if not deriv_root.is_dir():
+        return out
+    for p in sorted(deriv_root.glob("*.json")):
+        try:
+            r = json.loads(p.read_text())
+        except Exception:
+            continue
+        out.append({
+            "derivation_id":       r.get("derivation_id"),
+            "label":               r.get("label"),
+            "operation_type":      r.get("operation_type"),
+            "parent_set_id":       r.get("parent_set_id"),
+            "parent_set_ids":      r.get("parent_set_ids", []),
+            "operation_params_id": r.get("operation_params_id"),
+            "filter_profile_id":   r.get("filter_profile_id"),
+            "coordinate_system":   r.get("coordinate_system"),
+            "analysis_purpose":    r.get("analysis_purpose"),
+            "software":            r.get("software"),
+            "software_version":    r.get("software_version"),
+            "produces_set_id":     r.get("produces_set_id"),
+            "output_hash":         r.get("output_hash"),
+            "status":              r.get("status", "active"),
+            "created_at":          r.get("created_at"),
+        })
+    out.sort(key=lambda x: (x.get("operation_type") or "", x.get("derivation_id") or ""))
+    return out
+
+
+def scan_operation_params(registry_root: pathlib.Path) -> List[Dict]:
+    """Scan <registry_root>/operation_params/*.json for operation_params_v1 records."""
+    registry_root = pathlib.Path(registry_root)
+    params_root = registry_root / "operation_params"
+    out = []
+    if not params_root.is_dir():
+        return out
+    for p in sorted(params_root.glob("*.json")):
+        try:
+            r = json.loads(p.read_text())
+        except Exception:
+            continue
+        out.append({
+            "operation_params_id": r.get("operation_params_id"),
+            "operation_type":      r.get("operation_type"),
+            "label":               r.get("label"),
+            "params":              r.get("params", {}),
+            "deterministic":       r.get("deterministic"),
+            "seed":                r.get("seed"),
+            "created_at":          r.get("created_at"),
+        })
+    out.sort(key=lambda x: (x.get("operation_type") or "", x.get("operation_params_id") or ""))
+    return out
+
+
 def scan_all(registry_root: pathlib.Path) -> Dict[str, List[Dict]]:
-    """Return a combined {results, sets, analyses} payload for the
-    inventory page."""
+    """Return a combined {results, sets, derivations, operation_params,
+    analyses} payload for the inventory page."""
     return {
-        "results":  scan(registry_root),
-        "sets":     scan_sets(registry_root),
-        "analyses": scan_analyses(registry_root),
+        "results":          scan(registry_root),
+        "sets":             scan_sets(registry_root),
+        "derivations":      scan_derivations(registry_root),
+        "operation_params": scan_operation_params(registry_root),
+        "analyses":         scan_analyses(registry_root),
     }
 
 
@@ -375,17 +435,21 @@ def main(argv=None) -> int:
     rows = scan(registry)
 
     if args.json:
-        # Multi-section payload: results + sets + analyses. The HTML page
-        # reads this single file to populate all four tabs (Results, Sets,
-        # Analyses, Chain).
+        # Multi-section payload: results + sets + derivations +
+        # operation_params + analyses. The HTML page reads this single file
+        # to populate all six tabs.
         payload = {
-            "results":  rows,
-            "sets":     scan_sets(registry),
-            "analyses": scan_analyses(registry),
+            "results":          rows,
+            "sets":             scan_sets(registry),
+            "derivations":      scan_derivations(registry),
+            "operation_params": scan_operation_params(registry),
+            "analyses":         scan_analyses(registry),
         }
         pathlib.Path(args.json).write_text(json.dumps(payload, indent=2))
         print(f"wrote {len(rows)} results + "
               f"{len(payload['sets'])} sets + "
+              f"{len(payload['derivations'])} derivations + "
+              f"{len(payload['operation_params'])} params + "
               f"{len(payload['analyses'])} analyses → {args.json}",
               file=sys.stderr)
     if args.do_print or not args.json:

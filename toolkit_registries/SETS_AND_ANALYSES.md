@@ -252,6 +252,95 @@ click.
 
 ---
 
+## Derivation as a first-class record
+
+A name like `thin500` is not enough to identify a derived set. The same
+distance, different choice rule or different seed, gives a different
+file. The identity of a derived set is:
+
+> `parent_set + operation_type + filter_profile + operation_params + coordinate_system + hash`
+
+The toolkit splits that into two more registries:
+
+| Registry | What it stores | Where |
+|---|---|---|
+| **derivation_registry**       | One row per *recipe*: `(parent_set, operation_type, operation_params_id, filter_profile_id, coordinate_system, analysis_purpose, software, software_version, produces_set_id, output_hash)` | `<root>/derivations/<derivation_id>.json` |
+| **operation_params_registry** | One row per *parameter bundle*: `(operation_type, params, deterministic, seed, version_of_definition)`. Reusable across derivations. | `<root>/operation_params/<operation_params_id>.json` |
+
+A `set_v1` then carries a single `derivation_id` FK pointing at the
+derivation that produced it. The derivation in turn references
+`operation_params_id` and (optionally) `filter_profile_id`.
+
+```
+parent_set
+   ↓
+derivation (operation_type + operation_params + filter_profile + analysis_purpose + software)
+   ↓
+child_set
+```
+
+### When to use derivation_id vs derived_from
+
+`set_v1` accepts EITHER `derivation_id` OR `derived_from`, never both:
+
+| Use… | When the derivation is… | Examples |
+|---|---|---|
+| `derivation_id` (FK to derivation_v1) | An OPERATION with parameters / software / possibly a random seed | `thin_by_distance`, `window_extract`, `random_sample`, `callability_filter`, `concordance_intersect` |
+| `derived_from` (inline set algebra)   | A pure logical combination of other sets | `intersect`, `union`, `difference`, `filter`, `from_set`, `from_inline`, `from_group` |
+
+Set algebra has no parameters or randomness, so inlining is fine.
+Operation-style derivations need the full recipe, so they FK out.
+
+### Worked example — `thin500` is not one thing
+
+Two derivations, same distance (500 bp), different `operation_params`:
+
+```
+operation_params/thin500_first_per_chrom_v1.json    ← deterministic, choice_rule=first_valid_site_after_previous_kept_site
+operation_params/thin500_random_seed123_v1.json     ← non-deterministic, choice_rule=random_one_per_bin, seed=123
+
+derivations/derive_beagle_thin500_global_v1.json
+  parent_set_id: snps_maf005_v1
+  operation_type: thin_by_distance
+  operation_params_id: thin500_first_per_chrom_v1     ← deterministic
+  produces_set_id: sites_beagle_thin500_global_v1
+
+derivations/derive_beagle_thin500_random_v1.json
+  parent_set_id: snps_maf005_v1
+  operation_type: thin_by_distance
+  operation_params_id: thin500_random_seed123_v1      ← randomized
+  produces_set_id: sites_beagle_thin500_random_v1
+
+sets/variant_site/sites_beagle_thin500_global_v1.json    ← derivation_id: derive_beagle_thin500_global_v1
+sets/variant_site/sites_beagle_thin500_random_v1.json    ← derivation_id: derive_beagle_thin500_random_v1
+```
+
+Both are "thin500"; both are wrong if you pretend they're the same.
+The registries make the difference auditable.
+
+### TSV catalogues for derivations and params
+
+| File | Generated from | Columns (pinned) |
+|---|---|---|
+| `derivation_registry.tsv` | `<root>/derivations/*.json` | `derivation_id, label, operation_type, parent_set_id, operation_params_id, filter_profile_id, coordinate_system, analysis_purpose, software, software_version, produces_set_id, output_hash, status, created_at, definition_path` |
+| `operation_params_registry.tsv` | `<root>/operation_params/*.json` | `operation_params_id, operation_type, label, params_json, deterministic, seed, version_of_definition, created_at, definition_path` |
+
+`params_json` is a canonical-JSON (sorted keys, no whitespace) string —
+greppable on the shell, parseable by pandas. The full structured form
+stays in the per-record JSON.
+
+### Filter profiles
+
+`filter_profile_id` references a separate registry of filter profiles
+(MAF cutoffs, callability thresholds, missingness rules, allele
+coding). For now it's a free-form string — a dedicated
+`filter_profile_v1` schema can be added when the filter conventions
+are stable enough to formalize. Until then, two derivations sharing
+the same `filter_profile_id` STRING are assumed to share the same
+filter, on the honor system.
+
+---
+
 ## What this does NOT do
 
 - **Does not deprecate the existing schemas.** `group_definition`,

@@ -53,6 +53,10 @@ contract layer between them.
 | `set_registry_row_v1.schema.json` | Schema for one TSV row in `set_registry.tsv` (column order pinned). | active, v1 |
 | `analysis_v1.schema.json` | One analysis KIND definition (ngsRelate, ngsPedigree, mendelian, fst_pairwise, …). The vocabulary, not the per-result rows. | active, v1 |
 | `analysis_registry_row_v1.schema.json` | Schema for one TSV row in `analysis_registry.tsv`. | active, v1 |
+| `derivation_v1.schema.json` | One DERIVATION recipe: how a child set was produced from a parent (operation_type + operation_params + filter_profile + analysis_purpose + software). FK'd from `set_v1.derivation_id`. | active, v1 |
+| `operation_params_v1.schema.json` | One reusable parameter bundle for a derivation (e.g. `thin500_first_per_chrom_v1` vs `thin500_random_seed123_v1` — same distance, different choice rule). | active, v1 |
+| `derivation_registry_row_v1.schema.json` | Schema for one TSV row in `derivation_registry.tsv`. | active, v1 |
+| `operation_params_registry_row_v1.schema.json` | Schema for one TSV row in `operation_params_registry.tsv`. | active, v1 |
 
 ---
 

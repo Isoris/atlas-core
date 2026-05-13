@@ -1,0 +1,14 @@
+{
+  "set_id":             "sites_beagle_thin500_random_v1",
+  "entity_type":        "variant_site",
+  "label":              "Whole-genome BEAGLE sites — 1 site / 500 bp (random per bin, seed 123)",
+  "path":               "sets/variant_site/beagle.thin500.random.v1.tsv.gz",
+  "n_entities":         512912,
+  "hash":               "sha256:91f8e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1",
+  "parent_set_id":      "snps_maf005_v1",
+  "derivation_id":      "derive_beagle_thin500_random_v1",
+  "coordinate_system":  "fClaHyb_Gar_LG_v1",
+  "intended_use":       "sensitivity check vs deterministic thin500",
+  "status":             "experimental",
+  "created_at":         "2026-04-08T11:50:00Z"
+}

@@ -231,6 +231,54 @@
       "path": "sets/variant_site/LG28.localpca.sites.tsv.gz"
     },
     {
+      "set_id": "sites_beagle_thin500_global_v1",
+      "entity_type": "variant_site",
+      "label": "Whole-genome BEAGLE sites \u2014 1 site / 500 bp (deterministic, first per chrom)",
+      "n_entities": 512847,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": "snps_maf005_v1",
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": null,
+      "intended_use": "BEAGLE input for ngsRelate / NGSadmix / PCA",
+      "status": "active",
+      "created_at": "2026-04-08T11:42:00Z",
+      "path": "sets/variant_site/beagle.thin500.global.v1.tsv.gz"
+    },
+    {
+      "set_id": "sites_beagle_thin500_random_v1",
+      "entity_type": "variant_site",
+      "label": "Whole-genome BEAGLE sites \u2014 1 site / 500 bp (random per bin, seed 123)",
+      "n_entities": 512912,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": "snps_maf005_v1",
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": null,
+      "intended_use": "sensitivity check vs deterministic thin500",
+      "status": "experimental",
+      "created_at": "2026-04-08T11:50:00Z",
+      "path": "sets/variant_site/beagle.thin500.random.v1.tsv.gz"
+    },
+    {
+      "set_id": "sites_lostruct_LG28_v1",
+      "entity_type": "variant_site",
+      "label": "LG28 lostruct windows (100-site)",
+      "n_entities": 9871,
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "parent_set_id": "snps_maf005_v1",
+      "derived_op": null,
+      "derived_parents": [],
+      "derived_predicate": null,
+      "filter_profile_id": null,
+      "intended_use": "local PCA inversion scan",
+      "status": "active",
+      "created_at": "2026-04-10T12:00:00Z",
+      "path": "sets/variant_site/LG28.lostruct.tsv.gz"
+    },
+    {
       "set_id": "sites_wholegenome_thin1k_v1",
       "entity_type": "variant_site",
       "label": "Whole-genome sites \u2014 MAF\u22650.05, thinned to 1 SNP / kb",
@@ -261,6 +309,103 @@
       "status": "active",
       "created_at": "2026-04-10T12:00:00Z",
       "path": "sets/window/LG28.50kb.tsv"
+    }
+  ],
+  "derivations": [
+    {
+      "derivation_id": "derive_beagle_thin500_global_v1",
+      "label": "BEAGLE thinning \u2014 first valid site / 500 bp, per chromosome (global popstructure)",
+      "operation_type": "thin_by_distance",
+      "parent_set_id": "snps_maf005_v1",
+      "parent_set_ids": [],
+      "operation_params_id": "thin500_first_per_chrom_v1",
+      "filter_profile_id": "popstruct_angsd_sites_v1",
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "analysis_purpose": "BEAGLE input for ngsRelate / NGSadmix / PCA",
+      "software": "custom-thin.py",
+      "software_version": "v1.0.0",
+      "produces_set_id": "sites_beagle_thin500_global_v1",
+      "output_hash": "sha256:8a7c9d5e4b2f1a3c6e0d9b8a7c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d",
+      "status": "active",
+      "created_at": "2026-04-08T11:42:00Z"
+    },
+    {
+      "derivation_id": "derive_beagle_thin500_random_v1",
+      "label": "BEAGLE thinning \u2014 random per 500-bp bin, seed 123",
+      "operation_type": "thin_by_distance",
+      "parent_set_id": "snps_maf005_v1",
+      "parent_set_ids": [],
+      "operation_params_id": "thin500_random_seed123_v1",
+      "filter_profile_id": "popstruct_angsd_sites_v1",
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "analysis_purpose": "sensitivity check against the deterministic thin500",
+      "software": "custom-thin.py",
+      "software_version": "v1.0.0",
+      "produces_set_id": "sites_beagle_thin500_random_v1",
+      "output_hash": null,
+      "status": "experimental",
+      "created_at": "2026-04-08T11:50:00Z"
+    },
+    {
+      "derivation_id": "derive_lostruct_LG28_v1",
+      "label": "lostruct LG28 100-site windows",
+      "operation_type": "window_extract",
+      "parent_set_id": "snps_maf005_v1",
+      "parent_set_ids": [],
+      "operation_params_id": "lostruct_LG28_params_v1",
+      "filter_profile_id": "lostruct_site_filter_v1",
+      "coordinate_system": "fClaHyb_Gar_LG_v1",
+      "analysis_purpose": "local PCA inversion scan",
+      "software": "lostruct",
+      "software_version": "v0.0.0.9000",
+      "produces_set_id": "sites_lostruct_LG28_v1",
+      "output_hash": null,
+      "status": "active",
+      "created_at": "2026-04-10T12:00:00Z"
+    }
+  ],
+  "operation_params": [
+    {
+      "operation_params_id": "thin500_first_per_chrom_v1",
+      "operation_type": "thin_by_distance",
+      "label": "Thin to 1 site / 500 bp \u2014 first valid, per chromosome",
+      "params": {
+        "distance_bp": 500,
+        "reset_scope": "chromosome",
+        "sort_key": "chrom,pos",
+        "choice_rule": "first_valid_site_after_previous_kept_site"
+      },
+      "deterministic": true,
+      "seed": null,
+      "created_at": "2026-04-08T11:40:00Z"
+    },
+    {
+      "operation_params_id": "thin500_random_seed123_v1",
+      "operation_type": "thin_by_distance",
+      "label": "Thin to 1 site / 500 bp \u2014 random per 500-bp bin, seed 123",
+      "params": {
+        "distance_bp": 500,
+        "reset_scope": "chromosome",
+        "sort_key": "chrom,pos",
+        "choice_rule": "random_one_per_bin"
+      },
+      "deterministic": false,
+      "seed": 123,
+      "created_at": "2026-04-08T11:41:00Z"
+    },
+    {
+      "operation_params_id": "lostruct_LG28_params_v1",
+      "operation_type": "window_extract",
+      "label": "lostruct LG28 100-site windows",
+      "params": {
+        "window_size_sites": 100,
+        "chrom_filter": "C_gar_LG28",
+        "min_sites_per_window": 10,
+        "min_callability": 0.5
+      },
+      "deterministic": true,
+      "seed": null,
+      "created_at": "2026-04-10T11:55:00Z"
     }
   ],
   "analyses": [

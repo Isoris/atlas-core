@@ -1,0 +1,15 @@
+term	level	maps_to_kind	maps_to	aliases	notes
+fst	concept	analysis_id	fst_pairwise	pairwise_fst	pairwise FST between two sample sets
+dxy	concept	metric	dxy	dxy_per_window	per-window dxy
+pi	concept	metric	theta_pi	pi_per_window,nucleotide_diversity	π / θπ
+theta_pi	concept	analysis_id	theta_pi		nucleotide diversity per window
+pin	concept	metric	piN	pi_nonsyn	π nonsynonymous
+pis	concept	metric	piS	pi_syn	π synonymous
+pin_pis	concept	analysis_id	popstats	pinpis,pi_n_pi_s	piN/piS computation (region_popstats)
+popstats	concept	analysis_id	popstats	region_popstats,popgen_stats	region_popstats wrapper (FST/dxy/pi/piN/piS in windows)
+window	concept	entity_type	window	bin	one half-open coordinate interval for stats
+windowed	keyword	concept	window		stats computed in fixed-size windows
+neutrality	concept	analysis_id	tajimas_d	neutrality_test	Tajima's D and friends
+tajimas_d	concept	analysis_id	tajimas_d	tajima	Tajima's D
+differentiation	concept	analysis_id	fst_pairwise	population_differentiation	between-group differentiation
+diversity	concept	analysis_id	theta_pi	pop_diversity	within-group diversity

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "funnel_stage_4_refinement_v1.schema.json",
+  "title": "Stage 4 — refinement Q&A (deterministic, rule-based)",
+  "description": "Zero or more refinement rounds. The resolver fires this stage when keyword_mapping has unmapped_terms / medium-or-low confidence, or when contract_resolution would have missing/ambiguous inputs. Question kinds are locked. The funnel guards against infinite loops by capping at 3 rounds. See LLM_FUNNEL_SPEC.md §4.",
+  "type": "object",
+  "required": ["stage", "round", "questions"],
+  "additionalProperties": false,
+  "properties": {
+    "stage": { "type": "string", "const": "4_refinement" },
+    "round": { "type": "integer", "minimum": 1, "maximum": 3,
+               "description": "1-indexed. After round 3 the funnel escalates rather than loop further." },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["question_id", "kind", "prompt"],
+        "additionalProperties": false,
+        "properties": {
+          "question_id": { "type": "string", "pattern": "^q_[a-z0-9_]+$",
+                            "description": "Stable id used as the key in the matching refinement_answer_v1.answers map." },
+          "kind":        { "type": "string", "enum": ["pick_one", "pick_multiple", "free_text", "confirm"] },
+          "prompt":      { "type": "string", "minLength": 1, "description": "Short human-readable question text." },
+          "context":     { "type": "string", "description": "Optional one-line explanation of why this question is being asked (audit trail)." },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "label"],
+              "additionalProperties": false,
+              "properties": {
+                "id":          { "type": "string" },
+                "label":       { "type": "string" },
+                "description": { "type": "string", "description": "Optional sub-line shown under the label." }
+              }
+            },
+            "description": "Required when kind is pick_one or pick_multiple. Each option's id is what lands in the answer."
+          },
+          "pattern":      { "type": "string", "description": "Optional regex for kind=free_text validation." },
+          "placeholder":  { "type": "string", "description": "Optional UI hint for kind=free_text." },
+          "default":      { "type": "string", "description": "Default value for kind=confirm or free_text." }
+        }
+      }
+    }
+  }
+}

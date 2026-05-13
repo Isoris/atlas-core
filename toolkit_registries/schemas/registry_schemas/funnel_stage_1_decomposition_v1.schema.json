@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "funnel_stage_1_decomposition_v1.schema.json",
+  "title": "Stage 1 — language cleanup + decomposition",
+  "description": "Output of the LLM funnel's first stage (LLM call #1). Reads a free-text human request and produces a structured decomposition: goal, targets, exclusions, concepts, vague_terms. Does NOT pick files, ids, or specific analyses. See LLM_FUNNEL_SPEC.md §4.",
+  "type": "object",
+  "required": ["stage", "raw_request", "goal"],
+  "additionalProperties": false,
+  "properties": {
+    "stage":       { "type": "string", "const": "1_decomposition" },
+    "raw_request": { "type": "string", "minLength": 1, "description": "The original human text, verbatim." },
+    "goal":        { "type": "string", "description": "One-sentence restatement of intent. 'unknown' if the request is too vague to decompose." },
+    "targets":     { "type": "array", "items": { "type": "string" }, "description": "What is being looked at — chromosomes, candidates, sample subsets the question is about. Free text; not resolved to ids yet." },
+    "exclusions":  { "type": "array", "items": { "type": "string" }, "description": "What must be excluded. Free text." },
+    "concepts":    { "type": "array", "items": { "type": "string" }, "description": "Likely concept tags the request invokes (e.g. 'inheritance testing', 'structural variation'). Hand-off to stage 2." },
+    "vague_terms": { "type": "array", "items": { "type": "string" }, "description": "Words that need disambiguation downstream. Stage 4 may surface these as questions." },
+    "notes":       { "type": "string", "description": "Optional free-text note from the LLM (e.g. 'request appears to mix two research questions; only the first was decomposed')." }
+  }
+}

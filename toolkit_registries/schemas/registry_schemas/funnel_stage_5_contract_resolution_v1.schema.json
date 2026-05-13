@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "funnel_stage_5_contract_resolution_v1.schema.json",
+  "title": "Stage 5 — resolve mapped vocabulary against the live registry (deterministic)",
+  "description": "Pure-Python output of resolve.py + set_algebra.plan() applied to the keyword_mapping (after any refinement rounds). Produces a concrete plan ready to submit to POST /api/actions (PR #3). NEVER an LLM call. See LLM_FUNNEL_SPEC.md §4.",
+  "type": "object",
+  "required": ["stage", "plan", "missing"],
+  "additionalProperties": false,
+  "properties": {
+    "stage": { "type": "string", "const": "5_contract_resolution" },
+    "plan": {
+      "type": "array",
+      "description": "Ordered list of resolved actions. Each entry is one analysis run.",
+      "items": {
+        "type": "object",
+        "required": ["step", "analysis_id", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "step":             { "type": "integer", "minimum": 1, "description": "Position in the chain (1-indexed)." },
+          "analysis_id":      { "type": "string" },
+          "mode":             { "type": "string" },
+          "sample_set_id":    { "type": "string" },
+          "group_set_id":     { "type": "string" },
+          "interval_set_id":  { "type": "string" },
+          "site_set_id":      { "type": "string" },
+          "input_value_id":   { "type": "string" },
+          "input_result_id":  { "type": "string", "description": "FK to upstream chain step's produced layer. Use '<future: step N produced_layers[0]>' until N runs." },
+          "input_artifact_layer_ids": { "type": "array", "items": { "type": "string" } },
+          "params":           { "type": "object", "additionalProperties": true },
+          "module_name":      { "type": "string" },
+          "status":           { "type": "string", "enum": ["todo", "run_ready", "cached", "spawnable", "blocked", "missing"] },
+          "cached_layer_id":  { "type": "string", "description": "When status=cached, the existing result row." },
+          "missing_inputs":   { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "spawnable": {
+      "type": "array",
+      "description": "Things that don't yet exist but the resolver can derive (e.g. a filtered sample set).",
+      "items": {
+        "type": "object",
+        "required": ["kind", "proposed_id"],
+        "additionalProperties": true,
+        "properties": {
+          "kind":        { "type": "string", "enum": ["set", "derivation", "operation_params"] },
+          "proposed_id": { "type": "string" },
+          "rationale":   { "type": "string" },
+          "proposal":    { "type": "object", "additionalProperties": true,
+                            "description": "Skeleton JSON for the new record, ready for human review before registration." }
+        }
+      },
+      "default": []
+    },
+    "missing": {
+      "type": "array",
+      "description": "Things that are missing and can NOT be auto-spawned. The user must provide them.",
+      "items": {
+        "type": "object",
+        "required": ["kind", "needed"],
+        "additionalProperties": false,
+        "properties": {
+          "kind":   { "type": "string", "description": "What's missing: 'set', 'analysis', 'artifact_layer', 'module', 'classifier'." },
+          "needed": { "type": "string", "description": "Identifier or description of what's expected." },
+          "reason": { "type": "string" }
+        }
+      },
+      "default": []
+    },
+    "ambiguities": {
+      "type": "array",
+      "description": "Mappings that resolved to multiple registry rows; the user picks. (Surfaces a final stage 4 round if any survive into stage 5.)",
+      "items": {
+        "type": "object",
+        "required": ["source_term", "options"],
+        "additionalProperties": false,
+        "properties": {
+          "source_term": { "type": "string" },
+          "options":     { "type": "array", "items": { "type": "string" }, "minItems": 2 }
+        }
+      },
+      "default": []
+    }
+  }
+}

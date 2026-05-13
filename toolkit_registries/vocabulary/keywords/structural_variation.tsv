@@ -1,0 +1,23 @@
+term	level	maps_to_kind	maps_to	aliases	notes
+inversion	concept	entity_type	inversion_candidate	inv,inv_candidate,chromosomal_inversion	a putative inversion call
+inversion_candidate	registry_entry	entity_type	inversion_candidate		controlled type tag
+inversions	keyword	entity_type	inversion_candidate	invs	plural of inversion
+sv	concept	concept	structural_variant	structural_variation	domain-level term
+structural_variant	concept	concept	structural_variant		controlled head; resolves via specific entity_types
+breakpoint	concept	entity_type	breakpoint	bp,sv_breakpoint	one side of an SV junction
+candidate	keyword	entity_type	inversion_candidate	cand	short-hand for inversion candidate (in inversion-atlas context)
+chromosome	concept	entity_type	chromosome	chrom,chr,linkage_group,lg	one reference chromosome
+chromosome_12	keyword	set_id_pattern	*LG12*	chr12,lg12	chromosome 12 alias family
+chr12	keyword	set_id_pattern	*LG12*	chromosome_12	chromosome 12 alias family
+lg12	keyword	set_id_pattern	*LG12*	chr12	chromosome 12 alias family (LANTA convention)
+chr28	keyword	set_id_pattern	*LG28*	lg28	chromosome 28 alias family
+lg28	keyword	set_id_pattern	*LG28*	chr28	chromosome 28 alias family
+inverted	keyword	set_filter	karyotype:HOM_INV	hom_inv,homozygous_inverted	carrier of two inverted alleles
+hom_inv	keyword	set_filter	karyotype:HOM_INV	homozygous_inverted	carrier of two inverted alleles
+hom_ref	keyword	set_filter	karyotype:HOM_REF	homozygous_reference	carrier of two reference alleles
+het	keyword	set_filter	karyotype:HET	heterozygous,heterozygote	inversion heterozygote
+karyotype	concept	entity_type	karyotype_class	karyotype_assignment	HOM_REF/HET/HOM_INV class per candidate
+dosage	concept	entity_type	dosage_matrix	dosage_call	per-sample allelic dosage
+local_pca	concept	analysis_id	local_pca	lostruct,local_pca_scan	windowed PCA for SV discovery
+d17	concept	analysis_id	d17	d17_multipass	D17 multi-pass candidate detection
+recombinant	keyword	set_filter	karyotype:RECOMBINANT	rec	double-crossover / recombination tract

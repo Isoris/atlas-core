@@ -1,0 +1,13 @@
+domain	label	description	keyword_bank
+genetics	Genetics	General genetics terms (genotype, allele, phase, etc.) — usually invoked alongside a more specific domain	genetics.tsv
+relatedness	Relatedness	Pairwise relatedness / kinship — ngsRelate, KING, IBS/IBD, theta	relatedness.tsv
+inheritance	Inheritance	Mendelian inheritance, pedigrees, trios, segregation, transmission distortion	inheritance.tsv
+popgen	Population genetics	FST, dxy, π, piN/piS, Tajima's D, neutrality, summary statistics	popgen.tsv
+structural_variation	Structural variation	Inversions, translocations, breakpoints, dosage, SV calling	structural_variation.tsv
+population_history	Population history	ROH, heterozygosity, GHSL, demographic inference, founder effects, ancient lineages	population_history.tsv
+annotation	Annotation	Genes, TE copies, repeats, regulatory features, conserved blocks	annotation.tsv
+qc	Quality control	Coverage, missingness, contamination, sample QC, batch effects	qc.tsv
+sample_filtering	Sample filtering	Exclude / include sample subsets by metadata, kinship, ancestry, phenotype	sample_filtering.tsv
+ancestry	Ancestry	NGSadmix, pcangsd, Q matrices, local ancestry, admixture	ancestry.tsv
+recombination	Recombination	Recombination rate, pyrho, LD decay, fine-scale recombination maps	recombination.tsv
+phylogeny	Phylogeny	Trees, divergence time, comparative across species	phylogeny.tsv

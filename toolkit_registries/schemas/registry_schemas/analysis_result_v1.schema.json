@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "analysis_result_v1.schema.json",
+  "title": "Analysis result lookup row — content-keyed FK to a layer envelope",
+  "description": "One row per (analysis × sample-set × input-artifacts × params) tuple actually computed. The PRIMARY KEY is the content hash of those four components — so two different naming routes that resolve to the same inputs hit the same row. Acts as a unique-index over layers.registry.json: 'has anyone already run analysis A on sample set S against artifacts I with params P?'. The row points at the layer_id of the layer_envelope that holds the actual output. Per REGISTRY_LOOKUP.md §'Content-keyed result lookup'.",
+  "type": "object",
+  "required": ["result_id", "analysis_id", "sample_set_id", "params_hash", "output_layer_id", "created_at"],
+  "additionalProperties": true,
+  "properties": {
+    "result_id": {
+      "type": "string",
+      "pattern": "^res_[a-f0-9]{16}$",
+      "description": "Content-derived id. Convention: 'res_' + first 16 hex chars of sha256(analysis_id + '|' + sample_set_id + '|' + sorted(input_artifact_ids).join(',') + '|' + params_hash). Deterministic. PRIMARY KEY of the result-lookup table."
+    },
+    "analysis_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Stable tag for the analysis kind (e.g. 'ngsrelate', 'ngspedigree', 'mendelian', 'fst_pairwise', 'theta_pi'). The atlas dispatcher uses analysis_id + the action_manifest.type 1:1 by convention."
+    },
+    "analysis_version": {
+      "type": "string",
+      "description": "Optional version tag for the analysis itself (e.g. 'v0.4.1' for ngsRelate). Bumping this invalidates older results without changing the analysis_id."
+    },
+    "sample_set_id": {
+      "type": "string",
+      "pattern": "^sset_[a-f0-9]{16}$",
+      "description": "FK into sample_set_v1.sample_set_id. The CONTENT-derived sample set this result was computed against. Two analyses with the same sample_set_id ran on the exact same members."
+    },
+    "input_artifact_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "FKs into layers.registry — the input layers this analysis consumed (e.g. beagle_file_id, sites_file_id, ancestry_q_layer_id). Order does NOT matter for hashing; the engine sorts before hashing. An empty array is allowed for analyses with no recorded artifact inputs (pure-config analyses)."
+    },
+    "params_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "sha256 of the canonical JSON of all analysis-specific parameters (sorted keys, no whitespace). Bumping a parameter (e.g. -F flag in ngsRelate) produces a new result_id."
+    },
+    "params": {
+      "type": "object",
+      "description": "The actual params, kept inline for debugging. Source of truth for params_hash.",
+      "additionalProperties": true
+    },
+    "output_layer_id": {
+      "type": "string",
+      "description": "FK into layers.registry.json — the layer_envelope this result lives in. The envelope's payload contains the actual tool output."
+    },
+    "coordinate_scope": {
+      "type": ["object", "null"],
+      "description": "Optional coordinate scope of the analysis (per-chrom, whole-genome, custom region). Recorded for convenience filtering. Null = whole-genome / non-coordinate.",
+      "additionalProperties": false,
+      "properties": {
+        "chrom":    { "type": ["string", "null"] },
+        "start_bp": { "type": ["integer", "null"], "minimum": 0 },
+        "end_bp":   { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "stale", "superseded", "failed"],
+      "default": "active",
+      "description": "'active' = canonical. 'stale' = an input layer changed (integrity check). 'superseded' = a newer analysis_version produced a replacement. 'failed' = retained for debugging; output_layer_id may point at an error envelope."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "created_by_action_id": {
+      "type": ["string", "null"],
+      "pattern": "^act_[A-Za-z0-9_]+$",
+      "description": "FK into actions.log.jsonl — the action manifest that produced this result. Null for results registered by backfill (no action_log entry)."
+    }
+  },
+  "_examples": [
+    {
+      "_description": "ngsRelate result for a single karyotype group on a per-chrom beagle.",
+      "result_id":           "res_42a8c1e7f3b9d206",
+      "analysis_id":         "ngsrelate",
+      "analysis_version":    "v2.0.0",
+      "sample_set_id":       "sset_a3f9e1c2d4b7e028",
+      "input_artifact_ids":  ["beagle_LG28_main_qcpass_v1", "sites_LG28_thin1k_v1"],
+      "params_hash":         "sha256:f019…",
+      "params":              { "F_unknown": -1, "p": "ALL", "haploid": false, "minimum_freq": 0.05 },
+      "output_layer_id":     "ngsrelate_result_LG28_HOM_INV_v1",
+      "coordinate_scope":    { "chrom": "C_gar_LG28", "start_bp": null, "end_bp": null },
+      "status":              "active",
+      "created_at":          "2026-05-10T12:30:00Z",
+      "created_by_action_id":"act_1715000080000_r4t"
+    },
+    {
+      "_description": "Same analysis as above but with the intersection of HOM_INV ∩ ancestry_K8_cluster3. Different sample_set_id, different result_id — but same input artifacts and params.",
+      "result_id":           "res_91b3d4a7e2f80165",
+      "analysis_id":         "ngsrelate",
+      "analysis_version":    "v2.0.0",
+      "sample_set_id":       "sset_c8d4e2a1f6e09387",
+      "input_artifact_ids":  ["beagle_LG28_main_qcpass_v1", "sites_LG28_thin1k_v1"],
+      "params_hash":         "sha256:f019…",
+      "output_layer_id":     "ngsrelate_result_LG28_HOM_INV_anc3_v1",
+      "status":              "active",
+      "created_at":          "2026-05-10T12:35:00Z"
+    }
+  ]
+}

@@ -18,6 +18,7 @@ contract layer between them.
 | **MASTER_CONFIG.md** | Spec for the master config — the one file that tells the registry where everything is on this machine | active, v1 (now documents `cohort_scoped` / `genome_scoped` per HIERARCHY_SPEC.md) |
 | **ACTIVATOR_EXTRACTOR.md** | Mental-model doc: maps "activator" (compute) and "extractor" (file read) onto the existing `source_kind` enum (file / operation / analysis / inline) | active |
 | **PIPELINE_FLOW.md** | Full action-pipeline contract: action manifest → runner → raw output → extractor → layer envelope → registry → Atlas. Includes worked examples (popstats end-to-end, Excel staging) and the per-atlas `schema_in/` + `schema_out/` + dispatcher convention. | active, v1 |
+| **REGISTRY_LOOKUP.md** | How (groups × analysis × samples × intervals) collapses to one row per distinct computation via content-hash identity. Set algebra over groups; `sample_set_id` and `result_id` are content-derived. See companion `lib/set_algebra.py`. | active, v1 |
 | **ATLAS_WIRING_PROMPTS.md** | Paste-ready prompts to send to each downstream atlas / engine repo (inversion-atlas, unified-ancestry, any new atlas) telling them what to add on their side | active, v1 |
 | **DATABASE_DESIGN.md** | The 4-role mental model (samples / intervals / evidence / results) + FK discipline + integrity contract | active, canonical (refreshed chat ~34: R-API code preserved as illustrative; concepts canonical) |
 | **SPEC_DEFERRED.md** | Forward-looking specs for compute features that originated in the LANTA-era pipeline | each spec's Status line was rewritten in atlas-registry terms; bodies kept as scientific reference |
@@ -44,6 +45,8 @@ contract layer between them.
 | `extractor_manifest.schema.json` | Recipe for converting raw outputs into a layer payload | active, v1 |
 | `layer_envelope.schema.json` | One envelope for both staging and normalized layers; `stage` field discriminates. Minimal stable core. | active, v1 |
 | `action_log_entry.schema.json` | One line in `registry/actions.log.jsonl` (append-only action audit log) | active, v1 |
+| `sample_set_v1.schema.json` | Content-hashed sample list with optional set-algebra lineage (intersect / union / difference / filter / from_group / from_inline). See REGISTRY_LOOKUP.md. | active, v1 |
+| `analysis_result_v1.schema.json` | Content-keyed result lookup row: `(analysis_id, sample_set_id, input_artifact_ids, params_hash) → output_layer_id`. The "already computed?" index. | active, v1 |
 
 ---
 
@@ -66,6 +69,14 @@ contract layer between them.
    writes against during analysis.
 
 Skip SPEC_DEFERRED unless you're working on a deferred feature.
+
+---
+
+### lib/ — reusable Python helpers
+
+| File | Purpose |
+|---|---|
+| `set_algebra.py` | Materialize sample-set expressions (intersect / union / difference / filter), compute `sample_set_id` and `result_id` content hashes, answer "do we already have this result?". See REGISTRY_LOOKUP.md. Runnable smoke test: `python toolkit_registries/lib/set_algebra.py`. |
 
 ---
 

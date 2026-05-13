@@ -254,9 +254,10 @@ them via the top nav.
 
 | Page | What it does | Status |
 |---|---|---|
-| **1. Conversation** (`page/conversation.html`) | LLM-driven request resolver: free-text request → cleaned decomposition → controlled vocabulary → registry contracts → action plan. | **stub** — design only; deferred per your direction |
-| **2. Action** (`page/action.html`) | Readiness & routing dashboard. Pick a target analysis + scope; the page walks the chain backward through `analysis_modes.tsv` and shows each step's status: `RESULT_READY` (reuse), `RUN_READY`, `SPAWNABLE`, `BLOCKED`, `MISSING`. **Does not run anything** — it's a gatekeeper that tells you what to reuse, what's run-ready, and what's blocked. | **active** |
-| **3. Registries** (`page/index.html`) | Chain compatibility view. Shows wired ngsRelate → ngsPedigree → mendelian chains with green-light contracts, plus orphan results flagged "ready for X" when a downstream analysis is compatible. | **active** |
+| **1. Conversation** (`page/conversation.html`) | LLM-driven request resolver: free-text request → cleaned decomposition → controlled vocabulary → registry contracts → action plan. | **stub** — design only; deferred |
+| **2. Action** (`page/action.html`) | Readiness & routing dashboard. Pick a target analysis + scope; the page walks the chain backward through `analysis_modes.tsv` and shows each step's status: `RESULT_READY` (reuse), `RUN_READY`, `SPAWNABLE`, `BLOCKED`, `MISSING` (data side) + `mod_ready` / `mod_stale` / `mod_failed` / `mod_not_installed` / `mod_conceptual` (module side). **Does not run anything** — gatekeeper, not orchestrator. | **active** |
+| **3. Registries** (`page/index.html`) | Chain compatibility view. Wired ngsRelate → ngsPedigree → mendelian chains with green-light contracts; orphan results flagged "ready for X". | **active** |
+| **4. Catalogue** (`page/catalogue.html`) | Browse every module and every analysis the registry knows about. Two tabs — **Modules** (from `module_registry.tsv`) shows each biomod module with its readiness + lineage arrows (which module feeds into it, which it feeds into); **Analyses** (from `analysis_modes.tsv`) shows each analysis_type/mode with its module FK, policies, required dimensions, produces. | **active** |
 
 Open them:
 

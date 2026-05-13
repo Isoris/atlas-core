@@ -1,124 +1,179 @@
-# toolkit_registries — readiness audit
+# toolkit_registries — readiness audit & branch state
 
-**Scope:** readiness assessment of the top-level specs, schema folders,
-and the activator/extractor terminology question.
+**Scope:** snapshot of `claude/organize-toolkit-registries-kIIrU` after
+13 commits of work. Tracks (a) which top-level specs are current, (b) what
+has been built on this branch, (c) what is intentionally deferred.
 
-**Originally written:** 2026-05-12.
-**Refreshed:** 2026-05-12 after the four unblocked items landed in
-commit `9fe3b9e`. Items marked **[LANDED]** were resolved on this
-branch (`claude/organize-toolkit-registries-kIIrU`); items marked
-**[BLOCKED]** wait on per-page atlas/analysis migration.
+**First written:** 2026-05-12.
+**Last refreshed:** 2026-05-13 after commit `6a8e362`.
 
 ---
 
-## 1. Top-level docs — what's current, what's drifting
+## 1. Branch commits (chronological)
 
-| File | Self-declared status | State after the 9fe3b9e refresh |
+| # | Hash | What landed |
 |---|---|---|
-| `HIERARCHY_SPEC.md` | v1, "fifth pass" | Newest. Internally consistent. Canonical for the species → genome → cohort → group model. |
-| `MASTER_CONFIG.md` | v1 | **[LANDED]** New §"Cohort-scoped and genome-scoped roots" documents the three flags HIERARCHY_SPEC introduced. `species_scoped` is now labeled legacy. |
-| `DATABASE_DESIGN.md` | chat-16 rewrite, refreshed chat ~34 | Refreshed. R-API examples remain as illustration; canonical surface is `registry.resolve()` / `registry.write()`. |
-| `SPEC_DEFERRED.md` | LANTA-era reference | Historical. No action needed unless a deferred feature is picked up. |
-| `README.md` | active | **[LANDED]** Tables now list `ACTIVATOR_EXTRACTOR.md`, `operation_entry.schema.json`, and updated to "40 structured-block schemas". |
-| `ACTIVATOR_EXTRACTOR.md` | new | **[LANDED]** Maps activator/extractor onto the existing `source_kind` enum. |
+| 1 | `77330be` | initial audit (STATUS.md v1, report-only) |
+| 2 | `9fe3b9e` | `cohort_scoped` / `genome_scoped` flags in `master_config.schema.json` + `MASTER_CONFIG.md`; 41→40 structured-block count fix; `ACTIVATOR_EXTRACTOR.md`; promoted `operation_entry.schema.json` to a standalone canonical file |
+| 3 | `60599b9` | STATUS.md refreshed after the above |
+| 4 | `293e359` | Phase 1 contracts (no server code): `action_manifest`, `extractor_manifest`, `layer_envelope`, `action_log_entry` schemas + `PIPELINE_FLOW.md` + `ATLAS_WIRING_PROMPTS.md` |
+| 5 | `072dc11` | content-hash identity: `sample_set_v1`, `analysis_result_v1`, `lib/set_algebra.py`, `REGISTRY_LOOKUP.md`. Collapses (groups × analysis × samples × intervals). |
+| 6 | `dbc153d` | inventory viewer — `lib/registry_inventory.py` + `inventory/index.html` (single-page) |
+| 7 | `ea5c712` | `set_registry` + `analysis_registry`: `entity_type_v1`, `set_v1`, `analysis_v1`, two TSV row schemas, `lib/registry_index.py`, `SETS_AND_ANALYSES.md` |
+| 8 | `f2eb360` | inventory page tabs (Results / Sets / Analyses / Chain) + chain composer |
+| 9 | `4bafbdf` | `derivation_v1` + `operation_params_v1` (separates the "thin500 is not one thing" problem) + Derivations and Params tabs |
+| 10 | `275d968` | **`relatedness/`** — the pragmatic minimum: 6 flat TSV registries (sample_sets, group_sets, interval_sets, site_sets, input_values, analysis_results) + 4 contract checkers + `register_result.py`. Stdlib only. |
+| 11 | `a7a35f0` | `relatedness/01_registry/analysis_modes.tsv` + `scripts/resolve.py` — the mode-driven contract resolver |
+| 12 | `c5bb26e` | `relatedness/page/index.html` — single-page chain compatibility viewer |
+| 13 | `6a8e362` | atlas-core 3-page dashboard: page 1 (Conversation, stub), page 2 (Action, readiness ladder), page 3 (Registries, chains). Shared top nav. |
 
-### Drift points — status after refresh
+---
 
-| Drift | State |
+## 2. Two layers, one branch
+
+The branch landed two parallel things — both intended, both compatible:
+
+### A. The rich, long-term registry (under `toolkit_registries/`)
+
+Per-record JSON files with content-hash identity, set algebra, action
+manifests, extractor manifests, layer envelopes, derivations, parameter
+bundles, an inventory page with a chain composer. This is the design
+shape for atlas-core's future runtime.
+
+Schemas (`schemas/registry_schemas/`):
+
+| Schema | Purpose |
 |---|---|
-| `cohort_scoped` / `genome_scoped` flags missing from the schema | **[LANDED]** Added to `master_config.schema.json`. Three new properties on `root_entry` (mutually exclusive with `species_scoped`) plus `atlas.active_cohort`. |
-| `MASTER_CONFIG.md` only documents `species_scoped` | **[LANDED]** New section added; `species_scoped` labeled legacy with per-page migration posture documented. |
-| `master_config.example.yaml` still uses `species_scoped: true` | **[BLOCKED]** HIERARCHY_SPEC explicitly says the example flips per-page as page1+ migration touches each layer. Intentional. |
-| `master_config.yaml` (local) uses `species_scoped: false` everywhere | Single-species, single-cohort posture. Will flip per-page alongside the example. |
-| Docs claimed "41 structured-block schemas", filesystem has 40 | **[LANDED]** Both `README.md` and `DATABASE_DESIGN.md` now say 40. `INDEX_remaining_blocks.json` is called out separately. |
+| `species.config`, `genome.config`, `cohort.config`, `sample_master`, `group_definition`, `sample_group`, `candidate_interval`, `evidence_key`, `result_row`, `master_config` | Existing hierarchy schemas (pre-branch) |
+| `operation_entry` | Activator definition (promoted from inline) |
+| `action_manifest`, `extractor_manifest`, `layer_envelope`, `action_log_entry` | The action pipeline contracts |
+| `sample_set_v1`, `analysis_result_v1` | Content-hashed sample sets + per-computation lookup |
+| `entity_type_v1`, `set_v1`, `set_registry_row_v1` | Generalized "set of any entity type" + TSV catalogue row |
+| `analysis_v1`, `analysis_registry_row_v1` | Analysis-kind catalogue + TSV row |
+| `derivation_v1`, `operation_params_v1`, `derivation_registry_row_v1`, `operation_params_registry_row_v1` | "how a set was made" + reusable param bundles + TSV rows |
 
----
+Docs (`toolkit_registries/`):
 
-## 2. Registry schemas — version + readiness
-
-All 11 files in `schemas/registry_schemas/` declare draft-07 with `$id`
-matching the filename.
-
-| Schema | Status |
+| File | Purpose |
 |---|---|
-| `species.config` | active |
-| `genome.config` | active |
-| `cohort.config` | active |
-| `sample_master` | active |
-| `group_definition` | active |
-| `sample_group` | back-compat (superseded by group_definition; clearly labeled in-file) |
-| `candidate_interval` | active |
-| `evidence_key` | active |
-| `result_row` | active |
-| `master_config` | **[LANDED]** active; now includes `cohort_scoped` / `genome_scoped` / `atlas.active_cohort` |
-| `operation_entry` | **[LANDED]** new file; canonical activator definition; `core/registry_core.schema.json` mirrors it inline with a pointer back here |
+| `HIERARCHY_SPEC.md` | species → genome → cohort → group; current upgrade target |
+| `MASTER_CONFIG.md` | one config file, `cohort_scoped` / `genome_scoped` flags documented |
+| `DATABASE_DESIGN.md` | 4-role mental model |
+| `SPEC_DEFERRED.md` | LANTA-era reference |
+| `ACTIVATOR_EXTRACTOR.md` | maps "activator/extractor" onto `source_kind` enum |
+| `PIPELINE_FLOW.md` | action → runner → raw → extractor → envelope → registry → Atlas |
+| `ATLAS_WIRING_PROMPTS.md` | paste-ready prompts for other atlases (inversion, unified-ancestry, …) |
+| `REGISTRY_LOOKUP.md` | (groups × analysis × samples × intervals) collapse via content hash |
+| `SETS_AND_ANALYSES.md` | the set/analysis registries + derivation/params decomposition |
+| `STATUS.md` (this file) | branch state snapshot |
 
-`structured_block_schemas/` — 40 per-aspect `.schema.json` files plus
-`INDEX_remaining_blocks.json` and `BK_KEYS_EXPLAINED.md`. README posture
-is "draft; polished per-page during atlas migration" — **[BLOCKED]** on
-that per-page touch.
+Helpers (`toolkit_registries/lib/`):
 
----
+| File | Purpose |
+|---|---|
+| `set_algebra.py` | materialize set expressions, hash, lookup `plan()` |
+| `registry_inventory.py` | scan JSONs, emit `inventory.json` (results + sets + derivations + params + analyses) |
+| `registry_index.py` | scan JSONs, emit four flat TSV catalogues (set_registry, derivation_registry, operation_params_registry, analysis_registry) |
 
-## 3. Activator vs extractor — terminology
+UI (`toolkit_registries/inventory/`):
 
-**[LANDED]** as `ACTIVATOR_EXTRACTOR.md`. The mental-model mapping:
+| File | Purpose |
+|---|---|
+| `index.html` | 6-tab inventory page (Results, Sets, Derivations, Params, Analyses, Chain) |
+| `example_data/registry/` | synthetic JSON-per-record demo registry |
 
-| You called it | `source_kind` value | Dispatch |
-|---|---|---|
-| **extractor** | `'file'` | read a path from disk |
-| **activator** (server) | `'operation'` | POST to atlas backend; runs C engine |
-| **activator** (browser) | `'analysis'` | call a JS module function |
-| (neither) | `'inline'` | constant inline in config |
+### B. The pragmatic minimum (under `toolkit_registries/relatedness/`)
 
-The enum stays as-is (renaming would touch every atlas + `core/`); the
-doc bridges the terminology.
+Hand-authorable flat TSV registries + checker scripts + a 3-page
+dashboard. Solves the immediate ngsRelate → ngsPedigree → mendelian
+contract problem with stdlib Python and no external deps. Drop-in
+into a real workspace.
 
-The activator's *contract* lives in
-`schemas/registry_schemas/operation_entry.schema.json` (canonical) and
-is mirrored inline in `core/registry_core.schema.json` for the
-self-contained meta-schema. Extractor *contract* is the per-layer
-`schema` field, which in turn points at one of the payload schemas in
-`registry_schemas/` or `structured_block_schemas/`.
+Six TSVs in dependency order (`relatedness/01_registry/`):
 
----
+```
+WHO       sample_sets.tsv
+LABELS    group_sets.tsv
+WHERE     interval_sets.tsv
+WHICH     site_sets.tsv
+WHAT-IN   input_values.tsv
+WHAT-OUT  analysis_results.tsv
+HOW       analysis_modes.tsv         ← the resolver's brain
+```
 
-## 4. What's left
+Scripts (`relatedness/scripts/`):
 
-### Anything still actionable inside `toolkit_registries/` without per-page work?
+| Script | What it does |
+|---|---|
+| `io_helpers.py` | shared TSV / BEAGLE loaders |
+| `check_beagle_header_vs_samples.py` | BEAGLE column order vs sample_set |
+| `check_beagle_rows_vs_sites.py` | BEAGLE row count vs site_set (+ optional row-by-row marker check) |
+| `check_group_samples_vs_sample_set.py` | group_set ⊆ sample_set |
+| `check_result_contract.py` | **master check** — recursive FK + input contract for a result_id |
+| `register_result.py` | append a row to `analysis_results.tsv`, refuses if contract fails |
+| `resolve.py` | mode-driven contract resolver: turns "ngsrelate per_chromosome LG12" into the full contract |
 
-No. The four items flagged in this doc's first version (commit
-`77330be`) have all landed in `9fe3b9e`. No further spec or schema
-change here is unblocked.
+3-page dashboard (`relatedness/page/`):
 
-### What remains, by category
-
-**[BLOCKED] on per-page atlas migration:**
-- Polish of the 40 `structured_block_schemas/*.schema.json` — each is
-  tightened when a page consumes it.
-- Flip `master_config.example.yaml` roots from `species_scoped: true`
-  to `cohort_scoped:` / `genome_scoped:` per-layer-touched.
-- 4-role JS facade (`registry.samples.X`, `registry.evidence.X`, …) in
-  `core/registry_core.js`.
-- Integrity-check JS implementation — waits for `result_row` write
-  paths to be exercised.
-
-**[BLOCKED] on use case / data availability:**
-- `SPEC_DEFERRED.md` items (LANTA-era scientific specs).
-- Sub-cluster group registration (`STEP_C01i_e_subcluster.R` equivalent).
-- Atlas-specific schemas (`arrangement_calls`, `karyotype_assignment`)
-  — those belong in `<atlas>/registries/schemas/`, not here.
-
-**Low-value, do anytime:**
-- Port some R-API illustrative examples in `DATABASE_DESIGN.md` to JS.
-  The doc keeps them as illustration; rewriting is optional.
+| Page | What it does |
+|---|---|
+| `conversation.html` | stub for the LLM funnel (page 1) |
+| `action.html` | readiness & routing dashboard — RESULT_READY / RUN_READY / SPAWNABLE / BLOCKED / MISSING per step (page 2) |
+| `index.html` | chain compatibility viewer (page 3) |
 
 ---
 
-## 5. Commit history on this branch
+## 3. What's done / what's deferred
 
-- `77330be` — initial audit (`STATUS.md` v1, report-only).
-- `9fe3b9e` — four unblocked items landed
-  (`cohort_scoped`/`genome_scoped` in schema + doc, 41→40 count fix,
-  `ACTIVATOR_EXTRACTOR.md`, `operation_entry.schema.json` promoted).
-- (this commit) — `STATUS.md` refreshed to reflect that state.
+### Done on this branch
+- All registry contracts (rich JSON form + flat TSV form)
+- Content-hash identity collapses the (groups × analyses × samples × intervals) explosion
+- Mode-driven resolver (CLI + JS in the page)
+- Contract checker walks 3 levels deep through the ngsRelate → ngsPedigree → mendelian chain
+- 3-page dashboard (page 2 is the new piece; page 3 is the chain viewer; page 1 is documentation-only)
+
+### Intentionally deferred
+- **LLM funnel** (page 1 content). Design lives in `page/conversation.html`; out of scope per user direction.
+- **Server endpoints** for the action pipeline (`POST /api/actions`, `GET /api/layers`, etc.). Defined in `PIPELINE_FLOW.md`; not implemented in `atlas_server.py` yet.
+- **Per-page atlas migration** of the existing `species_scoped` master_config flags to `cohort_scoped` / `genome_scoped` — explicitly per-page per HIERARCHY_SPEC.
+- **Real runners** for ngsRelate / ngsPedigree / mendelian. The scripts register and validate; you still run the binaries yourself.
+- **Filter profile registry** (`filter_profile_v1`). Free-form string id for now in derivation rows.
+- **Backfill helper** that walks an existing `.res/` folder and registers everything. Not built; the contract checker + register_result is enough to do it by hand for now.
+
+### Things the user can run today
+
+```bash
+# 3-page dashboard
+python3 -m http.server -d toolkit_registries/relatedness 8765
+# → http://127.0.0.1:8765/page/action.html
+
+# CLI: the master check (recursive, 3 levels deep)
+cd toolkit_registries/relatedness/scripts
+python3 check_result_contract.py --result mendelian_LG12_v1
+#   → OVERALL: ✓ OK; READY FOR: family-QC summary tables, trio reliability flags
+
+# CLI: the mode-driven resolver
+python3 resolve.py --analysis ngsrelate --mode per_chromosome \
+                   --sample-set samples_226_v1 --chromosome C_gar_LG12 --explain
+#   → STATUS: ✓ OK  ready to run
+
+# CLI: ASCII inventory of the rich registry
+python3 ../../lib/registry_inventory.py --example --print
+
+# Or the inventory page (6 tabs incl. Chain composer)
+python3 -m http.server -d toolkit_registries/inventory 8000
+# → http://127.0.0.1:8000/
+```
+
+---
+
+## 4. Verification (after the latest linter touches)
+
+```
+119/119 JSON files parse OK
+check_result_contract.py --result mendelian_LG12_v1   ✓ OK (3-level recursion green)
+resolve.py --analysis ngsrelate --mode per_chromosome ✓ OK ready to run
+3-page dashboard                                       ✓ all routes serve 200
+```
+
+No regressions.

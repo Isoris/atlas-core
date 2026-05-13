@@ -69,7 +69,8 @@ relatedness/
     ├── resolve.py                             (mode-driven contract resolver)
     ├── register_result.py
     ├── sync_biomod_status.py                  (refresh module_registry.tsv from `biomod status --json`)
-    └── scan_results.py                        (walk a results dir, infer & propose analysis_results.tsv rows)
+    ├── scan_results.py                        (walk a results dir, infer & propose analysis_results.tsv rows)
+    └── scan_inputs.py                         (walk an inputs dir, infer & propose input_values.tsv rows — BEAGLE / dosage)
 ```
 
 ## Bulk-load existing results: `scan_results.py`
@@ -141,6 +142,68 @@ $ scan_results.py … --apply
 
 $ scan_results.py …                                  ← re-run
 0 new · 6 already registered · 0 blocked            ← idempotent
+```
+
+## Bulk-load existing inputs: `scan_inputs.py`
+
+Symmetric counterpart to `scan_results.py` — walks an inputs tree
+looking for BEAGLE / dosage / SAF / VCF files and proposes
+`input_values.tsv` rows. Same dry-run-by-default semantics, same
+defaults JSON (uses the `inputs` section).
+
+```bash
+python3 scan_inputs.py \
+  --inputs-dir ../03_inputs \
+  --defaults    ../01_registry/scan_defaults.json [--apply]
+```
+
+For each BEAGLE file the scanner ALSO opens it and reads:
+- the **header row** → derives `n_sample_columns` (3 × n_samples for BEAGLE GL)
+- the **data row count** → `n_rows`
+
+so the proposed row is already shape-true before it lands. The
+contract-checker on page 2 will agree with what's on disk because the
+TSV was populated from the file itself.
+
+| File pattern         | value_type   | id prefix |
+|---|---|---|
+| `*.beagle.gz`        | `BEAGLE_GL`  | `beagle`  |
+| `*.beagle`           | `BEAGLE_GL`  | `beagle`  |
+| `*.dosage.tsv.gz`    | `dosage`     | `dosage`  |
+| `*.dosage.tsv`       | `dosage`     | `dosage`  |
+| `*.saf.idx`          | `SAF`        | `saf`     |
+| `*.vcf.gz`           | `VCF`        | `vcf`     |
+
+The `inputs.site_tag_for_chrom` map in `scan_defaults.json` shapes the
+`value_id`: a BEAGLE in `C_gar_LG28` with tag `LG28_thin500` becomes
+`beagle_LG28_thin500_v1`. Pre-existing ids are respected — the scanner
+auto-versions on collision.
+
+Smoke-tested:
+
+```
+$ scan_inputs.py --inputs-dir ../03_inputs --defaults ../01_registry/scan_defaults.json
+0 new · 2 already registered · 0 blocked            ← baseline
+
+$ # drop LG28.thin500.beagle.gz into ../03_inputs/beagle/
+$ scan_inputs.py … --apply
+✓ OK appended 1 row(s) → input_values.tsv
+                                              ← row populated with
+                                                n_rows=6, n_sample_cols=18,
+                                                sha256:ae642b238…
+
+$ scan_inputs.py …
+0 new · 3 already registered · 0 blocked            ← idempotent
+```
+
+Combined workflow for a fresh real workspace:
+
+```bash
+$EDITOR 01_registry/scan_defaults.json        # one-time wiring
+python3 scripts/scan_inputs.py  --inputs-dir  /mnt/e/.../beagle  --defaults … --apply
+python3 scripts/scan_results.py --results-dir /mnt/e/.../results --defaults … --apply
+python3 scripts/sync_biomod_status.py         # if biomod is on PATH
+python3 -m http.server -d . 8765              # → page 4 shows the live registry
 ```
 
 ## Biomod bridge — what backs each analysis

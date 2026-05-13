@@ -23,6 +23,10 @@ Two subsystems, both wired into the same FastAPI app:
 | POST   | `/file/<path>`                    | registry-v2 write (allowlisted prefixes only) |
 | POST   | `/compute/<name>`                 | run a registered compute op |
 | GET    | `/`                               | atlas UI from `--workspace-root/index.html` |
+| POST   | `/api/actions`                    | submit an action_manifest; logs to `<root>/registry/actions.log.jsonl` and dispatches via `<root>/dispatcher.py` if present (else documentation mode) |
+| GET    | `/api/actions/<action_id>`        | read the latest action_log_entry for that id |
+| GET    | `/api/layers`                     | list layer envelopes under `<root>/layers/` (filters: `layer_type`, `dataset_id`, `stage`, `limit`) |
+| GET    | `/api/layers/<layer_id>`          | return one layer envelope |
 
 **Compute subsystem** — engaged when `--config <yaml>` is passed:
 
@@ -61,6 +65,63 @@ statistics given a list of sample IDs per group. Group names match
 `[A-Za-z0-9_]+`. Member IDs are validated against the canonical sample
 list (`SAMPLE_LIST_POPSTATS`); unknowns are rejected with a clear 400.
 Up to 10 groups per request (Engine F's `MAX_GROUPS`).
+
+## Action endpoints — `POST /api/actions` + friends
+
+Pure-Python implementation in `action_endpoints.py`; the four routes in
+`atlas_server.py` are thin wrappers. Contract per
+`toolkit_registries/PIPELINE_FLOW.md`.
+
+```
+<project_root>/
+├── registry/
+│   └── actions.log.jsonl       append-only JSONL log
+├── layers/<type>/.../*.json    layer_envelope.schema.json files
+└── dispatcher.py               OPTIONAL — per-workspace runner
+```
+
+**Documentation mode.** If `<project_root>/dispatcher.py` doesn't exist,
+`POST /api/actions` still works: it validates the manifest, appends
+`queued / running / success` entries to the log, and returns the
+`action_id` with `produced_layers: []` plus a `note` saying
+"no dispatcher.py — documentation mode". This lets atlas-core ship the
+contract without bundling runners; each atlas drops in its own
+dispatcher when it's ready.
+
+**With a dispatcher.** The expected signature is:
+
+```python
+# <project_root>/dispatcher.py
+def dispatch_action(manifest: dict, context: dict) -> dict:
+    """context contains {'workspace_root': str}.
+    Return {'produced_layers': [layer_id, ...]}.
+    Raising any exception is reported as status=error to the caller.
+    """
+```
+
+The endpoint runs the dispatcher synchronously inside the HTTP request.
+The action log captures `queued → running → success/error` regardless of
+outcome, so it's the durable record of "what was asked, what happened,
+which layers came out". A worker can later split into an async queue
+without changing the log format.
+
+Smoke commands:
+
+```bash
+# Submit
+curl -s -XPOST http://127.0.0.1:8000/api/actions -H 'content-type: application/json' \
+  -d '{"action_id":"act_demo_1","type":"run_ngsrelate",
+       "dataset_id":"main_226_hatchery","runner":"runners.ngsrelate.run"}' | jq .
+
+# Look it up
+curl -s http://127.0.0.1:8000/api/actions/act_demo_1 | jq .
+
+# List layers
+curl -s 'http://127.0.0.1:8000/api/layers?layer_type=fst_windows' | jq .
+
+# Read one envelope
+curl -s http://127.0.0.1:8000/api/layers/fst_windows_LG28_v1 | jq .
+```
 
 ## Run it
 

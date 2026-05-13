@@ -99,7 +99,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 import yaml
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -107,6 +107,11 @@ from pydantic import BaseModel, Field, field_validator
 
 # Turn 11a: LD split-heatmap endpoint (separate module to keep this file readable)
 from ld_endpoint import LDSplitReq, handle_split_heatmap
+
+# Action endpoints (POST /api/actions and friends). Pure-Python logic lives
+# in a sibling module — this file only wires the route decorators.
+# Contract: toolkit_registries/PIPELINE_FLOW.md.
+import action_endpoints as _act
 
 # Turn S6.P4.1: dosage chunk bridge endpoint (separate module; unblocks the
 # atlas-side renderDosageHeatmap by giving it a live data source instead of
@@ -2247,6 +2252,74 @@ async def dosage_manifest() -> Dict[str, Any]:
                                          DOSAGE_DEFAULT_MAX_REGION_BP)),
         },
     }
+
+
+# =============================================================================
+# Action endpoints — POST /api/actions, GET /api/actions/{id}, /api/layers/*
+# =============================================================================
+#
+# Pure logic lives in action_endpoints.py (aliased _act). These thin wrappers
+# only translate ValidationError → HTTP 400 / duplicate KeyError → HTTP 409 /
+# missing files → HTTP 404, and run inside the request synchronously.
+#
+# Workspace layout assumed (under PROJECT_ROOT):
+#   registry/actions.log.jsonl     append-only log
+#   layers/<type>/.../*.json       layer envelopes
+#   dispatcher.py                  optional per-workspace runner (if absent,
+#                                  the endpoint runs in documentation mode:
+#                                  accepts + logs manifests but executes nothing)
+
+
+@app.post("/api/actions")
+async def post_action(request: Request) -> Dict[str, Any]:
+    """Accept an action_manifest, validate, log, dispatch synchronously,
+    return action_id + status + produced_layers. Per PIPELINE_FLOW.md."""
+    workspace = _ensure_project_root()
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(400, "request body must be valid JSON")
+    try:
+        return _act.handle_post_action(workspace, body)
+    except _act.ValidationError as e:
+        raise HTTPException(400, str(e))
+    except _act.DuplicateActionError as e:
+        raise HTTPException(409, str(e))
+
+
+@app.get("/api/actions/{action_id}")
+async def get_action(action_id: str) -> Dict[str, Any]:
+    """Return the latest action_log_entry for this action_id. 404 if unknown."""
+    workspace = _ensure_project_root()
+    entry = _act.latest_action_entry(workspace, action_id)
+    if entry is None:
+        raise HTTPException(404, f"unknown action_id '{action_id}'")
+    return entry
+
+
+@app.get("/api/layers")
+async def list_layers(
+    layer_type: Optional[str] = Query(None, description="filter by layer_type, e.g. 'fst_windows'"),
+    dataset_id: Optional[str] = Query(None, description="filter by dataset_id"),
+    stage: Optional[str]      = Query(None, description="filter by stage: 'staging' | 'normalized'"),
+    limit: int                = Query(200, ge=1, le=10_000),
+) -> List[Dict[str, Any]]:
+    """List layer envelopes under <workspace>/layers/. Filters AND'd.
+    Returns summaries (layer_id, layer_type, schema_version, stage,
+    dataset_id, status, created_at, path); not the full payload."""
+    workspace = _ensure_project_root()
+    return _act.list_layers(workspace, layer_type=layer_type,
+                             dataset_id=dataset_id, stage=stage, limit=limit)
+
+
+@app.get("/api/layers/{layer_id}")
+async def get_layer(layer_id: str) -> Dict[str, Any]:
+    """Return one full layer envelope. 404 if unknown."""
+    workspace = _ensure_project_root()
+    env = _act.find_layer(workspace, layer_id)
+    if env is None:
+        raise HTTPException(404, f"unknown layer_id '{layer_id}'")
+    return env
 
 
 def _last_pos_in_sites(sites_gz: Path) -> int:

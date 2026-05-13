@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "sample_sets_row.schema.json",
+  "title": "sample_sets.tsv row — WHO",
+  "description": "One sample set: which catfish (or whatever individuals), in what order. The base of every contract — group_sets, input_values, and analysis_results all FK back to sample_set_id.",
+  "type": "object",
+  "required": ["sample_set_id", "path", "n_samples"],
+  "additionalProperties": false,
+  "properties": {
+    "sample_set_id": { "type": "string", "description": "Stable id, e.g. 'samples_226_v1'." },
+    "path":          { "type": "string", "description": "Path to the actual samples TSV (one row per sample, with sample_id + bam_path columns)." },
+    "n_samples":     { "type": "integer", "minimum": 0 },
+    "order_key":     { "type": "string", "description": "How sample order is defined: 'file_order' (the row order in path) or a column name to sort by. BEAGLE column order MUST match this." },
+    "hash":          { "type": "string", "description": "sha256 of canonical (sorted) sample_id list. Lets you detect 'is this the same set?' across machines." },
+    "notes":         { "type": "string" }
+  },
+  "_tsv_column_order": ["sample_set_id", "path", "n_samples", "order_key", "hash", "notes"]
+}

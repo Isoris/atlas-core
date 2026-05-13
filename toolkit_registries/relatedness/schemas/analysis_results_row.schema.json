@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "analysis_results_row.schema.json",
+  "title": "analysis_results.tsv row — WHAT-OUT",
+  "description": "One row per analysis run. Records WHICH inputs (sample / group / interval / site / input_value), WHICH method, and WHERE the output lives. Downstream tools (ngsPedigree consuming an ngsRelate .res, mendelian consuming a pedigree) reference this row's result_id as their upstream input.\n\nThe contract: a row is VALID only if every FK resolves AND the three-way input_value contract (samples × sites × interval) holds. scripts/check_result_contract.py runs that validation; scripts/register_result.py refuses to add a row that fails it.",
+  "type": "object",
+  "required": ["result_id", "analysis_type", "path", "sample_set_id"],
+  "additionalProperties": false,
+  "properties": {
+    "result_id":           { "type": "string" },
+    "analysis_type":       { "type": "string", "description": "ngsrelate | ngspedigree | mendelian | ngsadmix | pca | …" },
+    "path":                { "type": "string", "description": "Path to the output file (.res, pedigree.tsv, mendelian.tsv, .qopt, …)." },
+    "sample_set_id":       { "type": "string" },
+    "group_set_id":        { "type": "string", "description": "FK into group_sets.tsv. Empty when not applicable." },
+    "interval_set_id":     { "type": "string", "description": "FK into interval_sets.tsv (genome / chromosome / candidate)." },
+    "site_set_id":         { "type": "string", "description": "FK into site_sets.tsv. Empty for analyses that don't expose site granularity." },
+    "input_value_id":      { "type": "string", "description": "FK into input_values.tsv (e.g. the BEAGLE the analysis read). For analyses that consume an upstream RESULT (ngsPedigree on an ngsRelate .res), use input_result_id instead." },
+    "input_result_id":     { "type": "string", "description": "FK into analysis_results.tsv when the input is another analysis's output." },
+    "method_id":           { "type": "string", "description": "Tool + version, e.g. 'ngsrelate_v2', 'ngspedigree_v1'." },
+    "params_id":           { "type": "string", "description": "Optional FK or tag identifying the run params." },
+    "hash":                { "type": "string" },
+    "status":              { "type": "string", "enum": ["active", "experimental", "stale", "failed"], "default": "active" },
+    "created_at":          { "type": "string", "format": "date-time" },
+    "notes":               { "type": "string" }
+  },
+  "_tsv_column_order": ["result_id", "analysis_type", "path", "sample_set_id", "group_set_id", "interval_set_id", "site_set_id", "input_value_id", "input_result_id", "method_id", "params_id", "hash", "status", "created_at", "notes"]
+}

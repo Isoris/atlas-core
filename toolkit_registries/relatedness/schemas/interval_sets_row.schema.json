@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "interval_sets_row.schema.json",
+  "title": "interval_sets.tsv row — WHERE",
+  "description": "One coordinate scope: genome-wide, single chromosome, or a list of named intervals. site_sets, input_values, and analysis_results all reference this.",
+  "type": "object",
+  "required": ["interval_set_id", "path", "coordinate_system", "interval_type"],
+  "additionalProperties": false,
+  "properties": {
+    "interval_set_id":   { "type": "string" },
+    "path":              { "type": "string", "description": "Path to intervals TSV (interval_id + chrom + start + end)." },
+    "coordinate_system": { "type": "string", "description": "Genome assembly id, e.g. 'C_gar_v1'." },
+    "interval_type":     { "type": "string", "enum": ["genome", "chromosome", "candidate", "custom"] },
+    "n_intervals":       { "type": "integer", "minimum": 0 },
+    "hash":              { "type": "string" },
+    "notes":             { "type": "string" }
+  },
+  "_tsv_column_order": ["interval_set_id", "path", "coordinate_system", "interval_type", "n_intervals", "hash", "notes"]
+}

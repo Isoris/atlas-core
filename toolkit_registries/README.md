@@ -90,6 +90,15 @@ Skip SPEC_DEFERRED unless you're working on a deferred feature.
 | `registry_inventory.py` | Scan a registry root and emit a flat `analysis × group × samples × interval` table — JSON for the viewer, or ASCII for the terminal. See `inventory/`. |
 | `registry_index.py` | Build `set_registry.tsv` and `analysis_registry.tsv` (flat catalogues) from the per-record JSON files. See SETS_AND_ANALYSES.md. |
 
+### relatedness/ — minimum infrastructure that unstucks ngsRelate → ngsPedigree → mendelian
+
+Six flat TSV registries (`sample_sets`, `group_sets`, `interval_sets`,
+`site_sets`, `input_values`, `analysis_results`) + four contract
+checkers + one register tool. Stdlib Python only. Self-contained — copy
+into your real workspace, replace the example data, and
+`check_result_contract.py --result <id>` tells you whether the result
+is ready for downstream use. See `relatedness/README.md`.
+
 ### inventory/ — click and see what's in the registry
 
 Single-file HTML page (`index.html`) that reads the JSON dump from

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "site_sets_row.schema.json",
+  "title": "site_sets.tsv row — WHICH variant rows",
+  "description": "One set of variant sites (e.g. SNPs after MAF filter and 500-bp thinning). FK chain: site_set → parent_site_set + interval_set + coordinate_system.\n\nIMPORTANT: BEAGLE genotype-likelihood files are NOT site sets — they're INPUT VALUES (input_values.tsv). A site set lists rows; an input_value carries the per-(sample × site) values for those rows.",
+  "type": "object",
+  "required": ["site_set_id", "path", "coordinate_system"],
+  "additionalProperties": false,
+  "properties": {
+    "site_set_id":         { "type": "string" },
+    "path":                { "type": "string", "description": "Path to the sites TSV(.gz). Typical columns: chrom, pos, ref, alt." },
+    "parent_site_set_id":  { "type": "string", "description": "Optional FK: the bigger set this was thinned/intersected from." },
+    "interval_set_id":     { "type": "string", "description": "Optional FK: the coordinate scope (genome / chromosome / candidate)." },
+    "coordinate_system":   { "type": "string" },
+    "operation":           { "type": "string", "description": "How this set was derived from parent (e.g. 'thin', 'intersect', 'maf_filter')." },
+    "params_id":           { "type": "string", "description": "FK or tag identifying the operation parameters (e.g. 'thin500_first_per_chrom_v1')." },
+    "n_sites":             { "type": "integer", "minimum": 0 },
+    "hash":                { "type": "string" },
+    "notes":               { "type": "string" }
+  },
+  "_tsv_column_order": ["site_set_id", "path", "parent_site_set_id", "interval_set_id", "coordinate_system", "operation", "params_id", "n_sites", "hash", "notes"]
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "input_values_row.schema.json",
+  "title": "input_values.tsv row — WHAT-IN (BEAGLE / dosage / SAF / GL)",
+  "description": "One file containing per-(sample × site) values: BEAGLE genotype likelihoods, dosage matrix, SAF, raw VCF, etc. Has a strict three-way contract: the file's sample order must match sample_set, the file's row count must match site_set's n_sites, and both must lie under the declared interval_set.\n\nEverything downstream (ngsRelate, ngsAdmix, PCA) consumes ONE input_value plus a sample/group/interval scope. The contract checker (scripts/check_result_contract.py) validates this row's three FKs every time a result is registered.",
+  "type": "object",
+  "required": ["value_id", "value_type", "path", "sample_set_id", "site_set_id"],
+  "additionalProperties": false,
+  "properties": {
+    "value_id":         { "type": "string" },
+    "value_type":       { "type": "string", "enum": ["BEAGLE_GL", "dosage", "SAF", "VCF", "GL_TSV", "other"] },
+    "path":             { "type": "string", "description": "Path to the file." },
+    "sample_set_id":    { "type": "string", "description": "FK into sample_sets.tsv. The file's per-sample columns (BEAGLE: 3 per sample) MUST be in this set's order." },
+    "site_set_id":      { "type": "string", "description": "FK into site_sets.tsv. The file's data rows MUST cover exactly these sites in order." },
+    "interval_set_id":  { "type": "string", "description": "FK into interval_sets.tsv. The interval scope the file was extracted under." },
+    "n_rows":           { "type": "integer", "description": "Number of data rows. Should equal site_set's n_sites." },
+    "n_sample_columns": { "type": "integer", "description": "Number of per-sample columns. For BEAGLE that's 3*n_samples (AA/Aa/aa triplets)." },
+    "hash":             { "type": "string" },
+    "notes":            { "type": "string" }
+  },
+  "_tsv_column_order": ["value_id", "value_type", "path", "sample_set_id", "site_set_id", "interval_set_id", "n_rows", "n_sample_columns", "hash", "notes"]
+}

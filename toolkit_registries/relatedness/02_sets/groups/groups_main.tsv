@@ -1,0 +1,7 @@
+sample_id	family	population	batch
+GAR001	F01	hatchery_A	B1
+GAR002	F01	hatchery_A	B1
+GAR003	F02	hatchery_A	B1
+GAR004	F02	hatchery_B	B2
+GAR005	F03	wild	B2
+GAR006	F03	wild	B2

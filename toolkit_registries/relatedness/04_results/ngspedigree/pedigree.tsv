@@ -1,0 +1,4 @@
+offspring	parent1	parent2	likelihood
+GAR003	GAR001	GAR002	0.91
+GAR004	GAR001	GAR002	0.88
+GAR006	GAR005	NA	0.75

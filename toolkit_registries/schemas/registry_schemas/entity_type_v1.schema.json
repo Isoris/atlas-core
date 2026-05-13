@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "entity_type_v1.schema.json",
+  "title": "Entity type — kind of object that can be collected into a set",
+  "description": "Controlled vocabulary of entity types. Defines what KIND of thing a set contains. Each value in the enum is a canonical type; atlases may add their own (additionalProperties on set_v1.entity_type is allowed). Per SETS_AND_ANALYSES.md §'Entity types'.",
+  "type": "object",
+  "required": ["entity_type", "description"],
+  "additionalProperties": true,
+  "properties": {
+    "entity_type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Canonical name. Lowercase + underscores. Singular noun (sample, not samples). The 'kind' of object."
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable singular form. Optional."
+    },
+    "description": {
+      "type": "string",
+      "description": "One-line definition: 'what is one of these?'"
+    },
+    "coordinate_aware": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if instances carry chrom + start_bp + end_bp coordinates. Used by query builders to know whether a set can be filtered by region."
+    },
+    "id_pattern": {
+      "type": "string",
+      "description": "Optional regex hint for valid instance ids (e.g. variant_site uses 'chrom:pos:ref:alt')."
+    },
+    "examples": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "A few example instance ids for documentation."
+    }
+  },
+  "_canonical_vocabulary": [
+    {
+      "entity_type": "sample",
+      "label": "Sample",
+      "description": "One sequenced individual. The fundamental unit of who-was-measured.",
+      "coordinate_aware": false,
+      "examples": ["CGA001", "CGA042"]
+    },
+    {
+      "entity_type": "variant_site",
+      "label": "Variant site",
+      "description": "One position in the genome with at least two observed alleles. Typically biallelic SNPs in BEAGLE/sites contexts.",
+      "coordinate_aware": true,
+      "id_pattern": "^[A-Za-z0-9_]+:[0-9]+(:[ACGTN]:[ACGTN])?$",
+      "examples": ["C_gar_LG28:15000123", "C_gar_LG28:15000123:A:G"]
+    },
+    {
+      "entity_type": "window",
+      "label": "Genomic window",
+      "description": "One half-open coordinate interval [start_bp, end_bp). Bin for statistics (FST per window, theta per window, dosage per window).",
+      "coordinate_aware": true,
+      "examples": ["C_gar_LG28:15000000-15010000"]
+    },
+    {
+      "entity_type": "interval",
+      "label": "Interval",
+      "description": "One named coordinate range (candidate region, gene body, conserved block). Can be any size. Distinct from 'window' which is the bin-for-stats notion.",
+      "coordinate_aware": true,
+      "examples": ["LG28_INV_001", "LG28_INV_001_seg_DCO1"]
+    },
+    {
+      "entity_type": "inversion_candidate",
+      "label": "Inversion candidate",
+      "description": "One putative inversion call (born from D17, local-PCA, SV concordance). Has coordinates, lineage, evidence blocks.",
+      "coordinate_aware": true,
+      "examples": ["LG28_INV_001"]
+    },
+    {
+      "entity_type": "breakpoint",
+      "label": "Breakpoint",
+      "description": "One side of an SV junction. Has chrom + bp (single position).",
+      "coordinate_aware": true,
+      "examples": ["C_gar_LG28:15115023:left"]
+    },
+    {
+      "entity_type": "gene",
+      "label": "Gene",
+      "description": "One annotated gene (from GFF). Has coordinates + name.",
+      "coordinate_aware": true,
+      "examples": ["claGar_LG28_g00451"]
+    },
+    {
+      "entity_type": "te_copy",
+      "label": "Transposable element copy",
+      "description": "One TE insertion / fragment. Annotation source: RepeatModeler / EDTA.",
+      "coordinate_aware": true
+    },
+    {
+      "entity_type": "marker",
+      "label": "Genetic marker",
+      "description": "One assay target (PCR primer pair, ddPCR probe, SNP genotype assay). Usually has coordinates and a target sequence.",
+      "coordinate_aware": true
+    },
+    {
+      "entity_type": "chromosome",
+      "label": "Chromosome",
+      "description": "One reference chromosome / linkage group. Coordinate-aware only in the sense that it's the parent of all positions on it.",
+      "coordinate_aware": false,
+      "examples": ["C_gar_LG28"]
+    },
+    {
+      "entity_type": "scaffold",
+      "label": "Scaffold",
+      "description": "One scaffold in the genome assembly (may or may not be promoted to a chromosome).",
+      "coordinate_aware": false
+    },
+    {
+      "entity_type": "contig",
+      "label": "Contig",
+      "description": "One unbroken assembled sequence.",
+      "coordinate_aware": false
+    },
+    {
+      "entity_type": "bam",
+      "label": "BAM file",
+      "description": "One per-sample alignment file. Sets of BAMs are typically one-to-one with sample sets, but registered separately so processing variants (markdup vs raw, downsampled vs full-depth) can be tracked.",
+      "coordinate_aware": false
+    }
+  ]
+}

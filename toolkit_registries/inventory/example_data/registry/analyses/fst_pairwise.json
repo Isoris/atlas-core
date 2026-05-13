@@ -1,0 +1,25 @@
+{
+  "analysis_id":      "fst_pairwise",
+  "analysis_version": "v1",
+  "label":            "Pairwise FST in windows (region_popstats)",
+  "description":      "Window-wise pairwise FST between TWO sample sets along a coordinate scope. Wraps the existing /api/popstats/groupwise endpoint (Engine F = region_popstats).",
+  "inputs": {
+    "sets": [
+      { "role": "group_a", "entity_type": "sample", "cardinality": "one" },
+      { "role": "group_b", "entity_type": "sample", "cardinality": "one" },
+      { "role": "windows", "entity_type": "window", "cardinality": "one" }
+    ],
+    "artifacts": [
+      { "role": "beagle", "layer_type": "beagle_file", "schema_version": "beagle_file_v1" }
+    ]
+  },
+  "produces": [
+    { "layer_type": "fst_windows", "schema_version": "fst_windows_v1" }
+  ],
+  "engine":         "region_popstats",
+  "endpoint":       "/api/popstats/groupwise",
+  "default_runner": "runners.popstats.run_fst",
+  "status":         "active",
+  "intended_use":   "scan a candidate / cohort for population differentiation",
+  "created_at":     "2026-05-12T00:00:00Z"
+}

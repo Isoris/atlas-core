@@ -1,0 +1,14 @@
+{
+  "set_id":             "sites_LG28_localpca_v1",
+  "entity_type":        "variant_site",
+  "label":              "LG28 sites — MAF≥0.05, thinned to 1 SNP / kb",
+  "path":               "sets/variant_site/LG28.localpca.sites.tsv.gz",
+  "n_entities":         48211,
+  "hash":               "sha256:42a8c1e7f3b9d206aa11bb22cc33dd44ee55ff66770088991122334455667788",
+  "parent_set_id":      "snps_maf005_v1",
+  "filter_profile_id":  "maf005_thin1k_v1",
+  "coordinate_system":  "fClaHyb_Gar_LG_v1",
+  "intended_use":       "local PCA, scrubber landscape",
+  "status":             "active",
+  "created_at":         "2026-04-10T12:00:00Z"
+}

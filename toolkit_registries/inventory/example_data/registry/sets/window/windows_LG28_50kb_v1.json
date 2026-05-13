@@ -1,0 +1,11 @@
+{
+  "set_id":             "windows_LG28_50kb_v1",
+  "entity_type":        "window",
+  "label":              "LG28 50 kb tiling windows",
+  "path":               "sets/window/LG28.50kb.tsv",
+  "n_entities":         784,
+  "coordinate_system":  "fClaHyb_Gar_LG_v1",
+  "intended_use":       "FST / theta-pi windowed scans on LG28",
+  "status":             "active",
+  "created_at":         "2026-04-10T12:00:00Z"
+}

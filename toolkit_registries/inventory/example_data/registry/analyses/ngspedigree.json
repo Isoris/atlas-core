@@ -1,0 +1,23 @@
+{
+  "analysis_id":      "ngspedigree",
+  "analysis_version": "v1",
+  "label":            "ngsPedigree — pedigree reconstruction from relatedness",
+  "description":      "Builds the most-likely pedigree (trios / sib groups) from a pairwise-relatedness matrix produced by ngsRelate.",
+  "inputs": {
+    "sets": [
+      { "role": "samples", "entity_type": "sample", "cardinality": "one" }
+    ],
+    "artifacts": [
+      { "role": "relatedness", "layer_type": "ngsrelate_result", "schema_version": "ngsrelate_result_v1" }
+    ]
+  },
+  "produces": [
+    { "layer_type": "ngspedigree_result", "schema_version": "ngspedigree_result_v1" }
+  ],
+  "engine":         "ngsPedigree",
+  "default_runner": "runners.ngspedigree.run",
+  "requires":       ["ngsrelate"],
+  "status":         "active",
+  "intended_use":   "trio/family discovery from kinship matrix",
+  "created_at":     "2026-05-12T00:00:00Z"
+}

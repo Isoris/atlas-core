@@ -1,0 +1,205 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "analysis_v1.schema.json",
+  "title": "Analysis — definition of one analysis KIND (vocabulary, not per-result)",
+  "description": "One entry in the analysis registry. Defines what `ngsrelate`, `ngspedigree`, `mendelian`, `fst_pairwise`, `theta_pi`, etc. ARE: their inputs (set entity types + artifact entity types), parameters schema, output layer type, status, and version. The CATALOGUE. Distinct from analysis_result_v1.schema.json (per-result lookup row pointing at a layer) and from operation_entry.schema.json (per-server-endpoint definition). One JSON file per analysis under <registry_root>/analyses/<analysis_id>.json. The flat catalogue analysis_registry.tsv is generated from these by lib/registry_index.py. Per SETS_AND_ANALYSES.md §'The analysis registry'.",
+  "type": "object",
+  "required": ["analysis_id", "analysis_version", "description", "inputs", "produces", "status"],
+  "additionalProperties": true,
+  "properties": {
+    "analysis_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Stable id. Convention: short lowercase tag (ngsrelate, ngspedigree, mendelian, fst_pairwise, theta_pi, ngsadmix_global, ngsadmix_local, hobs_windowed). Used 1:1 as analysis_result_v1.analysis_id and as action_manifest.type after the 'run_' prefix is stripped."
+    },
+    "analysis_version": {
+      "type": "string",
+      "description": "Semver-ish tag for the analysis definition itself (NOT the engine binary version — that's recorded per-result in provenance.engine_version). Bumping this invalidates older results catalogued under the older version."
+    },
+    "label": { "type": "string", "description": "Display label." },
+    "description": {
+      "type": "string",
+      "description": "One-paragraph: what does this analysis compute, what is the biological question, what does the output mean?"
+    },
+    "inputs": {
+      "type": "object",
+      "description": "What the analysis CONSUMES. Two kinds: 'sets' (entity sets the analysis runs against — sample set, site set, window set) and 'artifacts' (specific input layer types — beagle file, sites file, ngsRelate result for downstream steps).",
+      "required": ["sets", "artifacts"],
+      "additionalProperties": false,
+      "properties": {
+        "sets": {
+          "type": "array",
+          "description": "Required entity sets. Each entry names a role and the entity_type the role expects.",
+          "items": {
+            "type": "object",
+            "required": ["role", "entity_type"],
+            "additionalProperties": false,
+            "properties": {
+              "role":        { "type": "string", "description": "Role name within the analysis: 'samples', 'sites', 'windows', 'parents_only', etc." },
+              "entity_type": { "type": "string", "description": "Required entity_type for this role (per entity_type_v1)." },
+              "cardinality": { "type": "string", "enum": ["one", "two", "many"], "default": "one", "description": "How many sets of this role (e.g. fst_pairwise needs 'two' sample sets)." },
+              "required":    { "type": "boolean", "default": true }
+            }
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "description": "Required upstream layer types (each is a layer_envelope schema_version this analysis consumes as INPUT). E.g. ngsRelate needs a 'beagle_file_v1' artifact + a 'sites_file_v1' artifact.",
+          "items": {
+            "type": "object",
+            "required": ["role", "layer_type", "schema_version"],
+            "additionalProperties": false,
+            "properties": {
+              "role":           { "type": "string" },
+              "layer_type":     { "type": "string" },
+              "schema_version": { "type": "string" },
+              "required":       { "type": "boolean", "default": true }
+            }
+          }
+        }
+      }
+    },
+    "params_schema": {
+      "type": ["string", "null"],
+      "description": "Path to the schema_in/<analysis_id>_v<N>.schema.json that validates the params block of action manifests for this analysis. Null when no parameters."
+    },
+    "produces": {
+      "type": "array",
+      "description": "Output layer types this analysis emits. Each entry names the schema_out/ schema; matched 1:1 with action_manifest.expected_outputs.",
+      "items": {
+        "type": "object",
+        "required": ["layer_type", "schema_version"],
+        "additionalProperties": false,
+        "properties": {
+          "layer_type":     { "type": "string" },
+          "schema_version": { "type": "string" },
+          "stage":          { "type": "string", "enum": ["staging", "normalized"], "default": "normalized" }
+        }
+      }
+    },
+    "engine": {
+      "type": ["string", "null"],
+      "description": "Tag of the underlying compute engine (e.g. 'ngsRelate', 'ngsPedigree', 'angsd_patched', 'region_popstats', 'instant_q', 'ngsadmix'). Informational; the actual binary path comes from master_config.engines.<name>."
+    },
+    "engine_repo": {
+      "type": ["string", "null"],
+      "description": "Optional URL or path to the engine's source (e.g. 'unified_ancestry/engines/fst_dxy/region_popstats')."
+    },
+    "endpoint": {
+      "type": ["string", "null"],
+      "description": "Optional. If the analysis is fronted by an atlas_server.py HTTP endpoint, the path (e.g. '/api/popstats/groupwise'). Null for analyses that run via a non-HTTP runner."
+    },
+    "default_runner": {
+      "type": ["string", "null"],
+      "description": "Optional default runner module path (e.g. 'runners.ngsrelate.run'). Atlases may override in their actions.registry.json."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "experimental", "deprecated"],
+      "default": "active"
+    },
+    "requires": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Other analysis_ids whose outputs this analysis takes as artifacts (informational dependency hint; the actual upstream layer is in inputs.artifacts)."
+    },
+    "intended_use": {
+      "type": "string",
+      "description": "Free-form: 'family detection', 'kinship QC', 'population structure'."
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "notes": { "type": "string" }
+  },
+  "_examples": [
+    {
+      "_description": "ngsRelate definition.",
+      "analysis_id":     "ngsrelate",
+      "analysis_version":"v1",
+      "label":           "ngsRelate — pairwise relatedness from genotype likelihoods",
+      "description":     "Estimates pairwise relatedness coefficients (theta, IBS0/1/2, KING) from a BEAGLE genotype-likelihood file restricted to a sites file. Per-pair scores for all N×(N-1)/2 sample pairs.",
+      "inputs": {
+        "sets": [
+          { "role": "samples", "entity_type": "sample", "cardinality": "one" }
+        ],
+        "artifacts": [
+          { "role": "beagle", "layer_type": "beagle_file", "schema_version": "beagle_file_v1" },
+          { "role": "sites",  "layer_type": "sites_file",  "schema_version": "sites_file_v1"  }
+        ]
+      },
+      "params_schema":  "schema_in/run_ngsrelate_v1.schema.json",
+      "produces": [
+        { "layer_type": "ngsrelate_result", "schema_version": "ngsrelate_result_v1" }
+      ],
+      "engine":         "ngsRelate",
+      "engine_repo":    "https://github.com/ANGSD/NgsRelate",
+      "default_runner": "runners.ngsrelate.run",
+      "status":         "active",
+      "intended_use":   "kinship QC, family detection, pedigree input",
+      "created_at":     "2026-05-12T00:00:00Z"
+    },
+    {
+      "_description": "ngsPedigree definition (depends on an ngsrelate_result upstream).",
+      "analysis_id":     "ngspedigree",
+      "analysis_version":"v1",
+      "description":     "Builds the most-likely pedigree from a pairwise-relatedness matrix.",
+      "inputs": {
+        "sets": [ { "role": "samples", "entity_type": "sample" } ],
+        "artifacts": [
+          { "role": "relatedness", "layer_type": "ngsrelate_result", "schema_version": "ngsrelate_result_v1" }
+        ]
+      },
+      "produces": [
+        { "layer_type": "ngspedigree_result", "schema_version": "ngspedigree_result_v1" }
+      ],
+      "engine":         "ngsPedigree",
+      "default_runner": "runners.ngspedigree.run",
+      "requires":       ["ngsrelate"],
+      "status":         "active",
+      "created_at":     "2026-05-12T00:00:00Z"
+    },
+    {
+      "_description": "Mendelian inheritance check (depends on a pedigree).",
+      "analysis_id":     "mendelian",
+      "analysis_version":"v1",
+      "description":     "Per-trio Mendelian-error rate from genotype calls along the genome. Inputs: pedigree (trios) + BEAGLE / genotype likelihoods.",
+      "inputs": {
+        "sets": [ { "role": "samples", "entity_type": "sample" } ],
+        "artifacts": [
+          { "role": "pedigree", "layer_type": "ngspedigree_result", "schema_version": "ngspedigree_result_v1" },
+          { "role": "beagle",   "layer_type": "beagle_file",       "schema_version": "beagle_file_v1" }
+        ]
+      },
+      "produces": [
+        { "layer_type": "mendelian_result", "schema_version": "mendelian_result_v1" }
+      ],
+      "engine":         "ngsTract",
+      "requires":       ["ngspedigree"],
+      "status":         "active",
+      "created_at":     "2026-05-12T00:00:00Z"
+    },
+    {
+      "_description": "Pairwise FST via region_popstats.",
+      "analysis_id":     "fst_pairwise",
+      "analysis_version":"v1",
+      "description":     "Window-wise pairwise FST between TWO sample sets. Wraps region_popstats (the existing /api/popstats/groupwise endpoint).",
+      "inputs": {
+        "sets": [
+          { "role": "group_a",  "entity_type": "sample", "cardinality": "one" },
+          { "role": "group_b",  "entity_type": "sample", "cardinality": "one" },
+          { "role": "windows",  "entity_type": "window" }
+        ],
+        "artifacts": [
+          { "role": "beagle", "layer_type": "beagle_file", "schema_version": "beagle_file_v1" }
+        ]
+      },
+      "produces": [
+        { "layer_type": "fst_windows", "schema_version": "fst_windows_v1" }
+      ],
+      "engine":   "region_popstats",
+      "endpoint": "/api/popstats/groupwise",
+      "status":   "active",
+      "created_at":"2026-05-12T00:00:00Z"
+    }
+  ]
+}

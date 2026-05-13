@@ -1,0 +1,24 @@
+{
+  "analysis_id":      "mendelian",
+  "analysis_version": "v1",
+  "label":            "Mendelian inheritance check",
+  "description":      "Per-trio Mendelian-error rate along the genome. Inputs: pedigree (trios) + genotype likelihoods (BEAGLE).",
+  "inputs": {
+    "sets": [
+      { "role": "samples", "entity_type": "sample", "cardinality": "one" }
+    ],
+    "artifacts": [
+      { "role": "pedigree", "layer_type": "ngspedigree_result", "schema_version": "ngspedigree_result_v1" },
+      { "role": "beagle",   "layer_type": "beagle_file",        "schema_version": "beagle_file_v1" }
+    ]
+  },
+  "produces": [
+    { "layer_type": "mendelian_result", "schema_version": "mendelian_result_v1" }
+  ],
+  "engine":         "ngsTract",
+  "default_runner": "runners.mendelian.run",
+  "requires":       ["ngspedigree"],
+  "status":         "active",
+  "intended_use":   "QC trios; flag mis-assigned families",
+  "created_at":     "2026-05-12T00:00:00Z"
+}

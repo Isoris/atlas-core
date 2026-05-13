@@ -1,0 +1,160 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "set_v1.schema.json",
+  "title": "Set — named collection of entities of one type",
+  "description": "The general 'named collection of N things of the same kind' pattern. Generalizes the sample / group / interval registries: a sample set is a set with entity_type='sample'; a sites set is a set with entity_type='variant_site'; a window list is a set with entity_type='window'; etc. One JSON file per set under <registry_root>/sets/<entity_type>/<set_id>.json. The flat catalogue set_registry.tsv is generated from these by lib/registry_index.py. Per SETS_AND_ANALYSES.md §'The set registry'. Members are EITHER inline (small sets), a path to a file (large sets), or computed via derived_from (set algebra over parents). The set algebra (intersect / union / difference / filter / from_inline / from_set) is generic over entity_type — see lib/set_algebra.py.",
+  "type": "object",
+  "required": ["set_id", "entity_type", "status", "created_at"],
+  "additionalProperties": true,
+  "properties": {
+    "set_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+      "description": "Stable identifier. Convention: '<what>_<scope_tag>_v<N>' (e.g. 'sites_LG28_localpca_v1', 'samples_broodstock226_v1', 'windows_50kb_LG28_v1', 'candidates_D17_PASS_v1'). For content-hashed sample sets (per sample_set_v1.schema.json) the prefix is 'sset_' + hex hash."
+    },
+    "entity_type": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "What KIND of thing is in this set. Canonical values per entity_type_v1.schema.json: sample, variant_site, window, interval, inversion_candidate, breakpoint, gene, te_copy, marker, chromosome, scaffold, contig, bam, … Atlases may add their own."
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable display label."
+    },
+    "path": {
+      "type": "string",
+      "description": "Relative or absolute path to the file holding the members. Conventions per entity_type: .tsv / .tsv.gz with a known column schema (id-only, or id + coord, or full row). Optional when derived_from is present and the registry resolves members on demand."
+    },
+    "n_entities": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of members. Stored for fast filtering; should match the resolved member count."
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "sha256 of the canonical member representation (sorted ids, '\\n'-joined, newline-terminated, UTF-8). Same convention as lib/set_algebra.canonical_members(). Two sets that resolve to the same members share this hash; the inventory and lookup helpers use it for the (groups × analysis × samples × intervals) collapse."
+    },
+    "parent_set_id": {
+      "type": ["string", "null"],
+      "description": "Optional single-parent FK to another set (e.g. 'sites_LG28_localpca_v1' has parent 'snps_maf005_v1'). When the set was derived by a more complex op, use derived_from instead."
+    },
+    "derived_from": {
+      "type": ["object", "null"],
+      "description": "Set algebra lineage. Null/absent for atomic sets (members are inline or read from path). Same shape as sample_set_v1.derived_from but generalized — parents may be any set_id of any entity_type that makes sense for the op.",
+      "additionalProperties": false,
+      "required": ["op", "parents"],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": ["from_inline", "from_set", "intersect", "union", "difference", "filter"]
+        },
+        "parents": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "predicate": {
+          "type": ["string", "null"],
+          "description": "Only when op='filter'. Tag identifying the filter (e.g. 'maf>0.05', 'distance_to_breakpoint<50kb'). The atlas materializer applies it."
+        }
+      }
+    },
+    "filter_profile_id": {
+      "type": ["string", "null"],
+      "description": "Optional FK into a filter-profile registry (future) — captures e.g. 'broodstock_filter_v1', 'maf005_thin1k_v1'. Free-form for now."
+    },
+    "coordinate_system": {
+      "type": ["string", "null"],
+      "description": "Genome assembly / coordinate system this set is defined against (e.g. 'fClaHyb_Gar_LG_v1'). Required when entity_type is coordinate_aware; null for sample / bam / chromosome / etc."
+    },
+    "intended_use": {
+      "type": "string",
+      "description": "Free-form: 'population genomics', 'local PCA', 'breakpoint analysis', 'atlas review'. Helps the user remember why this set was registered."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "experimental", "deprecated", "stale", "superseded"],
+      "default": "active"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "_examples": [
+    {
+      "_description": "Sample set (functionally equivalent to a group_definition with dimension=trivial or to a sample_set_v1 with entity_type=sample).",
+      "set_id":       "samples_broodstock226_v1",
+      "entity_type":  "sample",
+      "label":        "Broodstock 226 — all sequenced individuals",
+      "path":         "sets/sample/broodstock226.tsv",
+      "n_entities":   226,
+      "hash":         "sha256:e9c0…",
+      "parent_set_id":"all_samples_v1",
+      "intended_use": "population genomics",
+      "status":       "active",
+      "created_at":   "2026-02-04T00:00:00Z"
+    },
+    {
+      "_description": "Sites set used for local PCA on LG28. Coordinate-aware.",
+      "set_id":          "sites_LG28_localpca_v1",
+      "entity_type":     "variant_site",
+      "label":           "LG28 sites — MAF≥0.05, thinned to 1 SNP / kb",
+      "path":            "sets/variant_site/LG28.localpca.sites.tsv.gz",
+      "n_entities":      48211,
+      "hash":            "sha256:42a8…",
+      "parent_set_id":   "snps_maf005_v1",
+      "filter_profile_id":"maf005_thin1k_v1",
+      "coordinate_system":"fClaHyb_Gar_LG_v1",
+      "intended_use":    "local PCA, scrubber landscape",
+      "status":          "active",
+      "created_at":      "2026-04-10T12:00:00Z"
+    },
+    {
+      "_description": "Window set — 50 kb tiles across LG28.",
+      "set_id":          "windows_LG28_50kb_v1",
+      "entity_type":     "window",
+      "label":           "LG28 50 kb tiling windows",
+      "path":            "sets/window/LG28.50kb.tsv",
+      "n_entities":      784,
+      "coordinate_system":"fClaHyb_Gar_LG_v1",
+      "intended_use":    "FST / theta windowed scans",
+      "status":          "active",
+      "created_at":      "2026-04-10T12:00:00Z"
+    },
+    {
+      "_description": "Inversion candidate set — D17 PASS cohort-level.",
+      "set_id":          "candidates_D17_PASS_v1",
+      "entity_type":     "inversion_candidate",
+      "label":           "D17 PASS inversions (cohort-level)",
+      "path":            "sets/inversion_candidate/D17_PASS.tsv",
+      "n_entities":      47,
+      "coordinate_system":"fClaHyb_Gar_LG_v1",
+      "intended_use":    "atlas review, manuscript Fig 2",
+      "status":          "active",
+      "created_at":      "2026-04-25T09:00:00Z"
+    },
+    {
+      "_description": "Gene set derived by filter — genes within 50 kb of any breakpoint.",
+      "set_id":          "genes_near_breakpoints_50kb_v1",
+      "entity_type":     "gene",
+      "label":           "Genes within 50 kb of an inversion breakpoint",
+      "n_entities":      312,
+      "derived_from":    {
+        "op": "filter",
+        "parents": ["genes_all_v1"],
+        "predicate": "distance_to_any_breakpoint_bp <= 50000"
+      },
+      "coordinate_system":"fClaHyb_Gar_LG_v1",
+      "intended_use":    "annotation context",
+      "status":          "experimental",
+      "created_at":      "2026-05-03T16:30:00Z"
+    }
+  ]
+}

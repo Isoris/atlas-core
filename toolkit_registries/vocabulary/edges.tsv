@@ -1,0 +1,25 @@
+from	to	kind	notes
+mendelian	inheritance_test	is_a	mendelian inheritance is one kind of inheritance test
+ngspedigree	mendelian	requires	mendelian-error test needs a pedigree upstream
+ngsrelate	ngspedigree	requires	pedigree reconstruction needs a relatedness matrix upstream
+ngsrelate	relatedness	is_a	ngsrelate is one implementation of pairwise relatedness
+king	relatedness	is_a	KING-robust is one estimator within relatedness
+theta	rab	alias	ngsRelate emits both columns; theta is the kinship coefficient
+pi	theta_pi	alias	"π" and "θπ" are the same thing in popgen vocab
+piN_piS	popstats	is_a	piN/piS is one product of the popstats analysis
+fst	popstats	is_a	pairwise FST is one product of popstats
+local_pca	structural_variant	requires	local PCA scan upstream of SV (inversion) detection
+d17	structural_variant	requires	D17 multi-pass scan upstream of inversion detection
+karyotype	inversion_candidate	requires	karyotype assignment is per-candidate
+old_lineage	roh	requires	"old lineage" signature combines ROH + heterozygosity + kinship
+old_lineage	heterozygosity	requires	low heterozygosity is part of the "old lineage" signature
+old_lineage	kinship	requires	family kinship is part of the "old lineage" signature
+old_families	old_lineage	alias	colloquial alias
+chr12	LG12	alias	cross-vocabulary alias (different naming conventions)
+hom_inv	karyotype	belongs_to	HOM_INV is a class within the karyotype dimension
+hom_ref	karyotype	belongs_to	HOM_REF is a class within the karyotype dimension
+het	karyotype	belongs_to	HET is a class within the karyotype dimension
+fst	popgen	belongs_to	FST is a popgen statistic
+roh	population_history	belongs_to	ROH is a population-history signature
+ngsrelate	relatedness	belongs_to	primary tool for the relatedness domain
+mendelian	inheritance	belongs_to	primary analysis in the inheritance domain

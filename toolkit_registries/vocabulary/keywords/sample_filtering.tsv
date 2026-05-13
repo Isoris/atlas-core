@@ -1,0 +1,13 @@
+term	level	maps_to_kind	maps_to	aliases	notes
+exclude	keyword	concept	set_difference	remove,not_from,without	subtract a sample set
+include	keyword	concept	set_intersection	only,restrict_to,among	restrict to a sample set
+not_from	keyword	concept	set_difference	excluding	semantic equivalent of "exclude"
+without	keyword	concept	set_difference	not_in	semantic equivalent of "exclude"
+unrelateds	concept	set_filter	kinship:unrelated	unrelated_samples	subset with no detected kinship
+related	keyword	set_filter	kinship:related	relatives	subset with kinship > threshold
+broodstock	keyword	set_filter	population:broodstock	broodstock_samples	broodstock-origin samples
+hatchery	keyword	set_filter	origin:hatchery	hatchery_samples	hatchery-origin samples
+wild	keyword	set_filter	origin:wild	wild_samples	wild-caught samples
+phenotype	concept	entity_type	phenotype_group	pheno_class	a phenotype-defined sample subset
+white_flesh	keyword	set_filter	phenotype:white_flesh	white_flesh_samples	example phenotype-defined subset
+ancestry_cluster	concept	entity_type	ancestry_class	ngsadmix_cluster	an NGSadmix Q-cluster-defined subset

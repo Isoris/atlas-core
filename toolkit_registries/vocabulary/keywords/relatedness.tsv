@@ -1,0 +1,16 @@
+term	level	maps_to_kind	maps_to	aliases	notes
+relatedness	concept	analysis_id	ngsrelate	kinship,pairwise_relatedness	pairwise relatedness from genotype likelihoods
+ngsrelate	registry_entry	analysis_id	ngsrelate		canonical tool name
+kinship	concept	analysis_id	ngsrelate	kin,relatedness	used interchangeably with relatedness
+king	concept	analysis_id	ngsrelate	king_robust	KING-robust estimator (ngsRelate emits the column)
+theta	concept	metric	theta	relatedness_theta	ngsRelate's theta column = relatedness coefficient
+ibs	concept	metric	ibs_concordance	ibs_state	identity-by-state class
+ibs0	keyword	metric	ibs0_count	ibs_0	ngsRelate IBS0 column
+ibs1	keyword	metric	ibs1_count	ibs_1	ngsRelate IBS1 column
+ibs2	keyword	metric	ibs2_count	ibs_2	ngsRelate IBS2 column
+ibd	concept	metric	ibd_segments	identity_by_descent	identity-by-descent
+rab	concept	metric	rab	r_ab	ngsRelate rab column (kinship coefficient)
+related	keyword	set_filter	kinship:related	relatives	samples in known relationships
+unrelated	keyword	set_filter	kinship:unrelated	unrelateds	samples with no detected kinship
+relatedness_matrix	concept	entity_type	relatedness_matrix	r_matrix	pairwise relatedness output (.res)
+res_file	keyword	entity_type	relatedness_matrix	dot_res,res	ngsRelate output file

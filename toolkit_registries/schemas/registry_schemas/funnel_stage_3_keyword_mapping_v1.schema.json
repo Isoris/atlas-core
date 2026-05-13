@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "funnel_stage_3_keyword_mapping_v1.schema.json",
+  "title": "Stage 3 — map human terms to controlled vocabulary (LLM call #2)",
+  "description": "Reads the decomposition (stage 1) + the keyword banks for the selected domains (stage 2) and emits a structured map: human term → registry concept (entity_type / analysis_id / set_filter / set_id_pattern / operation_type / metric / concept). Crucially: `maps_to` MUST be a value present in one of the loaded banks — no hallucinated ids. See LLM_FUNNEL_SPEC.md §6 for the locked prompt.",
+  "type": "object",
+  "required": ["stage", "mapped_terms"],
+  "additionalProperties": false,
+  "properties": {
+    "stage": { "type": "string", "const": "3_keyword_mapping" },
+    "mapped_terms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_term", "maps_to_kind", "maps_to"],
+        "additionalProperties": false,
+        "properties": {
+          "source_term":  { "type": "string", "description": "The human word from the decomposition that triggered this mapping." },
+          "role":         { "type": "string", "description": "Role within the analysis: target_interval, target_entity, test_type, exclusion_entity, required_statistic, etc." },
+          "maps_to_kind": { "type": "string",
+                            "enum": ["entity_type", "analysis_id", "set_filter", "set_id_pattern", "operation_type", "metric", "concept"] },
+          "maps_to":      { "type": "string", "description": "The controlled vocabulary id (from the banks)." },
+          "domain":       { "type": "string", "description": "Which bank fired this mapping. Empty when maps_to_kind=concept and the term spans domains." },
+          "confidence":   { "type": "string", "enum": ["high", "medium", "low"],
+                            "description": "high = accept as-is; medium = surfaces in a confirmation card; low = surfaces with multiple candidates the user picks from." }
+        }
+      }
+    },
+    "unmapped_terms": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Human terms the loaded banks didn't cover. Stage 4 will surface these as questions or as candidates for a new keyword-bank entry."
+    }
+  }
+}

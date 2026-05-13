@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "keyword_bank_row_v1.schema.json",
+  "title": "Keyword bank row — one term in a per-domain vocabulary TSV",
+  "description": "One row of a vocabulary/keywords/<domain>.tsv. The file's column order is pinned; the matcher in lib/vocabulary.py reads this format. See LLM_FUNNEL_SPEC.md §3 'The keyword banks'.",
+  "type": "object",
+  "required": ["term", "level", "maps_to_kind", "maps_to"],
+  "additionalProperties": false,
+  "properties": {
+    "term":         { "type": "string", "minLength": 1, "description": "Canonical surface word, lowercase preferred. Matched case-insensitively." },
+    "level":        { "type": "string", "enum": ["keyword", "concept", "registry_entry"],
+                       "description": "keyword=literal surface word; concept=controlled head; registry_entry=points at a specific live id." },
+    "maps_to_kind": { "type": "string",
+                       "enum": ["entity_type", "analysis_id", "set_filter", "set_id_pattern", "operation_type", "metric", "concept"] },
+    "maps_to":      { "type": "string", "minLength": 1,
+                       "description": "The target id / pattern. For set_filter use '<dimension>:<value>' (e.g. 'karyotype:HOM_INV'). For set_id_pattern use a glob ('sites_thin*_v1')." },
+    "aliases":      { "type": "string", "description": "Comma-separated alternates. Matcher queries this column too. Empty cell is fine." },
+    "notes":        { "type": "string", "description": "Free-form documentation; never used by the matcher." }
+  },
+  "_tsv_column_order": ["term", "level", "maps_to_kind", "maps_to", "aliases", "notes"],
+  "_tsv_empty_value": "Empty cells are zero-length strings (not 'NA' / '.')."
+}

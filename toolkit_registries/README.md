@@ -21,6 +21,8 @@ contract layer between them.
 | **schemas/registry_schemas/** | Core registry schemas. See breakdown below | active |
 | **schemas/structured_block_schemas/** | 41 per-aspect schemas for evidence blocks (boundary_refined, gene_cargo, mendelian, etc.) + `BK_KEYS_EXPLAINED.md` | draft; polished per-page during atlas migration |
 | **schemas/specs/** | 3 deeper specs: `INVERSION_REGISTRY_SPECIFICATION_v2.md`, `STRUCTURED_BLOCK_SCHEMAS.md`, `CHARACTERIZATION_CONVERGENCE_RULES.md` | canonical scientific contracts; no LANTA-API contamination |
+| **LLM_FUNNEL_SPEC.md** | Design spec for page 1's staged LLM resolver: free-text request → cleaned decomposition → domain selection → controlled keyword mapping → refinement Q&A → registry contract resolution. Two LLM calls (stages 1 & 3), three deterministic stages (2, 4, 5). | v1 design; not implemented yet |
+| **vocabulary/** | Controlled vocabulary for the LLM funnel — `domains.tsv` (Layer 0) + per-domain `keywords/*.tsv` (Layer 1) + `edges.tsv` (concept graph). 12 domains, ~90 starter terms across inheritance / relatedness / popgen / structural_variation / population_history / sample_filtering. | v1 data |
 
 ### registry_schemas/ breakdown
 

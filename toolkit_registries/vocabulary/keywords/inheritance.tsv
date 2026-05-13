@@ -1,0 +1,14 @@
+term	level	maps_to_kind	maps_to	aliases	notes
+mendelian	concept	analysis_id	mendelian	mendel,mendelian_check,inheritance_test,trio_check	per-trio inheritance check
+pedigree	concept	analysis_id	ngspedigree	ped,family_tree,pedigree_reconstruction	pedigree reconstruction from relatedness
+trio	concept	entity_type	pedigree_trio		parent-parent-offspring triple
+trio_check	keyword	analysis_id	mendelian	trio_qc,trio_validation	mendelian-error scan over trio
+segregation	concept	analysis_id	mendelian	mendelian_segregation	allele segregation through a trio
+transmission	concept	analysis_id	mendelian	transmission_distortion,tdt	parent→offspring transmission test
+inheritance	concept	concept	inheritance		domain-level concept; resolves via specific analyses
+family	concept	entity_type	family_group	families	collection of related samples
+parent	keyword	concept	parent	mother,father	one of two parents in a trio
+offspring	keyword	concept	offspring	child,son,daughter	non-parent member of a trio
+mendelian_error	keyword	metric	mendelian_error_rate	me_rate	count or rate of mendelian violations
+inheritance_compatible	keyword	set_filter	mendelian:pass	mendelian_pass	samples whose trios pass the mendelian check
+inheritance_incompatible	keyword	set_filter	mendelian:fail	mendelian_fail	samples whose trios fail the mendelian check

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "funnel_stage_2_domain_selection_v1.schema.json",
+  "title": "Stage 2 — domain selection",
+  "description": "Picks ≤4 domains from the controlled menu in vocabulary/domains.tsv so the next stage's prompt only ships those domains' keyword banks. Can be rule-based or LLM-assisted. See LLM_FUNNEL_SPEC.md §4.",
+  "type": "object",
+  "required": ["stage", "selected_domains"],
+  "additionalProperties": false,
+  "properties": {
+    "stage": { "type": "string", "const": "2_domain_selection" },
+    "selected_domains": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+      "minItems": 1,
+      "maxItems": 8,
+      "description": "Domain ids from vocabulary/domains.tsv. Order doesn't matter. Soft cap at 8 to bound the next-stage prompt size."
+    },
+    "rationale": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Optional per-domain one-line reason. Keys are domain ids. Useful for audit and replay."
+    }
+  }
+}

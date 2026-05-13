@@ -1,0 +1,13 @@
+term	level	maps_to_kind	maps_to	aliases	notes
+roh	concept	metric	roh_per_sample	runs_of_homozygosity	runs of homozygosity
+heterozygosity	concept	metric	heterozygosity_per_sample	het_rate,observed_het	per-sample heterozygosity
+ghsl	concept	metric	ghsl_score	genome_homozygosity_score	GHSL inbreeding/lineage score
+inbreeding	concept	metric	inbreeding_coefficient	f_coef,f_inbreeding	per-sample F
+founder_effect	concept	concept	founder_effect	founder	demographic feature; resolves via specific tests
+old_lineage	concept	set_filter	population_history:old_lineage	ancient_lineage,old_family	"old families" — high ROH + low het + family kinship
+old_family	keyword	set_filter	population_history:old_lineage	old_families,ancient_family,founder_lineage	classic signal for "founder" / "old" lineage
+old_families	keyword	set_filter	population_history:old_lineage	old_family	plural alias
+recent_mixed	keyword	set_filter	population_history:recent_mixed	recent_admixture	low ROH, high het, weak kinship — recently mixed
+demographic_inference	concept	analysis_id	psmc	demographic_history,psmc_history	PSMC and friends
+bottleneck	concept	concept	bottleneck	population_bottleneck	demographic feature
+population_thermometer	concept	analysis_id	population_thermometer	thermometer	composite score: ROH + heterozygosity + relatedness + GHSL

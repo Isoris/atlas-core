@@ -67,5 +67,28 @@
       "status": "failed",
       "qc_status": null
     }
+  },
+  {
+    "name": "region_popstats_v0_4",
+    "version": "0.4.1",
+    "family": "popstats",
+    "status": "stable",
+    "installed": true,
+    "ready": true,
+    "stale": false,
+    "stale_reason": null,
+    "parent": null,
+    "derivatives": [],
+    "conda_env_path": "~/.biomod/envs/default/conda/region_popstats_v0_4/",
+    "last_run": {
+      "run_id": "d4e5f6a7-89ab-23de-f012-456789013def",
+      "started_at": "2026-05-12T13:00:00Z",
+      "finished_at": "2026-05-12T13:08:00Z",
+      "runtime_seconds": 480,
+      "n_samples": 6,
+      "output_bytes": 12288,
+      "status": "success",
+      "qc_status": "pass"
+    }
   }
 ]

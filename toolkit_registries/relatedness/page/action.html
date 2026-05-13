@@ -126,6 +126,7 @@
   .summary .item strong { color: var(--fg); }
   .summary .item .pill { margin-left: 4px; }
 </style>
+<script defer src="previews.js"></script>
 </head>
 <body>
 
@@ -572,14 +573,14 @@ function renderSteps(chain, args) {
         ${ex ? `<span style="color:var(--muted);font-size:12px">→ <code>${ex.result_id}</code></span>` : ""}
       </div>
       <dl class="step-body">
-        <dt>sample_set</dt><dd>${c.sample_set_id || "—"}</dd>
-        <dt>group_set</dt><dd>${c.group_set_id || "—"}</dd>
-        <dt>interval_set</dt><dd>${c.interval_set_id || "—"}</dd>
-        <dt>site_set</dt><dd>${c.site_set_id || "—"}</dd>
-        <dt>input_value</dt><dd>${c.input_value_id || "—"}</dd>
-        ${c.input_result_id ? `<dt>input_result</dt><dd>${c.input_result_id}</dd>` : ""}
+        <dt>sample_set</dt><dd>${c.sample_set_id   ? `<span data-preview-table="sample_sets"      data-preview-id="${c.sample_set_id}">${c.sample_set_id}</span>`     : "—"}</dd>
+        <dt>group_set</dt><dd>${c.group_set_id    ? `<span data-preview-table="group_sets"       data-preview-id="${c.group_set_id}">${c.group_set_id}</span>`     : "—"}</dd>
+        <dt>interval_set</dt><dd>${c.interval_set_id ? `<span data-preview-table="interval_sets"    data-preview-id="${c.interval_set_id}">${c.interval_set_id}</span>` : "—"}</dd>
+        <dt>site_set</dt><dd>${c.site_set_id      ? `<span data-preview-table="site_sets"        data-preview-id="${c.site_set_id}">${c.site_set_id}</span>`       : "—"}</dd>
+        <dt>input_value</dt><dd>${c.input_value_id ? `<span data-preview-table="input_values"     data-preview-id="${c.input_value_id}">${c.input_value_id}</span>` : "—"}</dd>
+        ${c.input_result_id ? `<dt>input_result</dt><dd><span data-preview-table="analysis_results" data-preview-id="${c.input_result_id}">${c.input_result_id}</span></dd>` : ""}
         <dt>produces</dt><dd>${c.produces}</dd>
-        <dt>module</dt><dd>${(s.mode.module_name || "—") + (mod.row && mod.row.version ? "  @ " + mod.row.version : "")}${mod.row && mod.row.last_run_id ? `  · last_run=<code>${mod.row.last_run_id.slice(0,8)}…</code>` : ""}</dd>
+        <dt>module</dt><dd>${s.mode.module_name ? `<span data-preview-table="module_registry" data-preview-id="${s.mode.module_name}">${s.mode.module_name}</span>` : "—"}${mod.row && mod.row.version ? "  @ " + mod.row.version : ""}${mod.row && mod.row.last_run_id ? `  · last_run=<code>${mod.row.last_run_id.slice(0,8)}…</code>` : ""}</dd>
       </dl>
       ${recoBlock(s)}
     </div>`;
@@ -655,6 +656,7 @@ function resolveAndRender() {
 (async () => {
   try {
     await loadAll();
+    window.DB = DB;   // make registry tables available to previews.js for hover popovers
     populateForm();
     resolveAndRender();
     document.getElementById("footer").innerHTML =

@@ -69,7 +69,8 @@ relatedness/
     ├── resolve.py                             (mode-driven contract resolver)
     ├── register_result.py
     ├── sync_biomod_status.py                  (refresh module_registry.tsv from `biomod status --json`)
-    └── scan_results.py                        (walk a results dir, infer & propose analysis_results.tsv rows)
+    ├── scan_results.py                        (walk a results dir, infer & propose analysis_results.tsv rows)
+    └── scan_inputs.py                         (walk an inputs dir, infer & propose input_values.tsv rows — BEAGLE / dosage)
 ```
 
 ## Bulk-load existing results: `scan_results.py`
@@ -143,6 +144,68 @@ $ scan_results.py …                                  ← re-run
 0 new · 6 already registered · 0 blocked            ← idempotent
 ```
 
+## Bulk-load existing inputs: `scan_inputs.py`
+
+Symmetric counterpart to `scan_results.py` — walks an inputs tree
+looking for BEAGLE / dosage / SAF / VCF files and proposes
+`input_values.tsv` rows. Same dry-run-by-default semantics, same
+defaults JSON (uses the `inputs` section).
+
+```bash
+python3 scan_inputs.py \
+  --inputs-dir ../03_inputs \
+  --defaults    ../01_registry/scan_defaults.json [--apply]
+```
+
+For each BEAGLE file the scanner ALSO opens it and reads:
+- the **header row** → derives `n_sample_columns` (3 × n_samples for BEAGLE GL)
+- the **data row count** → `n_rows`
+
+so the proposed row is already shape-true before it lands. The
+contract-checker on page 2 will agree with what's on disk because the
+TSV was populated from the file itself.
+
+| File pattern         | value_type   | id prefix |
+|---|---|---|
+| `*.beagle.gz`        | `BEAGLE_GL`  | `beagle`  |
+| `*.beagle`           | `BEAGLE_GL`  | `beagle`  |
+| `*.dosage.tsv.gz`    | `dosage`     | `dosage`  |
+| `*.dosage.tsv`       | `dosage`     | `dosage`  |
+| `*.saf.idx`          | `SAF`        | `saf`     |
+| `*.vcf.gz`           | `VCF`        | `vcf`     |
+
+The `inputs.site_tag_for_chrom` map in `scan_defaults.json` shapes the
+`value_id`: a BEAGLE in `C_gar_LG28` with tag `LG28_thin500` becomes
+`beagle_LG28_thin500_v1`. Pre-existing ids are respected — the scanner
+auto-versions on collision.
+
+Smoke-tested:
+
+```
+$ scan_inputs.py --inputs-dir ../03_inputs --defaults ../01_registry/scan_defaults.json
+0 new · 2 already registered · 0 blocked            ← baseline
+
+$ # drop LG28.thin500.beagle.gz into ../03_inputs/beagle/
+$ scan_inputs.py … --apply
+✓ OK appended 1 row(s) → input_values.tsv
+                                              ← row populated with
+                                                n_rows=6, n_sample_cols=18,
+                                                sha256:ae642b238…
+
+$ scan_inputs.py …
+0 new · 3 already registered · 0 blocked            ← idempotent
+```
+
+Combined workflow for a fresh real workspace:
+
+```bash
+$EDITOR 01_registry/scan_defaults.json        # one-time wiring
+python3 scripts/scan_inputs.py  --inputs-dir  /mnt/e/.../beagle  --defaults … --apply
+python3 scripts/scan_results.py --results-dir /mnt/e/.../results --defaults … --apply
+python3 scripts/sync_biomod_status.py         # if biomod is on PATH
+python3 -m http.server -d . 8765              # → page 4 shows the live registry
+```
+
 ## Biomod bridge — what backs each analysis
 
 The atlas pages don't run modules; biomod does. `module_registry.tsv`
@@ -182,7 +245,75 @@ the tool, you don't have the inputs") or **`RUN_READY` + `mod_failed`**
 ("inputs are all set, but the tool crashed last time — investigate
 before rerunning").
 
-## The dashboard — three pages, one nav
+## The two manuscript paths — end-to-end stress test
+
+Both paths the manuscript needs are wired and exercised by
+`scripts/stress_test_paths.py`. The test takes one candidate (default
+`inv_LG28_INV_001`) + one sample set (`samples_226_v1`) and walks both
+chains through the full resolver → cache-check → dispatcher → register
+loop.
+
+```
+Path A — relatedness chain
+  candidate + karyotype groups
+       → ngsrelate / per_candidate     produces  relatedness_res
+       → ngspedigree / global          consumes  relatedness_res
+       → mendelian / per_candidate     consumes  pedigree_result + BEAGLE
+
+Path B — popstats chain
+  candidate + karyotype groups
+       → popstats / per_candidate      FST / dxy / piN / piS between karyotype groups
+```
+
+Run:
+
+```bash
+cd scripts
+python3 stress_test_paths.py              # dry walk-through (no execution)
+python3 stress_test_paths.py --dispatch   # also run stub runners + register rows
+```
+
+After one `--dispatch`, re-running shows all four steps as CACHE hits
+(`existing result_id = …`) — this is the "did we already do this?"
+short-circuit the resolver design depends on.
+
+What the stress test verifies, across both paths, in one run:
+
+| Registry / Mechanism | Verified by |
+|---|---|
+| group_registry → sample subsets | `groups_karyotype_inv_LG28_INV_001_v1` row, resolved via `family_karyotype` policy |
+| interval_registry → candidate scope | `inv_LG28_INV_001_v1`, resolved via `candidate_interval` policy |
+| site_registry → candidate-scoped sites | `sites_inv_LG28_INV_001_v1`, resolved via `candidate_sites` policy (parent=thin500_global, operation=intersect) |
+| input_values → matching BEAGLE | `beagle_inv_LG28_INV_001_v1`, resolved via `beagle_matching` policy |
+| analysis_registry → mode-driven contract | every `analysis_modes.tsv` row exercised by the resolver |
+| module_registry → biomod state | each step's required module shown by `module_registry.tsv` (page 4) |
+| **cache check** | per-step "do we already have this?" via `(analysis_type, sample_set, interval, site)` |
+| **chain inheritance** | step 2 of Path A pulls `input_result_id = ngsrelate_LG28_v2` from step 1's output |
+| **dispatcher → action endpoint contract** | `dispatcher.py` at the workspace root satisfies PR #3's `dispatch_action(manifest, context)` |
+
+## Runners (stubs today, swap for real binaries tomorrow)
+
+`scripts/runners/` ships four thin wrappers that share a common harness
+(`_base.py`). Each runner: reads the manifest's `target` to find input
+ids, calls a real binary OR writes a contract-true synthetic file in
+stub mode, then appends a row to `analysis_results.tsv`.
+
+| Runner | manifest.type | Stub output |
+|---|---|---|
+| `run_ngsrelate.py` | `run_ngsrelate` | `.res` with `a/b/nSites/theta/IBS0/IBS1/IBS2/KING` |
+| `run_ngspedigree.py` | `run_ngspedigree` | `.pedigree.tsv` with `offspring/parent1/parent2/likelihood` |
+| `run_mendelian.py` | `run_mendelian` | `.mendelian.tsv` with per-trio error rates |
+| `run_popstats.py` | `run_popstats` | `.popstats.tsv` with `chrom/start/end/n_sites/fst/dxy/piN/piS` |
+
+When you wire real binaries: open the runner, replace
+`real_executor=None` with a `subprocess.run([...])` call, and the
+stress test starts producing real outputs. The contract checker
+(`check_result_contract.py`) validates each new result identically.
+
+`dispatcher.py` at the workspace root routes manifests to the right
+runner by `manifest.type`. It satisfies the contract from PR #3 so the
+atlas server's `POST /api/actions` calls it automatically — no more
+"documentation mode" once you copy this folder into your real workspace.
 
 ## The most important command
 
@@ -328,7 +459,7 @@ them via the top nav.
 |---|---|---|
 | **1. Conversation** (`page/conversation.html`) | LLM-driven request resolver: free-text request → cleaned decomposition → controlled vocabulary → registry contracts → action plan. | **stub** — design only; deferred |
 | **2. Action** (`page/action.html`) | Readiness & routing dashboard. Pick a target analysis + scope; the page walks the chain backward through `analysis_modes.tsv` and shows each step's status: `RESULT_READY` (reuse), `RUN_READY`, `SPAWNABLE`, `BLOCKED`, `MISSING` (data side) + `mod_ready` / `mod_stale` / `mod_failed` / `mod_not_installed` / `mod_conceptual` (module side). **Does not run anything** — gatekeeper, not orchestrator. | **active** |
-| **3. Registries** (`page/index.html`) | Chain compatibility view. Wired ngsRelate → ngsPedigree → mendelian chains with green-light contracts; orphan results flagged "ready for X". | **active** |
+| **3. Registries** (`page/index.html`) | Chain compatibility view. Wired ngsRelate → ngsPedigree → mendelian chains with green-light contracts; orphan results flagged "ready for X". Click any brick → right sidebar slides in with the resolved contract, the backing biomod module, editable parameter overrides and a required `reason` → **Save as derivative** downloads a biomod recipe JSON (`schema_version: 0`, `parent: <name>@<version>`, `parent_overrides.{parameters, reason}`) ready for `biomod derive`. | **active** |
 | **4. Catalogue** (`page/catalogue.html`) | Browse every module and every analysis the registry knows about. Two tabs — **Modules** (from `module_registry.tsv`) shows each biomod module with its readiness + lineage arrows (which module feeds into it, which it feeds into); **Analyses** (from `analysis_modes.tsv`) shows each analysis_type/mode with its module FK, policies, required dimensions, produces. | **active** |
 
 Open them:

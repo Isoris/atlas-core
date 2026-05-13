@@ -63,10 +63,16 @@
     padding: 9px 12px;
     margin-bottom: 6px;
     position: relative;
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
   }
-  .step.ngsrelate    { border-color: var(--chain-ngsrelate); }
-  .step.ngspedigree  { border-color: var(--chain-ngspedigree); }
-  .step.mendelian    { border-color: var(--chain-mendelian); }
+  .step:hover  { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.08); }
+  .step:active { transform: translateY(0); }
+  .step.selected { box-shadow: 0 0 0 3px rgba(43,108,176,0.35); }
+  .step.ngsrelate    { border-color: var(--chain-ngsrelate);   background: rgba(47,133,90,0.04); }
+  .step.ngspedigree  { border-color: var(--chain-ngspedigree); background: rgba(44,122,123,0.04); }
+  .step.mendelian    { border-color: var(--chain-mendelian);   background: rgba(90,61,153,0.04); }
+  .step.popstats     { border-color: #b7791f;                  background: rgba(183,121,31,0.04); }
   .step.other        { border-color: var(--muted); }
 
   .step .ana {
@@ -78,6 +84,7 @@
   .step.ngsrelate    .ana { background: var(--chain-ngsrelate); }
   .step.ngspedigree  .ana { background: var(--chain-ngspedigree); }
   .step.mendelian    .ana { background: var(--chain-mendelian); }
+  .step.popstats     .ana { background: #b7791f; }
   .step.other        .ana { background: var(--muted); }
 
   .step .rid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -123,6 +130,84 @@
   .empty { padding: 30px; color: var(--muted); }
   .error { padding: 30px; color: var(--fail); }
   .footer { padding: 12px 24px; color: var(--muted); font-size: 11.5px; border-top: 1px solid var(--border); }
+
+  /* ------ brick-edit sidebar ------ */
+  .sidebar-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.18);
+    opacity: 0; pointer-events: none; transition: opacity 0.12s ease;
+    z-index: 50;
+  }
+  .sidebar-backdrop.open { opacity: 1; pointer-events: auto; }
+  .sidebar {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 420px; max-width: 95vw;
+    background: var(--bg-card); border-left: 1px solid var(--border);
+    box-shadow: -4px 0 14px rgba(0,0,0,0.08);
+    transform: translateX(100%); transition: transform 0.18s ease;
+    z-index: 51; display: flex; flex-direction: column;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-header {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 10px; flex-shrink: 0;
+  }
+  .sidebar-header .title { flex: 1; }
+  .sidebar-header .ana {
+    display: inline-block; padding: 1px 8px; border-radius: 3px;
+    color: white; font-size: 10.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .sidebar-header .module { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .sidebar-header .rid {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px; font-weight: 600; margin-top: 4px; word-break: break-all;
+  }
+  .sidebar-header .close {
+    border: none; background: transparent; cursor: pointer;
+    font-size: 18px; color: var(--muted); padding: 0 4px; line-height: 1;
+  }
+  .sidebar-header .close:hover { color: var(--fg); }
+  .sidebar-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
+  .sidebar-body h3 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--muted); margin: 14px 0 6px; font-weight: 600;
+  }
+  .sidebar-body h3:first-child { margin-top: 0; }
+  .contract-dl { display: grid; grid-template-columns: 90px 1fr; gap: 4px 10px; font-size: 12.5px; }
+  .contract-dl dt { color: var(--muted); }
+  .contract-dl dd {
+    margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; word-break: break-all;
+  }
+  .contract-dl dd.plain { font-family: inherit; font-size: 12.5px; }
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+  .field input, .field textarea {
+    width: 100%; box-sizing: border-box;
+    padding: 6px 8px; font-size: 12.5px;
+    border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg-card); color: var(--fg);
+    font-family: inherit;
+  }
+  .field textarea.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
+    min-height: 110px; resize: vertical;
+  }
+  .field .hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .field .invalid { color: var(--fail); }
+  .sidebar-footer {
+    padding: 12px 18px; border-top: 1px solid var(--border);
+    display: flex; gap: 8px; flex-shrink: 0;
+  }
+  .btn {
+    padding: 7px 12px; font-size: 12.5px; font-weight: 500;
+    border-radius: 4px; cursor: pointer; border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--fg);
+  }
+  .btn:hover { background: #f0f2f5; }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-primary:hover { background: #265a9a; }
+  .btn-primary:disabled { background: var(--muted); border-color: var(--muted); cursor: not-allowed; }
 
   .topnav { display: flex; gap: 0; background: #2d3748; }
   .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
@@ -170,6 +255,46 @@
 </section>
 
 <div class="footer" id="footer"></div>
+
+<!-- Brick-edit sidebar — populated by openBrick() in JS -->
+<div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+<aside class="sidebar" id="sidebar" role="dialog" aria-hidden="true" aria-label="Brick editor">
+  <div class="sidebar-header">
+    <div class="title">
+      <span class="ana" id="sb-ana"></span>
+      <div class="module" id="sb-module"></div>
+      <div class="rid" id="sb-rid"></div>
+    </div>
+    <button type="button" class="close" id="sb-close" aria-label="Close">×</button>
+  </div>
+  <div class="sidebar-body">
+    <h3>Resolved contract</h3>
+    <dl class="contract-dl" id="sb-contract"></dl>
+
+    <h3>Edit parameters</h3>
+    <div class="field">
+      <label for="sb-new-name">new module name</label>
+      <input type="text" id="sb-new-name" placeholder="e.g. ngsrelate_pairwise_v2_strict">
+    </div>
+    <div class="field">
+      <label for="sb-new-version">version</label>
+      <input type="text" id="sb-new-version" value="0.1.0">
+    </div>
+    <div class="field">
+      <label for="sb-params">parameter overrides (JSON)</label>
+      <textarea id="sb-params" class="mono" spellcheck="false" placeholder='{"min_maf": 0.05}'>{}</textarea>
+      <div class="hint" id="sb-params-hint">Only the overrides — biomod merges these on top of the parent's params.</div>
+    </div>
+    <div class="field">
+      <label for="sb-reason">reason for derivative (required)</label>
+      <textarea id="sb-reason" placeholder="Why does this derivative exist? Be specific — this is the only provenance biomod records." rows="3"></textarea>
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <button type="button" class="btn" id="sb-copy">Copy JSON</button>
+    <button type="button" class="btn btn-primary" id="sb-save" disabled>Save as derivative</button>
+  </div>
+</aside>
 
 <script>
 // ===== TSV loader =================================================== //
@@ -377,7 +502,7 @@ function stepCard(r) {
 
   const pv = (tbl, id) => id ? `<span data-preview-table="${tbl}" data-preview-id="${id}">${id}</span>` : "—";
   return `
-    <div class="step ${cls}">
+    <div class="step ${cls}" data-brick-rid="${r.result_id}" tabindex="0" role="button" aria-label="Edit ${r.analysis_type} brick">
       <div class="ana">${r.analysis_type}</div>
       <div class="rid" data-preview-table="analysis_results" data-preview-id="${r.result_id}">${r.result_id}</div>
       <div class="meta">
@@ -508,6 +633,220 @@ function populateFilters() {
 
 document.getElementById("filter-sample").addEventListener("input", applyFilters);
 document.getElementById("filter-interval").addEventListener("input", applyFilters);
+
+// ===== Brick-edit sidebar ============================================= //
+// Click a chain brick → resolve its full contract + the biomod module
+// behind it → let the user override parameters and download a biomod
+// derivative recipe (parent + parent_overrides.{parameters,reason}).
+// No server calls. The downloaded JSON is what `biomod derive` consumes.
+
+let CURRENT_BRICK = null;
+
+function _txt(s) { return (s === undefined || s === null) ? "" : String(s); }
+
+function renderContractDL(r) {
+  const mod = moduleStatusForAnalysisType(r.analysis_type);
+  const moduleRow = mod && mod.row;
+  const fields = [
+    ["analysis_type", r.analysis_type],
+    ["sample_set",    r.sample_set_id],
+    ["group_set",     r.group_set_id],
+    ["interval_set",  r.interval_set_id],
+    ["site_set",      r.site_set_id],
+    ["input_value",   r.input_value_id],
+    ["input_result",  r.input_result_id],
+    ["method_id",     r.method_id],
+    ["params_id",     r.params_id],
+    ["path",          r.path],
+    ["hash",          r.hash],
+    ["status",        r.status],
+    ["created_at",    r.created_at],
+    ["notes",         r.notes],
+  ];
+  const moduleLine = moduleRow
+    ? `${moduleRow.module_name} ${moduleRow.version} · ${moduleRow.family}`
+    : (mod ? `${mod.module_name} (not in module_registry)` : "(no module wired)");
+  const parts = [`<dt>module</dt><dd class="plain">${_txt(moduleLine)}</dd>`];
+  for (const [k, v] of fields) {
+    if (!v) continue;
+    parts.push(`<dt>${k}</dt><dd>${_txt(v)}</dd>`);
+  }
+  document.getElementById("sb-contract").innerHTML = parts.join("");
+  return moduleRow;
+}
+
+function openBrick(rid) {
+  const r = DB.analysis_results.by[rid];
+  if (!r) return;
+  CURRENT_BRICK = r;
+
+  // Mark which brick is selected.
+  document.querySelectorAll(".step.selected").forEach(el => el.classList.remove("selected"));
+  document.querySelectorAll(`.step[data-brick-rid="${rid}"]`).forEach(el => el.classList.add("selected"));
+
+  const cls = classFor(r.analysis_type);
+  const sb = document.getElementById("sidebar");
+  sb.classList.remove("ngsrelate", "ngspedigree", "mendelian", "popstats", "other");
+  sb.classList.add(cls);
+
+  const ana = document.getElementById("sb-ana");
+  ana.textContent = r.analysis_type;
+  ana.style.background = ({
+    ngsrelate:   "var(--chain-ngsrelate)",
+    ngspedigree: "var(--chain-ngspedigree)",
+    mendelian:   "var(--chain-mendelian)",
+    popstats:    "#b7791f",
+    other:       "var(--muted)",
+  })[cls];
+
+  document.getElementById("sb-rid").textContent = r.result_id;
+
+  const moduleRow = renderContractDL(r);
+  const mod = moduleStatusForAnalysisType(r.analysis_type);
+  const modLabel = mod
+    ? (moduleRow ? `module: ${moduleRow.module_name} ${moduleRow.version}` : `module: ${mod.module_name} (conceptual)`)
+    : "module: (none wired)";
+  document.getElementById("sb-module").textContent = modLabel;
+
+  // Suggest a derivative name. User can edit.
+  const parentName = moduleRow ? moduleRow.module_name : (mod ? mod.module_name : r.analysis_type);
+  document.getElementById("sb-new-name").value = `${parentName}_derived`;
+  document.getElementById("sb-new-version").value = "0.1.0";
+  document.getElementById("sb-params").value = "{}";
+  document.getElementById("sb-reason").value = "";
+  document.getElementById("sb-params-hint").classList.remove("invalid");
+  document.getElementById("sb-params-hint").textContent =
+    "Only the overrides — biomod merges these on top of the parent's params.";
+  document.getElementById("sb-save").disabled = true;
+
+  document.getElementById("sidebar-backdrop").classList.add("open");
+  sb.classList.add("open");
+  sb.setAttribute("aria-hidden", "false");
+}
+
+function closeBrick() {
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("sidebar").setAttribute("aria-hidden", "true");
+  document.getElementById("sidebar-backdrop").classList.remove("open");
+  document.querySelectorAll(".step.selected").forEach(el => el.classList.remove("selected"));
+  CURRENT_BRICK = null;
+}
+
+function buildDerivativeRecipe() {
+  if (!CURRENT_BRICK) return null;
+  const name = document.getElementById("sb-new-name").value.trim();
+  const version = document.getElementById("sb-new-version").value.trim() || "0.1.0";
+  const reason = document.getElementById("sb-reason").value.trim();
+  const paramsRaw = document.getElementById("sb-params").value.trim() || "{}";
+
+  let params;
+  try { params = JSON.parse(paramsRaw); }
+  catch (e) { return { error: `parameter overrides not valid JSON: ${e.message}` }; }
+  if (typeof params !== "object" || Array.isArray(params) || params === null) {
+    return { error: "parameter overrides must be a JSON object." };
+  }
+
+  const mod = moduleStatusForAnalysisType(CURRENT_BRICK.analysis_type);
+  const moduleRow = mod && mod.row;
+  const parentName = moduleRow ? moduleRow.module_name : (mod ? mod.module_name : CURRENT_BRICK.analysis_type);
+  const parentVersion = moduleRow ? moduleRow.version : null;
+  const family = moduleRow ? moduleRow.family : "unknown";
+
+  const recipe = {
+    schema_version: 0,
+    name,
+    version,
+    family,
+    description: `Derivative of ${parentName} created from ${CURRENT_BRICK.result_id}.`,
+    parent: parentVersion ? `${parentName}@${parentVersion}` : parentName,
+    parent_overrides: {
+      parameters: params,
+      reason,
+    },
+    _provenance: {
+      derived_from_result: CURRENT_BRICK.result_id,
+      derived_from_analysis_type: CURRENT_BRICK.analysis_type,
+      derived_at: new Date().toISOString(),
+    },
+  };
+  return { recipe };
+}
+
+function validateForm() {
+  const name = document.getElementById("sb-new-name").value.trim();
+  const reason = document.getElementById("sb-reason").value.trim();
+  const paramsRaw = document.getElementById("sb-params").value.trim() || "{}";
+  const hint = document.getElementById("sb-params-hint");
+  let paramsOk = true;
+  try { const v = JSON.parse(paramsRaw); if (typeof v !== "object" || Array.isArray(v) || v === null) paramsOk = false; }
+  catch (e) { paramsOk = false; }
+  if (paramsOk) {
+    hint.classList.remove("invalid");
+    hint.textContent = "Only the overrides — biomod merges these on top of the parent's params.";
+  } else {
+    hint.classList.add("invalid");
+    hint.textContent = "Not valid JSON object — fix this before saving.";
+  }
+  document.getElementById("sb-save").disabled = !(name && reason && paramsOk);
+}
+
+function saveDerivative() {
+  const res = buildDerivativeRecipe();
+  if (!res || res.error) { alert(res ? res.error : "no brick selected"); return; }
+  const blob = new Blob([JSON.stringify(res.recipe, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${res.recipe.name}.recipe.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function copyDerivative() {
+  const res = buildDerivativeRecipe();
+  if (!res || res.error) { alert(res ? res.error : "no brick selected"); return; }
+  const text = JSON.stringify(res.recipe, null, 2);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => { const b = document.getElementById("sb-copy"); const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1200); },
+      () => alert("Copy failed — your browser blocked clipboard access. Use Save instead.")
+    );
+  } else {
+    alert("Clipboard not available. Use Save instead.");
+  }
+}
+
+document.getElementById("sb-close").addEventListener("click", closeBrick);
+document.getElementById("sidebar-backdrop").addEventListener("click", closeBrick);
+document.getElementById("sb-save").addEventListener("click", saveDerivative);
+document.getElementById("sb-copy").addEventListener("click", copyDerivative);
+for (const id of ["sb-new-name", "sb-reason", "sb-params"]) {
+  document.getElementById(id).addEventListener("input", validateForm);
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && document.getElementById("sidebar").classList.contains("open")) closeBrick();
+});
+
+// Delegated brick click — survives chain re-renders.
+document.addEventListener("click", (e) => {
+  const brick = e.target.closest(".step[data-brick-rid]");
+  if (!brick) return;
+  // Ignore clicks on the preview-id span — that's for the hover popover.
+  if (e.target.closest("[data-preview-id]") && e.target.closest("[data-preview-id]") !== brick) {
+    // Inner preview span clicked — still open the sidebar; previews are hover-only.
+  }
+  openBrick(brick.getAttribute("data-brick-rid"));
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const el = document.activeElement;
+  if (el && el.classList && el.classList.contains("step") && el.dataset.brickRid) {
+    e.preventDefault();
+    openBrick(el.dataset.brickRid);
+  }
+});
 
 (async () => {
   await loadAll();

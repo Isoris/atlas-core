@@ -197,6 +197,62 @@ For chained analyses (ngspedigree consumes a relatedness_res), use
 (sample_set, group_set, interval_set, site_set) from the upstream row.
 No re-typing.
 
+## The dashboard — three pages, one nav
+
+The atlas-core dashboard. Open any of the three pages, click between
+them via the top nav.
+
+| Page | What it does | Status |
+|---|---|---|
+| **1. Conversation** (`page/conversation.html`) | LLM-driven request resolver: free-text request → cleaned decomposition → controlled vocabulary → registry contracts → action plan. | **stub** — design only; deferred per your direction |
+| **2. Action** (`page/action.html`) | Readiness & routing dashboard. Pick a target analysis + scope; the page walks the chain backward through `analysis_modes.tsv` and shows each step's status: `RESULT_READY` (reuse), `RUN_READY`, `SPAWNABLE`, `BLOCKED`, `MISSING`. **Does not run anything** — it's a gatekeeper that tells you what to reuse, what's run-ready, and what's blocked. | **active** |
+| **3. Registries** (`page/index.html`) | Chain compatibility view. Shows wired ngsRelate → ngsPedigree → mendelian chains with green-light contracts, plus orphan results flagged "ready for X" when a downstream analysis is compatible. | **active** |
+
+Open them:
+
+```bash
+python3 -m http.server -d toolkit_registries/relatedness 8765
+# → http://127.0.0.1:8765/page/action.html
+# → http://127.0.0.1:8765/page/index.html
+# → http://127.0.0.1:8765/page/conversation.html
+```
+
+### What page 2 (Action) shows
+
+For the synthetic example, picking **mendelian / per_candidate** with
+`samples_226_v1`, `chromosome=C_gar_LG12`, `candidate_id=LG12_INV_001`:
+
+```
+step 1 of 3   ngsrelate / per_chromosome    [RESULT_READY]  → ngsrelate_LG12_v1
+                                            (reuse — output exists & matches contract)
+
+step 2 of 3   ngspedigree / global          [RUN_READY]
+                                            inputs all resolved; suggests register_result.py
+                                            cmdline to register the new pedigree
+
+step 3 of 3   mendelian / per_candidate     [MISSING]  no candidate_set, candidate_interval policy
+                                            needs --candidate-id LG12_INV_001 → resolves
+                                            (and the page UPDATES live as you tweak the form)
+```
+
+A summary row at the top shows the overall counts:
+**1 RESULT_READY · 1 RUN_READY · 1 MISSING**.
+
+### The readiness ladder (page 2 status vocabulary)
+
+| Status | Meaning | Recommended action |
+|---|---|---|
+| `RESULT_READY`  | Output already exists, matches the requested contract  | REUSE — copy `result_id` |
+| `RUN_READY`     | All inputs resolved, no existing output                | RUN — page emits the `register_result.py` command line |
+| `SPAWNABLE`     | Inputs missing but derivable from registered sets       | SPAWN inputs first |
+| `DATA_READY`    | Inputs exist but checks not yet run                     | run `check_*` scripts |
+| `BLOCKED`       | A policy has multiple matches OR existing result conflicts | DISAMBIGUATE — page lists candidates |
+| `MISSING`       | A required dimension or input is missing AND not spawnable | REGISTER the missing input |
+| `CONCEPTUAL`    | Module known to LLM but not registered                  | wire the module |
+
+The page does NOT run anything. It tells you what to reuse, what's
+run-ready, and what's blocked.
+
 ## The page — open and see the chains
 
 A single-file HTML viewer at `page/index.html`. Loads the six TSVs

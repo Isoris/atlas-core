@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "analysis_modes_row.schema.json",
+  "title": "analysis_modes.tsv row — what an analysis needs and how to default the rest",
+  "description": "One row per (analysis_type × mode). Tells the resolver: 'for analysis A in mode M, the user must supply these required_dimensions; everything else is filled by the named policies'. The policies are short tags that resolve.py knows how to match against the six registries (e.g. site_policy='thin500_per_chr' looks for a site_set with parent='thin500_global' and interval_set covering the requested chromosome).",
+  "type": "object",
+  "required": ["analysis_type", "mode", "required_dimensions", "produces"],
+  "additionalProperties": false,
+  "properties": {
+    "analysis_type":       { "type": "string", "description": "ngsrelate | ngspedigree | mendelian | ngsadmix | …" },
+    "mode":                { "type": "string", "description": "genome_wide | per_chromosome | per_candidate | global | …" },
+    "label":               { "type": "string" },
+    "required_dimensions": { "type": "string", "description": "Comma-separated list of dimensions the USER must supply. e.g. 'sample_set,chromosome'. The resolver fills the rest from policies." },
+    "interval_policy":     { "type": "string", "description": "Tag the resolver matches against interval_sets. Recognized: genome_all, chromosome_full, candidate_interval, same_as_input." },
+    "site_policy":         { "type": "string", "description": "Tag matched against site_sets. Recognized: thin500_global, thin500_per_chr, candidate_sites, karyotype_calls, same_as_input." },
+    "group_policy":        { "type": "string", "description": "Tag matched against group_sets. Recognized: family_population, family_karyotype, optional_groups, same_as_input." },
+    "value_policy":        { "type": "string", "description": "Tag matched against input_values. Default: BEAGLE matching the resolved (sample_set, site_set, interval_set). Recognized: beagle_matching, none." },
+    "produces":            { "type": "string", "description": "Output kind tag (e.g. 'relatedness_res', 'pedigree_result', 'mendelian_result'). Used to chain modes (ngspedigree.required_dimensions includes 'ngsrelate_result' which means 'a previous analysis_results row whose produces == relatedness_res')." },
+    "notes":               { "type": "string" }
+  },
+  "_tsv_column_order": ["analysis_type", "mode", "label", "required_dimensions", "interval_policy", "site_policy", "group_policy", "value_policy", "produces", "notes"]
+}

@@ -15,6 +15,7 @@ WHERE     interval_sets.tsv    one row per coordinate scope
 WHICH     site_sets.tsv        one row per variant-site list (thinned, filtered)
 WHAT-IN   input_values.tsv     one row per BEAGLE / dosage / SAF / VCF
 WHAT-OUT  analysis_results.tsv one row per ngsRelate / ngsPedigree / mendelian / … run
+HOW       analysis_modes.tsv   one row per (analysis × mode); the resolver's brain
 ```
 
 Every WHAT-OUT row points at WHO + LABELS + WHERE + WHICH + WHAT-IN
@@ -57,6 +58,7 @@ relatedness/
     ├── check_beagle_rows_vs_sites.py
     ├── check_group_samples_vs_sample_set.py
     ├── check_result_contract.py               (the master check)
+    ├── resolve.py                             (mode-driven contract resolver)
     └── register_result.py
 ```
 
@@ -124,6 +126,76 @@ python3 register_result.py \
 
 Every script accepts `--registry-root <PATH>` to override; otherwise
 they walk upward looking for `01_registry/`.
+
+## The resolver — let the registry do the thinking
+
+You don't want to remember which sample_set + which thin500 + which BEAGLE
+goes with which chromosome. `analysis_modes.tsv` + `resolve.py` do that:
+
+```bash
+# "Run ngsRelate on chromosome 12 for the 226 samples."
+python3 resolve.py --analysis ngsrelate --mode per_chromosome \
+                   --sample-set samples_226_v1 --chromosome C_gar_LG12
+```
+
+Output:
+
+```
+=== contract ===
+  analysis_type       ngsrelate
+  mode                per_chromosome
+  sample_set_id       samples_226_v1
+  group_set_id        groups_main_v1
+  interval_set_id     C_gar_LG12_full_v1
+  site_set_id         sites_LG12_thin500_v1
+  input_value_id      beagle_LG12_thin500_v1
+  produces            relatedness_res
+
+STATUS: ✓ OK  ready to run
+```
+
+The resolver walked `analysis_modes.tsv` to find the row for
+`ngsrelate / per_chromosome`, then applied its policies:
+
+| policy            | tag                | how it resolves |
+|---|---|---|
+| `interval_policy` | `chromosome_full`  | finds an interval_set with `interval_type=chromosome` containing the requested chrom |
+| `site_policy`     | `thin500_per_chr`  | finds the site_set whose name contains `thin500` AND whose `interval_set_id` matches |
+| `group_policy`    | `family_population`| finds the group_set whose `group_columns` contain both `family` and `population` |
+| `value_policy`    | `beagle_matching`  | finds the BEAGLE input_value whose `(sample_set_id, site_set_id, interval_set_id)` triple matches |
+
+Add `--explain` to see each step. Add `--emit-register-cmd` to also
+print a `register_result.py` invocation skeleton.
+
+When a policy has multiple valid matches, the resolver REFUSES to guess —
+it lists the candidates and asks you to pick:
+
+```
+STATUS: ⚠ WARN  ambiguous policy match — pick one explicitly:
+  • site_policy='thin500_per_chr': … — candidates: [sites_LG12_thin500_v1, sites_LG12_thin1000_v1]
+```
+
+When a required dimension is missing, it fails fast:
+
+```
+STATUS: ✗ FAIL  missing inputs:
+  • required dimension 'chromosome' not provided (use --chromosome)
+```
+
+Modes wired today (`01_registry/analysis_modes.tsv`):
+
+| analysis_type | mode             | required             | produces           |
+|---|---|---|---|
+| ngsrelate     | genome_wide      | sample_set           | relatedness_res    |
+| ngsrelate     | per_chromosome   | sample_set,chromosome| relatedness_res    |
+| ngsrelate     | per_candidate    | sample_set,candidate_id | relatedness_res |
+| ngspedigree   | global           | ngsrelate_result     | pedigree_result    |
+| mendelian     | per_candidate    | candidate_id,pedigree_result | mendelian_result |
+
+For chained analyses (ngspedigree consumes a relatedness_res), use
+`--ngsrelate-result <id>` and the resolver INHERITS the contract
+(sample_set, group_set, interval_set, site_set) from the upstream row.
+No re-typing.
 
 ## How to use this in your real workspace
 

@@ -1,0 +1,6 @@
+analysis_type	mode	label	required_dimensions	interval_policy	site_policy	group_policy	value_policy	produces	notes
+ngsrelate	genome_wide	ngsRelate genome-wide	sample_set	genome_all	thin500_global	family_population	beagle_matching	relatedness_res	global relatedness; family QC
+ngsrelate	per_chromosome	ngsRelate per-chromosome	sample_set,chromosome	chromosome_full	thin500_per_chr	family_population	beagle_matching	relatedness_res	chromosome-specific relatedness signal
+ngsrelate	per_candidate	ngsRelate per-candidate	sample_set,candidate_id	candidate_interval	candidate_sites	family_karyotype	beagle_matching	relatedness_res	local relatedness inside an inversion candidate
+ngspedigree	global	ngsPedigree from genome-wide ngsRelate	ngsrelate_result	same_as_input	same_as_input	same_as_input	none	pedigree_result	pedigree built from a genome-wide relatedness_res
+mendelian	per_candidate	Mendelian inheritance per candidate	candidate_id,pedigree_result	candidate_interval	candidate_sites	family_karyotype	beagle_matching	mendelian_result	per-trio mendelian-error rate inside a candidate; consumes a pedigree

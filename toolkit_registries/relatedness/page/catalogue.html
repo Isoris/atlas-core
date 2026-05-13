@@ -93,6 +93,7 @@
   .error { padding: 30px; color: var(--fail); }
   .footer { padding: 12px 24px; color: var(--muted); font-size: 11.5px; border-top: 1px solid var(--border); }
 </style>
+<script defer src="previews.js"></script>
 </head>
 <body>
 
@@ -252,16 +253,17 @@ function renderModuleCard(m) {
     ? modes.map(mo => `<span class="chip">${mo.analysis_type}/${mo.mode}</span>`).join("")
     : `<span style="color:var(--muted)">(no analysis_modes row references this module yet)</span>`;
 
+  const modCode = (name) => `<code data-preview-table="module_registry" data-preview-id="${name}">${name}</code>`;
   const lineage = (ups.length || downs.length) ? `<div class="lineage">
-    ${ups.map(u => `<span><code>${u.module}</code> <span class="arrow">→</span></span>`).join("")}
-    <code style="font-weight:600">${m.module_name}</code>
-    ${downs.map(d => `<span><span class="arrow">→</span> <code>${d.module}</code></span>`).join("")}
+    ${ups.map(u => `<span>${modCode(u.module)} <span class="arrow">→</span></span>`).join("")}
+    <code style="font-weight:600" data-preview-table="module_registry" data-preview-id="${m.module_name}">${m.module_name}</code>
+    ${downs.map(d => `<span><span class="arrow">→</span> ${modCode(d.module)}</span>`).join("")}
   </div>` : "";
 
   return `
     <div class="card ${cls}">
       <div class="head">
-        <span class="name">${m.module_name}</span>
+        <span class="name" data-preview-table="module_registry" data-preview-id="${m.module_name}">${m.module_name}</span>
         <span class="meta">v${m.version} · family=${m.family} · biomod_status=${m.biomod_status || "?"}</span>
         <span class="pill">${label}</span>
       </div>
@@ -359,6 +361,12 @@ document.getElementById("filter").addEventListener("input", applyFilter);
 (async () => {
   try {
     await loadAll();
+    // Expose standard-shape DB for previews.js (hover popovers)
+    window.DB = {
+      module_registry: { rows: DB.modules, by: DB.moduleBy },
+      analysis_modes:  { rows: DB.modes },
+      modules:  DB.modules, modes: DB.modes, moduleBy: DB.moduleBy,
+    };
     document.getElementById("count-modules").textContent  = `(${DB.modules.length})`;
     document.getElementById("count-analyses").textContent = `(${DB.modes.length})`;
     applyFilter();

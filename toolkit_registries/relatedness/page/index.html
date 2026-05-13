@@ -132,6 +132,7 @@
   .topnav a.current .num { color: rgba(255,255,255,0.65); }
   .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
 </style>
+<script defer src="previews.js"></script>
 </head>
 <body>
 
@@ -374,16 +375,17 @@ function stepCard(r) {
   const ready    = readyFor.map(c => `<span class="badge ready-for">ready for ${c}</span>`).join("");
   const failBadge = !cs.ok ? `<span class="badge contract-fail">${cs.why}</span>` : "";
 
+  const pv = (tbl, id) => id ? `<span data-preview-table="${tbl}" data-preview-id="${id}">${id}</span>` : "—";
   return `
     <div class="step ${cls}">
       <div class="ana">${r.analysis_type}</div>
-      <div class="rid">${r.result_id}</div>
+      <div class="rid" data-preview-table="analysis_results" data-preview-id="${r.result_id}">${r.result_id}</div>
       <div class="meta">
-        <div><span class="k">samples</span> ${r.sample_set_id || "—"}</div>
-        <div><span class="k">interval</span> ${r.interval_set_id || "—"}</div>
-        <div><span class="k">sites</span> ${r.site_set_id || "—"}</div>
-        <div><span class="k">value</span> ${r.input_value_id || "—"}</div>
-        ${r.input_result_id ? `<div><span class="k">input_result</span> ${r.input_result_id}</div>` : ""}
+        <div><span class="k">samples</span> ${pv("sample_sets",  r.sample_set_id)}</div>
+        <div><span class="k">interval</span> ${pv("interval_sets",r.interval_set_id)}</div>
+        <div><span class="k">sites</span> ${pv("site_sets",    r.site_set_id)}</div>
+        <div><span class="k">value</span> ${pv("input_values", r.input_value_id)}</div>
+        ${r.input_result_id ? `<div><span class="k">input_result</span> ${pv("analysis_results", r.input_result_id)}</div>` : ""}
       </div>
       <div>${upstream}${ready}${failBadge}${moduleBadge(r.analysis_type)}</div>
     </div>`;
@@ -454,13 +456,17 @@ function renderTable(filtered) {
     if (!cs.ok) compat.push(`<span class="badge contract-fail">${cs.why}</span>`);
     const mb = moduleBadge(r.analysis_type);
     if (mb) compat.push(mb);
+    const cellPV = (tbl, id) => id ? `<td class="code" data-preview-table="${tbl}" data-preview-id="${id}">${id}</td>` : `<td class="code"></td>`;
+    const valueOrUpstream = r.input_value_id
+      ? cellPV("input_values", r.input_value_id)
+      : (r.input_result_id ? cellPV("analysis_results", r.input_result_id) : `<td class="code"></td>`);
     html += `<tr>
-      <td class="code">${r.result_id}</td>
+      ${cellPV("analysis_results", r.result_id)}
       <td>${r.analysis_type}</td>
-      <td class="code">${r.sample_set_id || ""}</td>
-      <td class="code">${r.interval_set_id || ""}</td>
-      <td class="code">${r.site_set_id || ""}</td>
-      <td class="code">${r.input_value_id || r.input_result_id || ""}</td>
+      ${cellPV("sample_sets",   r.sample_set_id)}
+      ${cellPV("interval_sets", r.interval_set_id)}
+      ${cellPV("site_sets",     r.site_set_id)}
+      ${valueOrUpstream}
       <td>${r.method_id || ""}</td>
       <td>${compat.join(" ")}</td>
     </tr>`;
@@ -505,6 +511,7 @@ document.getElementById("filter-interval").addEventListener("input", applyFilter
 
 (async () => {
   await loadAll();
+  window.DB = DB;   // make registry tables available to previews.js for hover popovers
   populateFilters();
   applyFilters();
   document.getElementById("footer").innerHTML =

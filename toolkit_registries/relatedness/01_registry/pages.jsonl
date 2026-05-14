@@ -1,0 +1,7 @@
+{"page_id": "conversation",      "schema_version": "page_v1", "label": "Conversation",      "nav_order": 1, "hook_id": "",                       "panels": [], "status": "experimental"}
+{"page_id": "action",            "schema_version": "page_v1", "label": "Action",            "nav_order": 2, "hook_id": "",                       "panels": [], "status": "active"}
+{"page_id": "registries",        "schema_version": "page_v1", "label": "Registries",        "nav_order": 3, "hook_id": "relatedness_chain_view", "panels": [], "status": "active"}
+{"page_id": "catalogue",         "schema_version": "page_v1", "label": "Catalogue",         "nav_order": 4, "hook_id": "catalogue_dashboard",    "panels": [], "status": "active"}
+{"page_id": "layers",            "schema_version": "page_v1", "label": "Layers",            "nav_order": 5, "hook_id": "",                       "panels": [], "status": "active"}
+{"page_id": "candidate_review",  "schema_version": "page_v1", "label": "Candidate review",  "nav_order": 6, "hook_id": "candidate_review_hook",  "panels": [{"panel_id": "candidate_overview_panel"}, {"panel_id": "karyotype_panel"}, {"panel_id": "long_range_regime_panel"}, {"panel_id": "popstats_panel"}, {"panel_id": "mendelian_panel"}, {"panel_id": "fst_panel"}], "package_id": "discovery_karyotype_package", "status": "active"}
+{"page_id": "graph_builder",     "schema_version": "page_v1", "label": "Graph builder",     "nav_order": 7, "hook_id": "",                       "panels": [], "status": "active"}

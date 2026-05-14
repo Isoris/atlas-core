@@ -1,0 +1,8 @@
+from_type	to_type	edge_type	constraint	description
+set	filter	feeds_into	entity_type_match	The set's entity_type must equal the filter's input_entity_type.
+filter	set	feeds_into	always	A filter always outputs a derived set; type is determined by the filter.
+set	analysis	input	always	An analysis row's inputs.sets[] declares which entity_types are accepted.
+set	layer	feeds_into	entity_type_match	The layer's entity_type must accept the set's entity_type.
+layer	analysis	input	layer_in_inputs	The analysis's input_layer_types must contain the layer_id.
+analysis	layer	output	layer_in_produces	The analysis's produces must contain the layer_id.
+layer	hook	input	layer_in_requires_or_optional	The hook's requires_layers OR optional_layers must contain the layer_id.

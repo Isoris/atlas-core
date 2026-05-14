@@ -16,8 +16,19 @@ WHICH     site_sets.tsv        one row per variant-site list (thinned, filtered)
 WHAT-IN   input_values.tsv     one row per BEAGLE / dosage / SAF / VCF
 WHAT-OUT  analysis_results.tsv one row per ngsRelate / ngsPedigree / mendelian / … run
 HOW       analysis_modes.tsv   one row per (analysis × mode); the resolver's brain
+WHAT-KIND analysis_registry.tsv one row per analysis_id; the catalogue of analysis KINDS
 TOOLS     module_registry.tsv  one row per biomod module (mirror of `biomod status --json`)
 ```
+
+`analysis_registry.tsv` is the canonical catalogue: one row per analysis KIND
+(`ngsrelate`, `ngspedigree`, `mendelian`, `popstats`, `fst_pairwise`, `theta_pi`,
+`dxy`, …) declaring its `input_entity_types`, `input_layer_types`, `produces`,
+`engine`, `endpoint`, `default_runner`, `status`, and `requires` (upstream
+dependency hint). `analysis_modes.tsv.analysis_type` and
+`analysis_results.tsv.analysis_type` both FK into `analysis_registry.analysis_id`.
+Adding a new analysis kind is: add one row here + (one or more) rows in
+`analysis_modes.tsv` + (when it has a biomod backing) one row in `module_registry.tsv`.
+Validated by `scripts/check_analysis_registry.py`.
 
 The TOOLS row is the bridge to **biomod** — the conda-style module catalog
 described in `BIOMOD_SPEC.md`. biomod owns the module / runs / install
@@ -379,6 +390,297 @@ python3 register_result.py \
 
 Every script accepts `--registry-root <PATH>` to override; otherwise
 they walk upward looking for `01_registry/`.
+
+## The analysis catalogue — `analysis_registry.tsv`
+
+One row per analysis KIND. Schema:
+`schemas/registry_schemas/analysis_registry_row_v1.schema.json`. Today's
+catalogue:
+
+| analysis_id | status | input_layer_types | produces | engine | requires |
+|---|---|---|---|---|---|
+| `ngsrelate`     | active       | `beagle_file,sites_file`             | `relatedness_res`     | ngsRelate       |              |
+| `ngspedigree`   | active       | `relatedness_res`                    | `pedigree_result`     | ngsPedigree     | ngsrelate    |
+| `mendelian`     | active       | `pedigree_result,beagle_file,sites_file` | `mendelian_result` | mendelian_trio  | ngspedigree  |
+| `popstats`      | active       | `beagle_file,sites_file`             | `popstats_result`     | region_popstats |              |
+| `fst_pairwise`  | experimental | `beagle_file`                        | `fst_windows`         | region_popstats | popstats     |
+| `theta_pi`      | experimental | `beagle_file`                        | `theta_pi_windows`    | region_popstats | popstats     |
+| `dxy`           | experimental | `beagle_file`                        | `dxy_windows`         | region_popstats | popstats     |
+
+`analysis_modes.tsv.analysis_type` and `analysis_results.tsv.analysis_type` are
+FKs into `analysis_registry.analysis_id`. Adding a new analysis kind is:
+
+1. add one row to `analysis_registry.tsv` (declare `produces`, `input_*`, `engine`)
+2. add (one or more) rows in `analysis_modes.tsv` with the policy fields
+3. when it has a biomod backing, add the module to `module_registry.tsv`
+
+Validate the FKs:
+
+```bash
+python3 scripts/check_analysis_registry.py
+# OK    relatedness/: analysis_registry.tsv + FKs clean
+```
+
+Checks: schema-required columns, unique `analysis_id`, allowed `status`,
+`analysis_modes.tsv.analysis_type` resolves to a row here,
+`analysis_results.tsv.analysis_type` resolves to a row here,
+each mode's `produces` is declared on its parent registry row,
+each mode's `module_name` resolves to `module_registry.tsv`, and
+`requires` upstream `analysis_id`s all resolve.
+
+## The layer registry + hooks — APLR's librarian
+
+**Layer is the abstraction.** Modules produce layers; pages consume layers;
+APLR's librarian resolves whether each requested layer exists, is missing,
+blocked, ready-to-run, complete, or failed.
+
+```
+01_registry/
+├── layer_registry.tsv    one row per layer KIND (relatedness_res, mendelian_result, karyotype_calls, ...)
+├── hook_registry.tsv     one row per page hook (mendelian_page_load, popstats_page_load, ...)
+```
+
+A layer is one of four `source_kind`s:
+
+| source_kind | example | producer |
+|---|---|---|
+| `file`            | `beagle_file`, `sites_file`, `sample_set`, `karyotype_calls` | the underlying registry / external upload |
+| `analysis_result` | `relatedness_res`, `pedigree_result`, `mendelian_result`, `popstats_result` | the matching row in `analysis_registry.produces` |
+| `operation`       | computed on demand via an HTTP endpoint | the endpoint (not yet wired in the librarian) |
+| `inline`          | literal payload embedded in a manifest | the manifest itself |
+
+A hook declares which layers a page needs:
+
+```
+hook_id              page_id   requires_layers
+mendelian_page_load  mendelian karyotype_calls,inversion_candidates,relatedness_res,pedigree_result,mendelian_result
+popstats_page_load   popstats  karyotype_calls,inversion_candidates,popstats_result
+```
+
+### The librarian — `resolve_layer.py`
+
+Pure read-only graph walk. Given a layer_id (+ scope), returns one of nine
+states:
+
+| state | meaning |
+|---|---|
+| `RESOLVED`         | file-kind layer present in the scope |
+| `COMPLETE`         | analysis_result row exists in `analysis_results.tsv` matching scope, `status=active` |
+| `READY_TO_RUN`     | analysis_result; every upstream input resolves to `RESOLVED` / `COMPLETE` |
+| `BLOCKED_BY_INPUT` | analysis_result; at least one upstream is `KNOWN_MISSING` / `UNKNOWN_CONTRACT` / `FAILED` |
+| `KNOWN_MISSING`    | contract registered, no product / file matches the scope |
+| `UNKNOWN_CONTRACT` | `layer_id` not in `layer_registry.tsv` (or `source_kind` not implemented) |
+| `STALE`            | reserved (hash-based invalidation; not yet implemented) |
+| `FAILED`           | `analysis_results.tsv` row with `status=failed` |
+| `PARTIAL`          | reserved (chunked / per-chrom outputs; not yet implemented) |
+
+Use it:
+
+```bash
+# single layer in a scope
+python3 scripts/resolve_layer.py --layer mendelian_result \
+    --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1
+# → [COMPLETE] mendelian_result: analysis_results.tsv row 'mendelian_LG28_v2' matches scope
+
+# unknown layer
+python3 scripts/resolve_layer.py --layer bogus_layer
+# → [UNKNOWN_CONTRACT] bogus_layer: layer_id not in layer_registry.tsv
+
+# whole hook — walks every required layer
+python3 scripts/resolve_layer.py --hook mendelian_page_load \
+    --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1
+# hook: mendelian_page_load  state: BLOCKED_BY_INPUT  page: mendelian
+#   [KNOWN_MISSING] karyotype_calls: ...
+#   [KNOWN_MISSING] inversion_candidates: ...
+#   [COMPLETE] relatedness_res: ...
+#   [COMPLETE] pedigree_result: ...
+#   [COMPLETE] mendelian_result: ...
+
+# JSON form for the dashboard
+python3 scripts/resolve_layer.py --layer mendelian_result \
+    --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1 --json
+```
+
+> **Librarian only.** `resolve_layer.py` never runs an analysis, never
+> writes a file, never queues an action. That is the dispatcher / planner's
+> job, which is intentionally a *separate concern*. The clean APLR split:
+>
+> > The librarian resolves layer identity and current state.
+> > The dispatcher uses that resolved state to decide ready / blocked /
+> > stale / reusable / run / queue.
+
+## Page 5 — manual layer ↔ analysis connector (`page/layers.html`)
+
+Open `page/layers.html` to see every layer (left column) and every analysis
+(right column) with the **declared edges** from `analysis_registry.tsv`
+(dashed grey, `input_layer_types` / `produces`) drawn between them. Click
+a layer, then an analysis, to add a **manual edge** (solid blue). Toggle
+between `input` / `output` edge type at the top. Click a manual edge to
+delete it. Manual edges persist to `localStorage`; **Export JSON**
+downloads the full edge set for sharing or committing into a workspace.
+
+The page is the practical interface for the layer/analysis adjacency: when
+the formal `analysis_registry.tsv` rows are wrong / incomplete / aspirational,
+you can wire the missing connections by hand and export the result.
+
+## Page 6 — candidate review (composition demo, `page/candidate_review.html`)
+
+The first vertical slice of the **Layer Graph Builder** spec
+(`toolkit_registries/LAYER_GRAPH_BUILDER_SPEC.md`). Page 6 renders the
+output of `resolve_layer.py --compose candidate_review_hook` — one panel
+per layer the hook requires / optionally consumes, each panel labelled
+with its **panel_state**:
+
+| panel_state          | render                                                     |
+|---|---|
+| `VISIBLE_COMPLETE`   | full panel with a 6-row preview of the underlying TSV       |
+| `VISIBLE_PARTIAL`    | full panel with a stale / partial badge                     |
+| `VISIBLE_BLOCKED`    | red card listing `missing_layers[]` + an "Inspect" button   |
+| `READY_TO_RUN`       | blue card with a manual **Run <analysis>** button           |
+| `HIDDEN_OPTIONAL`    | hidden by default (toggle "show HIDDEN_OPTIONAL" to reveal) |
+
+The page composition is computed live (no caching). Re-pick a candidate
+or scope and the panels re-arrange. Buttons emit a dispatch *intent*
+only — nothing runs from the page (the dispatcher is a separate
+concern, see spec §9).
+
+```bash
+python3 scripts/resolve_layer.py --compose candidate_review_hook \
+    --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1 \
+    --candidate inv_LG28_INV_001
+# → page_composition_plan_v1 JSON
+```
+
+Seed data for the demo: `02_sets/candidates/inversion_candidates.tsv`
+(LG01 + LG28) and `02_sets/karyotype/karyotype_calls.tsv` (6 samples × 2
+candidates). The LG01 candidate is the manuscript pair-relation target
+(see spec §11).
+
+## Page 7 — Graph Builder (`page/graph_builder.html`)
+
+Phase B+C of LAYER_GRAPH_BUILDER_SPEC.md.  Five columns, one per node
+type (set / filter / layer / analysis / hook), each listing the
+registered items.  Click any node → adds it to the current graph
+(`IN GRAPH` pill).  Click two in-graph nodes → draws an edge between them
+with the selected edge type (`input` / `output` / `feeds_into`).
+
+Every edge is **validated live** against `vocabulary/edge_rules.tsv`:
+- green = valid (rule + constraint pass)
+- red   = invalid (no rule, or constraint failed — e.g. layer not in `analysis.input_layer_types`)
+
+The Python side: `lib/edge_validator.py` reads the same rules table and
+validates a `layer_graph_v1` JSON.  CLI:
+
+```bash
+python3 -m lib.edge_validator --graph path/to/graph.json
+# valid graph → exit 0
+# invalid     → exit 1; report on stdout
+```
+
+The JS validator on the page mirrors this exactly; the in-browser badge
+in the toolbar shows `VALID` or `n ERR` live as you add / remove edges.
+
+Top-bar actions:
+- **Validate** — re-runs the report; the errors panel below the board lists every failing edge / node.
+- **Export** — downloads a `layer_graph_v1` JSON (matches `schemas/registry_schemas/layer_graph_v1.schema.json`).
+- **Import** — loads a JSON back in (replaces the current graph).
+- **Clear graph** — wipes the localStorage graph.
+
+The Inspector slides in from the right when you click an in-graph node:
+shows the node's fields + the registry context (`layer_registry` /
+`analysis_registry` / `hook_registry` row) + incident edges + a **Remove
+from graph** button.
+
+This page does **not** run anything.  Per spec §9: the librarian /
+dispatcher split says connect ≠ compute.  The graph here is a *contract
+draft*; running it is the dispatcher's job (Phase F, deferred).
+
+## Adapters, packages, the connection map + the readiness planner
+
+Per **`toolkit_registries/ADAPTER_CONTRACT.md`** — every analysis kind
+lives at `analysis/<analysis_id>/`:
+
+```
+analysis/<analysis_id>/
+├── compute.js            pure JSON-in / JSON-out (no registry, no DOM)
+├── adapter_atlas.js      bridges compute() to Atlas/APLR runtime; exports `meta`, `run`, optionally `preview`
+├── schema_in.json
+├── schema_out.json
+├── example_input.json
+└── example_output.json
+```
+
+A **package** bundles related analyses + layers + panels into one
+distribution unit; see `packages/<package_id>/manifest.json`.
+
+### Canonical storage: JSONL, not TSV
+
+Per ADAPTER_CONTRACT.md §5.4: **JSONL is canonical, TSV is derived.**
+The canonical registries live as `01_registry/*.jsonl`:
+
+```
+01_registry/
+├── layer_registry.jsonl          canonical
+├── hook_registry.jsonl           canonical
+├── analysis_registry.jsonl       canonical
+├── analysis_results.jsonl        canonical
+├── panels.jsonl                  canonical
+├── pages.jsonl                   canonical
+└── connection_map.json           generated
+plus the TSV versions for grep / pandas / Excel (derived, never edited by hand for adapter-backed rows).
+```
+
+### The build / plan pipeline
+
+```bash
+# 1) Scan adapters + packages + pages + panels, emit the connection map.
+python3 -m lib.build_connection_map
+# → 01_registry/connection_map.json   (n nodes × m edges, 0 warnings = OK)
+
+# 2) Plan a user's request.
+python3 -m lib.readiness_planner --page candidate_review \
+        --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1
+# → aggregate state + per-hook + per-layer states + ready_actions[]
+
+python3 -m lib.readiness_planner --package discovery_karyotype_package \
+        --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1
+
+# 3) Regenerate the TSV derived view from JSONL (one-way; do not edit TSVs by hand).
+python3 -m lib.tsv_from_jsonl
+```
+
+The planner walks layer → producer adapter → producer's inputs
+recursively; each layer ends in one of the 9 librarian states
+(RESOLVED / COMPLETE / READY_TO_RUN / BLOCKED_BY_INPUT / KNOWN_MISSING
+/ UNKNOWN_CONTRACT / FAILED / STALE / PARTIAL).  Aggregate hook /
+package / page state is the roll-up.
+
+**Nothing runs.**  `ready_actions[]` lists what *would* run (per spec §9
+— the dispatcher is separate).
+
+### Live example — discovery_karyotype_package
+
+```
+$ python3 -m lib.readiness_planner --package discovery_karyotype_package \
+        --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1
+aggregate: COMPLETE
+  hook candidate_review_hook: COMPLETE  (req=2, opt=4)
+  layers: 10
+    [BLOCKED_BY_INPUT] candidate_registry        (missing=window_band_calls,l3_contingency,dosage_summary)
+    [BLOCKED_BY_INPUT] chain_evidence            (missing=window_band_calls,l3_contingency,dosage_summary)
+    [RESOLVED        ] inversion_candidates      (file=02_sets/candidates/inversion_candidates.tsv)
+    [RESOLVED        ] karyotype_calls           (file=02_sets/karyotype/karyotype_calls.tsv)
+    [UNKNOWN_CONTRACT] long_range_haplotype_regime
+    [COMPLETE        ] mendelian_result          (result=mendelian_LG28_v2)
+    [BLOCKED_BY_INPUT] polarized_karyotype_calls (missing=unpolarized_karyotype_calls,reference_genome_layer)
+    [COMPLETE        ] popstats_result           (result=popstats_LG28_v1)
+    [BLOCKED_BY_INPUT] unpolarized_karyotype_calls (missing=candidate_registry,...)
+```
+
+The required panels for page 6 are already COMPLETE (the file-kind
+layers exist); the package's adapter chain — promoter → caller →
+polarizer — would unblock the four optional panels once raw signal
+inputs arrive.
 
 ## The resolver — let the registry do the thinking
 

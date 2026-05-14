@@ -1,0 +1,96 @@
+{
+  "candidate_registry": [
+    {
+      "candidate_id": "C_gar_LG01_INV_001",
+      "chrom": "C_gar_LG01",
+      "start": 34000000,
+      "end": 34080000,
+      "band_count": 2,
+      "l3_hits": 1,
+      "dosage_hits": 1,
+      "confidence": "medium"
+    },
+    {
+      "candidate_id": "C_gar_LG28_INV_002",
+      "chrom": "C_gar_LG28",
+      "start": 1200000,
+      "end": 1280000,
+      "band_count": 2,
+      "l3_hits": 2,
+      "dosage_hits": 1,
+      "confidence": "high"
+    },
+    {
+      "candidate_id": "C_gar_LG28_INV_003",
+      "chrom": "C_gar_LG28",
+      "start": 4100000,
+      "end": 4180000,
+      "band_count": 2,
+      "l3_hits": 1,
+      "dosage_hits": 0,
+      "confidence": "medium"
+    }
+  ],
+  "chain_evidence": [
+    {
+      "candidate_id": "C_gar_LG01_INV_001",
+      "evidence_kind": "window_band",
+      "evidence_id": "w_LG01_001"
+    },
+    {
+      "candidate_id": "C_gar_LG01_INV_001",
+      "evidence_kind": "window_band",
+      "evidence_id": "w_LG01_002"
+    },
+    {
+      "candidate_id": "C_gar_LG01_INV_001",
+      "evidence_kind": "l3_contingency",
+      "evidence_id": "s_LG01_a"
+    },
+    {
+      "candidate_id": "C_gar_LG01_INV_001",
+      "evidence_kind": "dosage_summary",
+      "evidence_id": "d_LG01_a"
+    },
+    {
+      "candidate_id": "C_gar_LG28_INV_002",
+      "evidence_kind": "window_band",
+      "evidence_id": "w_LG28_001"
+    },
+    {
+      "candidate_id": "C_gar_LG28_INV_002",
+      "evidence_kind": "window_band",
+      "evidence_id": "w_LG28_002"
+    },
+    {
+      "candidate_id": "C_gar_LG28_INV_002",
+      "evidence_kind": "l3_contingency",
+      "evidence_id": "s_LG28_a"
+    },
+    {
+      "candidate_id": "C_gar_LG28_INV_002",
+      "evidence_kind": "l3_contingency",
+      "evidence_id": "s_LG28_b"
+    },
+    {
+      "candidate_id": "C_gar_LG28_INV_002",
+      "evidence_kind": "dosage_summary",
+      "evidence_id": "d_LG28_a"
+    },
+    {
+      "candidate_id": "C_gar_LG28_INV_003",
+      "evidence_kind": "window_band",
+      "evidence_id": "w_LG28_004"
+    },
+    {
+      "candidate_id": "C_gar_LG28_INV_003",
+      "evidence_kind": "window_band",
+      "evidence_id": "w_LG28_005"
+    },
+    {
+      "candidate_id": "C_gar_LG28_INV_003",
+      "evidence_kind": "l3_contingency",
+      "evidence_id": "s_LG28_c"
+    }
+  ]
+}

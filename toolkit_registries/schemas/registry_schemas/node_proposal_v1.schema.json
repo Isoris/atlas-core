@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "node_proposal_v1.schema.json",
+  "title": "Node proposal — Stage C output from the LLM graph proposer",
+  "description": "JSON the LLM emits in Stage C of LAYER_GRAPH_BUILDER_SPEC.md §8. Constrained: every node MUST cite an existing layer_id / analysis_id (or set stub=true with confidence=low and a reason). No free-text answers. After deterministic validation it becomes a draft layer_graph_v1.",
+  "type": "object",
+  "required": ["proposal_id", "schema_version", "research_question", "nodes", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "proposal_id":      { "type": "string", "pattern": "^proposal_[a-z0-9_]+_v[0-9]+$" },
+    "schema_version":   { "type": "string", "const": "node_proposal_v1" },
+    "research_question":{ "type": "string", "description": "Verbatim user question." },
+    "intent": {
+      "type": "object",
+      "description": "Stage-A extracted intent (passed through for traceability).",
+      "additionalProperties": true
+    },
+    "vocabulary_hits": {
+      "type": "object",
+      "description": "Stage-B output: which controlled-vocab tokens matched.",
+      "additionalProperties": true
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "confidence", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "id":           { "type": "string" },
+          "type":         { "type": "string", "enum": ["set", "filter", "layer", "analysis", "hook"] },
+          "entity_type":  { "type": "string" },
+          "layer_id":     { "type": "string" },
+          "analysis_id":  { "type": "string" },
+          "hook_id":      { "type": "string" },
+          "input":        { "type": "string" },
+          "conditions":   { "type": "array" },
+          "trigger_policy":{ "type": "string", "enum": ["manual", "cached_only"] },
+          "required":     { "type": "boolean", "default": true },
+          "stub":         { "type": "boolean", "default": false },
+          "confidence":   { "type": "string", "enum": ["high", "medium", "low"], "description": "high = verbatim hit; medium = inferred via vocabulary/edges.tsv; low = added because a producing analysis demands it." },
+          "reason":       { "type": "string", "description": "REQUIRED. The LLM must explain why this node exists." }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": [
+          { "type": "string" },
+          { "type": "string" },
+          { "type": "string", "enum": ["input", "output", "feeds_into"] }
+        ]
+      }
+    },
+    "validation": {
+      "type": "object",
+      "description": "Stage-D output (filled in by aplr.validate, not the LLM).",
+      "additionalProperties": false,
+      "properties": {
+        "valid":  { "type": "boolean" },
+        "errors": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "author":     { "type": "string", "const": "llm_proposer_v1" }
+  }
+}

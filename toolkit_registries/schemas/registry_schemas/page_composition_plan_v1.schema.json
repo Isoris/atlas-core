@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "page_composition_plan_v1.schema.json",
+  "title": "Page composition plan — output of resolve_layer.py --compose <hook_id>",
+  "description": "Per LAYER_GRAPH_BUILDER_SPEC.md §5: the structure a page consumes to decide which panels render. The librarian never persists this; it is recomputed live on every page load.",
+  "type": "object",
+  "required": ["hook_id", "schema_version", "hook_state", "panels"],
+  "additionalProperties": false,
+  "properties": {
+    "hook_id":        { "type": "string" },
+    "schema_version": { "type": "string", "const": "page_composition_plan_v1" },
+    "page_id":        { "type": "string" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sample_set":   { "type": "string" },
+        "interval_set": { "type": "string" },
+        "candidate_id": { "type": "string" }
+      }
+    },
+    "hook_state":   { "type": "string", "enum": ["COMPLETE", "PARTIAL", "READY_TO_RUN", "BLOCKED", "HIDDEN"] },
+    "panels": {
+      "type": "array",
+      "items": { "$ref": "panel_composition_entry_v1.schema.json" }
+    },
+    "computed_at":  { "type": "string", "format": "date-time" }
+  }
+}

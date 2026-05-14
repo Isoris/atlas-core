@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "panel_v1.schema.json",
+  "title": "Panel — one visual component that renders one layer",
+  "description": "A panel renders exactly ONE layer (its primary layer_id). The librarian's page_composition_plan_v1 reports the panel_state; the panel renderer reads the layer payload and the panel_state to decide what to show. Per ADAPTER_CONTRACT.md §4. Panels never produce layers themselves; producing is an analysis adapter's job.",
+  "type": "object",
+  "required": ["panel_id", "schema_version", "layer_id"],
+  "additionalProperties": false,
+  "properties": {
+    "panel_id":       { "type": "string", "pattern": "^[a-z][a-z0-9_]*_panel$" },
+    "schema_version": { "type": "string", "const": "panel_v1" },
+    "label":          { "type": "string" },
+    "description":    { "type": "string" },
+    "layer_id":       { "type": "string", "description": "The layer this panel renders. FK into layer_registry.layer_id." },
+    "optional_layers": {
+      "type": "array",
+      "description": "Other layers the panel can overlay / decorate with when available.",
+      "items": { "type": "string" }
+    },
+    "renderer":       { "type": "string", "enum": ["table", "track", "scatter", "barplot", "heatmap", "graph", "summary_card", "raw_json", "custom"], "default": "table", "description": "Hint to the page about how to lay out the panel. 'custom' means the producing adapter's preview() is the renderer." },
+    "preview_via_adapter": { "type": "boolean", "default": false, "description": "If true, the page calls the producing adapter's preview(layer_payload, panel_id) instead of using a built-in renderer." },
+    "package_id":     { "type": "string", "description": "Owning package (optional)." },
+    "status":         { "type": "string", "enum": ["active", "experimental", "deprecated"] }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "panel_composition_entry_v1.schema.json",
+  "title": "Panel composition entry — one panel inside a page_composition_plan_v1",
+  "description": "Per LAYER_GRAPH_BUILDER_SPEC.md §5: one panel per layer the hook requires / optionally consumes. panel_state is the rendering directive; the page does not need to re-run the librarian to know what to show.",
+  "type": "object",
+  "required": ["panel_id", "layer_id", "required", "panel_state", "layer_state"],
+  "additionalProperties": false,
+  "properties": {
+    "panel_id":     { "type": "string" },
+    "layer_id":     { "type": "string" },
+    "required":     { "type": "boolean" },
+    "panel_state":  {
+      "type": "string",
+      "enum": ["VISIBLE_COMPLETE", "VISIBLE_PARTIAL", "VISIBLE_BLOCKED", "READY_TO_RUN", "HIDDEN_OPTIONAL"]
+    },
+    "layer_state": {
+      "type": "string",
+      "enum": ["RESOLVED", "COMPLETE", "READY_TO_RUN", "BLOCKED_BY_INPUT",
+               "KNOWN_MISSING", "UNKNOWN_CONTRACT", "STALE", "FAILED", "PARTIAL"]
+    },
+    "reason":         { "type": "string" },
+    "missing_layers": { "type": "array", "items": { "type": "string" } },
+    "result_id":      { "type": "string", "description": "Set when layer_state=COMPLETE." },
+    "default_path":   { "type": "string", "description": "Resolved file path when layer_state=RESOLVED on a file-kind layer." },
+    "actions": {
+      "type": "array",
+      "description": "Suggested user actions for VISIBLE_BLOCKED or READY_TO_RUN panels (the dispatcher consumes these). Pure suggestions; never executed by the panel itself.",
+      "items": {
+        "type": "object",
+        "required": ["action", "label"],
+        "additionalProperties": false,
+        "properties": {
+          "action": { "type": "string", "enum": ["run", "register_file", "edit_registry"] },
+          "label":  { "type": "string" },
+          "target": { "type": "string", "description": "layer_id / analysis_id the action targets." }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Layers — manual layer ↔ analysis connector</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #6c727f;
+    --bg: #fafafa;
+    --bg-card: #ffffff;
+    --border: #d9dde4;
+    --accent: #2d6cb6;
+    --green: #2f8550;
+    --amber: #b87a14;
+    --red: #b13030;
+    --layer-bg: #f6f8fb;
+    --analysis-bg: #fff7ec;
+    --edge-declared: #a4adb9;
+    --edge-manual: #2d6cb6;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 13.5px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--fg); background: var(--bg);
+  }
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  .wrap { padding: 16px 22px 0; max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+  .lede { color: var(--muted); margin: 0 0 12px; font-size: 12.5px; max-width: 880px; }
+
+  .toolbar {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    margin: 6px 0 14px; padding: 8px 10px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 6px;
+  }
+  .toolbar label { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .toolbar select, .toolbar input[type=text] {
+    font: inherit; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
+    background: white;
+  }
+  .btn {
+    padding: 6px 12px; font-size: 12.5px; font-weight: 500;
+    border-radius: 4px; cursor: pointer; border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--fg);
+  }
+  .btn:hover { background: #f0f2f5; }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-primary:hover { background: #265a9a; }
+  .btn-danger  { background: white; color: var(--red); border-color: var(--red); }
+  .btn-danger:hover { background: #fff3f3; }
+
+  .status {
+    margin-left: auto; font-size: 11.5px; color: var(--muted);
+  }
+  .status .badge {
+    background: #eaecf0; color: var(--fg); padding: 2px 7px;
+    border-radius: 3px; font-weight: 600; margin: 0 2px;
+  }
+  .status .badge.manual { background: #e6f0fa; color: var(--accent); }
+  .status .badge.declared { background: #eaecf0; color: var(--muted); }
+
+  .board {
+    position: relative;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 14px; min-height: 600px;
+  }
+  .col h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted); margin: 0 0 8px; font-weight: 600;
+  }
+  .col h2 .n { color: var(--fg); margin-left: 4px; }
+  .col-list { display: flex; flex-direction: column; gap: 6px; }
+  .node {
+    position: relative; padding: 6px 9px; border-radius: 5px;
+    background: var(--layer-bg); border: 1px solid var(--border);
+    font-size: 12.5px; line-height: 1.35; cursor: pointer;
+    transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+  }
+  .node:hover { box-shadow: 0 1px 4px rgba(0,0,0,0.06); transform: translateX(-1px); }
+  .col.analyses .node { background: var(--analysis-bg); }
+  .col.analyses .node:hover { transform: translateX(1px); }
+  .node.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(45,108,182,0.18); }
+  .node.dimmed   { opacity: 0.35; }
+  .node .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; }
+  .node .meta { color: var(--muted); font-size: 11px; margin-top: 1px; }
+  .node .pill {
+    display: inline-block; padding: 0 5px; border-radius: 3px;
+    background: #eaecf0; color: var(--fg); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.03em; margin-right: 5px;
+  }
+  .node .pill.kind-file            { background: #e6efe9; color: #2f8550; }
+  .node .pill.kind-analysis_result { background: #e9eef7; color: #2d6cb6; }
+  .node .pill.kind-operation       { background: #fdecd2; color: #b87a14; }
+  .node .pill.kind-inline          { background: #efe6f5; color: #6b3aa6; }
+  .node .pill.status-experimental  { background: #fdecd2; color: #b87a14; }
+  .node .pill.status-stub          { background: #f8e6e6; color: #b13030; }
+
+  /* anchor dot for edge endpoints */
+  .node::before, .node::after {
+    content: ''; position: absolute; top: 50%; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--border);
+    transform: translateY(-50%);
+  }
+  .col.layers   .node::after  { right: -4px; }
+  .col.layers   .node::before { display: none; }
+  .col.analyses .node::before { left:  -4px; }
+  .col.analyses .node::after  { display: none; }
+  .node.selected::before, .node.selected::after { background: var(--accent); }
+
+  .edges-svg {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    width: 100%; height: 100%;
+  }
+  .edges-svg path { fill: none; stroke-width: 1.4; }
+  .edges-svg path.declared { stroke: var(--edge-declared); stroke-dasharray: 4 3; }
+  .edges-svg path.manual   { stroke: var(--edge-manual); stroke-width: 1.8; pointer-events: stroke; cursor: pointer; }
+  .edges-svg path.manual:hover { stroke: var(--red); stroke-width: 2.6; }
+  .edges-svg path.input    { /* default */ }
+  .edges-svg path.output   { stroke-dasharray: none; }
+  .edges-svg text {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 9.5px; fill: var(--muted);
+    paint-order: stroke; stroke: white; stroke-width: 3;
+  }
+
+  .legend {
+    margin: 12px 0 30px; display: flex; gap: 18px; flex-wrap: wrap;
+    font-size: 11.5px; color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch {
+    display: inline-block; width: 22px; height: 2px; background: var(--edge-declared);
+  }
+  .legend-swatch.manual { background: var(--edge-manual); height: 2px; }
+  .legend-swatch.dashed { border-top: 2px dashed var(--edge-declared); height: 0; }
+
+  .hint {
+    font-size: 11.5px; color: var(--muted); margin: 8px 0 0;
+  }
+  .hint kbd {
+    display: inline-block; padding: 1px 5px; border: 1px solid var(--border);
+    border-radius: 3px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px; background: white;
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html"><span class="num">1.</span> Conversation</a>
+  <a href="action.html"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html"><span class="num">4.</span> Catalogue</a>
+  <a href="layers.html" class="current"><span class="num">5.</span> Layers</a>
+  <a href="candidate_review.html"><span class="num">6.</span> Candidate review</a>
+  <a href="graph_builder.html"><span class="num">7.</span> Graph builder</a>
+  <span class="tag">atlas-core / page 5</span>
+</nav>
+
+<div class="wrap">
+  <h1>Layers — manual layer ↔ analysis connector</h1>
+  <p class="lede">
+    Left column lists every <em>layer</em> the registry knows about (file / analysis_result / operation / inline kinds).
+    Right column lists every <em>analysis</em>. Dashed grey lines are the connections <strong>declared</strong> by
+    <code>analysis_registry.tsv</code>'s <code>input_layer_types</code> + <code>produces</code> columns. Click a layer
+    on the left, then an analysis on the right — you'll add a solid blue <strong>manual</strong> connection. Click a
+    manual line to remove it. Use the export button to download the connection set.
+  </p>
+
+  <div class="toolbar">
+    <label>Edge type
+      <select id="edge-type">
+        <option value="input">input  (layer → analysis)</option>
+        <option value="output">output (analysis → layer)</option>
+      </select>
+    </label>
+    <label>Filter layer
+      <input type="text" id="filter-layer" placeholder="substring…" size="14">
+    </label>
+    <label>Filter analysis
+      <input type="text" id="filter-analysis" placeholder="substring…" size="14">
+    </label>
+    <button class="btn" id="btn-import">Import JSON</button>
+    <input type="file" id="file-import" accept="application/json" style="display:none">
+    <button class="btn btn-primary" id="btn-export">Export JSON</button>
+    <button class="btn btn-danger" id="btn-clear">Clear manual</button>
+    <span class="status">
+      <span class="badge declared" id="count-declared">0</span> declared
+      <span class="badge manual"   id="count-manual">0</span> manual
+    </span>
+  </div>
+
+  <div class="board" id="board">
+    <div class="col layers">
+      <h2>Layers <span class="n" id="count-layers">0</span></h2>
+      <div class="col-list" id="layers-list"></div>
+    </div>
+    <div class="col analyses">
+      <h2>Analyses <span class="n" id="count-analyses">0</span></h2>
+      <div class="col-list" id="analyses-list"></div>
+    </div>
+    <svg class="edges-svg" id="edges-svg" preserveAspectRatio="none"></svg>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch dashed"></span> declared (from <code>analysis_registry.tsv</code>)</div>
+    <div class="legend-item"><span class="legend-swatch manual"></span> manual (added in this page)</div>
+    <div class="legend-item">click a manual edge to delete it</div>
+  </div>
+
+  <p class="hint">
+    Manual edges persist to <code>localStorage</code> on this device. Use
+    <kbd>Export JSON</kbd> to capture them for sharing / committing into a workspace.
+    The JSON shape is <code>{"manual_edges": [{"layer": "...", "analysis": "...", "type": "input|output"}], "declared_edges": [...]}</code>.
+  </p>
+</div>
+
+<script>
+const SVG_NS = "http://www.w3.org/2000/svg";
+const LS_KEY = "atlas_layers_manual_edges_v1";
+
+function parseTSV(text) {
+  const lines = text.replace(/\r\n/g, "\n").split("\n").filter(l => l.length);
+  if (lines.length < 1) return [];
+  const header = lines[0].split("\t");
+  return lines.slice(1).map(l => {
+    const cells = l.split("\t");
+    const o = {};
+    header.forEach((h, i) => { o[h] = cells[i] ?? ""; });
+    return o;
+  });
+}
+
+const state = {
+  layers: [],
+  analyses: [],
+  declared: [],   // [{layer, analysis, type}]
+  manual: [],     // [{layer, analysis, type}]
+  selectedLayer: null,
+  selectedAnalysis: null,
+  filterLayer: "",
+  filterAnalysis: "",
+};
+
+async function loadAll() {
+  const [layersTSV, analysesTSV] = await Promise.all([
+    fetch("../01_registry/layer_registry.tsv").then(r => r.text()),
+    fetch("../01_registry/analysis_registry.tsv").then(r => r.text()),
+  ]);
+  state.layers = parseTSV(layersTSV);
+  state.analyses = parseTSV(analysesTSV);
+  state.declared = computeDeclaredEdges(state.analyses);
+  state.manual = loadManual();
+}
+
+function computeDeclaredEdges(analyses) {
+  const out = [];
+  for (const a of analyses) {
+    const aid = a.analysis_id; if (!aid) continue;
+    (a.input_layer_types || "").split(",").map(s => s.trim()).filter(Boolean)
+      .forEach(lyr => out.push({ layer: lyr, analysis: aid, type: "input" }));
+    (a.produces || "").split(",").map(s => s.trim()).filter(Boolean)
+      .forEach(lyr => out.push({ layer: lyr, analysis: aid, type: "output" }));
+  }
+  return out;
+}
+
+function loadManual() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
+  catch (e) { return []; }
+}
+function saveManual() { localStorage.setItem(LS_KEY, JSON.stringify(state.manual)); }
+
+function renderColumns() {
+  const lc = document.getElementById("layers-list");
+  const ac = document.getElementById("analyses-list");
+  lc.innerHTML = ""; ac.innerHTML = "";
+  const lf = state.filterLayer.toLowerCase();
+  const af = state.filterAnalysis.toLowerCase();
+  const layers = state.layers.filter(l => !lf || (l.layer_id || "").toLowerCase().includes(lf));
+  const analyses = state.analyses.filter(a => !af || (a.analysis_id || "").toLowerCase().includes(af));
+
+  for (const l of layers) {
+    const el = document.createElement("div");
+    el.className = "node layer-node";
+    el.dataset.id = l.layer_id;
+    el.innerHTML = `
+      <span class="pill kind-${l.source_kind || "unknown"}">${l.source_kind || "?"}</span>${
+        l.status && l.status !== "active" ? `<span class="pill status-${l.status}">${l.status}</span>` : ""
+      }
+      <span class="id">${l.layer_id}</span>
+      <div class="meta">${(l.label || l.description || "").slice(0, 90)}</div>
+    `;
+    el.addEventListener("click", () => onLayerClick(l.layer_id));
+    lc.appendChild(el);
+  }
+  for (const a of analyses) {
+    const el = document.createElement("div");
+    el.className = "node analysis-node";
+    el.dataset.id = a.analysis_id;
+    el.innerHTML = `
+      ${a.status && a.status !== "active" ? `<span class="pill status-${a.status}">${a.status}</span>` : ""}
+      <span class="id">${a.analysis_id}</span>
+      <div class="meta">${(a.label || a.description || "").slice(0, 90)}</div>
+    `;
+    el.addEventListener("click", () => onAnalysisClick(a.analysis_id));
+    ac.appendChild(el);
+  }
+  document.getElementById("count-layers").textContent = layers.length;
+  document.getElementById("count-analyses").textContent = analyses.length;
+  applySelection();
+}
+
+function applySelection() {
+  for (const el of document.querySelectorAll(".node")) {
+    el.classList.remove("selected", "dimmed");
+  }
+  if (state.selectedLayer) {
+    const el = document.querySelector(`.layer-node[data-id="${cssEsc(state.selectedLayer)}"]`);
+    if (el) el.classList.add("selected");
+    // dim analyses NOT connected to this layer (neither declared nor manual)
+    const connected = new Set([...state.declared, ...state.manual]
+      .filter(e => e.layer === state.selectedLayer).map(e => e.analysis));
+    document.querySelectorAll(".analysis-node").forEach(el => {
+      if (!connected.has(el.dataset.id)) el.classList.add("dimmed");
+    });
+  }
+  if (state.selectedAnalysis) {
+    const el = document.querySelector(`.analysis-node[data-id="${cssEsc(state.selectedAnalysis)}"]`);
+    if (el) el.classList.add("selected");
+    const connected = new Set([...state.declared, ...state.manual]
+      .filter(e => e.analysis === state.selectedAnalysis).map(e => e.layer));
+    document.querySelectorAll(".layer-node").forEach(el => {
+      if (!connected.has(el.dataset.id)) el.classList.add("dimmed");
+    });
+  }
+}
+
+function cssEsc(s) { return (window.CSS && CSS.escape) ? CSS.escape(s) : s.replace(/"/g, '\\"'); }
+
+function onLayerClick(layerId) {
+  if (state.selectedAnalysis) {
+    toggleManual(layerId, state.selectedAnalysis);
+    state.selectedAnalysis = null;
+    state.selectedLayer = null;
+  } else {
+    state.selectedLayer = state.selectedLayer === layerId ? null : layerId;
+    state.selectedAnalysis = null;
+  }
+  applySelection();
+  drawEdges();
+}
+function onAnalysisClick(analysisId) {
+  if (state.selectedLayer) {
+    toggleManual(state.selectedLayer, analysisId);
+    state.selectedLayer = null;
+    state.selectedAnalysis = null;
+  } else {
+    state.selectedAnalysis = state.selectedAnalysis === analysisId ? null : analysisId;
+    state.selectedLayer = null;
+  }
+  applySelection();
+  drawEdges();
+}
+
+function toggleManual(layer, analysis) {
+  const type = document.getElementById("edge-type").value;
+  const idx = state.manual.findIndex(e => e.layer === layer && e.analysis === analysis && e.type === type);
+  if (idx >= 0) {
+    state.manual.splice(idx, 1);
+  } else {
+    state.manual.push({ layer, analysis, type });
+  }
+  saveManual();
+}
+
+function drawEdges() {
+  const svg = document.getElementById("edges-svg");
+  const board = document.getElementById("board");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const brect = board.getBoundingClientRect();
+  svg.setAttribute("viewBox", `0 0 ${brect.width} ${brect.height}`);
+
+  const layerEls = new Map();
+  document.querySelectorAll(".layer-node").forEach(el => layerEls.set(el.dataset.id, el));
+  const analysisEls = new Map();
+  document.querySelectorAll(".analysis-node").forEach(el => analysisEls.set(el.dataset.id, el));
+
+  function endpoint(el, side) {
+    const r = el.getBoundingClientRect();
+    return {
+      x: (side === "right" ? r.right : r.left) - brect.left,
+      y: r.top + r.height / 2 - brect.top,
+    };
+  }
+  function curve(p1, p2) {
+    const dx = Math.max(40, (p2.x - p1.x) * 0.55);
+    return `M ${p1.x} ${p1.y} C ${p1.x + dx} ${p1.y}, ${p2.x - dx} ${p2.y}, ${p2.x} ${p2.y}`;
+  }
+  function midpoint(p1, p2) {
+    return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+  }
+
+  let declaredVisible = 0, manualVisible = 0;
+  function drawSet(edges, klass) {
+    for (const e of edges) {
+      const lEl = layerEls.get(e.layer);
+      const aEl = analysisEls.get(e.analysis);
+      if (!lEl || !aEl) continue;
+      const p1 = endpoint(lEl, "right");
+      const p2 = endpoint(aEl, "left");
+      const path = document.createElementNS(SVG_NS, "path");
+      path.setAttribute("d", curve(p1, p2));
+      path.setAttribute("class", `${klass} ${e.type}`);
+      if (klass === "manual") {
+        path.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          if (!confirm(`Remove manual edge: ${e.layer} → ${e.analysis} (${e.type})?`)) return;
+          state.manual = state.manual.filter(x => !(x.layer === e.layer && x.analysis === e.analysis && x.type === e.type));
+          saveManual();
+          drawEdges();
+          updateCounts();
+        });
+      }
+      svg.appendChild(path);
+
+      const mid = midpoint(p1, p2);
+      const lbl = document.createElementNS(SVG_NS, "text");
+      lbl.setAttribute("x", mid.x);
+      lbl.setAttribute("y", mid.y - 3);
+      lbl.setAttribute("text-anchor", "middle");
+      lbl.textContent = e.type === "input" ? "in" : "out";
+      svg.appendChild(lbl);
+
+      if (klass === "declared") declaredVisible++; else manualVisible++;
+    }
+  }
+  drawSet(state.declared, "declared");
+  drawSet(state.manual,   "manual");
+}
+
+function updateCounts() {
+  document.getElementById("count-declared").textContent = state.declared.length;
+  document.getElementById("count-manual").textContent   = state.manual.length;
+}
+
+function exportJSON() {
+  const payload = {
+    generated_at: new Date().toISOString(),
+    declared_edges: state.declared,
+    manual_edges: state.manual,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "layer_analysis_edges.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importJSON(file) {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const obj = JSON.parse(ev.target.result);
+      if (!Array.isArray(obj.manual_edges)) throw new Error("missing manual_edges array");
+      state.manual = obj.manual_edges.filter(e => e.layer && e.analysis && e.type);
+      saveManual();
+      drawEdges();
+      updateCounts();
+    } catch (e) {
+      alert("import failed: " + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function clearManual() {
+  if (!state.manual.length) return;
+  if (!confirm(`Clear all ${state.manual.length} manual edges?`)) return;
+  state.manual = [];
+  saveManual();
+  drawEdges();
+  updateCounts();
+}
+
+(async () => {
+  await loadAll();
+  renderColumns();
+  drawEdges();
+  updateCounts();
+  // events
+  document.getElementById("filter-layer").addEventListener("input", e => {
+    state.filterLayer = e.target.value;
+    renderColumns(); drawEdges();
+  });
+  document.getElementById("filter-analysis").addEventListener("input", e => {
+    state.filterAnalysis = e.target.value;
+    renderColumns(); drawEdges();
+  });
+  document.getElementById("btn-export").addEventListener("click", exportJSON);
+  document.getElementById("btn-clear").addEventListener("click", clearManual);
+  document.getElementById("btn-import").addEventListener("click", () => document.getElementById("file-import").click());
+  document.getElementById("file-import").addEventListener("change", e => {
+    if (e.target.files[0]) importJSON(e.target.files[0]);
+    e.target.value = "";
+  });
+  window.addEventListener("resize", drawEdges);
+  window.addEventListener("scroll", drawEdges);
+})();
+</script>
+</body>
+</html>

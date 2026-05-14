@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "layer_registry_row_v1.schema.json",
+  "title": "Layer registry row — one TSV row in layer_registry.tsv",
+  "description": "Flat catalogue row, one per registered layer KIND. A layer is the unit of data the atlas resolves — pages consume layers; analyses produce layers; files contribute layers. The source_kind enum (file / analysis_result / operation / inline) decides how the librarian (resolve_layer.py) checks whether a layer is present. Many-to-many is supported: a layer_id may be produced by several analyses (cross-validate by joining analysis_registry.produces) and consumed by several analyses (analysis_registry.input_layer_types) and several hooks (hook_registry.requires_layers). Per the layer-abstraction design: 'modules produce layers; pages consume layers; APLR resolves layers'.",
+  "type": "object",
+  "required": ["layer_id", "source_kind", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "layer_id":      { "type": "string", "description": "Stable id. Convention: short snake_case noun (relatedness_res, mendelian_result, karyotype_calls, beagle_file, ...). Matches analysis_registry.produces / input_layer_types tokens." },
+    "source_kind":   { "type": "string", "enum": ["file", "analysis_result", "operation", "inline"], "description": "How the layer is materialized. file = a registered raw file (BEAGLE, sites, karyotype call sheet); analysis_result = output of an analysis row in analysis_registry; operation = computed on demand via an HTTP endpoint; inline = literal data embedded in a manifest." },
+    "entity_type":   { "type": "string", "description": "What kind of entity the layer rows describe (sample / pair / trio / variant_site / window / candidate / breakpoint / gene / interval / inline). Empty when not applicable." },
+    "label":         { "type": "string", "description": "Display label. Empty allowed." },
+    "description":   { "type": "string", "description": "One-line description of what the layer means biologically + structurally." },
+    "schema_path":   { "type": "string", "description": "Relative path to the layer-envelope or per-layer schema. Empty allowed while the contract is undefined." },
+    "example_path":  { "type": "string", "description": "Relative path to an example payload file. Empty allowed." },
+    "default_path":  { "type": "string", "description": "Relative path the librarian (resolve_layer.py) probes when source_kind=file. If the file exists at this path (relative to the registry root), the layer resolves to RESOLVED. Empty allowed; the librarian falls back to scope-driven lookup over the underlying set / input_values registries." },
+    "status":        { "type": "string", "enum": ["active", "experimental", "deprecated", "stub"], "description": "stub = the layer_id is registered (so it appears as KNOWN_MISSING, not UNKNOWN_CONTRACT) but no schema / no example yet." },
+    "intended_use":  { "type": "string" },
+    "definition_path": { "type": "string", "description": "Optional path to a richer per-layer JSON when the TSV row isn't enough." }
+  },
+  "_tsv_column_order": [
+    "layer_id", "source_kind", "entity_type", "label", "description",
+    "schema_path", "example_path", "default_path", "status", "intended_use", "definition_path"
+  ],
+  "_tsv_empty_value": "Empty cells are the zero-length string. The validator (check_layer_registry.py) treats empty as None for optional fields."
+}

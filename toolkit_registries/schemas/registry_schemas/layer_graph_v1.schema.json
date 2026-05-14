@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "layer_graph_v1.schema.json",
+  "title": "Layer graph — typed DAG over the five node types",
+  "description": "Top-level shape produced by the Layer Graph Builder and consumed by the librarian / dispatcher. Per LAYER_GRAPH_BUILDER_SPEC.md §3.",
+  "type": "object",
+  "required": ["graph_id", "schema_version", "nodes", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "graph_id":       { "type": "string", "pattern": "^[a-z][a-z0-9_]*_v[0-9]+$" },
+    "schema_version": { "type": "string", "const": "layer_graph_v1" },
+    "intent":         { "type": "string", "description": "One-paragraph free-text rationale (often emitted by the LLM proposer)." },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sample_set":   { "type": "string" },
+        "interval_set": { "type": "string" },
+        "candidate_id": { "type": "string" },
+        "site_set":     { "type": "string" },
+        "group_set":    { "type": "string" }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type"],
+        "additionalProperties": false,
+        "properties": {
+          "id":              { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "type":            { "type": "string", "enum": ["set", "filter", "layer", "analysis", "hook"] },
+          "entity_type":     { "type": "string", "description": "Required when type=set." },
+          "set_id":          { "type": "string", "description": "Optional when type=set; FK into the relevant sample/interval/site/group_sets.tsv." },
+          "members":         { "type": "array", "items": { "type": "string" }, "description": "Inline members (alternative to set_id)." },
+          "layer_id":        { "type": "string", "description": "Required when type=layer; FK into layer_registry." },
+          "analysis_id":     { "type": "string", "description": "Required when type=analysis; FK into analysis_registry." },
+          "hook_id":         { "type": "string", "description": "Required when type=hook; FK into hook_registry." },
+          "input":           { "type": "string", "description": "Required when type=filter; graph-local id of the input node." },
+          "conditions": {
+            "type": "array",
+            "description": "Filter conditions (required when type=filter).",
+            "items": {
+              "type": "object",
+              "required": ["field", "op", "value"],
+              "additionalProperties": false,
+              "properties": {
+                "field": { "type": "string" },
+                "op":    { "type": "string", "enum": ["==", "!=", ">", ">=", "<", "<=", "in", "not_in", "intersect", "union", "difference"] },
+                "value": { }
+              }
+            }
+          },
+          "params":          { "type": "object", "description": "Optional analysis params; conforms to that analysis's schema_in/<analysis_id>.schema.json." },
+          "trigger_policy":  { "type": "string", "enum": ["manual", "cached_only", "auto"], "default": "manual" },
+          "required":        { "type": "boolean", "default": true },
+          "confidence":      { "type": "string", "enum": ["high", "medium", "low"], "description": "LLM-emitted confidence; informational." },
+          "reason":          { "type": "string", "description": "Free-text justification for why this node exists in the graph." },
+          "stub":            { "type": "boolean", "default": false, "description": "True when the node references a layer_id / analysis_id not yet registered. The Builder shows a warning and the proposal is invalid until the registry catches up." }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "description": "[from_node_id, to_node_id, edge_type].",
+        "items": [
+          { "type": "string" },
+          { "type": "string" },
+          { "type": "string", "enum": ["input", "output", "feeds_into"] }
+        ]
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "author":     { "type": "string", "description": "Human author OR 'llm_proposer_v1'." }
+  }
+}

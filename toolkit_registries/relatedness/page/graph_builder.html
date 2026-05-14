@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Graph Builder — five-column layer graph editor</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #6c727f;
+    --bg: #fafafa;
+    --bg-card: #ffffff;
+    --border: #d9dde4;
+    --accent: #2d6cb6;
+    --green: #2f8550;
+    --amber: #b87a14;
+    --red: #b13030;
+    --col-set:      #f3f7ee;
+    --col-filter:   #fff8e6;
+    --col-layer:    #eef2f8;
+    --col-analysis: #fff0e7;
+    --col-hook:     #ede9f4;
+    --edge-valid:   #2f8550;
+    --edge-invalid: #b13030;
+    --edge-pending: #6c727f;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 13.5px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--fg); background: var(--bg);
+  }
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  .wrap { padding: 14px 18px 40px; max-width: 1480px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+  .lede { color: var(--muted); margin: 0 0 10px; font-size: 12.5px; max-width: 1100px; }
+
+  .toolbar {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    margin: 6px 0 14px; padding: 9px 11px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 6px;
+  }
+  .toolbar input[type=text] {
+    font: inherit; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
+    background: white;
+  }
+  .toolbar .sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+  .btn {
+    padding: 6px 11px; font-size: 12.5px; font-weight: 500;
+    border-radius: 4px; cursor: pointer; border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--fg);
+  }
+  .btn:hover { background: #f0f2f5; }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-primary:hover { background: #265a9a; }
+  .btn-danger  { background: white; color: var(--red); border-color: var(--red); }
+  .btn-success { background: white; color: var(--green); border-color: var(--green); }
+
+  .status { margin-left: auto; font-size: 11.5px; color: var(--muted); }
+  .status .badge {
+    background: #eaecf0; color: var(--fg); padding: 2px 7px;
+    border-radius: 3px; font-weight: 600; margin: 0 2px;
+  }
+  .status .badge.valid   { background: #def0e0; color: var(--green); }
+  .status .badge.invalid { background: #f8e6e6; color: var(--red); }
+  .status .badge.pending { background: #eaecf0; color: var(--muted); }
+
+  .board {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); gap: 30px;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 14px 12px; min-height: 640px;
+  }
+  .col h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted); margin: 0 0 8px; font-weight: 600;
+  }
+  .col h2 .n { color: var(--fg); margin-left: 4px; }
+  .col h2 .glyph {
+    display: inline-block; margin-right: 5px; color: var(--fg); font-size: 14px; line-height: 1;
+  }
+  .col-list { display: flex; flex-direction: column; gap: 5px; }
+  .node {
+    position: relative; padding: 5px 9px; border-radius: 4px;
+    border: 1px solid var(--border);
+    font-size: 12px; line-height: 1.3; cursor: pointer;
+    transition: transform .08s ease, box-shadow .08s ease, border-color .08s ease;
+  }
+  .col.sets      .node { background: var(--col-set); }
+  .col.filters   .node { background: var(--col-filter); }
+  .col.layers    .node { background: var(--col-layer); }
+  .col.analyses  .node { background: var(--col-analysis); }
+  .col.hooks     .node { background: var(--col-hook); }
+  .node:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+  .node.in-graph { border-color: var(--accent); border-width: 1px; box-shadow: 0 0 0 1px rgba(45,108,182,0.12); }
+  .node.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(45,108,182,0.25); background: white; }
+  .node .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; }
+  .node .meta { color: var(--muted); font-size: 10.5px; margin-top: 1px; }
+  .node .pill {
+    display: inline-block; padding: 0 4px; border-radius: 3px;
+    background: #eaecf0; color: var(--fg); font-size: 9.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.03em; margin-right: 3px;
+    vertical-align: middle;
+  }
+  .node .pill.in-graph { background: var(--accent); color: white; }
+  .node .pill.kind-file            { background: #def0e0; color: var(--green); }
+  .node .pill.kind-analysis_result { background: #e9eef7; color: var(--accent); }
+  .node .pill.stub                 { background: #f8e6e6; color: var(--red); }
+  .node .pill.status-experimental  { background: #fdecd2; color: var(--amber); }
+
+  /* anchor dots */
+  .node::before, .node::after {
+    content: ''; position: absolute; top: 50%; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--border);
+    transform: translateY(-50%);
+  }
+  .node::before { left:  -3px; }
+  .node::after  { right: -3px; }
+  .node.in-graph::before, .node.in-graph::after { background: var(--accent); }
+
+  .edges-svg {
+    position: absolute; inset: 0;
+    pointer-events: none; width: 100%; height: 100%;
+  }
+  .edges-svg path { fill: none; stroke-width: 1.6; pointer-events: stroke; cursor: pointer; }
+  .edges-svg path.valid   { stroke: var(--edge-valid); }
+  .edges-svg path.invalid { stroke: var(--edge-invalid); stroke-width: 2.2; }
+  .edges-svg path.pending { stroke: var(--edge-pending); stroke-dasharray: 4 3; }
+  .edges-svg text {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 9.5px; fill: var(--muted);
+    paint-order: stroke; stroke: white; stroke-width: 3;
+  }
+
+  .legend {
+    margin: 12px 0 12px; display: flex; gap: 16px; flex-wrap: wrap;
+    font-size: 11px; color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-sw   { display: inline-block; width: 22px; height: 2px; }
+  .legend-sw.valid   { background: var(--edge-valid); }
+  .legend-sw.invalid { background: var(--edge-invalid); }
+  .legend-sw.pending { border-top: 2px dashed var(--edge-pending); height: 0; }
+
+  .inspector {
+    position: fixed; top: 0; right: 0; height: 100vh; width: 360px;
+    background: var(--bg-card); border-left: 1px solid var(--border);
+    transform: translateX(100%); transition: transform .15s ease;
+    z-index: 70; display: flex; flex-direction: column;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.05);
+  }
+  .inspector.open { transform: translateX(0); }
+  .inspector-header {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .inspector-header .h-id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 600; font-size: 13px; flex: 1; word-break: break-all;
+  }
+  .inspector-header .close {
+    border: none; background: transparent; cursor: pointer;
+    font-size: 18px; color: var(--muted); padding: 0 4px; line-height: 1;
+  }
+  .inspector-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
+  .inspector-body h3 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--muted); margin: 14px 0 6px; font-weight: 600;
+  }
+  .inspector-body h3:first-child { margin-top: 0; }
+  .inspector-body dl {
+    display: grid; grid-template-columns: 96px 1fr; gap: 3px 10px; font-size: 12.5px;
+    margin: 0;
+  }
+  .inspector-body dt { color: var(--muted); }
+  .inspector-body dd {
+    margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    word-break: break-all;
+  }
+  .inspector-body .actions { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+  .inspector-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.06);
+    z-index: 60; display: none;
+  }
+  .inspector-backdrop.open { display: block; }
+
+  .help {
+    margin-top: 6px; padding: 8px 11px; background: #f7f8fa;
+    border: 1px dashed var(--border); border-radius: 4px;
+    color: var(--muted); font-size: 11.5px;
+  }
+  .help kbd {
+    display: inline-block; padding: 1px 5px; border: 1px solid var(--border);
+    border-radius: 3px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px; background: white;
+  }
+  .errors-panel {
+    margin-top: 16px; padding: 0; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 6px;
+    overflow: hidden;
+  }
+  .errors-panel .head {
+    padding: 8px 12px; background: #f7f8fa; border-bottom: 1px solid var(--border);
+    font-size: 11.5px; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .errors-panel .body { padding: 8px 12px; max-height: 280px; overflow-y: auto; }
+  .errors-panel .body .err {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; color: var(--red); padding: 3px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .errors-panel .body .err:last-child { border: none; }
+  .errors-panel .body .ok { color: var(--green); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html"><span class="num">1.</span> Conversation</a>
+  <a href="action.html"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html"><span class="num">4.</span> Catalogue</a>
+  <a href="layers.html"><span class="num">5.</span> Layers</a>
+  <a href="candidate_review.html"><span class="num">6.</span> Candidate review</a>
+  <a href="graph_builder.html" class="current"><span class="num">7.</span> Graph builder</a>
+  <span class="tag">atlas-core / page 7</span>
+</nav>
+
+<div class="wrap">
+  <h1>Graph builder — five-column layer graph editor</h1>
+  <p class="lede">
+    Five columns, one per node type from <code>vocabulary/node_types.tsv</code>: sets / filters / layers / analyses / hooks.
+    Each column lists the items registered in the workspace. Click a node to <strong>add it to the current graph</strong>
+    (a small <span class="pill in-graph" style="display:inline-block; padding: 0 4px;">IN GRAPH</span> badge appears).
+    Then click two in-graph nodes — the second click <strong>draws an edge</strong> with the current edge type.
+    Edges are validated live against <code>vocabulary/edge_rules.tsv</code>: <span style="color:#2f8550;font-weight:600">green</span> = valid, <span style="color:#b13030;font-weight:600">red</span> = invalid. Click an edge to delete.
+  </p>
+
+  <div class="toolbar">
+    <label>edge type
+      <select id="edge-type">
+        <option value="input">input</option>
+        <option value="output">output</option>
+        <option value="feeds_into">feeds_into</option>
+      </select>
+    </label>
+    <span class="sep"></span>
+    <label>graph_id
+      <input type="text" id="graph-id" value="candidate_review_LG28_v1" size="26">
+    </label>
+    <span class="sep"></span>
+    <button class="btn btn-success" id="btn-validate">Validate</button>
+    <button class="btn btn-primary" id="btn-export">Export</button>
+    <button class="btn"             id="btn-import">Import</button>
+    <input type="file" id="file-import" accept="application/json" style="display:none">
+    <button class="btn btn-danger"  id="btn-clear">Clear graph</button>
+    <span class="status">
+      <span class="badge pending" id="badge-nodes">0</span> nodes
+      <span class="badge pending" id="badge-edges">0</span> edges
+      <span class="badge pending" id="badge-state">pending</span>
+    </span>
+  </div>
+
+  <div class="help">
+    <strong>How to use:</strong>
+    1. Click any node card → adds it to the graph (toggle off by clicking again).
+    2. With nodes in the graph, click one then another to draw an edge between them (with the selected edge type).
+    3. Click an edge to delete.
+    4. <kbd>Validate</kbd> runs the §6 edge-rule table in JS (mirrors <code>lib/edge_validator.py</code>).
+    5. <kbd>Export</kbd> downloads a <code>layer_graph_v1</code> JSON; <kbd>Import</kbd> loads one back.
+    Manual graph persists to <code>localStorage</code>.
+  </div>
+
+  <div class="board" id="board">
+    <div class="col sets">
+      <h2><span class="glyph">○</span>Sets <span class="n" id="count-sets">0</span></h2>
+      <div class="col-list" id="sets-list"></div>
+    </div>
+    <div class="col filters">
+      <h2><span class="glyph">◇</span>Filters <span class="n" id="count-filters">0</span></h2>
+      <div class="col-list" id="filters-list"></div>
+    </div>
+    <div class="col layers">
+      <h2><span class="glyph">▭</span>Layers <span class="n" id="count-layers">0</span></h2>
+      <div class="col-list" id="layers-list"></div>
+    </div>
+    <div class="col analyses">
+      <h2><span class="glyph">⬡</span>Analyses <span class="n" id="count-analyses">0</span></h2>
+      <div class="col-list" id="analyses-list"></div>
+    </div>
+    <div class="col hooks">
+      <h2><span class="glyph">🔌</span>Hooks <span class="n" id="count-hooks">0</span></h2>
+      <div class="col-list" id="hooks-list"></div>
+    </div>
+    <svg class="edges-svg" id="edges-svg" preserveAspectRatio="none"></svg>
+  </div>
+
+  <div class="errors-panel">
+    <div class="head">Validation report</div>
+    <div class="body" id="errors-body"><div class="ok">Click Validate to check the graph.</div></div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-sw valid"></span> valid edge</div>
+    <div class="legend-item"><span class="legend-sw invalid"></span> invalid edge (no rule / constraint failed)</div>
+    <div class="legend-item"><span class="legend-sw pending"></span> not yet validated</div>
+  </div>
+</div>
+
+<div class="inspector-backdrop" id="inspector-backdrop"></div>
+<aside class="inspector" id="inspector">
+  <div class="inspector-header">
+    <div class="h-id" id="inspector-id">—</div>
+    <button class="close" id="inspector-close" aria-label="close">×</button>
+  </div>
+  <div class="inspector-body" id="inspector-body"></div>
+</aside>
+
+<script>
+const SVG_NS = "http://www.w3.org/2000/svg";
+const LS_KEY = "atlas_graph_builder_v1";
+
+// ----- TSV helpers -----
+function parseTSV(text) {
+  const lines = text.replace(/\r\n/g, "\n").split("\n").filter(l => l.length);
+  if (!lines.length) return [];
+  const header = lines[0].split("\t");
+  return lines.slice(1).map(l => {
+    const cells = l.split("\t");
+    const o = {};
+    header.forEach((h, i) => { o[h] = cells[i] ?? ""; });
+    return o;
+  });
+}
+const csv = s => (s || "").split(",").map(x => x.trim()).filter(Boolean);
+
+// ----- data model -----
+const DB = {};
+const state = {
+  // graph = { nodes: [...], edges: [...] }
+  nodes: [],
+  edges: [],
+  selectedRegistryId: null,        // currently selected (for adding via click)
+  selectedGraphNodeId: null,       // last clicked in-graph node (for edge start)
+  validationReport: null,
+};
+
+async function loadDB() {
+  async function tsv(p) {
+    try { return parseTSV(await (await fetch(p)).text()); }
+    catch { return []; }
+  }
+  const [layers, hooks, analyses, samples, intervals] = await Promise.all([
+    tsv("../01_registry/layer_registry.tsv"),
+    tsv("../01_registry/hook_registry.tsv"),
+    tsv("../01_registry/analysis_registry.tsv"),
+    tsv("../01_registry/sample_sets.tsv"),
+    tsv("../01_registry/interval_sets.tsv"),
+  ]);
+  // edge rules from ../../vocabulary/edge_rules.tsv
+  const edgeRules = await tsv("../../vocabulary/edge_rules.tsv");
+  DB.layers = layers;
+  DB.hooks = hooks;
+  DB.analyses = analyses;
+  DB.sets = [
+    ...samples.map(s => ({ kind: "sample_set", id: s.sample_set_id, label: s.notes || "" })),
+    ...intervals.map(i => ({ kind: "interval_set", id: i.interval_set_id, label: i.notes || "" })),
+  ];
+  DB.filters = []; // synthesised from user actions; none registered
+  DB.edge_rules = edgeRules;
+  DB.layers_by_id = Object.fromEntries(layers.map(l => [l.layer_id, l]));
+  DB.analyses_by_id = Object.fromEntries(analyses.map(a => [a.analysis_id, a]));
+  DB.hooks_by_id = Object.fromEntries(hooks.map(h => [h.hook_id, h]));
+}
+
+// ----- registry-side rendering -----
+function colInfo(type) {
+  return ({
+    set:      { listId: "sets-list",     countId: "count-sets" },
+    filter:   { listId: "filters-list",  countId: "count-filters" },
+    layer:    { listId: "layers-list",   countId: "count-layers" },
+    analysis: { listId: "analyses-list", countId: "count-analyses" },
+    hook:     { listId: "hooks-list",    countId: "count-hooks" },
+  })[type];
+}
+function registryItems(type) {
+  if (type === "set")     return DB.sets.map(s => ({ id: s.id, label: s.kind, meta: s.label }));
+  if (type === "filter")  return [{ id: "manual_filter", label: "manual (one per click)", meta: "drag-to-graph creates a new filter node" }];
+  if (type === "layer")   return DB.layers.map(l => ({ id: l.layer_id, label: l.label, meta: `${l.source_kind} · ${l.status}`, kind: l.source_kind, status: l.status, stub: l.status === "stub" }));
+  if (type === "analysis")return DB.analyses.map(a => ({ id: a.analysis_id, label: a.label, meta: `${a.engine} · ${a.status}`, status: a.status }));
+  if (type === "hook")    return DB.hooks.map(h => ({ id: h.hook_id, label: h.label, meta: `page: ${h.page_id}` }));
+  return [];
+}
+function renderColumns() {
+  for (const type of ["set", "filter", "layer", "analysis", "hook"]) {
+    const info = colInfo(type);
+    const host = document.getElementById(info.listId);
+    host.innerHTML = "";
+    const items = registryItems(type);
+    document.getElementById(info.countId).textContent = items.length;
+    for (const it of items) {
+      const inGraph = state.nodes.some(n => n.type === type && registryRefOf(n) === it.id);
+      const el = document.createElement("div");
+      el.className = "node" + (inGraph ? " in-graph" : "");
+      el.dataset.type = type;
+      el.dataset.registryId = it.id;
+      const pills = [];
+      if (inGraph) pills.push(`<span class="pill in-graph">in graph</span>`);
+      if (it.kind) pills.push(`<span class="pill kind-${it.kind}">${it.kind}</span>`);
+      if (it.stub) pills.push(`<span class="pill stub">stub</span>`);
+      if (it.status && it.status !== "active" && !it.stub) pills.push(`<span class="pill status-${it.status}">${it.status}</span>`);
+      el.innerHTML = `
+        ${pills.join("")}
+        <span class="id">${it.id}</span>
+        <div class="meta">${(it.label || it.meta || "").slice(0, 60)}</div>
+      `;
+      el.addEventListener("click", e => onRegistryItemClick(type, it.id, e));
+      host.appendChild(el);
+    }
+  }
+}
+function registryRefOf(node) {
+  if (node.type === "set")      return node.set_id || node.entity_type;
+  if (node.type === "filter")   return node.id;
+  if (node.type === "layer")    return node.layer_id;
+  if (node.type === "analysis") return node.analysis_id;
+  if (node.type === "hook")     return node.hook_id;
+  return "";
+}
+
+// ----- node toggle (in-graph or not) -----
+function onRegistryItemClick(type, registryId, ev) {
+  // Toggle in/out of graph (also serves as edge-start when already in graph).
+  const existingIdx = state.nodes.findIndex(n => n.type === type && registryRefOf(n) === registryId);
+  if (existingIdx === -1) {
+    addNodeToGraph(type, registryId);
+  } else {
+    // If a different in-graph node is selected as edge-start, this click is the end.
+    const me = state.nodes[existingIdx];
+    if (state.selectedGraphNodeId && state.selectedGraphNodeId !== me.id) {
+      addEdge(state.selectedGraphNodeId, me.id, document.getElementById("edge-type").value);
+      state.selectedGraphNodeId = null;
+    } else if (state.selectedGraphNodeId === me.id) {
+      // toggle off as edge-start; double-click pattern would remove. Instead, hold Shift to remove.
+      if (ev.shiftKey) { removeNodeFromGraph(me.id); }
+      state.selectedGraphNodeId = null;
+    } else {
+      state.selectedGraphNodeId = me.id;
+      openInspector(me);
+    }
+  }
+  rerender();
+}
+function addNodeToGraph(type, registryId) {
+  const id = mintNodeId(type, registryId);
+  const n = { id, type };
+  if (type === "set") {
+    // We treat set rows from sample_sets / interval_sets as sets with that id.
+    const found = DB.sets.find(s => s.id === registryId);
+    n.entity_type = found ? (found.kind === "sample_set" ? "sample" : "interval") : "sample";
+    n.set_id = registryId;
+  } else if (type === "filter") {
+    n.input = "<unset>";
+    n.conditions = [];
+  } else if (type === "layer")    n.layer_id = registryId;
+  else if (type === "analysis")   { n.analysis_id = registryId; n.trigger_policy = "manual"; }
+  else if (type === "hook")       n.hook_id = registryId;
+  state.nodes.push(n);
+  saveLS();
+  openInspector(n);
+}
+function mintNodeId(type, registryId) {
+  const base = (registryId || type).replace(/[^a-z0-9_]/gi, "_").toLowerCase();
+  let i = 0;
+  while (state.nodes.some(n => n.id === (i === 0 ? base : `${base}_${i}`))) i++;
+  return i === 0 ? base : `${base}_${i}`;
+}
+function removeNodeFromGraph(nodeId) {
+  state.nodes = state.nodes.filter(n => n.id !== nodeId);
+  state.edges = state.edges.filter(e => e[0] !== nodeId && e[1] !== nodeId);
+  saveLS();
+}
+
+// ----- edges -----
+function addEdge(fromId, toId, edgeType) {
+  // Don't duplicate
+  if (state.edges.some(e => e[0] === fromId && e[1] === toId && e[2] === edgeType)) return;
+  state.edges.push([fromId, toId, edgeType]);
+  saveLS();
+}
+function removeEdge(edge) {
+  state.edges = state.edges.filter(e => !(e[0] === edge[0] && e[1] === edge[1] && e[2] === edge[2]));
+  saveLS();
+}
+
+// ----- inspector -----
+function openInspector(node) {
+  const insp = document.getElementById("inspector");
+  const back = document.getElementById("inspector-backdrop");
+  const body = document.getElementById("inspector-body");
+  document.getElementById("inspector-id").textContent = node.id;
+  let html = `<h3>Type</h3><dl><dt>type</dt><dd>${node.type}</dd>`;
+  if (node.set_id)      html += `<dt>set_id</dt><dd>${node.set_id}</dd>`;
+  if (node.entity_type) html += `<dt>entity_type</dt><dd>${node.entity_type}</dd>`;
+  if (node.layer_id)    html += `<dt>layer_id</dt><dd>${node.layer_id}</dd>`;
+  if (node.analysis_id) html += `<dt>analysis_id</dt><dd>${node.analysis_id}</dd>`;
+  if (node.hook_id)     html += `<dt>hook_id</dt><dd>${node.hook_id}</dd>`;
+  if (node.trigger_policy) html += `<dt>trigger</dt><dd>${node.trigger_policy}</dd>`;
+  html += `</dl>`;
+  // Show registry context
+  if (node.type === "layer") {
+    const l = DB.layers_by_id[node.layer_id];
+    if (l) html += `<h3>Layer registry</h3><dl><dt>source_kind</dt><dd>${l.source_kind}</dd><dt>status</dt><dd>${l.status}</dd><dt>label</dt><dd style="white-space:normal;font-family:inherit;">${l.label || ""}</dd></dl>`;
+  } else if (node.type === "analysis") {
+    const a = DB.analyses_by_id[node.analysis_id];
+    if (a) html += `<h3>Analysis registry</h3><dl><dt>input_layer_types</dt><dd>${a.input_layer_types}</dd><dt>produces</dt><dd>${a.produces}</dd><dt>engine</dt><dd>${a.engine}</dd></dl>`;
+  } else if (node.type === "hook") {
+    const h = DB.hooks_by_id[node.hook_id];
+    if (h) html += `<h3>Hook registry</h3><dl><dt>requires_layers</dt><dd>${h.requires_layers}</dd><dt>optional_layers</dt><dd>${h.optional_layers || "—"}</dd></dl>`;
+  }
+  // Connected edges
+  const incident = state.edges.filter(e => e[0] === node.id || e[1] === node.id);
+  if (incident.length) {
+    html += `<h3>Edges (${incident.length})</h3><dl>`;
+    for (const e of incident) html += `<dt>${e[2]}</dt><dd>${e[0] === node.id ? "→ " + e[1] : "← " + e[0]}</dd>`;
+    html += `</dl>`;
+  }
+  html += `<div class="actions">
+    <button class="btn btn-danger" id="btn-remove-node">Remove from graph</button>
+  </div>`;
+  body.innerHTML = html;
+  document.getElementById("btn-remove-node").addEventListener("click", () => {
+    removeNodeFromGraph(node.id);
+    closeInspector();
+    rerender();
+  });
+  insp.classList.add("open");
+  back.classList.add("open");
+}
+function closeInspector() {
+  document.getElementById("inspector").classList.remove("open");
+  document.getElementById("inspector-backdrop").classList.remove("open");
+}
+
+// ----- the JS edge validator (mirrors lib/edge_validator.py §6) -----
+function validateGraph(g) {
+  const nodesById = Object.fromEntries(g.nodes.map(n => [n.id, n]));
+  const errors = [];
+  for (const n of g.nodes) {
+    const err = validateNode(n);
+    if (err) errors.push(err);
+  }
+  for (const e of g.edges) {
+    if (!Array.isArray(e) || e.length !== 3) {
+      errors.push({ edge: e, error: "edge must be a 3-tuple" });
+      continue;
+    }
+    const [from, to, et] = e;
+    const fn = nodesById[from], tn = nodesById[to];
+    if (!fn) { errors.push({ edge: e, error: `from_id ${from} not in nodes[]` }); continue; }
+    if (!tn) { errors.push({ edge: e, error: `to_id ${to} not in nodes[]` }); continue; }
+    const r = validateEdge(fn, tn, et);
+    if (!r.ok) errors.push({ edge: e, from_type: fn.type, to_type: tn.type, error: r.why });
+  }
+  return { graph_id: g.graph_id, n_nodes: g.nodes.length, n_edges: g.edges.length,
+           valid: errors.length === 0, errors };
+}
+function validateNode(n) {
+  if (n.type === "layer"    && !n.layer_id)    return { node: n.id, error: "layer node missing layer_id" };
+  if (n.type === "analysis" && !n.analysis_id) return { node: n.id, error: "analysis node missing analysis_id" };
+  if (n.type === "hook"     && !n.hook_id)     return { node: n.id, error: "hook node missing hook_id" };
+  if (n.type === "set"      && !n.entity_type) return { node: n.id, error: "set node missing entity_type" };
+  if (n.type === "layer"    && n.layer_id    && !DB.layers_by_id[n.layer_id]    && !n.stub) return { node: n.id, error: `layer_id ${n.layer_id} not in registry` };
+  if (n.type === "analysis" && n.analysis_id && !DB.analyses_by_id[n.analysis_id] && !n.stub) return { node: n.id, error: `analysis_id ${n.analysis_id} not in registry` };
+  if (n.type === "hook"     && n.hook_id     && !DB.hooks_by_id[n.hook_id]     && !n.stub) return { node: n.id, error: `hook_id ${n.hook_id} not in registry` };
+  return null;
+}
+function validateEdge(fn, tn, et) {
+  const rule = DB.edge_rules.find(r => r.from_type === fn.type && r.to_type === tn.type && r.edge_type === et);
+  if (!rule) return { ok: false, why: `no rule for (${fn.type} → ${tn.type}, ${et})` };
+  const c = rule.constraint;
+  if (c === "always") return { ok: true };
+  if (c === "entity_type_match") {
+    const fet = fn.entity_type || "";
+    const tet = tn.entity_type || (DB.layers_by_id[tn.layer_id || ""] || {}).entity_type || "";
+    if (!fet || !tet) return { ok: false, why: "entity_type_match: missing entity_type" };
+    return fet === tet ? { ok: true } : { ok: false, why: `entity_type_match: ${fet} != ${tet}` };
+  }
+  if (c === "layer_in_inputs") {
+    const a = DB.analyses_by_id[tn.analysis_id || ""] || {};
+    const inputs = csv(a.input_layer_types);
+    return inputs.includes(fn.layer_id) ? { ok: true } :
+      { ok: false, why: `layer_in_inputs: ${fn.layer_id} not in ${tn.analysis_id}.input_layer_types=[${inputs.join(",")}]` };
+  }
+  if (c === "layer_in_produces") {
+    const a = DB.analyses_by_id[fn.analysis_id || ""] || {};
+    const produces = csv(a.produces);
+    return produces.includes(tn.layer_id) ? { ok: true } :
+      { ok: false, why: `layer_in_produces: ${tn.layer_id} not in ${fn.analysis_id}.produces=[${produces.join(",")}]` };
+  }
+  if (c === "layer_in_requires_or_optional") {
+    const h = DB.hooks_by_id[tn.hook_id || ""] || {};
+    const allowed = csv(h.requires_layers).concat(csv(h.optional_layers));
+    return allowed.includes(fn.layer_id) ? { ok: true } :
+      { ok: false, why: `layer_in_requires_or_optional: ${fn.layer_id} not in ${tn.hook_id} (required/optional)` };
+  }
+  return { ok: false, why: `unknown constraint ${c}` };
+}
+
+// ----- rendering -----
+function rerender() {
+  renderColumns();
+  drawEdges();
+  document.getElementById("badge-nodes").textContent = state.nodes.length;
+  document.getElementById("badge-edges").textContent = state.edges.length;
+}
+
+function cssEsc(s) { return (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/"/g, '\\"'); }
+function findNodeEl(graphNode) {
+  return document.querySelector(`.node[data-type="${graphNode.type}"][data-registry-id="${cssEsc(registryRefOf(graphNode))}"]`);
+}
+function drawEdges() {
+  const svg = document.getElementById("edges-svg");
+  const board = document.getElementById("board");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const brect = board.getBoundingClientRect();
+  svg.setAttribute("viewBox", `0 0 ${brect.width} ${brect.height}`);
+
+  function endpoint(el, side) {
+    const r = el.getBoundingClientRect();
+    return { x: (side === "right" ? r.right : r.left) - brect.left,
+             y: r.top + r.height / 2 - brect.top };
+  }
+  function curve(p1, p2) {
+    const dx = Math.max(40, Math.abs(p2.x - p1.x) * 0.55);
+    return `M ${p1.x} ${p1.y} C ${p1.x + dx} ${p1.y}, ${p2.x - dx} ${p2.y}, ${p2.x} ${p2.y}`;
+  }
+
+  // Compute validation for every edge live (cheap) so we can color them.
+  const report = validateGraph({ nodes: state.nodes, edges: state.edges, graph_id: document.getElementById("graph-id").value });
+  const badEdgeIdx = new Set();
+  for (const e of report.errors) {
+    if (e.edge && Array.isArray(e.edge)) {
+      const i = state.edges.findIndex(x => x[0] === e.edge[0] && x[1] === e.edge[1] && x[2] === e.edge[2]);
+      if (i !== -1) badEdgeIdx.add(i);
+    }
+  }
+  // status badge
+  const sb = document.getElementById("badge-state");
+  sb.className = "badge " + (state.edges.length === 0 ? "pending" : report.valid ? "valid" : "invalid");
+  sb.textContent = state.edges.length === 0 ? "pending" : report.valid ? "VALID" : `${report.errors.length} ERR`;
+
+  const byId = Object.fromEntries(state.nodes.map(n => [n.id, n]));
+  state.edges.forEach((edge, i) => {
+    const fn = byId[edge[0]], tn = byId[edge[1]];
+    if (!fn || !tn) return;
+    const fEl = findNodeEl(fn), tEl = findNodeEl(tn);
+    if (!fEl || !tEl) return;
+    // Determine left/right based on x positions
+    const fr = fEl.getBoundingClientRect();
+    const tr = tEl.getBoundingClientRect();
+    const p1 = endpoint(fEl, fr.left < tr.left ? "right" : "left");
+    const p2 = endpoint(tEl, fr.left < tr.left ? "left"  : "right");
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", curve(p1, p2));
+    path.setAttribute("class", badEdgeIdx.has(i) ? "invalid" : "valid");
+    path.addEventListener("click", ev => {
+      ev.stopPropagation();
+      if (!confirm(`Remove edge: ${edge[0]} —(${edge[2]})→ ${edge[1]}?`)) return;
+      removeEdge(edge);
+      rerender();
+    });
+    svg.appendChild(path);
+    const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 - 4 };
+    const text = document.createElementNS(SVG_NS, "text");
+    text.setAttribute("x", mid.x);
+    text.setAttribute("y", mid.y);
+    text.setAttribute("text-anchor", "middle");
+    text.textContent = edge[2];
+    svg.appendChild(text);
+  });
+}
+
+// ----- localStorage / import / export -----
+function saveLS() {
+  localStorage.setItem(LS_KEY, JSON.stringify({ nodes: state.nodes, edges: state.edges }));
+}
+function loadLS() {
+  try {
+    const o = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    if (Array.isArray(o.nodes)) state.nodes = o.nodes;
+    if (Array.isArray(o.edges)) state.edges = o.edges;
+  } catch {}
+}
+function exportGraph() {
+  const g = {
+    graph_id: document.getElementById("graph-id").value || "untitled_v1",
+    schema_version: "layer_graph_v1",
+    nodes: state.nodes,
+    edges: state.edges,
+    created_at: new Date().toISOString(),
+    author: "human_via_graph_builder",
+  };
+  const blob = new Blob([JSON.stringify(g, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = g.graph_id + ".json"; a.click();
+  URL.revokeObjectURL(url);
+}
+function importGraph(file) {
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const o = JSON.parse(ev.target.result);
+      if (!Array.isArray(o.nodes) || !Array.isArray(o.edges)) throw new Error("missing nodes/edges arrays");
+      state.nodes = o.nodes;
+      state.edges = o.edges;
+      if (o.graph_id) document.getElementById("graph-id").value = o.graph_id;
+      saveLS();
+      rerender();
+    } catch (e) { alert("import failed: " + e.message); }
+  };
+  r.readAsText(file);
+}
+function clearGraph() {
+  if (!state.nodes.length && !state.edges.length) return;
+  if (!confirm(`Clear graph (${state.nodes.length} nodes, ${state.edges.length} edges)?`)) return;
+  state.nodes = []; state.edges = []; saveLS(); rerender();
+  document.getElementById("errors-body").innerHTML = '<div class="ok">Click Validate to check the graph.</div>';
+}
+function runValidate() {
+  const g = { graph_id: document.getElementById("graph-id").value, nodes: state.nodes, edges: state.edges };
+  const rep = validateGraph(g);
+  state.validationReport = rep;
+  const body = document.getElementById("errors-body");
+  if (rep.valid && state.edges.length) {
+    body.innerHTML = `<div class="ok">✓ graph valid — ${rep.n_nodes} nodes, ${rep.n_edges} edges, 0 errors.</div>`;
+  } else if (!state.edges.length) {
+    body.innerHTML = `<div class="ok">${rep.n_nodes} nodes, 0 edges — add edges and click Validate.</div>`;
+  } else {
+    body.innerHTML = rep.errors.map(e => `<div class="err">${e.edge ? "edge " + JSON.stringify(e.edge) + ": " : e.node ? "node " + e.node + ": " : ""}${e.error}</div>`).join("");
+  }
+  rerender(); // update colors/badges
+}
+
+(async () => {
+  await loadDB();
+  loadLS();
+  rerender();
+  document.getElementById("btn-validate").addEventListener("click", runValidate);
+  document.getElementById("btn-export").addEventListener("click", exportGraph);
+  document.getElementById("btn-clear").addEventListener("click", clearGraph);
+  document.getElementById("btn-import").addEventListener("click", () => document.getElementById("file-import").click());
+  document.getElementById("file-import").addEventListener("change", e => {
+    if (e.target.files[0]) importGraph(e.target.files[0]);
+    e.target.value = "";
+  });
+  document.getElementById("inspector-close").addEventListener("click", closeInspector);
+  document.getElementById("inspector-backdrop").addEventListener("click", closeInspector);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeInspector(); });
+  window.addEventListener("resize", drawEdges);
+  window.addEventListener("scroll", drawEdges);
+})();
+</script>
+</body>
+</html>

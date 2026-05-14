@@ -1,0 +1,33 @@
+{
+  "package_id":     "discovery_karyotype_package",
+  "schema_version": "package_manifest_v1",
+  "atlas_id":       "inversion_atlas",
+  "label":          "Discovery + karyotype (coupled)",
+  "description":    "Three coupled analyses that take raw window-band / L3 / dosage signals through to polarised per-sample karyotype calls. Standalone but tightly chained: candidate_registry → unpolarized_karyotype_calls → polarized_karyotype_calls. Sibling adapters share the same input scope but each is its own registry entry.",
+  "version":        "0.1.0",
+  "status":         "experimental",
+  "analyses": [
+    { "analysis_id": "iv_candidate_promoter",  "required": true,  "rationale": "produces candidate_registry + chain_evidence from raw signals" },
+    { "analysis_id": "karyotype_auto_caller",  "required": true,  "rationale": "classifies each (sample, candidate) into 0/1/2 from dosage + chain evidence" },
+    { "analysis_id": "karyotype_polarizer",    "required": false, "rationale": "adds direction; not required if downstream consumers tolerate unpolarized" }
+  ],
+  "layers": [
+    { "layer_id": "candidate_registry",         "role": "produced",          "rationale": "core output — the candidate axis for all downstream work" },
+    { "layer_id": "chain_evidence",             "role": "produced",          "rationale": "provenance trail — which window/site/dosage hit promoted this candidate" },
+    { "layer_id": "unpolarized_karyotype_calls","role": "produced",          "rationale": "intermediate; consumed internally" },
+    { "layer_id": "polarized_karyotype_calls",  "role": "produced",          "rationale": "final canonical karyotype layer" },
+    { "layer_id": "karyotype_calls",            "role": "consumed_external", "rationale": "the existing manuscript file-kind layer; this package's polarized output supersedes manual curation when it stabilises" },
+    { "layer_id": "window_band_calls",          "role": "consumed_external", "rationale": "raw signal input" },
+    { "layer_id": "l3_contingency",             "role": "consumed_external", "rationale": "raw signal input" },
+    { "layer_id": "dosage_summary",             "role": "consumed_external", "rationale": "raw signal input" }
+  ],
+  "panels": [
+    { "panel_id": "candidate_overview_panel", "rationale": "renders candidate_registry rows for the current candidate scope" },
+    { "panel_id": "candidate_review_panel",   "rationale": "composite panel for page 6 (Candidate review)" },
+    { "panel_id": "karyotype_panel",          "rationale": "renders (un)polarized_karyotype_calls per sample × candidate" }
+  ],
+  "pages": [
+    { "hook_id": "candidate_review_hook", "rationale": "this package contributes the two required panels of page 6" }
+  ],
+  "requires_packages": []
+}

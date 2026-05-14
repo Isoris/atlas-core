@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "package_manifest_v1.schema.json",
+  "title": "Package manifest — bundle of related analyses / layers / panels / pages",
+  "description": "Per ADAPTER_CONTRACT.md §7. A package is the unit of distribution: one folder under packages/<package_id>/ with a manifest.json listing the analyses, layers, panels, and pages that go together. Packages are how the user picks a body of work (\"discovery+karyotype\", \"relatedness chain\", \"popgen scans\") without naming each piece individually.",
+  "type": "object",
+  "required": ["package_id", "schema_version", "label", "analyses", "layers", "panels"],
+  "additionalProperties": false,
+  "properties": {
+    "package_id":     { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "schema_version": { "type": "string", "const": "package_manifest_v1" },
+    "atlas_id":       { "type": "string", "description": "Owning atlas (e.g. inversion_atlas). Optional for cross-atlas packages." },
+    "label":          { "type": "string" },
+    "description":    { "type": "string" },
+    "version":        { "type": "string", "description": "Semver-ish for the package itself." },
+    "status":         { "type": "string", "enum": ["active", "experimental", "deprecated"] },
+    "analyses": {
+      "type": "array",
+      "description": "Analyses bundled by this package. Each is the analysis_id, which must resolve to analysis_registry.",
+      "items": {
+        "type": "object",
+        "required": ["analysis_id"],
+        "additionalProperties": false,
+        "properties": {
+          "analysis_id":  { "type": "string" },
+          "required":     { "type": "boolean", "default": true, "description": "If false, the analysis is optional within the package (useful for stubs)." },
+          "rationale":    { "type": "string", "description": "Why this analysis belongs in the package." }
+        }
+      }
+    },
+    "layers": {
+      "type": "array",
+      "description": "Layers the package contributes (produced by its analyses) and / or consumes from outside.",
+      "items": {
+        "type": "object",
+        "required": ["layer_id", "role"],
+        "additionalProperties": false,
+        "properties": {
+          "layer_id":     { "type": "string" },
+          "role":         { "type": "string", "enum": ["produced", "consumed_internal", "consumed_external"], "description": "produced = an analysis in this package produces it; consumed_internal = panel inside this package renders it; consumed_external = panel in another package renders it." },
+          "rationale":    { "type": "string" }
+        }
+      }
+    },
+    "panels": {
+      "type": "array",
+      "description": "Panel IDs this package owns. Each panel_id must resolve to a panel_v1 entry.",
+      "items": {
+        "type": "object",
+        "required": ["panel_id"],
+        "additionalProperties": false,
+        "properties": {
+          "panel_id":   { "type": "string" },
+          "rationale":  { "type": "string" }
+        }
+      }
+    },
+    "pages": {
+      "type": "array",
+      "description": "Optional. Pages whose hooks this package depends on. The page is not 'owned' by a package — multiple packages can contribute panels to the same page.",
+      "items": {
+        "type": "object",
+        "required": ["hook_id"],
+        "additionalProperties": false,
+        "properties": {
+          "hook_id":    { "type": "string" },
+          "rationale":  { "type": "string" }
+        }
+      }
+    },
+    "requires_packages": {
+      "type": "array",
+      "description": "Other package_ids whose analyses / layers this one depends on. Informational dependency hint.",
+      "items": { "type": "string" }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}

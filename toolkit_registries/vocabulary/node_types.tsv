@@ -1,0 +1,6 @@
+node_type	label	description	visual_glyph	visual_color
+set	Set	A named collection of entities of one type (sample_set, interval_set, candidate_set, site_set, group_set). Per LAYER_GRAPH_BUILDER_SPEC.md §2.	circle	white
+filter	Filter	A deterministic set → set transformation (predicate, intersection, union, difference, from_inline).	diamond	pale_yellow
+layer	Layer	A unit of data the atlas resolves. Has a source_kind (file / analysis_result / operation / inline).	rectangle	per_source_kind
+analysis	Analysis	A KIND of computation declared in analysis_registry.tsv. Consumes input_layer_types + sets; produces layer_id(s).	hexagon	accent_blue
+hook	Hook	A page / panel / widget request. Declares requires_layers + optional_layers.	plug	dark_grey

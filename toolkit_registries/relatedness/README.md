@@ -16,8 +16,19 @@ WHICH     site_sets.tsv        one row per variant-site list (thinned, filtered)
 WHAT-IN   input_values.tsv     one row per BEAGLE / dosage / SAF / VCF
 WHAT-OUT  analysis_results.tsv one row per ngsRelate / ngsPedigree / mendelian / … run
 HOW       analysis_modes.tsv   one row per (analysis × mode); the resolver's brain
+WHAT-KIND analysis_registry.tsv one row per analysis_id; the catalogue of analysis KINDS
 TOOLS     module_registry.tsv  one row per biomod module (mirror of `biomod status --json`)
 ```
+
+`analysis_registry.tsv` is the canonical catalogue: one row per analysis KIND
+(`ngsrelate`, `ngspedigree`, `mendelian`, `popstats`, `fst_pairwise`, `theta_pi`,
+`dxy`, …) declaring its `input_entity_types`, `input_layer_types`, `produces`,
+`engine`, `endpoint`, `default_runner`, `status`, and `requires` (upstream
+dependency hint). `analysis_modes.tsv.analysis_type` and
+`analysis_results.tsv.analysis_type` both FK into `analysis_registry.analysis_id`.
+Adding a new analysis kind is: add one row here + (one or more) rows in
+`analysis_modes.tsv` + (when it has a biomod backing) one row in `module_registry.tsv`.
+Validated by `scripts/check_analysis_registry.py`.
 
 The TOOLS row is the bridge to **biomod** — the conda-style module catalog
 described in `BIOMOD_SPEC.md`. biomod owns the module / runs / install
@@ -379,6 +390,43 @@ python3 register_result.py \
 
 Every script accepts `--registry-root <PATH>` to override; otherwise
 they walk upward looking for `01_registry/`.
+
+## The analysis catalogue — `analysis_registry.tsv`
+
+One row per analysis KIND. Schema:
+`schemas/registry_schemas/analysis_registry_row_v1.schema.json`. Today's
+catalogue:
+
+| analysis_id | status | input_layer_types | produces | engine | requires |
+|---|---|---|---|---|---|
+| `ngsrelate`     | active       | `beagle_file,sites_file`             | `relatedness_res`     | ngsRelate       |              |
+| `ngspedigree`   | active       | `relatedness_res`                    | `pedigree_result`     | ngsPedigree     | ngsrelate    |
+| `mendelian`     | active       | `pedigree_result,beagle_file,sites_file` | `mendelian_result` | mendelian_trio  | ngspedigree  |
+| `popstats`      | active       | `beagle_file,sites_file`             | `popstats_result`     | region_popstats |              |
+| `fst_pairwise`  | experimental | `beagle_file`                        | `fst_windows`         | region_popstats | popstats     |
+| `theta_pi`      | experimental | `beagle_file`                        | `theta_pi_windows`    | region_popstats | popstats     |
+| `dxy`           | experimental | `beagle_file`                        | `dxy_windows`         | region_popstats | popstats     |
+
+`analysis_modes.tsv.analysis_type` and `analysis_results.tsv.analysis_type` are
+FKs into `analysis_registry.analysis_id`. Adding a new analysis kind is:
+
+1. add one row to `analysis_registry.tsv` (declare `produces`, `input_*`, `engine`)
+2. add (one or more) rows in `analysis_modes.tsv` with the policy fields
+3. when it has a biomod backing, add the module to `module_registry.tsv`
+
+Validate the FKs:
+
+```bash
+python3 scripts/check_analysis_registry.py
+# OK    relatedness/: analysis_registry.tsv + FKs clean
+```
+
+Checks: schema-required columns, unique `analysis_id`, allowed `status`,
+`analysis_modes.tsv.analysis_type` resolves to a row here,
+`analysis_results.tsv.analysis_type` resolves to a row here,
+each mode's `produces` is declared on its parent registry row,
+each mode's `module_name` resolves to `module_registry.tsv`, and
+`requires` upstream `analysis_id`s all resolve.
 
 ## The resolver — let the registry do the thinking
 

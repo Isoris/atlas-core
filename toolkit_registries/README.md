@@ -93,11 +93,16 @@ Skip SPEC_DEFERRED unless you're working on a deferred feature.
 ### relatedness/ — minimum infrastructure that unstucks ngsRelate → ngsPedigree → mendelian
 
 Six flat TSV registries (`sample_sets`, `group_sets`, `interval_sets`,
-`site_sets`, `input_values`, `analysis_results`) + four contract
-checkers + one register tool. Stdlib Python only. Self-contained — copy
-into your real workspace, replace the example data, and
-`check_result_contract.py --result <id>` tells you whether the result
-is ready for downstream use. See `relatedness/README.md`.
+`site_sets`, `input_values`, `analysis_results`) + `analysis_modes.tsv`
+(the resolver's brain) + `analysis_registry.tsv` (the catalogue of analysis
+KINDS — ngsrelate / ngspedigree / mendelian / popstats / fst_pairwise /
+theta_pi / dxy / …) + `module_registry.tsv` (biomod bridge). Stdlib Python
+only. Self-contained — copy into your real workspace, replace the example
+data, and `check_result_contract.py --result <id>` tells you whether the
+result is ready for downstream use. `check_analysis_registry.py` validates
+that every `analysis_type` referenced from modes / results resolves to a
+catalogue row and every mode's `produces` / `module_name` resolves too.
+See `relatedness/README.md`.
 
 ### inventory/ — click and see what's in the registry
 

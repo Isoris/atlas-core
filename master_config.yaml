@@ -64,22 +64,22 @@ roots:
     description: "Phased Clair3 VCFs feeding the GHSL inversion-discovery path."
 
   precomp_zblocks:
-    path: "/mnt/e/results_inversions/local_PCA_MDS_z/04_atlas_json"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_z/09_atlas_json"
     role: "intervals"
     species_scoped: false
-    description: "Per-chromosome atlas JSONs from the z-blocks local-PCA path. Auto-loaded by atlas pages."
+    description: "Per-chromosome atlas JSONs from the z-blocks local-PCA path. Auto-loaded by atlas pages. Bumped 2026-05-14 from 04_atlas_json to 09_atlas_json (new pipeline output dir; the pipeline now writes <chrom>.json here)."
 
   precomp_thetapi:
-    path: "/mnt/e/results_inversions/local_PCA_MDS_theta_pi/04_atlas_json"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_theta_pi/09_atlas_json"
     role: "intervals"
     species_scoped: false
-    description: "Per-chromosome atlas JSONs from the theta-pi local-PCA path. Auto-loaded by atlas pages."
+    description: "Per-chromosome atlas JSONs from the theta-pi local-PCA path. Auto-loaded by atlas pages. Bumped 2026-05-14 from 04_atlas_json to 09_atlas_json (new pipeline output dir)."
 
   precomp_ghsl:
-    path: "/mnt/e/results_inversions/local_PCA_MDS_GHSL/04_atlas_json"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_GHSL/09_atlas_json"
     role: "intervals"
     species_scoped: false
-    description: "Per-chromosome atlas JSONs from the GHSL local-PCA path. Auto-loaded by atlas pages."
+    description: "Per-chromosome atlas JSONs from the GHSL local-PCA path. Auto-loaded by atlas pages. Bumped 2026-05-14 from 04_atlas_json to 09_atlas_json (new pipeline output dir)."
 
   per_chrom_zblocks:
     path: "/mnt/e/results_inversions/local_PCA_MDS_z/03_per_chrom"

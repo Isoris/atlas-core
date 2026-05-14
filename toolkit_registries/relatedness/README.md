@@ -556,6 +556,45 @@ Seed data for the demo: `02_sets/candidates/inversion_candidates.tsv`
 candidates). The LG01 candidate is the manuscript pair-relation target
 (see spec §11).
 
+## Page 7 — Graph Builder (`page/graph_builder.html`)
+
+Phase B+C of LAYER_GRAPH_BUILDER_SPEC.md.  Five columns, one per node
+type (set / filter / layer / analysis / hook), each listing the
+registered items.  Click any node → adds it to the current graph
+(`IN GRAPH` pill).  Click two in-graph nodes → draws an edge between them
+with the selected edge type (`input` / `output` / `feeds_into`).
+
+Every edge is **validated live** against `vocabulary/edge_rules.tsv`:
+- green = valid (rule + constraint pass)
+- red   = invalid (no rule, or constraint failed — e.g. layer not in `analysis.input_layer_types`)
+
+The Python side: `lib/edge_validator.py` reads the same rules table and
+validates a `layer_graph_v1` JSON.  CLI:
+
+```bash
+python3 -m lib.edge_validator --graph path/to/graph.json
+# valid graph → exit 0
+# invalid     → exit 1; report on stdout
+```
+
+The JS validator on the page mirrors this exactly; the in-browser badge
+in the toolbar shows `VALID` or `n ERR` live as you add / remove edges.
+
+Top-bar actions:
+- **Validate** — re-runs the report; the errors panel below the board lists every failing edge / node.
+- **Export** — downloads a `layer_graph_v1` JSON (matches `schemas/registry_schemas/layer_graph_v1.schema.json`).
+- **Import** — loads a JSON back in (replaces the current graph).
+- **Clear graph** — wipes the localStorage graph.
+
+The Inspector slides in from the right when you click an in-graph node:
+shows the node's fields + the registry context (`layer_registry` /
+`analysis_registry` / `hook_registry` row) + incident edges + a **Remove
+from graph** button.
+
+This page does **not** run anything.  Per spec §9: the librarian /
+dispatcher split says connect ≠ compute.  The graph here is a *contract
+draft*; running it is the dispatcher's job (Phase F, deferred).
+
 ## The resolver — let the registry do the thinking
 
 You don't want to remember which sample_set + which thin500 + which BEAGLE

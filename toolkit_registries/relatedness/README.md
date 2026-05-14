@@ -428,6 +428,101 @@ each mode's `produces` is declared on its parent registry row,
 each mode's `module_name` resolves to `module_registry.tsv`, and
 `requires` upstream `analysis_id`s all resolve.
 
+## The layer registry + hooks — APLR's librarian
+
+**Layer is the abstraction.** Modules produce layers; pages consume layers;
+APLR's librarian resolves whether each requested layer exists, is missing,
+blocked, ready-to-run, complete, or failed.
+
+```
+01_registry/
+├── layer_registry.tsv    one row per layer KIND (relatedness_res, mendelian_result, karyotype_calls, ...)
+├── hook_registry.tsv     one row per page hook (mendelian_page_load, popstats_page_load, ...)
+```
+
+A layer is one of four `source_kind`s:
+
+| source_kind | example | producer |
+|---|---|---|
+| `file`            | `beagle_file`, `sites_file`, `sample_set`, `karyotype_calls` | the underlying registry / external upload |
+| `analysis_result` | `relatedness_res`, `pedigree_result`, `mendelian_result`, `popstats_result` | the matching row in `analysis_registry.produces` |
+| `operation`       | computed on demand via an HTTP endpoint | the endpoint (not yet wired in the librarian) |
+| `inline`          | literal payload embedded in a manifest | the manifest itself |
+
+A hook declares which layers a page needs:
+
+```
+hook_id              page_id   requires_layers
+mendelian_page_load  mendelian karyotype_calls,inversion_candidates,relatedness_res,pedigree_result,mendelian_result
+popstats_page_load   popstats  karyotype_calls,inversion_candidates,popstats_result
+```
+
+### The librarian — `resolve_layer.py`
+
+Pure read-only graph walk. Given a layer_id (+ scope), returns one of nine
+states:
+
+| state | meaning |
+|---|---|
+| `RESOLVED`         | file-kind layer present in the scope |
+| `COMPLETE`         | analysis_result row exists in `analysis_results.tsv` matching scope, `status=active` |
+| `READY_TO_RUN`     | analysis_result; every upstream input resolves to `RESOLVED` / `COMPLETE` |
+| `BLOCKED_BY_INPUT` | analysis_result; at least one upstream is `KNOWN_MISSING` / `UNKNOWN_CONTRACT` / `FAILED` |
+| `KNOWN_MISSING`    | contract registered, no product / file matches the scope |
+| `UNKNOWN_CONTRACT` | `layer_id` not in `layer_registry.tsv` (or `source_kind` not implemented) |
+| `STALE`            | reserved (hash-based invalidation; not yet implemented) |
+| `FAILED`           | `analysis_results.tsv` row with `status=failed` |
+| `PARTIAL`          | reserved (chunked / per-chrom outputs; not yet implemented) |
+
+Use it:
+
+```bash
+# single layer in a scope
+python3 scripts/resolve_layer.py --layer mendelian_result \
+    --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1
+# → [COMPLETE] mendelian_result: analysis_results.tsv row 'mendelian_LG28_v2' matches scope
+
+# unknown layer
+python3 scripts/resolve_layer.py --layer bogus_layer
+# → [UNKNOWN_CONTRACT] bogus_layer: layer_id not in layer_registry.tsv
+
+# whole hook — walks every required layer
+python3 scripts/resolve_layer.py --hook mendelian_page_load \
+    --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1
+# hook: mendelian_page_load  state: BLOCKED_BY_INPUT  page: mendelian
+#   [KNOWN_MISSING] karyotype_calls: ...
+#   [KNOWN_MISSING] inversion_candidates: ...
+#   [COMPLETE] relatedness_res: ...
+#   [COMPLETE] pedigree_result: ...
+#   [COMPLETE] mendelian_result: ...
+
+# JSON form for the dashboard
+python3 scripts/resolve_layer.py --layer mendelian_result \
+    --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1 --json
+```
+
+> **Librarian only.** `resolve_layer.py` never runs an analysis, never
+> writes a file, never queues an action. That is the dispatcher / planner's
+> job, which is intentionally a *separate concern*. The clean APLR split:
+>
+> > The librarian resolves layer identity and current state.
+> > The dispatcher uses that resolved state to decide ready / blocked /
+> > stale / reusable / run / queue.
+
+## Page 5 — manual layer ↔ analysis connector (`page/layers.html`)
+
+Open `page/layers.html` to see every layer (left column) and every analysis
+(right column) with the **declared edges** from `analysis_registry.tsv`
+(dashed grey, `input_layer_types` / `produces`) drawn between them. Click
+a layer, then an analysis, to add a **manual edge** (solid blue). Toggle
+between `input` / `output` edge type at the top. Click a manual edge to
+delete it. Manual edges persist to `localStorage`; **Export JSON**
+downloads the full edge set for sharing or committing into a workspace.
+
+The page is the practical interface for the layer/analysis adjacency: when
+the formal `analysis_registry.tsv` rows are wrong / incomplete / aspirational,
+you can wire the missing connections by hand and export the result.
+
 ## The resolver — let the registry do the thinking
 
 You don't want to remember which sample_set + which thin500 + which BEAGLE

@@ -57,6 +57,8 @@ contract layer between them.
 | `operation_params_v1.schema.json` | One reusable parameter bundle for a derivation (e.g. `thin500_first_per_chrom_v1` vs `thin500_random_seed123_v1` — same distance, different choice rule). | active, v1 |
 | `derivation_registry_row_v1.schema.json` | Schema for one TSV row in `derivation_registry.tsv`. | active, v1 |
 | `operation_params_registry_row_v1.schema.json` | Schema for one TSV row in `operation_params_registry.tsv`. | active, v1 |
+| `layer_registry_row_v1.schema.json` | One row per layer KIND (file / analysis_result / operation / inline). The "what does this data mean" catalogue that pages consume and analyses produce. | active, v1 |
+| `hook_registry_row_v1.schema.json` | One row per page hook / panel / widget. Declares `requires_layers` (CSV FK into `layer_registry`). The librarian (`resolve_layer.py`) walks this to compute per-hook blocked/ready/complete states. | active, v1 |
 
 ---
 

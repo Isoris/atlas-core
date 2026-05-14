@@ -5,7 +5,8 @@
 has been built on this branch, (c) what is intentionally deferred.
 
 **First written:** 2026-05-12.
-**Last refreshed:** 2026-05-13 after commit `6a8e362`.
+**Last refreshed:** 2026-05-14 after the action-pipeline wiring landed
+(server endpoints + 5 atlases wired + `core/layer_api.js`).
 
 ---
 
@@ -26,6 +27,12 @@ has been built on this branch, (c) what is intentionally deferred.
 | 11 | `a7a35f0` | `relatedness/01_registry/analysis_modes.tsv` + `scripts/resolve.py` — the mode-driven contract resolver |
 | 12 | `c5bb26e` | `relatedness/page/index.html` — single-page chain compatibility viewer |
 | 13 | `6a8e362` | atlas-core 3-page dashboard: page 1 (Conversation, stub), page 2 (Action, readiness ladder), page 3 (Registries, chains). Shared top nav. |
+| 14 | _unstaged_ | **Action-pipeline server endpoints in `atlas_server.py`**: `POST /api/actions`, `GET /api/actions/{id}`, `GET /api/layers`, `GET /api/layers/{id}`. Validates manifest, imports per-atlas `dispatcher.py`, runs it on a worker thread (so HTTP callbacks resolve), writes envelopes to `<workspace>/layers/...`, appends to `<workspace>/registry/actions.log.jsonl`, indexes in `<workspace>/registry/layers.registry.json`. No new pip deps. |
+| 15 | _unstaged_ | **inversion-atlas end-to-end wiring**: `run_popstats` → `fst_windows_v1`. New folders `schemas/schema_in`, `schemas/schema_out`, `runners/`, `extractors/` + `dispatcher.py` + `actions.registry.json` + `extractors.registry.json`. Runner wraps `/api/popstats/groupwise`; extractor produces `{windows, summary}`. Smoke tests green for happy + 4 negative paths. |
+| 16 | _unstaged_ | **diversity/population/genome/relatedness atlases — one worked action each** (same 7-file layout). Stage = `staging` so the schema_out is loose; promote later. Smoke tests green. Actions: `import_slot` (calls the new `/api/diversity/{slot}` sidecar), `compute_ancestry_q` (wraps `/api/ancestry/groupwise_q`), `import_table`, `import_relatedness_tsv`. |
+| 17 | _unstaged_ | **Page-migration helper `core/layer_api.js`** + re-export from `core/atlas_api.js`. Six client-side helpers: `listLayers`, `getLayer`, `resolveLatestLayer`, `getLayersOfType`, `submitAction`, `getActionLog`, plus `newActionId`. `tests/test_layer_api.js` covers 27 assertions via mocked fetch. `docs/examples/layer_api_demo.html` is a framework-free worked page. |
+| 18 | _unstaged_ | **diversity sidecar endpoint** `server/diversity_endpoint.py` + `app.include_router(...)` in `atlas_server.py`. Five read-only JSON slots: `embedded_tables`, `texture_metrics`, `functional_burden`, `roh_gene_overlap`, `divergence_network`. |
+| 19 | _unstaged_ | **`package.json`** (`"type": "module"`) so `node tests/*.js` no longer warns / fails on the ESM `import` syntax that existing tests already used. Three existing JS tests + the new one run green; two pre-existing tests still need a `WORKSPACE` env var (unchanged behaviour). |
 
 ---
 
@@ -134,8 +141,10 @@ Scripts (`relatedness/scripts/`):
 
 ### Intentionally deferred
 - **LLM funnel** (page 1 content). Design lives in `page/conversation.html`; out of scope per user direction.
-- **Server endpoints** for the action pipeline (`POST /api/actions`, `GET /api/layers`, etc.). Defined in `PIPELINE_FLOW.md`; not implemented in `atlas_server.py` yet.
+- **Real existing-page migration to envelopes.** `core/layer_api.js` is the surface; the demo HTML shows the pattern; no page in any atlas has been switched yet. Per-page work — the legacy `resolve(layer_name, args)` and the new `resolveLatestLayer(layer_type, opts)` coexist by design.
 - **Per-page atlas migration** of the existing `species_scoped` master_config flags to `cohort_scoped` / `genome_scoped` — explicitly per-page per HIERARCHY_SPEC.
+- **Normalized payload schemas for the four staging actions.** diversity/population/genome/relatedness ship as `staging_*_v0` (`additionalProperties: true`). Promote each with a `normalize_layer` converter once the renderers commit to columns/units.
+- **Live-server round-trip integration test.** Unit tests cover the helpers + dispatchers; an end-to-end test that boots `atlas_server.py` with a tmp workspace + dispatches one action is feasible but needs `fastapi`/`yaml`/`pandas` installed.
 - **Real runners** for ngsRelate / ngsPedigree / mendelian. The scripts register and validate; you still run the binaries yourself.
 - **Filter profile registry** (`filter_profile_v1`). Free-form string id for now in derivation rows.
 - **Backfill helper** that walks an existing `.res/` folder and registers everything. Not built; the contract checker + register_result is enough to do it by hand for now.
@@ -174,6 +183,34 @@ python3 -m http.server -d toolkit_registries/inventory 8000
 check_result_contract.py --result mendelian_LG12_v1   ✓ OK (3-level recursion green)
 resolve.py --analysis ngsrelate --mode per_chromosome ✓ OK ready to run
 3-page dashboard                                       ✓ all routes serve 200
+```
+
+### Action-pipeline wiring (commits 14–19)
+
+```
+atlas_server.py — py_compile                                          ✓ OK
+atlas_server.py — pure-helper exercise (validate_manifest, etc.)      ✓ OK
+inversion-atlas dispatcher — happy path + 4 negative paths            ✓ OK
+diversity / population / genome / relatedness dispatchers (each)      ✓ OK
+core/layer_api.js — 27 mocked-fetch assertions                        ✓ OK
+existing JS tests still green (3/5; 2 need WORKSPACE env, pre-existing) ✓ OK
+```
+
+### What the user can run today (action-pipeline)
+
+```bash
+# In WSL (atlas_server.py needs fastapi/uvicorn/pyyaml/pandas):
+cd atlas-core/server
+python3 atlas_server.py --workspace-root <assembled-workspace> \
+                        --project-root  <assembled-workspace> \
+                        --host 127.0.0.1 --port 8000
+
+# Then in a browser:
+# http://127.0.0.1:8000/docs/examples/layer_api_demo.html
+#  - list / fetch envelopes, submit run_popstats, watch the action log
+
+# Or unit-test the JS helpers without a server (Node 18+ inside WSL):
+cd atlas-core && node tests/test_layer_api.js
 ```
 
 No regressions.

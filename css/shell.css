@@ -170,12 +170,14 @@
  * line 426). Each pill is a folder-button-like rectangle with a colored
  * left edge tint + tinted background on expanded state. */
 #topbar .tab-stage-pill {
-  align-self: center;
+  /* No align-self override → inherits parent's `align-items: stretch`, so
+     the pill matches the page-tab height (the 28px topbar row). Vertical
+     padding is removed for the same reason; horizontal padding stays. */
   display: inline-flex; align-items: center;
   font-family: var(--mono); font-size: 10.5px;
   color: var(--ink-dim);
   letter-spacing: 0.04em; line-height: 1;
-  padding: 4px 10px; margin: 0 2px;
+  padding: 0 10px; margin: 0 2px;
   background: var(--panel-2);
   border: 1px solid var(--rule);
   border-radius: 3px;
@@ -217,20 +219,19 @@
   border-color: rgba(138, 148, 163, 0.55);
 }
 
-/* When the topbar has an active stage, hide tabs of every other stage so
- * only ONE group of tabs is expanded at a time. The pills themselves stay
- * visible (they're how the user switches stages).
- * Show rules add :not(.tab-stage-pill) too so their specificity matches
- * the hide rule's; source order then makes the show rule win for the
- * active stage. Without that match the hide rule won regardless of which
- * stage was active and clicking pills appeared to do nothing. */
-#topbar[data-active-stage] button[data-stage]:not(.tab-stage-pill) { display: none; }
-#topbar[data-active-stage="discovery"]   button[data-stage="discovery"]:not(.tab-stage-pill)   { display: inline-flex; }
-#topbar[data-active-stage="review"]      button[data-stage="review"]:not(.tab-stage-pill)      { display: inline-flex; }
-#topbar[data-active-stage="catalogue"]   button[data-stage="catalogue"]:not(.tab-stage-pill)   { display: inline-flex; }
-#topbar[data-active-stage="comparative"] button[data-stage="comparative"]:not(.tab-stage-pill) { display: inline-flex; }
-#topbar[data-active-stage="synthesis"]   button[data-stage="synthesis"]:not(.tab-stage-pill)   { display: inline-flex; }
-#topbar[data-active-stage="help"]        button[data-stage="help"]:not(.tab-stage-pill)        { display: inline-flex; }
+/* Stage visibility is class-driven, not attribute-driven: atlas_router.js
+ * adds the `.stage-hidden` class to every page button whose data-stage
+ * doesn't match the currently active stage. Class-based scales to any
+ * stage name (each atlas declares its own — `classification`, `per_sample`,
+ * `assembly`, …) without per-stage CSS rules. The .tab-stage-pill nodes
+ * are exempt — they're always visible so the user can switch stages.
+ *
+ * Click-twice-to-collapse: when the user clicks the already-active stage
+ * pill, atlas_router.js sets data-collapsed="1" on #topbar. The second
+ * rule below adds a blanket hide independent of stage class. */
+#topbar button[data-stage].stage-hidden:not(.tab-stage-pill)        { display: none !important; }
+#topbar[data-collapsed="1"] button[data-stage]:not(.tab-stage-pill) { display: none !important; }
+
 #topbar .tab-stage-pill .pill-dot { font-size: 7px; opacity: 0.7; }
 #topbar .tab-stage-pill .pill-count {
   margin-left: 4px;

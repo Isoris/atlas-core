@@ -129,6 +129,10 @@ from dosage_bridge import (
 # include_router call after _safe_project_path is defined.
 from diversity_endpoint import make_diversity_router
 
+# /api/population/{slot} + /api/population/ngsadmix/q/{k} JSON shims for
+# the population atlas — same sidecar pattern as diversity_endpoint.
+from population_endpoint import make_population_router
+
 # =============================================================================
 # Logging
 # =============================================================================
@@ -1279,6 +1283,10 @@ def _safe_project_path(rel: str) -> Path:
 
 # Mount /api/diversity/{slot} JSON shims (see server/diversity_endpoint.py).
 app.include_router(make_diversity_router(_safe_project_path))
+
+# Mount /api/population/{slot} + /api/population/ngsadmix/q/{k} JSON shims
+# (see server/population_endpoint.py).
+app.include_router(make_population_router(_safe_project_path))
 
 
 # =============================================================================

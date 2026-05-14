@@ -23,6 +23,13 @@
        header per Quentin's request. The router renders pickers into
        this <nav id="scopebar"> at navigate time. -->
   <nav id="scopebar"></nav>
+  <!-- Per-page parameters-sidebar toggle. Previously lived in the per-atlas
+       topbar (#tabBar) as a large orange gear; promoted into the shell
+       header so it's tone-matched with the other header controls. Click
+       forwards to the active page's #sidebarToggleBtn (see shell_chrome.js). -->
+  <button id="globalSettingsBtn" type="button"
+          title="Toggle the parameters sidebar"
+          aria-label="Toggle parameters sidebar">⚙</button>
   <span id="schemaBadge" style="display: none;"></span>
   <span id="jsScriptsBadge" title="Loaded JavaScript modules registered as window globals.">JS · 0 scripts</span>
 

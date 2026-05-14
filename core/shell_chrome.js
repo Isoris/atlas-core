@@ -26,9 +26,46 @@ const THEME_LABEL = { dark: '☀ light', light: '📓 academic', academic: '🌙
 export function attachShellChrome(opts = {}) {
   _wireThemeToggle();
   _wireFolderButtons();
+  _wireGlobalSettingsBtn();
   _wireServerPing(opts.serverUrl || window.ATLAS_SERVER_URL || 'http://127.0.0.1:8000');
   _wireSchemaBadge();
   _wireJsScriptsBadge();
+}
+
+// Forward header gear clicks to the active page's sidebar.
+//
+// Sidebar collapse semantics live in the active page (e.g. for inversion
+// page1, sidebar.js wires #sidebarToggleBtn against `.wrap[data-sidebar]`
+// and redraws canvases on transition). We click the page-owned toggle so
+// those handlers fire. As a robust fallback — for atlases that haven't
+// wired a toggle button yet, or for the brief window before page-mount —
+// we also flip `.wrap[data-sidebar]` directly so the CSS responds even
+// when no JS handler is listening.
+function _wireGlobalSettingsBtn() {
+  const btn = document.getElementById('globalSettingsBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const pageToggle = document.getElementById('sidebarToggleBtn');
+    if (pageToggle && pageToggle !== btn) {
+      // .click() is more reliable than dispatchEvent(new MouseEvent('click'))
+      // for triggering programmatically-added handlers — Safari quirks.
+      pageToggle.click();
+      return;
+    }
+    // Fallback: no page-owned toggle exists. Flip .wrap[data-sidebar]
+    // directly so the inversion.css grid-template-columns rule still
+    // collapses the aside. Other atlases use the same convention.
+    const wrap = document.querySelector('#app-root .wrap, main .wrap, .wrap');
+    if (wrap) {
+      const collapsed = wrap.getAttribute('data-sidebar') === 'collapsed';
+      if (collapsed) wrap.removeAttribute('data-sidebar');
+      else           wrap.setAttribute('data-sidebar', 'collapsed');
+      return;
+    }
+    // Last-ditch: toggle a `.collapsed` class on the first <aside>.
+    const aside = document.querySelector('#app-root aside, main aside');
+    if (aside) aside.classList.toggle('collapsed');
+  });
 }
 
 function _wireThemeToggle() {

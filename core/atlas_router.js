@@ -258,27 +258,9 @@ export class AtlasRouter {
     if (!bar) return;
     bar.innerHTML = '';
 
-    // Orange settings gear — leftmost element on the topbar. Legacy: see
-    // monolith line 4983 (#globalSettingsBtn). Clicking it toggles the
-    // page's parameters sidebar (most pages render an <aside> with their
-    // own #sidebarToggleBtn; we forward the click).
-    const gear = document.createElement('button');
-    gear.id = 'globalSettingsBtn';
-    gear.type = 'button';
-    gear.title = 'Toggle the parameters sidebar';
-    gear.setAttribute('aria-label', 'Toggle parameters sidebar');
-    gear.textContent = '⚙';
-    gear.addEventListener('click', () => {
-      const pageToggle = document.getElementById('sidebarToggleBtn');
-      if (pageToggle) {
-        pageToggle.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      } else {
-        // Fallback: collapse the active page's <aside> directly.
-        const aside = document.querySelector('#app-root aside, main aside');
-        if (aside) aside.classList.toggle('collapsed');
-      }
-    });
-    bar.appendChild(gear);
+    // The settings gear (#globalSettingsBtn) used to live here at the
+    // leftmost slot of the topbar. It's now a static element in the shell
+    // header (atlas-core/index.html); wiring lives in shell_chrome.js.
 
     // Determine which stage to expand. If a page is active and we know
     // its stage (from the manifest), expand that stage; else fall back
@@ -300,6 +282,22 @@ export class AtlasRouter {
     }
     if (activeStageForBar) bar.dataset.activeStage = activeStageForBar;
     else delete bar.dataset.activeStage;
+
+    // Helper: toggle the `.stage-hidden` class on every page button so
+    // only the active stage's pages render. Class-based instead of CSS
+    // per-stage rules so any atlas's stage names work (inversion adds
+    // `classification`, diversity adds `per_sample`/`per_chromosome`/…,
+    // genome adds `assembly`/`annotation`, etc.). Pills are always
+    // visible — they're how the user switches stages.
+    const applyStageVisibility = (activeStage) => {
+      bar.querySelectorAll('button[data-stage]:not(.tab-stage-pill)').forEach(b => {
+        if (!activeStage || b.dataset.stage === activeStage) {
+          b.classList.remove('stage-hidden');
+        } else {
+          b.classList.add('stage-hidden');
+        }
+      });
+    };
 
     const multi = this.manifests.size > 1;
 
@@ -404,23 +402,33 @@ export class AtlasRouter {
           count.className = 'pill-count';
           count.textContent = '(' + pagesInStage.length + ')';
           pill.appendChild(count);
-          // Click → toggle this stage's expansion. If the clicked pill is
-          // already the active stage, REMOVE the active-stage attribute so
-          // all tab clusters collapse (only pills visible). Otherwise focus
-          // on this stage. Mutates the topbar's data-active-stage attribute
-          // that the CSS reads to show/hide tabs. Does NOT navigate.
+          // Click → toggle this stage's expansion.
+          //
+          //   - Same pill clicked while expanded → set data-collapsed="1"
+          //     so every page button hides (the row folds). data-active-stage
+          //     is kept so re-expanding restores the same stage.
+          //   - Different stage clicked → expand it; clear data-collapsed.
+          //   - Same pill clicked while collapsed → expand again.
+          //
+          // The CSS contract: when data-collapsed="1" is set on #topbar,
+          // shell.css hides every button[data-stage]:not(.tab-stage-pill).
+          // Removing data-collapsed restores the per-stage show/hide rules.
+          // Does NOT navigate.
           pill.addEventListener('click', () => {
-            const isActive = bar.dataset.activeStage === stage;
-            if (isActive) {
-              delete bar.dataset.activeStage;
+            const isActive    = bar.dataset.activeStage === stage;
+            const isCollapsed = bar.dataset.collapsed === '1';
+            if (isActive && !isCollapsed) {
+              bar.dataset.collapsed = '1';
               bar.querySelectorAll('.tab-stage-pill').forEach(p => {
                 p.dataset.expanded = '0';
               });
             } else {
+              delete bar.dataset.collapsed;
               bar.dataset.activeStage = stage;
               bar.querySelectorAll('.tab-stage-pill').forEach(p => {
                 p.dataset.expanded = (p.dataset.stage === stage) ? '1' : '0';
               });
+              applyStageVisibility(stage);
             }
           });
           sec.appendChild(pill);
@@ -456,6 +464,11 @@ export class AtlasRouter {
 
       bar.appendChild(sec);
     }
+
+    // Apply initial stage visibility now that every page button is in the
+    // DOM. Without this, on first paint every stage's pages are visible
+    // because no button has the `.stage-hidden` class yet.
+    applyStageVisibility(activeStageForBar);
   }
 
   /**

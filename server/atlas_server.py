@@ -124,6 +124,11 @@ from dosage_bridge import (
     DEFAULT_MAX_REGION_BP as DOSAGE_DEFAULT_MAX_REGION_BP,
 )
 
+# /api/diversity/{slot} JSON shims for the diversity atlas. Router-style
+# sidecar so atlas_server stays untouched beyond this import + the
+# include_router call after _safe_project_path is defined.
+from diversity_endpoint import make_diversity_router
+
 # =============================================================================
 # Logging
 # =============================================================================
@@ -1270,6 +1275,10 @@ def _safe_project_path(rel: str) -> Path:
     except ValueError:
         raise HTTPException(403, f"path escapes project root: {rel}")
     return p
+
+
+# Mount /api/diversity/{slot} JSON shims (see server/diversity_endpoint.py).
+app.include_router(make_diversity_router(_safe_project_path))
 
 
 # =============================================================================

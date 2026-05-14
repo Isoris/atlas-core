@@ -123,13 +123,26 @@
       "Bash(python -c \"import atlas_server; print\\('OK', atlas_server.SERVER_VERSION\\)\")",
       "Bash(python -c \"import sys; print\\(sys.executable\\); print\\(sys.prefix\\)\")",
       "Bash(python -m py_compile atlas_server.py)",
-      "Bash(python -m pip --version)"
+      "Bash(python -m pip --version)",
+      "Bash(mkdir -p \"C:/Users/quent/Desktop/relatedness-atlas/atlases/relatedness/shared/loaders\" \"C:/Users/quent/Desktop/relatedness-atlas/atlases/relatedness/server\")",
+      "Bash(python -c \"import json; json.load\\(open\\(r'c:/Users/quent/Desktop/population-atlas/atlases/population/registries/data/operations.registry.json'\\)\\)\")",
+      "Bash(python -c \"import json; json.load\\(open\\(r'c:/Users/quent/Desktop/population-atlas/atlases/population/registries/data/pages.registry.json'\\)\\)\")",
+      "Bash(python -c \"import json; json.load\\(open\\(r'c:/Users/quent/Desktop/population-atlas/atlases/population/registries/data/operations.registry.json', encoding='utf-8'\\)\\)\")",
+      "Bash(python -c \"import json; json.load\\(open\\(r'c:/Users/quent/Desktop/population-atlas/atlases/population/registries/data/pages.registry.json', encoding='utf-8'\\)\\)\")",
+      "Bash(where python *)",
+      "Bash(python -c \"import sys; print\\(sys.executable\\); print\\(sys.path\\)\")",
+      "Bash(git -C c:/Users/quent/Desktop/atlas-core diff --stat -- server/atlas_server.py)",
+      "Bash(git -C c:/Users/quent/Desktop/population-atlas diff --stat)",
+      "Bash(python -c \"import fastapi; print\\('fastapi', fastapi.__version__\\)\")",
+      "Bash(python -m py_compile diversity_endpoint.py)",
+      "Bash(bash \"/c/Users/quent/Desktop/atlas-core/build/assemble.sh\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",
       "C:\\Users\\quent\\Desktop\\relatedness-atlas\\atlases\\relatedness\\pages\\hub",
       "C:\\Users\\quent\\Desktop\\diversity-atlas\\atlases\\diversity\\pages",
-      "c:\\Users\\quent\\Desktop\\genome-atlas"
+      "c:\\Users\\quent\\Desktop\\genome-atlas",
+      "C:\\Users\\quent\\Desktop\\relatedness-atlas\\atlases\\relatedness\\shared"
     ]
   }
 }

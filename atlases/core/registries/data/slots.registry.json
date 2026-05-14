@@ -1,0 +1,5 @@
+{
+  "$schema": "../../../../core/registry_core.schema.json",
+  "_doc": "AtlasState slots for the atlas-core dashboard atlas. Round-1 stub: the four pages keep all their state in module-local closures (filter strings, current tab, current brick, etc.) and do not yet write into AtlasState. When the dashboard becomes scope-aware (e.g. cohort/genome filters via the scopebar), those slots will land here.",
+  "slots": {}
+}

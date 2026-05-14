@@ -1,0 +1,5 @@
+{
+  "$schema": "../../../../core/registry_core.schema.json",
+  "_doc": "Backend operations exposed by the atlas-core dashboard atlas. Round-1: empty. The four dashboard pages do not call any server endpoints themselves; they read TSV files from the assembled workspace and render entirely client-side. Future operations (e.g. POST /api/conversation/resolve for the LLM funnel on the Conversation page) will land here.",
+  "operations": {}
+}

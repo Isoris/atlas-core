@@ -191,7 +191,18 @@
       "PowerShell(wsl -d Ubuntu-24.04 bash -lc \"cd /mnt/c/Users/quent/Desktop/relatedness-atlas && node atlases/relatedness/shared/test_api_client.js\" 2>&1)",
       "PowerShell(tail -30)",
       "PowerShell(wsl -d Ubuntu-24.04 bash -lc \"cd /mnt/c/Users/quent/Desktop/relatedness-atlas && node atlases/relatedness/shared/test_api_client.js 2>&1 | tail -30\")",
-      "PowerShell(wsl -d Ubuntu-24.04 bash -lc \"cd /mnt/c/Users/quent/Desktop/relatedness-atlas && node atlases/relatedness/shared/test_api_client.js 2>&1 | tail -25\")"
+      "PowerShell(wsl -d Ubuntu-24.04 bash -lc \"cd /mnt/c/Users/quent/Desktop/relatedness-atlas && node atlases/relatedness/shared/test_api_client.js 2>&1 | tail -25\")",
+      "PowerShell(wsl -d Ubuntu-24.04 bash -lc \"cd /mnt/c/Users/quent/Desktop/inversion-atlas && node atlases/inversion/shared/test_atlas_server.js 2>&1 | tail -30\")",
+      "PowerShell(wsl -d Ubuntu-24.04 bash /mnt/c/Users/quent/Desktop/atlas-core/scripts/_run_all_tests.sh)",
+      "PowerShell(wsl -d Ubuntu-24.04 bash /mnt/c/Users/quent/Desktop/atlas-core/scripts/_run_all_tests.sh 2>&1)",
+      "PowerShell(head -50)",
+      "PowerShell(wsl -d Ubuntu-24.04 bash -lc \"which python3 && python3 -c 'import fastapi; print\\(fastapi.__version__\\)'\")",
+      "PowerShell(wsl -d Ubuntu-24.04 bash -lc \"cd /mnt/c/Users/quent/Desktop/relatedness-atlas && node --check atlases/relatedness/pages/hub/network.js && echo SYNTAX_OK_network && node --check atlases/relatedness/shared/api_client.js && echo SYNTAX_OK_api_client\")",
+      "PowerShell(wsl -d Ubuntu-24.04 bash -lc \"cd /mnt/c/Users/quent/Desktop/relatedness-atlas && node atlases/relatedness/pages/hub/test_network_data_source.js 2>&1 | tail -25\")",
+      "PowerShell(wsl -d Ubuntu-24.04 bash -lc \"cd /mnt/c/Users/quent/Desktop/relatedness-atlas && node --check atlases/relatedness/pages/hub/compatibility.js && echo SYNTAX_OK_compatibility && node atlases/relatedness/pages/hub/test_compatibility_data_source.js 2>&1 | tail -20\")",
+      "PowerShell(wsl -d Ubuntu-24.04 bash -lc \"cd /mnt/c/Users/quent/Desktop/genome-atlas && node --check atlases/genome/pages/assembly/page1.js && echo SYNTAX_OK && node atlases/genome/pages/assembly/test_page1_chips.js 2>&1 | tail -30\")",
+      "Bash(xargs wc -l)",
+      "PowerShell(wsl -d Ubuntu-24.04 bash -lc \"cd /mnt/c/Users/quent/Desktop/diversity-atlas && node --check atlases/diversity/pages/per_sample/page1.js && echo SYNTAX_OK && node atlases/diversity/pages/per_sample/test_page1_provenance.js 2>&1 | tail -25\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

@@ -1,0 +1,60 @@
+{
+  "atlas_id": "core",
+  "atlas_name": "Atlas Core",
+  "atlas_version": "2026-05-14-round1",
+  "atlas_description": "The atlas-core dashboard. Cross-atlas registry inspector + analysis-routing UI: conversation (LLM funnel, deferred), action (readiness & routing dashboard), registries (chains and compatibility, with brick-edit sidebar), catalogue (modules & analyses). Pages migrated 2026-05-14 from toolkit_registries/relatedness/page/ into the AtlasRouter so they appear as the first atlas in the topbar.",
+  "_round_1_note": "Round-1 migration: the four standalone HTML files in toolkit_registries/relatedness/page/ were converted to the AtlasRouter fragment + module convention. Behaviour is preserved verbatim apart from: (a) the inner topnav was removed (the shell topbar replaces it); (b) inline <style> blocks were merged into css/core_pages.css and scoped under .core-page; (c) inline <script> bodies were wrapped in exported mount()/unmount() functions; (d) registry-data fetch paths are rooted at toolkit_registries/relatedness/ via a single REGISTRY_ROOT constant per page so the workspace-relative fetches resolve under the assembled workspace.",
+  "pages": [
+    {
+      "id": "conversation",
+      "label": "1. Conversation",
+      "stage": "dashboard",
+      "fragment": "atlases/core/pages/conversation.html",
+      "module": "atlases/core/pages/conversation.js",
+      "tooltip": "Free-text request → cleaned decomposition → controlled vocabulary → registry contracts → action plan. Status: deferred — wired LLM funnel arrives later; today this page documents the design and points at page 2 for hand-composed runs."
+    },
+    {
+      "id": "action",
+      "label": "2. Action",
+      "stage": "dashboard",
+      "fragment": "atlases/core/pages/action.html",
+      "module": "atlases/core/pages/action.js",
+      "tooltip": "Readiness & routing dashboard. Pick a target analysis + scope; the dashboard walks the chain backward and shows each step's status (RESULT_READY / RUN_READY / SPAWNABLE / BLOCKED / MISSING) plus the biomod module's state. Does not run anything."
+    },
+    {
+      "id": "registries",
+      "label": "3. Registries",
+      "stage": "dashboard",
+      "fragment": "atlases/core/pages/registries.html",
+      "module": "atlases/core/pages/registries.js",
+      "tooltip": "Chains and compatibility browser. Visualizes existing ngsRelate → ngsPedigree → mendelian chains, lists all registered results, and lets you click any chain brick to derive a biomod recipe in the side panel."
+    },
+    {
+      "id": "catalogue",
+      "label": "4. Catalogue",
+      "stage": "dashboard",
+      "fragment": "atlases/core/pages/catalogue.html",
+      "module": "atlases/core/pages/catalogue.js",
+      "tooltip": "Modules & analyses catalogue. Two tabs: biomod modules (one card per module, status-coloured) and analysis modes (one card per analysis × mode). Click anywhere a registry id is shown to hover-preview the underlying TSV row."
+    }
+  ],
+  "registries": {
+    "layers":     "atlases/core/registries/data/layers.registry.json",
+    "files":      "atlases/core/registries/data/files.registry.json",
+    "operations": "atlases/core/registries/data/operations.registry.json",
+    "pages":      "atlases/core/registries/data/pages.registry.json",
+    "slots":      "atlases/core/registries/data/slots.registry.json"
+  },
+  "stylesheets": [
+    "atlases/core/css/core_pages.css"
+  ],
+  "_stylesheets_doc": "Shared stylesheet for the four dashboard pages. Extracted from the four <style> blocks in the original toolkit_registries/relatedness/page/*.html files and scoped under .core-page to avoid colliding with sibling atlases.",
+  "stages": [
+    {
+      "id": "dashboard",
+      "label": "registry dashboard",
+      "order": 1,
+      "_doc": "Single-stage atlas. Conversation → Action → Registries → Catalogue is a recommended reading order, but the four pages are each independently usable."
+    }
+  ]
+}

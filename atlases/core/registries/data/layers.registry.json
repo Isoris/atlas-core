@@ -1,0 +1,5 @@
+{
+  "$schema": "../../../../core/registry_core.schema.json",
+  "_doc": "Layer inventory for the atlas-core dashboard atlas. Round-1 stub: the four dashboard pages (conversation / action / registries / catalogue) read their data directly from toolkit_registries/relatedness/01_registry/*.tsv via plain fetch() and do not yet go through registry.resolve(). The TSV files will be promoted into proper layer entries (with loaders, schemas, tier annotations) when the dashboard moves off raw TSV reads.",
+  "layers": {}
+}

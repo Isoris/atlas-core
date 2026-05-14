@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>atlas-core — layer_api demo</title>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  h1 { margin-bottom: 0.25rem; }
+  h2 { margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; }
+  .row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin: 0.5rem 0; }
+  input, select, button { font: inherit; padding: 0.3rem 0.5rem; }
+  button { cursor: pointer; }
+  .muted { color: #888; font-size: 0.85em; }
+  pre { background: #f7f7f7; padding: 0.75rem; border-radius: 4px; overflow-x: auto; max-height: 320px; font-size: 0.85em; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9em; }
+  th, td { border-bottom: 1px solid #eee; padding: 0.3rem 0.5rem; text-align: left; }
+  th { background: #f0f0f0; }
+  .err { color: #b00; font-family: ui-monospace, monospace; white-space: pre-wrap; }
+  .ok  { color: #060; }
+  code { background: #f0f0f0; padding: 0 0.25rem; border-radius: 3px; }
+</style>
+</head>
+<body>
+<h1>layer_api demo</h1>
+<p class="muted">
+  Worked example for <code>atlas-core/core/layer_api.js</code> — exercises every
+  endpoint pages need to consume action-pipeline layers. Open this page via the
+  atlas server (so same-origin <code>fetch()</code> works), or set the
+  <em>base URL</em> below and run it from <code>file://</code>.
+</p>
+
+<h2>1. Base URL (optional)</h2>
+<div class="row">
+  <label>baseUrl: <input id="baseUrl" type="text" size="40" placeholder="leave empty for same-origin"></label>
+  <button id="setBaseUrl">apply</button>
+  <span class="muted">When the page is served by atlas_server.py, leave empty.</span>
+</div>
+
+<h2>2. List layers — <code>GET /api/layers</code></h2>
+<div class="row">
+  <label>layer_type: <input id="ftype" type="text" size="20" placeholder="e.g. fst_windows"></label>
+  <label>dataset_id: <input id="fdataset" type="text" size="24" placeholder="e.g. main_226_hatchery"></label>
+  <label>stage:
+    <select id="fstage">
+      <option value="">(any)</option>
+      <option value="staging">staging</option>
+      <option value="normalized">normalized</option>
+    </select>
+  </label>
+  <label>limit: <input id="flimit" type="number" min="1" max="500" value="50" style="width: 4em;"></label>
+  <button id="listBtn">list</button>
+</div>
+<div id="listStatus" class="muted"></div>
+<table id="listTable"><thead><tr>
+  <th>layer_id</th><th>layer_type</th><th>schema_version</th>
+  <th>stage</th><th>dataset_id</th><th>status</th><th>created_at</th><th></th>
+</tr></thead><tbody></tbody></table>
+
+<h2>3. Fetch one envelope — <code>GET /api/layers/{layer_id}</code></h2>
+<div class="row">
+  <label>layer_id: <input id="oneId" type="text" size="48"></label>
+  <button id="oneBtn">fetch</button>
+  <button id="latestBtn">resolveLatestLayer of type above</button>
+</div>
+<div id="oneStatus" class="muted"></div>
+<pre id="oneOut"></pre>
+
+<h2>4. Submit an action — <code>POST /api/actions</code></h2>
+<p class="muted">
+  Paste a manifest matching <code>action_manifest.schema.json</code>. The
+  <em>action_id</em> is auto-filled to a fresh schema-conformant id; edit if
+  you want to retry a known one. <em>atlas</em> resolves the dispatcher
+  (precedence: <code>?atlas=…</code> &gt; <code>manifest.atlas_id</code> &gt;
+  <code>master_config.atlas.active_atlas</code>).
+</p>
+<div class="row">
+  <label>atlas: <input id="actAtlas" type="text" size="14" placeholder="inversion"></label>
+  <button id="freshIdBtn">new action_id</button>
+  <button id="submitBtn">submit</button>
+</div>
+<textarea id="manifest" rows="14" style="width: 100%; font-family: ui-monospace, monospace; font-size: 0.85em;"></textarea>
+<div id="submitStatus" class="muted"></div>
+<pre id="submitOut"></pre>
+
+<h2>5. Read an action's log entry — <code>GET /api/actions/{action_id}</code></h2>
+<div class="row">
+  <label>action_id: <input id="logId" type="text" size="40"></label>
+  <button id="logBtn">fetch</button>
+</div>
+<pre id="logOut"></pre>
+
+<script type="module">
+import {
+  configureLayerApi, getLayerApiBaseUrl,
+  listLayers, getLayer, resolveLatestLayer,
+  submitAction, getActionLog, newActionId,
+} from '../../core/layer_api.js';
+
+// ----- helpers ---------------------------------------------------------
+const $ = (id) => document.getElementById(id);
+
+function setStatus(el, text, cls = 'muted') {
+  el.textContent = text;
+  el.className = cls;
+}
+function show(el, obj) {
+  el.textContent = (obj === undefined || obj === null)
+    ? ''
+    : (typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2));
+}
+function showError(statusEl, outEl, err) {
+  setStatus(statusEl, '✗ ' + String(err.message || err), 'err');
+  show(outEl, err.stack || String(err));
+}
+
+// ----- 1. base url -----------------------------------------------------
+$('setBaseUrl').addEventListener('click', () => {
+  configureLayerApi({ baseUrl: $('baseUrl').value });
+  alert('baseUrl now: ' + (getLayerApiBaseUrl() || '(same-origin)'));
+});
+
+// ----- 2. list ---------------------------------------------------------
+$('listBtn').addEventListener('click', async () => {
+  const filters = {
+    layer_type: $('ftype').value.trim() || undefined,
+    dataset_id: $('fdataset').value.trim() || undefined,
+    stage:      $('fstage').value || undefined,
+    limit:      Number($('flimit').value) || 50,
+  };
+  setStatus($('listStatus'), 'listing…');
+  try {
+    const res = await listLayers(filters);
+    setStatus(
+      $('listStatus'),
+      `✓ ${res.n} shown (total ${res.total ?? res.n})`,
+      'ok',
+    );
+    const tbody = $('listTable').querySelector('tbody');
+    tbody.innerHTML = '';
+    for (const r of (res.layers || [])) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><code>${r.layer_id}</code></td>
+        <td>${r.layer_type ?? ''}</td>
+        <td>${r.schema_version ?? ''}</td>
+        <td>${r.stage ?? ''}</td>
+        <td>${r.dataset_id ?? ''}</td>
+        <td>${r.status ?? ''}</td>
+        <td>${r.created_at ?? ''}</td>
+        <td><button data-id="${r.layer_id}">fetch</button></td>
+      `;
+      tr.querySelector('button').addEventListener('click', () => {
+        $('oneId').value = r.layer_id;
+        $('oneBtn').click();
+      });
+      tbody.appendChild(tr);
+    }
+  } catch (e) { showError($('listStatus'), $('listTable').querySelector('tbody'), e); }
+});
+
+// ----- 3. fetch one ----------------------------------------------------
+$('oneBtn').addEventListener('click', async () => {
+  const id = $('oneId').value.trim();
+  if (!id) { setStatus($('oneStatus'), 'enter a layer_id', 'err'); return; }
+  setStatus($('oneStatus'), 'fetching…');
+  try {
+    const env = await getLayer(id);
+    setStatus($('oneStatus'), `✓ ${env.layer_type} / ${env.stage}`, 'ok');
+    show($('oneOut'), env);
+  } catch (e) { showError($('oneStatus'), $('oneOut'), e); }
+});
+
+$('latestBtn').addEventListener('click', async () => {
+  const t = $('ftype').value.trim();
+  if (!t) { setStatus($('oneStatus'), 'fill layer_type above first', 'err'); return; }
+  setStatus($('oneStatus'), `resolving latest ${t}…`);
+  try {
+    const env = await resolveLatestLayer(t, {
+      dataset_id: $('fdataset').value.trim() || undefined,
+      stage:      $('fstage').value || undefined,
+    });
+    if (env === null) {
+      setStatus($('oneStatus'), 'no matching envelope', 'muted');
+      show($('oneOut'), null);
+    } else {
+      $('oneId').value = env.layer_id;
+      setStatus($('oneStatus'), `✓ ${env.layer_id}`, 'ok');
+      show($('oneOut'), env);
+    }
+  } catch (e) { showError($('oneStatus'), $('oneOut'), e); }
+});
+
+// ----- 4. submit -------------------------------------------------------
+function templateManifest() {
+  return {
+    action_id:  newActionId(),
+    type:       'run_popstats',
+    dataset_id: 'main_226_hatchery',
+    runner:     'run_popstats',
+    target: {
+      chrom:    'C_gar_LG28',
+      start_bp: 14815000,
+      end_bp:   18305000,
+      groups: {
+        inv_LG28_INV_001_HOM_REF: ['CGA_001', 'CGA_007', 'CGA_010', 'CGA_023', 'CGA_041', 'CGA_059', 'CGA_082', 'CGA_097', 'CGA_103', 'CGA_118'],
+        inv_LG28_INV_001_HOM_INV: ['CGA_003', 'CGA_017', 'CGA_028', 'CGA_036', 'CGA_055', 'CGA_071', 'CGA_088', 'CGA_104', 'CGA_127', 'CGA_142'],
+      },
+    },
+    params: { stat: 'fst', win_bp: 50000, step_bp: 10000 },
+    expected_outputs: [
+      { layer_type: 'fst_windows', schema_version: 'fst_windows_v1' },
+    ],
+  };
+}
+$('manifest').value = JSON.stringify(templateManifest(), null, 2);
+$('actAtlas').value = 'inversion';
+
+$('freshIdBtn').addEventListener('click', () => {
+  try {
+    const m = JSON.parse($('manifest').value);
+    m.action_id = newActionId();
+    $('manifest').value = JSON.stringify(m, null, 2);
+  } catch (e) {
+    $('manifest').value = JSON.stringify({ ...templateManifest() }, null, 2);
+  }
+});
+
+$('submitBtn').addEventListener('click', async () => {
+  let manifest;
+  try { manifest = JSON.parse($('manifest').value); }
+  catch (e) { setStatus($('submitStatus'), 'invalid JSON: ' + e.message, 'err'); return; }
+  const atlas = $('actAtlas').value.trim() || undefined;
+  setStatus($('submitStatus'), 'submitting…');
+  try {
+    const res = await submitAction(manifest, { atlas });
+    setStatus(
+      $('submitStatus'),
+      `✓ produced ${(res.produced_layers || []).length} layer(s)`,
+      'ok',
+    );
+    show($('submitOut'), res);
+    if (res.action_id) $('logId').value = res.action_id;
+    if (res.produced_layers && res.produced_layers[0]) {
+      $('oneId').value = res.produced_layers[0];
+    }
+  } catch (e) { showError($('submitStatus'), $('submitOut'), e); }
+});
+
+// ----- 5. action log ---------------------------------------------------
+$('logBtn').addEventListener('click', async () => {
+  const id = $('logId').value.trim();
+  if (!id) return;
+  try {
+    const entry = await getActionLog(id);
+    show($('logOut'), entry);
+  } catch (e) { show($('logOut'), String(e.message || e)); }
+});
+</script>
+</body>
+</html>

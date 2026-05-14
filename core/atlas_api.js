@@ -35,3 +35,19 @@ export function subscribe(event, callback) { return _state.subscribe(event, call
 export function emit(event, payload)       { return _state.emit(event, payload); }
 
 export function getState() { return _state; }
+
+// ---------------------------------------------------------------------
+// Action-pipeline helpers — re-exported from layer_api.js so pages can
+// import everything from one place. See layer_api.js for full docs.
+// ---------------------------------------------------------------------
+export {
+  configureLayerApi,
+  getLayerApiBaseUrl,
+  listLayers,
+  getLayer,
+  resolveLatestLayer,
+  getLayersOfType,
+  getActionLog,
+  submitAction,
+  newActionId,
+} from './layer_api.js';

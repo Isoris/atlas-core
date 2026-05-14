@@ -1,0 +1,10 @@
+{
+  "name": "atlas-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "atlas-core JS modules (core/*) — flagged as ES modules so 'node tests/*.js' can load them. There is no npm dependency graph; the browser imports core/*.js directly.",
+  "scripts": {
+    "test": "node tests/test_layer_api.js && node tests/test_layer_router_fields.js && node tests/test_master_config.js && node tests/test_registry_cache_key_fields.js && node tests/test_registry_master_config.js && node tests/test_registry_write_and_versioning.js"
+  }
+}

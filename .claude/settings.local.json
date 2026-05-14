@@ -115,7 +115,15 @@
       "PowerShell('---population')",
       "PowerShell(foreach \\($p in @\\('c:\\\\Users\\\\quent\\\\Desktop\\\\genome-atlas\\\\atlases\\\\genome','c:\\\\Users\\\\quent\\\\Desktop\\\\diversity-atlas\\\\atlases\\\\diversity','c:\\\\Users\\\\quent\\\\Desktop\\\\relatedness-atlas\\\\atlases\\\\relatedness','c:\\\\Users\\\\quent\\\\Desktop\\\\population-atlas\\\\atlases\\\\population'\\)\\) { Write-Host \"=== $p ===\"; if \\(Test-Path $p\\) { ls $p | Select-Object -ExpandProperty Name } else { 'missing' } })",
       "PowerShell(foreach \\($atlas in @\\('inversion-atlas\\\\atlases\\\\inversion','genome-atlas\\\\atlases\\\\genome','diversity-atlas\\\\atlases\\\\diversity','relatedness-atlas\\\\atlases\\\\relatedness','population-atlas\\\\atlases\\\\population'\\)\\) { $p = \"c:\\\\Users\\\\quent\\\\Desktop\\\\$atlas\\\\REGISTRY_GUIDE.md\"; if \\(Test-Path $p\\) { \"EXISTS: $p\" } else { \"missing: $p\" } })",
-      "PowerShell($src = 'c:\\\\Users\\\\quent\\\\Desktop\\\\inversion-atlas\\\\atlases\\\\inversion\\\\REGISTRY_GUIDE.md'; foreach \\($dst in @\\('c:\\\\Users\\\\quent\\\\Desktop\\\\genome-atlas\\\\atlases\\\\genome\\\\REGISTRY_GUIDE.md','c:\\\\Users\\\\quent\\\\Desktop\\\\diversity-atlas\\\\atlases\\\\diversity\\\\REGISTRY_GUIDE.md','c:\\\\Users\\\\quent\\\\Desktop\\\\relatedness-atlas\\\\atlases\\\\relatedness\\\\REGISTRY_GUIDE.md','c:\\\\Users\\\\quent\\\\Desktop\\\\population-atlas\\\\atlases\\\\population\\\\REGISTRY_GUIDE.md'\\)\\) { Copy-Item -LiteralPath $src -Destination $dst -Force; if \\(Test-Path $dst\\) { \"wrote $dst \\($\\(\\(Get-Item $dst\\).Length\\) bytes\\)\" } else { \"FAILED $dst\" } })"
+      "PowerShell($src = 'c:\\\\Users\\\\quent\\\\Desktop\\\\inversion-atlas\\\\atlases\\\\inversion\\\\REGISTRY_GUIDE.md'; foreach \\($dst in @\\('c:\\\\Users\\\\quent\\\\Desktop\\\\genome-atlas\\\\atlases\\\\genome\\\\REGISTRY_GUIDE.md','c:\\\\Users\\\\quent\\\\Desktop\\\\diversity-atlas\\\\atlases\\\\diversity\\\\REGISTRY_GUIDE.md','c:\\\\Users\\\\quent\\\\Desktop\\\\relatedness-atlas\\\\atlases\\\\relatedness\\\\REGISTRY_GUIDE.md','c:\\\\Users\\\\quent\\\\Desktop\\\\population-atlas\\\\atlases\\\\population\\\\REGISTRY_GUIDE.md'\\)\\) { Copy-Item -LiteralPath $src -Destination $dst -Force; if \\(Test-Path $dst\\) { \"wrote $dst \\($\\(\\(Get-Item $dst\\).Length\\) bytes\\)\" } else { \"FAILED $dst\" } })",
+      "Bash(git init *)",
+      "Bash(git clone *)",
+      "Bash(ls -la \"C:\\\\Users\\\\quent\\\\Desktop\\\\ngsRelate-fast\\\\src\" 2>&1 && echo \"---DIFF---\" && diff -rq \"C:\\\\Users\\\\quent\\\\AppData\\\\Local\\\\Temp\\\\ngsrelate-bundle-check\" \"C:\\\\Users\\\\quent\\\\Desktop\\\\ngsRelate-fast\" 2>&1 | grep -v \".git\" | head -40)",
+      "Read(//c/Users/quent/AppData/Local/Temp/ngsrelate-bundle-check/**)",
+      "Bash(python -c \"import atlas_server; print\\('OK', atlas_server.SERVER_VERSION\\)\")",
+      "Bash(python -c \"import sys; print\\(sys.executable\\); print\\(sys.prefix\\)\")",
+      "Bash(python -m py_compile atlas_server.py)",
+      "Bash(python -m pip --version)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

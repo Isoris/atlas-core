@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "edge_validation_rule_v1.schema.json",
+  "title": "Edge validation rule — one row in vocabulary/edge_rules.tsv",
+  "description": "One row per allowed (from.type, to.type, edge_type) triple, plus a constraint expression evaluated against the actual nodes. Per LAYER_GRAPH_BUILDER_SPEC.md §6. Edges not matching any row are invalid by default.",
+  "type": "object",
+  "required": ["from_type", "to_type", "edge_type", "constraint"],
+  "additionalProperties": false,
+  "properties": {
+    "from_type":    { "type": "string", "enum": ["set", "filter", "layer", "analysis", "hook"] },
+    "to_type":      { "type": "string", "enum": ["set", "filter", "layer", "analysis", "hook"] },
+    "edge_type":    { "type": "string", "enum": ["input", "output", "feeds_into"] },
+    "constraint":   {
+      "type": "string",
+      "description": "A constraint expression: 'always', 'entity_type_match', 'layer_in_inputs', 'layer_in_produces', 'layer_in_requires', or 'layer_in_requires_or_optional'."
+    },
+    "description":  { "type": "string" }
+  },
+  "_tsv_column_order": ["from_type", "to_type", "edge_type", "constraint", "description"]
+}

@@ -14,13 +14,14 @@
     "description":   { "type": "string", "description": "One-line description of what the layer means biologically + structurally." },
     "schema_path":   { "type": "string", "description": "Relative path to the layer-envelope or per-layer schema. Empty allowed while the contract is undefined." },
     "example_path":  { "type": "string", "description": "Relative path to an example payload file. Empty allowed." },
+    "default_path":  { "type": "string", "description": "Relative path the librarian (resolve_layer.py) probes when source_kind=file. If the file exists at this path (relative to the registry root), the layer resolves to RESOLVED. Empty allowed; the librarian falls back to scope-driven lookup over the underlying set / input_values registries." },
     "status":        { "type": "string", "enum": ["active", "experimental", "deprecated", "stub"], "description": "stub = the layer_id is registered (so it appears as KNOWN_MISSING, not UNKNOWN_CONTRACT) but no schema / no example yet." },
     "intended_use":  { "type": "string" },
     "definition_path": { "type": "string", "description": "Optional path to a richer per-layer JSON when the TSV row isn't enough." }
   },
   "_tsv_column_order": [
     "layer_id", "source_kind", "entity_type", "label", "description",
-    "schema_path", "example_path", "status", "intended_use", "definition_path"
+    "schema_path", "example_path", "default_path", "status", "intended_use", "definition_path"
   ],
   "_tsv_empty_value": "Empty cells are the zero-length string. The validator (check_layer_registry.py) treats empty as None for optional fields."
 }

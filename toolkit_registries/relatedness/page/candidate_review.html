@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Candidate review — page composition demo</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #6c727f;
+    --bg: #fafafa;
+    --bg-card: #ffffff;
+    --border: #d9dde4;
+    --accent: #2d6cb6;
+    --green: #2f8550;
+    --amber: #b87a14;
+    --red: #b13030;
+    --grey-soft: #e7eaee;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 13.5px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--fg); background: var(--bg);
+  }
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  .wrap { padding: 16px 22px 40px; max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+  .lede { color: var(--muted); margin: 0 0 12px; font-size: 12.5px; max-width: 880px; }
+
+  .controls {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    margin: 8px 0 14px; padding: 9px 12px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 6px;
+  }
+  .controls label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+  .controls input, .controls select {
+    font: inherit; padding: 5px 9px; border: 1px solid var(--border);
+    border-radius: 4px; background: white;
+  }
+  .btn {
+    padding: 6px 12px; font-size: 12.5px; font-weight: 500;
+    border-radius: 4px; cursor: pointer; border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--fg);
+  }
+  .btn:hover { background: #f0f2f5; }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-primary:hover { background: #265a9a; }
+
+  .hook-banner {
+    display: flex; align-items: center; gap: 12px;
+    margin: 6px 0 14px; padding: 10px 14px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 6px;
+  }
+  .hook-banner .state {
+    padding: 2px 10px; border-radius: 4px; font-size: 11.5px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .state.COMPLETE     { background: #def0e0; color: #2f8550; }
+  .state.PARTIAL      { background: #fdecd2; color: #b87a14; }
+  .state.READY_TO_RUN { background: #e9eef7; color: #2d6cb6; }
+  .state.BLOCKED      { background: #f8e6e6; color: #b13030; }
+  .state.HIDDEN       { background: #eaecf0; color: #6c727f; }
+  .hook-banner .hook-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; }
+  .hook-banner .scope { color: var(--muted); font-size: 11.5px; margin-left: auto; }
+
+  .panel-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 14px;
+  }
+  .panel {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 6px; padding: 0; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .panel.hidden-opt { opacity: 0.55; }
+  .panel-head {
+    display: flex; align-items: center; gap: 9px;
+    padding: 10px 14px; background: #f7f8fa;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-head .badge {
+    padding: 2px 9px; border-radius: 4px; font-size: 10.5px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .badge.VISIBLE_COMPLETE { background: #def0e0; color: #2f8550; }
+  .badge.VISIBLE_PARTIAL  { background: #fdecd2; color: #b87a14; }
+  .badge.VISIBLE_BLOCKED  { background: #f8e6e6; color: #b13030; }
+  .badge.READY_TO_RUN     { background: #e9eef7; color: #2d6cb6; }
+  .badge.HIDDEN_OPTIONAL  { background: #eaecf0; color: #6c727f; }
+  .panel-head .label { font-weight: 600; flex: 1; }
+  .panel-head .req {
+    font-size: 10.5px; color: var(--muted); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .panel-body { padding: 12px 14px; font-size: 12.5px; }
+  .panel-body .meta { color: var(--muted); margin: 0 0 8px; font-size: 11.5px; }
+  .panel-body table {
+    width: 100%; border-collapse: collapse; margin: 0; font-size: 11.5px;
+  }
+  .panel-body th, .panel-body td {
+    text-align: left; padding: 3px 7px; border-bottom: 1px solid var(--border);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .panel-body th { background: #f7f8fa; color: var(--muted); font-weight: 600; }
+  .panel-body .more { color: var(--muted); font-size: 11px; margin: 4px 0 0; }
+  .panel-body .reason { color: var(--red); margin: 0 0 8px; font-size: 11.5px; }
+  .panel-body .reason.ok { color: var(--green); }
+  .panel-body .missing {
+    margin: 6px 0; font-size: 11.5px;
+  }
+  .panel-body .missing code {
+    background: #f8e6e6; color: var(--red); padding: 1px 6px; border-radius: 3px;
+    margin-right: 4px;
+  }
+  .panel-actions {
+    border-top: 1px solid var(--border); padding: 8px 14px; background: #fbfbfd;
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .action-note {
+    color: var(--muted); font-size: 11px; margin-left: auto; align-self: center;
+  }
+
+  .show-hidden {
+    margin-left: 6px; font-size: 11.5px; color: var(--muted);
+  }
+  .show-hidden input { vertical-align: middle; }
+
+  .compose-json {
+    margin-top: 26px; padding: 12px 14px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 6px;
+  }
+  .compose-json summary {
+    cursor: pointer; font-size: 12px; color: var(--muted);
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .compose-json pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; margin: 10px 0 0; max-height: 360px; overflow: auto;
+    background: #f7f8fa; padding: 10px; border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html"><span class="num">1.</span> Conversation</a>
+  <a href="action.html"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html"><span class="num">4.</span> Catalogue</a>
+  <a href="layers.html"><span class="num">5.</span> Layers</a>
+  <a href="candidate_review.html" class="current"><span class="num">6.</span> Candidate review</a>
+  <span class="tag">atlas-core / page 6 — composition demo</span>
+</nav>
+
+<div class="wrap">
+  <h1>Candidate review</h1>
+  <p class="lede">
+    Vertical-slice page (LAYER_GRAPH_BUILDER_SPEC §11). The librarian
+    resolves <code>candidate_review_hook</code> for the chosen scope and
+    returns a <code>page_composition_plan_v1</code>; this page renders
+    one panel per layer per its <strong>panel_state</strong>. No analysis
+    runs automatically — buttons emit dispatch suggestions only.
+  </p>
+
+  <div class="controls">
+    <label>candidate
+      <select id="candidate-select"></select>
+    </label>
+    <label>sample_set
+      <input type="text" id="sample-set" value="samples_226_v1" size="20">
+    </label>
+    <label>interval_set
+      <input type="text" id="interval-set" size="22">
+    </label>
+    <button class="btn btn-primary" id="btn-recompose">Re-compose</button>
+    <label class="show-hidden">
+      <input type="checkbox" id="show-hidden"> show HIDDEN_OPTIONAL panels
+    </label>
+  </div>
+
+  <div class="hook-banner">
+    <span class="state" id="hook-state">…</span>
+    <span class="hook-id">candidate_review_hook</span>
+    <span class="scope" id="scope-label"></span>
+  </div>
+
+  <div class="panel-grid" id="panel-grid"></div>
+
+  <details class="compose-json">
+    <summary>Raw composition plan (JSON, for debugging)</summary>
+    <pre id="raw-json"></pre>
+  </details>
+</div>
+
+<script>
+// ---------- TSV / generic helpers ----------
+function parseTSV(text) {
+  const lines = text.replace(/\r\n/g, "\n").split("\n").filter(l => l.length);
+  if (!lines.length) return [];
+  const header = lines[0].split("\t");
+  return lines.slice(1).map(l => {
+    const cells = l.split("\t");
+    const o = {};
+    header.forEach((h, i) => { o[h] = cells[i] ?? ""; });
+    return o;
+  });
+}
+const csv = s => (s || "").split(",").map(x => x.trim()).filter(Boolean);
+
+// ---------- in-memory registry ----------
+const DB = {};
+async function fetchTSV(path) {
+  return parseTSV(await (await fetch(path)).text());
+}
+async function loadDB() {
+  const [layers, hooks, analyses, results, values, samples, intervals, sites, groups] = await Promise.all([
+    fetchTSV("../01_registry/layer_registry.tsv"),
+    fetchTSV("../01_registry/hook_registry.tsv"),
+    fetchTSV("../01_registry/analysis_registry.tsv"),
+    fetchTSV("../01_registry/analysis_results.tsv"),
+    fetchTSV("../01_registry/input_values.tsv").catch(() => []),
+    fetchTSV("../01_registry/sample_sets.tsv").catch(() => []),
+    fetchTSV("../01_registry/interval_sets.tsv").catch(() => []),
+    fetchTSV("../01_registry/site_sets.tsv").catch(() => []),
+    fetchTSV("../01_registry/group_sets.tsv").catch(() => []),
+  ]);
+  DB.layers     = Object.fromEntries(layers.map(l => [l.layer_id, l]));
+  DB.hooks      = Object.fromEntries(hooks.map(h => [h.hook_id, h]));
+  DB.analyses   = Object.fromEntries(analyses.map(a => [a.analysis_id, a]));
+  DB.results    = results;
+  DB.values     = values;
+  DB.samples    = Object.fromEntries(samples.map(s => [s.sample_set_id, s]));
+  DB.intervals  = Object.fromEntries(intervals.map(i => [i.interval_set_id, i]));
+  DB.sites      = Object.fromEntries(sites.map(s => [s.site_set_id, s]));
+  DB.groups     = Object.fromEntries(groups.map(g => [g.group_set_id, g]));
+  // Probe which file-kind layers' default_path files are present on disk.
+  const probes = Object.values(DB.layers)
+    .filter(l => l.source_kind === "file" && (l.default_path || "").trim())
+    .map(l => fetch("../" + l.default_path, { method: "HEAD" })
+      .then(r => [l.layer_id, r.ok])
+      .catch(() => [l.layer_id, false]));
+  DB.file_present = Object.fromEntries(await Promise.all(probes));
+}
+
+// ---------- the JS librarian (mirrors resolve_layer.py) ----------
+function resolveLayer(layerId, scope, seen = new Set()) {
+  if (seen.has(layerId)) return mk(layerId, "BLOCKED_BY_INPUT", "cycle");
+  seen = new Set([...seen, layerId]);
+  const row = DB.layers[layerId];
+  if (!row) return mk(layerId, "UNKNOWN_CONTRACT", "layer_id not in layer_registry");
+  if (row.source_kind === "file") return resolveFile(row, scope);
+  if (row.source_kind === "analysis_result") return resolveAnalysis(row, scope, seen);
+  return mk(layerId, "UNKNOWN_CONTRACT", `source_kind ${row.source_kind} not implemented in JS librarian`);
+}
+function resolveFile(row, scope) {
+  const lid = row.layer_id;
+  // 1. default_path probe (fastest)
+  if ((row.default_path || "").trim() && DB.file_present[lid] === true) {
+    return mk(lid, "RESOLVED", `file present at ${row.default_path}`, { default_path: row.default_path });
+  }
+  if ((row.default_path || "").trim() && DB.file_present[lid] === false) {
+    return mk(lid, "KNOWN_MISSING", `file missing at ${row.default_path}`);
+  }
+  // 2. scope-driven lookup for known file layers
+  if (lid === "sample_set") {
+    return scope.sample_set && DB.samples[scope.sample_set]
+      ? mk(lid, "RESOLVED", `sample_set_id=${scope.sample_set} found`)
+      : mk(lid, "KNOWN_MISSING", `sample_set_id=${scope.sample_set} not in sample_sets.tsv`);
+  }
+  if (lid === "interval_set") {
+    return scope.interval_set && DB.intervals[scope.interval_set]
+      ? mk(lid, "RESOLVED", `interval_set_id=${scope.interval_set} found`)
+      : mk(lid, "KNOWN_MISSING", `interval_set_id=${scope.interval_set} not in interval_sets.tsv`);
+  }
+  if (lid === "beagle_file") {
+    const hits = DB.values.filter(v => v.value_kind === "beagle"
+      && (!scope.sample_set   || v.sample_set_id   === scope.sample_set)
+      && (!scope.interval_set || v.interval_set_id === scope.interval_set));
+    return mk(lid, hits.length ? "RESOLVED" : "KNOWN_MISSING",
+      `${hits.length} beagle row(s) match scope`);
+  }
+  return mk(lid, "KNOWN_MISSING", `file-kind layer; no default_path / no scope lookup matched`);
+}
+function resolveAnalysis(row, scope, seen) {
+  const lid = row.layer_id;
+  const producers = Object.values(DB.analyses).filter(a => csv(a.produces).includes(lid));
+  if (!producers.length) return mk(lid, "UNKNOWN_CONTRACT", `no analysis_registry row declares produces='${lid}'`);
+  const producerIds = new Set(producers.map(a => a.analysis_id));
+  for (const r of DB.results) {
+    if (!producerIds.has(r.analysis_type)) continue;
+    if (scope.sample_set   && r.sample_set_id   !== scope.sample_set)   continue;
+    if (scope.interval_set && r.interval_set_id !== scope.interval_set) continue;
+    if (r.status === "active") return mk(lid, "COMPLETE",
+      `analysis_results.tsv row '${r.result_id}' matches scope`, { result_id: r.result_id });
+    if (r.status === "failed") return mk(lid, "FAILED",
+      `analysis_results.tsv row '${r.result_id}' status=failed`, { result_id: r.result_id });
+  }
+  // Walk upstream
+  const upstream = [];
+  for (const a of producers) for (const u of csv(a.input_layer_types)) {
+    upstream.push(resolveLayer(u, scope, seen));
+  }
+  const ok  = new Set(["RESOLVED", "COMPLETE"]);
+  const bad = new Set(["KNOWN_MISSING", "BLOCKED_BY_INPUT", "UNKNOWN_CONTRACT", "FAILED"]);
+  let state;
+  if (upstream.every(u => ok.has(u.state)))      state = "READY_TO_RUN";
+  else if (upstream.some(u => bad.has(u.state))) state = "BLOCKED_BY_INPUT";
+  else                                            state = "KNOWN_MISSING";
+  return mk(lid, state, `no existing result; upstream = ${upstream.map(u => u.state).join(", ")}`,
+    { upstream });
+}
+function mk(layerId, state, reason, extra = {}) {
+  return { layer_id: layerId, state, reason, ...extra };
+}
+function panelStateFor(layerState, isRequired) {
+  if (layerState === "RESOLVED" || layerState === "COMPLETE") return "VISIBLE_COMPLETE";
+  if (layerState === "READY_TO_RUN") return "READY_TO_RUN";
+  if (layerState === "STALE" || layerState === "PARTIAL") return "VISIBLE_PARTIAL";
+  return isRequired ? "VISIBLE_BLOCKED" : "HIDDEN_OPTIONAL";
+}
+function composeHook(hookId, scope) {
+  const hook = DB.hooks[hookId];
+  if (!hook) return { hook_id: hookId, hook_state: "HIDDEN", panels: [], reason: "hook unknown" };
+  const reqs = csv(hook.requires_layers);
+  const opts = csv(hook.optional_layers);
+  const panelIds = csv(hook.panels);
+  const all = [...reqs.map(l => [l, true]), ...opts.map(l => [l, false])];
+  const panels = all.map(([lid, isReq], i) => {
+    const res = resolveLayer(lid, scope);
+    const missing = (res.upstream || [])
+      .filter(u => ["KNOWN_MISSING","BLOCKED_BY_INPUT","UNKNOWN_CONTRACT","FAILED"].includes(u.state))
+      .map(u => u.layer_id);
+    const entry = {
+      panel_id:    panelIds[i] || `${lid}_panel`,
+      layer_id:    lid,
+      required:    isReq,
+      panel_state: panelStateFor(res.state, isReq),
+      layer_state: res.state,
+      reason:      res.reason,
+    };
+    if (missing.length) entry.missing_layers = missing;
+    if (res.result_id) entry.result_id = res.result_id;
+    if (res.default_path) entry.default_path = res.default_path;
+    if (entry.panel_state === "READY_TO_RUN") {
+      const producers = Object.values(DB.analyses).filter(a => csv(a.produces).includes(lid));
+      entry.actions = producers.map(a => ({ action: "run", label: `Run ${a.analysis_id}`, target: a.analysis_id }));
+    } else if (entry.panel_state === "VISIBLE_BLOCKED") {
+      entry.actions = [{ action: "edit_registry", label: `Inspect ${lid}`, target: lid }];
+    }
+    return entry;
+  });
+  const reqPanels = panels.filter(p => p.required);
+  const states = new Set(reqPanels.map(p => p.panel_state));
+  let hookState = "PARTIAL";
+  if (!reqPanels.length) hookState = "HIDDEN";
+  else if (states.size === 1 && states.has("VISIBLE_COMPLETE")) hookState = "COMPLETE";
+  else if (states.size === 1 && states.has("READY_TO_RUN")) hookState = "READY_TO_RUN";
+  else if (states.size === 1 && states.has("VISIBLE_BLOCKED")) hookState = "BLOCKED";
+  return {
+    hook_id: hookId, schema_version: "page_composition_plan_v1",
+    page_id: hook.page_id, scope, hook_state: hookState, panels,
+  };
+}
+
+// ---------- panel preview loaders ----------
+async function loadPreview(layerId, defaultPath) {
+  if (!defaultPath) return null;
+  try {
+    const text = await (await fetch("../" + defaultPath)).text();
+    const rows = parseTSV(text);
+    return { rows, total: rows.length };
+  } catch { return null; }
+}
+
+// ---------- render ----------
+function renderHookBanner(plan) {
+  const banner = document.getElementById("hook-state");
+  banner.textContent = plan.hook_state;
+  banner.className = `state ${plan.hook_state}`;
+  document.getElementById("scope-label").textContent =
+    `${plan.scope.sample_set || "—"} × ${plan.scope.interval_set || "—"}` +
+    (plan.scope.candidate_id ? ` · ${plan.scope.candidate_id}` : "");
+}
+async function renderPanels(plan) {
+  const grid = document.getElementById("panel-grid");
+  grid.innerHTML = "";
+  const showHidden = document.getElementById("show-hidden").checked;
+  for (const p of plan.panels) {
+    if (p.panel_state === "HIDDEN_OPTIONAL" && !showHidden) continue;
+    const row = DB.layers[p.layer_id] || {};
+    const card = document.createElement("div");
+    card.className = "panel" + (p.panel_state === "HIDDEN_OPTIONAL" ? " hidden-opt" : "");
+    card.innerHTML = `
+      <div class="panel-head">
+        <span class="badge ${p.panel_state}">${p.panel_state.replace(/_/g, " ")}</span>
+        <span class="label">${row.label || p.layer_id}</span>
+        <span class="req">${p.required ? "required" : "optional"}</span>
+      </div>
+      <div class="panel-body">
+        <div class="meta">layer: <code>${p.layer_id}</code> · state: <code>${p.layer_state}</code></div>
+        ${p.reason ? `<div class="reason ${p.panel_state === "VISIBLE_COMPLETE" ? "ok" : ""}">${p.reason}</div>` : ""}
+        ${(p.missing_layers || []).length ? `<div class="missing">missing: ${p.missing_layers.map(m => `<code>${m}</code>`).join("")}</div>` : ""}
+        <div data-preview="${p.layer_id}"></div>
+      </div>
+      ${(p.actions || []).length ? `
+        <div class="panel-actions">
+          ${p.actions.map(a => `<button class="btn ${a.action === "run" ? "btn-primary" : ""}" data-action="${a.action}" data-target="${a.target}">${a.label}</button>`).join("")}
+          <span class="action-note">does not run; emits dispatch request</span>
+        </div>
+      ` : ""}
+    `;
+    grid.appendChild(card);
+    if (p.panel_state === "VISIBLE_COMPLETE" && p.default_path) {
+      const previewHost = card.querySelector(`[data-preview="${p.layer_id}"]`);
+      const preview = await loadPreview(p.layer_id, p.default_path);
+      if (preview && preview.rows.length) {
+        const head = Object.keys(preview.rows[0]);
+        const tbl = document.createElement("table");
+        tbl.innerHTML = `<thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead>
+          <tbody>${preview.rows.slice(0, 6).map(r => `<tr>${head.map(h => `<td>${(r[h] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody>`;
+        previewHost.appendChild(tbl);
+        if (preview.total > 6) {
+          const more = document.createElement("div");
+          more.className = "more";
+          more.textContent = `… and ${preview.total - 6} more rows`;
+          previewHost.appendChild(more);
+        }
+      }
+    }
+  }
+  // wire (no-op) action buttons that just print intent — never actually runs.
+  for (const b of grid.querySelectorAll("button[data-action]")) {
+    b.addEventListener("click", e => {
+      alert(`dispatch intent\naction: ${b.dataset.action}\ntarget: ${b.dataset.target}\n\n(no execution — this is the librarian-only build; the dispatcher is a separate concern)`);
+    });
+  }
+}
+
+function currentScope() {
+  return {
+    sample_set:   document.getElementById("sample-set").value.trim() || null,
+    interval_set: document.getElementById("interval-set").value.trim() || null,
+    candidate_id: document.getElementById("candidate-select").value || null,
+  };
+}
+async function recompose() {
+  const plan = composeHook("candidate_review_hook", currentScope());
+  renderHookBanner(plan);
+  await renderPanels(plan);
+  document.getElementById("raw-json").textContent = JSON.stringify(plan, null, 2);
+}
+function fillCandidateSelect() {
+  const sel = document.getElementById("candidate-select");
+  // read inversion_candidates.tsv via default_path
+  fetch("../" + DB.layers["inversion_candidates"].default_path).then(r => r.text()).then(t => {
+    const cands = parseTSV(t);
+    sel.innerHTML = cands.map(c => `<option value="${c.candidate_id}">${c.candidate_id} (${c.chrom})</option>`).join("");
+    // Heuristic: default to LG28 candidate; set the interval_set to the matching interval row if present.
+    sel.value = "inv_LG28_INV_001";
+    syncIntervalSet();
+    sel.addEventListener("change", () => { syncIntervalSet(); recompose(); });
+  });
+}
+function syncIntervalSet() {
+  const cand = document.getElementById("candidate-select").value;
+  // by convention the interval_set_id is <candidate>_v1
+  const guess = `${cand}_v1`;
+  if (DB.intervals[guess]) document.getElementById("interval-set").value = guess;
+}
+
+(async () => {
+  await loadDB();
+  fillCandidateSelect();
+  document.getElementById("btn-recompose").addEventListener("click", recompose);
+  document.getElementById("show-hidden").addEventListener("change", recompose);
+  document.getElementById("sample-set").addEventListener("change", recompose);
+  document.getElementById("interval-set").addEventListener("change", recompose);
+  // initial render (after candidate select settles)
+  setTimeout(recompose, 50);
+})();
+</script>
+</body>
+</html>

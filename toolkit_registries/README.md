@@ -26,6 +26,7 @@ contract layer between them.
 | **schemas/registry_schemas/** | Core registry schemas. See breakdown below | active |
 | **schemas/structured_block_schemas/** | 40 per-aspect schemas for evidence blocks (boundary_refined, gene_cargo, mendelian, etc.) + `BK_KEYS_EXPLAINED.md` + `INDEX_remaining_blocks.json` | draft; polished per-page during atlas migration |
 | **schemas/specs/** | 3 deeper specs: `INVERSION_REGISTRY_SPECIFICATION_v2.md`, `STRUCTURED_BLOCK_SCHEMAS.md`, `CHARACTERIZATION_CONVERGENCE_RULES.md` | canonical scientific contracts; no LANTA-API contamination |
+| **LAYER_GRAPH_BUILDER_SPEC.md** | Full contract for the Layer Graph Builder: five-node vocabulary (set / filter / layer / analysis / hook), edge validation rules, the 9 librarian states, the 5 panel states, the page composition plan, the three UI modes (Ask / Inspect / Commit), and the LLM proposal pipeline. The invariant document this PR locks down. | active, v1 |
 
 ### registry_schemas/ breakdown
 
@@ -57,8 +58,13 @@ contract layer between them.
 | `operation_params_v1.schema.json` | One reusable parameter bundle for a derivation (e.g. `thin500_first_per_chrom_v1` vs `thin500_random_seed123_v1` — same distance, different choice rule). | active, v1 |
 | `derivation_registry_row_v1.schema.json` | Schema for one TSV row in `derivation_registry.tsv`. | active, v1 |
 | `operation_params_registry_row_v1.schema.json` | Schema for one TSV row in `operation_params_registry.tsv`. | active, v1 |
-| `layer_registry_row_v1.schema.json` | One row per layer KIND (file / analysis_result / operation / inline). The "what does this data mean" catalogue that pages consume and analyses produce. | active, v1 |
-| `hook_registry_row_v1.schema.json` | One row per page hook / panel / widget. Declares `requires_layers` (CSV FK into `layer_registry`). The librarian (`resolve_layer.py`) walks this to compute per-hook blocked/ready/complete states. | active, v1 |
+| `layer_registry_row_v1.schema.json` | One row per layer KIND (file / analysis_result / operation / inline). The "what does this data mean" catalogue that pages consume and analyses produce. v1 adds `default_path` for fast file-presence probes. | active, v1 |
+| `hook_registry_row_v1.schema.json` | One row per page hook / panel / widget. Declares `requires_layers` (CSV FK into `layer_registry`), `optional_layers`, and `panels` (1:1 with the union). The librarian (`resolve_layer.py --compose`) walks this to compute `page_composition_plan_v1`. | active, v1 |
+| `layer_graph_v1.schema.json` | Top-level shape of a layer graph — a typed DAG over the 5 node types with `nodes[]` and `edges[]` (3-tuples). Per LAYER_GRAPH_BUILDER_SPEC.md §3. | active, v1 |
+| `node_proposal_v1.schema.json` | Output of the LLM Stage-C graph proposer. Every node MUST cite an existing `layer_id` / `analysis_id` (or be `stub=true`); every node has a required `reason` and `confidence` ∈ {high, medium, low}. Per spec §8. | active, v1 |
+| `edge_validation_rule_v1.schema.json` | One row per allowed `(from_type, to_type, edge_type)` triple + a constraint expression evaluated against the actual nodes. Per spec §6. | active, v1 |
+| `page_composition_plan_v1.schema.json` | What `resolve_layer.py --compose <hook_id>` returns. Per spec §5. | active, v1 |
+| `panel_composition_entry_v1.schema.json` | One panel inside a composition plan. `panel_state` ∈ {VISIBLE_COMPLETE / VISIBLE_PARTIAL / VISIBLE_BLOCKED / READY_TO_RUN / HIDDEN_OPTIONAL}. | active, v1 |
 
 ---
 

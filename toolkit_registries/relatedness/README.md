@@ -523,6 +523,39 @@ The page is the practical interface for the layer/analysis adjacency: when
 the formal `analysis_registry.tsv` rows are wrong / incomplete / aspirational,
 you can wire the missing connections by hand and export the result.
 
+## Page 6 — candidate review (composition demo, `page/candidate_review.html`)
+
+The first vertical slice of the **Layer Graph Builder** spec
+(`toolkit_registries/LAYER_GRAPH_BUILDER_SPEC.md`). Page 6 renders the
+output of `resolve_layer.py --compose candidate_review_hook` — one panel
+per layer the hook requires / optionally consumes, each panel labelled
+with its **panel_state**:
+
+| panel_state          | render                                                     |
+|---|---|
+| `VISIBLE_COMPLETE`   | full panel with a 6-row preview of the underlying TSV       |
+| `VISIBLE_PARTIAL`    | full panel with a stale / partial badge                     |
+| `VISIBLE_BLOCKED`    | red card listing `missing_layers[]` + an "Inspect" button   |
+| `READY_TO_RUN`       | blue card with a manual **Run <analysis>** button           |
+| `HIDDEN_OPTIONAL`    | hidden by default (toggle "show HIDDEN_OPTIONAL" to reveal) |
+
+The page composition is computed live (no caching). Re-pick a candidate
+or scope and the panels re-arrange. Buttons emit a dispatch *intent*
+only — nothing runs from the page (the dispatcher is a separate
+concern, see spec §9).
+
+```bash
+python3 scripts/resolve_layer.py --compose candidate_review_hook \
+    --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1 \
+    --candidate inv_LG28_INV_001
+# → page_composition_plan_v1 JSON
+```
+
+Seed data for the demo: `02_sets/candidates/inversion_candidates.tsv`
+(LG01 + LG28) and `02_sets/karyotype/karyotype_calls.tsv` (6 samples × 2
+candidates). The LG01 candidate is the manuscript pair-relation target
+(see spec §11).
+
 ## The resolver — let the registry do the thinking
 
 You don't want to remember which sample_set + which thin500 + which BEAGLE

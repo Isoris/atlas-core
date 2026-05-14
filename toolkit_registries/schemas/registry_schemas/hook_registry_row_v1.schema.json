@@ -10,7 +10,9 @@
     "hook_id":         { "type": "string", "description": "Stable id. Convention: <page>_<event>. Example: mendelian_page_load, popstats_panel_open." },
     "page_id":         { "type": "string", "description": "Which page this hook belongs to. Empty allowed for global hooks." },
     "provides_view":   { "type": "string", "description": "Label for the rendered view (e.g. mendelian_panel, fst_track). Free-form." },
-    "requires_layers": { "type": "string", "description": "Comma-separated layer_ids the hook needs to render. FK into layer_registry.layer_id." },
+    "requires_layers": { "type": "string", "description": "Comma-separated layer_ids the hook NEEDS to render. FK into layer_registry.layer_id. Per LAYER_GRAPH_BUILDER_SPEC.md §5: a required layer that resolves to KNOWN_MISSING / BLOCKED / UNKNOWN / FAILED becomes a VISIBLE_BLOCKED panel." },
+    "optional_layers": { "type": "string", "description": "Comma-separated layer_ids the hook CAN render but does not require. FK into layer_registry.layer_id. Per spec §5: optional layers that fail to resolve become HIDDEN_OPTIONAL panels (collapsed, not red)." },
+    "panels":          { "type": "string", "description": "Comma-separated panel_id labels matched 1:1 with (requires_layers + optional_layers) in order. Empty allowed; the librarian will mint panel_ids as '<layer_id>_panel'." },
     "scope_dims":      { "type": "string", "description": "Comma-separated dimension names the hook is parameterized over (sample_set, interval, candidate_id, chromosome). Informational; the resolver uses these to know what scope keys to expect when called." },
     "label":           { "type": "string" },
     "description":     { "type": "string" },
@@ -19,6 +21,7 @@
   },
   "_tsv_column_order": [
     "hook_id", "page_id", "provides_view", "requires_layers",
+    "optional_layers", "panels",
     "scope_dims", "label", "description", "status", "definition_path"
   ]
 }

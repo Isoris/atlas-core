@@ -150,9 +150,121 @@ class Resolver:
         return {"hook_id": hook_id, "state": agg, "page_id": hook.get("page_id", ""),
                 "provides_view": hook.get("provides_view", ""), "layers": per_layer}
 
+    def compose_hook(
+        self,
+        hook_id: str,
+        sample_set: Optional[str] = None,
+        interval_set: Optional[str] = None,
+        candidate_id: Optional[str] = None,
+    ) -> Dict[str, object]:
+        """Return a page_composition_plan_v1 dict for a hook.
+        Per LAYER_GRAPH_BUILDER_SPEC.md §5 — maps each layer's
+        librarian state into a panel_state via the fixed table."""
+        hook = self.hooks.get(hook_id)
+        if not hook:
+            return {"hook_id": hook_id, "schema_version": "page_composition_plan_v1",
+                    "page_id": "", "hook_state": "HIDDEN", "panels": [],
+                    "reason": "hook_id not in hook_registry.tsv"}
+
+        req = _csv_field(hook.get("requires_layers"))
+        opt = _csv_field(hook.get("optional_layers"))
+        panel_ids = _csv_field(hook.get("panels"))
+        all_layers = [(lid, True) for lid in req] + [(lid, False) for lid in opt]
+
+        panels: List[Dict[str, object]] = []
+        for i, (lid, is_required) in enumerate(all_layers):
+            res = self.resolve_layer(lid, sample_set, interval_set, candidate_id)
+            panel_state = self._panel_state(res["state"], is_required)
+            panel_id = panel_ids[i] if i < len(panel_ids) else f"{lid}_panel"
+            entry: Dict[str, object] = {
+                "panel_id":    panel_id,
+                "layer_id":    lid,
+                "required":    is_required,
+                "panel_state": panel_state,
+                "layer_state": res["state"],
+                "reason":      res.get("reason", ""),
+            }
+            # missing_layers: from upstream of an analysis_result
+            missing = [u["layer_id"] for u in res.get("upstream", []) or []
+                       if u["state"] in {"KNOWN_MISSING", "BLOCKED_BY_INPUT",
+                                          "UNKNOWN_CONTRACT", "FAILED"}]
+            if missing:
+                entry["missing_layers"] = missing
+            if "result_id" in res:
+                entry["result_id"] = res["result_id"]
+            row = self.layers.get(lid, {})
+            if res["state"] == "RESOLVED" and row.get("default_path"):
+                entry["default_path"] = row["default_path"]
+            # actions: suggestions (the dispatcher reads these; they're never auto-executed)
+            actions = []
+            if panel_state == "READY_TO_RUN":
+                # find which producer analysis would run
+                producers = [a["analysis_id"] for a in self.analyses.values()
+                             if lid in _csv_field(a.get("produces"))]
+                for aid in producers:
+                    actions.append({"action": "run", "label": f"Run {aid}", "target": aid})
+            elif panel_state == "VISIBLE_BLOCKED":
+                actions.append({"action": "edit_registry",
+                                "label": f"Inspect {lid} in the layer registry",
+                                "target": lid})
+            if actions:
+                entry["actions"] = actions
+            panels.append(entry)
+
+        hook_state = self._aggregate_hook_state(panels)
+        return {
+            "hook_id":        hook_id,
+            "schema_version": "page_composition_plan_v1",
+            "page_id":        hook.get("page_id", ""),
+            "scope": {"sample_set": sample_set, "interval_set": interval_set,
+                      "candidate_id": candidate_id},
+            "hook_state":     hook_state,
+            "panels":         panels,
+        }
+
+    @staticmethod
+    def _panel_state(layer_state: str, is_required: bool) -> str:
+        if layer_state in {"RESOLVED", "COMPLETE"}:
+            return "VISIBLE_COMPLETE"
+        if layer_state == "READY_TO_RUN":
+            return "READY_TO_RUN"
+        if layer_state in {"STALE", "PARTIAL"}:
+            return "VISIBLE_PARTIAL"
+        # missing / blocked / unknown / failed
+        return "VISIBLE_BLOCKED" if is_required else "HIDDEN_OPTIONAL"
+
+    @staticmethod
+    def _aggregate_hook_state(panels: List[Dict[str, object]]) -> str:
+        req = [p for p in panels if p["required"]]
+        if not req:
+            return "HIDDEN"
+        req_states = {p["panel_state"] for p in req}
+        if req_states == {"VISIBLE_COMPLETE"}:
+            return "COMPLETE"
+        if req_states == {"READY_TO_RUN"}:
+            return "READY_TO_RUN"
+        if req_states == {"VISIBLE_BLOCKED"}:
+            return "BLOCKED"
+        if all(p["panel_state"] in {"VISIBLE_BLOCKED"} for p in req if p["layer_state"] == "UNKNOWN_CONTRACT"):
+            # Every required layer is UNKNOWN_CONTRACT → page is hidden entirely
+            if all(p["layer_state"] == "UNKNOWN_CONTRACT" for p in req):
+                return "HIDDEN"
+        return "PARTIAL"
+
     # ---- internals ----
     def _resolve_file_layer(self, row, sample_set, interval_set, candidate_id):
         lid = row["layer_id"]
+        # First: probe default_path if declared. A present file always resolves.
+        default = (row.get("default_path") or "").strip()
+        if default:
+            candidate_path = (self.root / default).resolve()
+            if candidate_path.exists():
+                return self._mk(lid, "RESOLVED",
+                                f"file present at {default}",
+                                sample_set, interval_set, candidate_id,
+                                default_path=default)
+            # default_path declared but missing → KNOWN_MISSING, unless we fall
+            # through to a scope-driven lookup below.
         # Map known file layers to their underlying registry.
         if lid == "sample_set":
             present = bool(sample_set) and sample_set in self.samples
@@ -264,8 +376,9 @@ def _print_layer(res, indent=0):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--layer", help="layer_id to resolve")
-    g.add_argument("--hook",  help="hook_id to resolve (walks all required_layers)")
+    g.add_argument("--layer",   help="layer_id to resolve")
+    g.add_argument("--hook",    help="hook_id to resolve (walks all required_layers)")
+    g.add_argument("--compose", help="hook_id to compose (emits page_composition_plan_v1)")
     ap.add_argument("--sample-set",   default=None)
     ap.add_argument("--interval-set", default=None)
     ap.add_argument("--candidate",    default=None)
@@ -279,10 +392,13 @@ def main():
 
     if args.layer:
         res = r.resolve_layer(args.layer, args.sample_set, args.interval_set, args.candidate)
+    elif args.compose:
+        res = r.compose_hook(args.compose, args.sample_set, args.interval_set, args.candidate)
     else:
         res = r.resolve_hook(args.hook, args.sample_set, args.interval_set, args.candidate)
 
-    if args.json:
+    if args.json or args.compose:
+        # --compose always emits JSON (the composition plan is JSON-only).
         print(json.dumps(res, indent=2))
         return 0
 

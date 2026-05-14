@@ -1,0 +1,3 @@
+candidate_id	chrom	start	end	karyotype_axis	confidence	notes
+inv_LG28_INV_001	C_gar_LG28	1200000	8400000	0_1_2	high	synthetic; the manuscript stress-test candidate on LG28
+inv_LG01_INV_001	C_gar_LG01	34000000	41200000	0_1_2	medium	synthetic; the paired LG01 candidate (LG28 × LG01 pair-relation test target)

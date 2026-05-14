@@ -1,0 +1,13 @@
+sample_id	candidate_id	karyotype	confidence	method
+GAR001	inv_LG28_INV_001	0	high	pca_dosage_v1
+GAR002	inv_LG28_INV_001	0	high	pca_dosage_v1
+GAR003	inv_LG28_INV_001	1	medium	pca_dosage_v1
+GAR004	inv_LG28_INV_001	1	high	pca_dosage_v1
+GAR005	inv_LG28_INV_001	2	high	pca_dosage_v1
+GAR006	inv_LG28_INV_001	2	medium	pca_dosage_v1
+GAR001	inv_LG01_INV_001	0	medium	pca_dosage_v1
+GAR002	inv_LG01_INV_001	1	medium	pca_dosage_v1
+GAR003	inv_LG01_INV_001	1	high	pca_dosage_v1
+GAR004	inv_LG01_INV_001	0	medium	pca_dosage_v1
+GAR005	inv_LG01_INV_001	2	high	pca_dosage_v1
+GAR006	inv_LG01_INV_001	1	low	pca_dosage_v1

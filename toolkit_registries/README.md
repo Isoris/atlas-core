@@ -27,6 +27,7 @@ contract layer between them.
 | **schemas/structured_block_schemas/** | 40 per-aspect schemas for evidence blocks (boundary_refined, gene_cargo, mendelian, etc.) + `BK_KEYS_EXPLAINED.md` + `INDEX_remaining_blocks.json` | draft; polished per-page during atlas migration |
 | **schemas/specs/** | 3 deeper specs: `INVERSION_REGISTRY_SPECIFICATION_v2.md`, `STRUCTURED_BLOCK_SCHEMAS.md`, `CHARACTERIZATION_CONVERGENCE_RULES.md` | canonical scientific contracts; no LANTA-API contamination |
 | **LAYER_GRAPH_BUILDER_SPEC.md** | Full contract for the Layer Graph Builder: five-node vocabulary (set / filter / layer / analysis / hook), edge validation rules, the 9 librarian states, the 5 panel states, the page composition plan, the three UI modes (Ask / Inspect / Commit), and the LLM proposal pipeline. The invariant document this PR locks down. | active, v1 |
+| **ADAPTER_CONTRACT.md** | What every `analysis/<id>/adapter_atlas.js` must export: identity, contract (input/produced layers), runtime, schemas, fixtures + the §rules separating `compute.js` (pure science, no registry imports) from `adapter_atlas.js` (registry-aware bridge). Plus the build/validate pipeline, packages, recipes. Per-adapter JSON + JSONL is canonical; TSV is the derived view. | active, v1 |
 
 ### registry_schemas/ breakdown
 
@@ -65,6 +66,9 @@ contract layer between them.
 | `edge_validation_rule_v1.schema.json` | One row per allowed `(from_type, to_type, edge_type)` triple + a constraint expression evaluated against the actual nodes. Per spec §6. | active, v1 |
 | `page_composition_plan_v1.schema.json` | What `resolve_layer.py --compose <hook_id>` returns. Per spec §5. | active, v1 |
 | `panel_composition_entry_v1.schema.json` | One panel inside a composition plan. `panel_state` ∈ {VISIBLE_COMPLETE / VISIBLE_PARTIAL / VISIBLE_BLOCKED / READY_TO_RUN / HIDDEN_OPTIONAL}. | active, v1 |
+| `package_manifest_v1.schema.json` | One row per `packages/<id>/manifest.json` — bundle of related analyses + layers + panels + pages. The unit of distribution. Per ADAPTER_CONTRACT.md §7. | active, v1 |
+| `page_v1.schema.json` | One row per `pages.jsonl` entry — a dashboard page, its hook, and its ordered list of panels. | active, v1 |
+| `panel_v1.schema.json` | One row per `panels.jsonl` entry — a visual component that renders exactly one `layer_id` (with optional decoration layers). | active, v1 |
 
 ---
 

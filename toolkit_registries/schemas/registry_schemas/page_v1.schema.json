@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "page_v1.schema.json",
+  "title": "Page — one dashboard page",
+  "description": "A page is a container of panels. Per ADAPTER_CONTRACT.md §4 and LAYER_GRAPH_BUILDER_SPEC.md §5. The page itself has no scientific behaviour — its job is to host panels in a layout. Visibility / composition is decided by the librarian via the page's primary hook (hook_id below).",
+  "type": "object",
+  "required": ["page_id", "schema_version", "hook_id", "panels"],
+  "additionalProperties": false,
+  "properties": {
+    "page_id":        { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "schema_version": { "type": "string", "const": "page_v1" },
+    "label":          { "type": "string" },
+    "description":    { "type": "string" },
+    "nav_order":      { "type": "integer", "description": "Position in the top nav (1..N)." },
+    "hook_id":        { "type": "string", "description": "Primary hook this page resolves on load. FK into hook_registry.hook_id." },
+    "panels": {
+      "type": "array",
+      "description": "Ordered list of panel_ids the page lays out. Each panel_id must resolve to a panel_v1 entry.",
+      "items": {
+        "type": "object",
+        "required": ["panel_id"],
+        "additionalProperties": false,
+        "properties": {
+          "panel_id":    { "type": "string" },
+          "layout_hint": { "type": "string", "enum": ["full", "half", "third"], "default": "full" },
+          "show_when":   { "type": "string", "description": "Optional gate: 'always' (default), 'has_optional', 'has_complete'. Currently informational." }
+        }
+      }
+    },
+    "package_id":     { "type": "string", "description": "Optional owning package. A page may aggregate panels across packages." },
+    "status":         { "type": "string", "enum": ["active", "experimental", "deprecated"] }
+  }
+}

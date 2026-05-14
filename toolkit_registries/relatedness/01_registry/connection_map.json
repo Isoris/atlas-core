@@ -1,0 +1,964 @@
+{
+  "schema_version": "connection_map_v1",
+  "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
+  "n_nodes": 58,
+  "n_edges": 81,
+  "warnings": [],
+  "nodes": [
+    {
+      "id": "beagle_file",
+      "type": "layer",
+      "label": "BEAGLE genotype likelihoods",
+      "status": "active"
+    },
+    {
+      "id": "sites_file",
+      "type": "layer",
+      "label": "Sites file (chrom, pos, ref, alt)",
+      "status": "active"
+    },
+    {
+      "id": "sample_set",
+      "type": "layer",
+      "label": "Sample set (catflist)",
+      "status": "active"
+    },
+    {
+      "id": "group_set",
+      "type": "layer",
+      "label": "Group / metadata table",
+      "status": "active"
+    },
+    {
+      "id": "interval_set",
+      "type": "layer",
+      "label": "Interval / coordinate scope",
+      "status": "active"
+    },
+    {
+      "id": "relatedness_res",
+      "type": "layer",
+      "label": "ngsRelate pairwise relatedness",
+      "status": "active"
+    },
+    {
+      "id": "pedigree_result",
+      "type": "layer",
+      "label": "ngsPedigree pedigree",
+      "status": "active"
+    },
+    {
+      "id": "mendelian_result",
+      "type": "layer",
+      "label": "Mendelian-error rate per trio",
+      "status": "active"
+    },
+    {
+      "id": "popstats_result",
+      "type": "layer",
+      "label": "Composite popstats (FST / dxy / piN / piS)",
+      "status": "active"
+    },
+    {
+      "id": "fst_windows",
+      "type": "layer",
+      "label": "Pairwise FST in windows",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_pi_windows",
+      "type": "layer",
+      "label": "Nucleotide diversity \u03b8\u03c0 in windows",
+      "status": "experimental"
+    },
+    {
+      "id": "dxy_windows",
+      "type": "layer",
+      "label": "Between-group divergence dxy in windows",
+      "status": "experimental"
+    },
+    {
+      "id": "karyotype_calls",
+      "type": "layer",
+      "label": "Per-sample karyotype assignment",
+      "status": "active"
+    },
+    {
+      "id": "inversion_candidates",
+      "type": "layer",
+      "label": "Candidate inversion intervals",
+      "status": "active"
+    },
+    {
+      "id": "long_range_haplotype_regime",
+      "type": "layer",
+      "label": "Long-range haplotype regime",
+      "status": "stub"
+    },
+    {
+      "id": "family_hub",
+      "type": "layer",
+      "label": "Family hub (high-relatedness cluster)",
+      "status": "stub"
+    },
+    {
+      "id": "distortion_summary",
+      "type": "layer",
+      "label": "Genotype-distortion summary",
+      "status": "stub"
+    },
+    {
+      "id": "candidate_registry",
+      "type": "layer",
+      "label": "Candidate inversion registry (promoted)",
+      "status": "experimental"
+    },
+    {
+      "id": "chain_evidence",
+      "type": "layer",
+      "label": "Candidate chain evidence",
+      "status": "experimental"
+    },
+    {
+      "id": "unpolarized_karyotype_calls",
+      "type": "layer",
+      "label": "Unpolarized karyotype calls",
+      "status": "stub"
+    },
+    {
+      "id": "polarized_karyotype_calls",
+      "type": "layer",
+      "label": "Polarized karyotype calls",
+      "status": "stub"
+    },
+    {
+      "id": "window_band_calls",
+      "type": "layer",
+      "label": "Window band calls (raw signal)",
+      "status": "stub"
+    },
+    {
+      "id": "l3_contingency",
+      "type": "layer",
+      "label": "L3 contingency hits (raw signal)",
+      "status": "stub"
+    },
+    {
+      "id": "dosage_summary",
+      "type": "layer",
+      "label": "Dosage summary (raw signal)",
+      "status": "stub"
+    },
+    {
+      "id": "reference_genome_layer",
+      "type": "layer",
+      "label": "Reference genome (assembly + ancestral context)",
+      "status": "stub"
+    },
+    {
+      "id": "ngsrelate",
+      "type": "analysis",
+      "label": "ngsRelate \u2014 pairwise relatedness from genotype likelihoods",
+      "status": "active"
+    },
+    {
+      "id": "ngspedigree",
+      "type": "analysis",
+      "label": "ngsPedigree \u2014 pedigree reconstruction from a relatedness matrix",
+      "status": "active"
+    },
+    {
+      "id": "mendelian",
+      "type": "analysis",
+      "label": "Mendelian inheritance \u2014 per-trio error rate",
+      "status": "active"
+    },
+    {
+      "id": "popstats",
+      "type": "analysis",
+      "label": "Population statistics \u2014 windowed FST / dxy / piN / piS (composite)",
+      "status": "active"
+    },
+    {
+      "id": "fst_pairwise",
+      "type": "analysis",
+      "label": "Pairwise FST in windows",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_pi",
+      "type": "analysis",
+      "label": "Nucleotide diversity \u03b8\u03c0 in windows",
+      "status": "experimental"
+    },
+    {
+      "id": "dxy",
+      "type": "analysis",
+      "label": "Between-group divergence dxy in windows",
+      "status": "experimental"
+    },
+    {
+      "id": "iv_candidate_promoter",
+      "type": "analysis",
+      "label": "Inversion candidate promoter",
+      "status": "experimental"
+    },
+    {
+      "id": "karyotype_auto_caller",
+      "type": "analysis",
+      "label": "Karyotype auto caller",
+      "status": "stub"
+    },
+    {
+      "id": "karyotype_polarizer",
+      "type": "analysis",
+      "label": "Karyotype polarizer",
+      "status": "stub"
+    },
+    {
+      "id": "mendelian_page_load",
+      "type": "hook",
+      "label": "Mendelian panel",
+      "status": "active"
+    },
+    {
+      "id": "popstats_page_load",
+      "type": "hook",
+      "label": "Popstats panel",
+      "status": "active"
+    },
+    {
+      "id": "relatedness_chain_view",
+      "type": "hook",
+      "label": "Relatedness chain strip",
+      "status": "active"
+    },
+    {
+      "id": "catalogue_dashboard",
+      "type": "hook",
+      "label": "Catalogue grid",
+      "status": "active"
+    },
+    {
+      "id": "candidate_review_hook",
+      "type": "hook",
+      "label": "Candidate review",
+      "status": "active"
+    },
+    {
+      "id": "candidate_overview_panel",
+      "type": "panel",
+      "label": "Candidate overview",
+      "status": "active",
+      "layer_id": "inversion_candidates"
+    },
+    {
+      "id": "candidate_review_panel",
+      "type": "panel",
+      "label": "Candidate review composite",
+      "status": "experimental",
+      "layer_id": "candidate_registry"
+    },
+    {
+      "id": "karyotype_panel",
+      "type": "panel",
+      "label": "Karyotype panel",
+      "status": "active",
+      "layer_id": "karyotype_calls"
+    },
+    {
+      "id": "long_range_regime_panel",
+      "type": "panel",
+      "label": "Long-range haplotype regimes",
+      "status": "experimental",
+      "layer_id": "long_range_haplotype_regime"
+    },
+    {
+      "id": "popstats_panel",
+      "type": "panel",
+      "label": "Popstats (FST / dxy / piN / piS)",
+      "status": "active",
+      "layer_id": "popstats_result"
+    },
+    {
+      "id": "mendelian_panel",
+      "type": "panel",
+      "label": "Mendelian per-trio rate",
+      "status": "active",
+      "layer_id": "mendelian_result"
+    },
+    {
+      "id": "fst_panel",
+      "type": "panel",
+      "label": "Pairwise FST windows",
+      "status": "experimental",
+      "layer_id": "fst_windows"
+    },
+    {
+      "id": "conversation",
+      "type": "page",
+      "label": "Conversation",
+      "status": "experimental"
+    },
+    {
+      "id": "action",
+      "type": "page",
+      "label": "Action",
+      "status": "active"
+    },
+    {
+      "id": "registries",
+      "type": "page",
+      "label": "Registries",
+      "status": "active"
+    },
+    {
+      "id": "catalogue",
+      "type": "page",
+      "label": "Catalogue",
+      "status": "active"
+    },
+    {
+      "id": "layers",
+      "type": "page",
+      "label": "Layers",
+      "status": "active"
+    },
+    {
+      "id": "candidate_review",
+      "type": "page",
+      "label": "Candidate review",
+      "status": "active"
+    },
+    {
+      "id": "graph_builder",
+      "type": "page",
+      "label": "Graph builder",
+      "status": "active"
+    },
+    {
+      "id": "discovery_karyotype_package",
+      "type": "package",
+      "label": "Discovery + karyotype (coupled)",
+      "status": "experimental"
+    },
+    {
+      "id": "iv_candidate_promoter_adapter",
+      "type": "adapter",
+      "label": "Inversion candidate promoter",
+      "status": "active",
+      "input_layer_types": [
+        "window_band_calls",
+        "l3_contingency",
+        "dosage_summary"
+      ],
+      "produces": [
+        "candidate_registry",
+        "chain_evidence"
+      ]
+    },
+    {
+      "id": "karyotype_auto_caller_adapter",
+      "type": "adapter",
+      "label": "Karyotype auto caller",
+      "status": "stub",
+      "input_layer_types": [
+        "candidate_registry",
+        "chain_evidence",
+        "dosage_summary",
+        "window_band_calls"
+      ],
+      "produces": [
+        "unpolarized_karyotype_calls"
+      ]
+    },
+    {
+      "id": "karyotype_polarizer_adapter",
+      "type": "adapter",
+      "label": "Karyotype polarizer",
+      "status": "stub",
+      "input_layer_types": [
+        "unpolarized_karyotype_calls",
+        "reference_genome_layer"
+      ],
+      "produces": [
+        "polarized_karyotype_calls"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "beagle_file",
+      "to": "ngsrelate",
+      "kind": "input"
+    },
+    {
+      "from": "sites_file",
+      "to": "ngsrelate",
+      "kind": "input"
+    },
+    {
+      "from": "ngsrelate",
+      "to": "relatedness_res",
+      "kind": "output"
+    },
+    {
+      "from": "relatedness_res",
+      "to": "ngspedigree",
+      "kind": "input"
+    },
+    {
+      "from": "ngspedigree",
+      "to": "pedigree_result",
+      "kind": "output"
+    },
+    {
+      "from": "pedigree_result",
+      "to": "mendelian",
+      "kind": "input"
+    },
+    {
+      "from": "beagle_file",
+      "to": "mendelian",
+      "kind": "input"
+    },
+    {
+      "from": "sites_file",
+      "to": "mendelian",
+      "kind": "input"
+    },
+    {
+      "from": "mendelian",
+      "to": "mendelian_result",
+      "kind": "output"
+    },
+    {
+      "from": "beagle_file",
+      "to": "popstats",
+      "kind": "input"
+    },
+    {
+      "from": "sites_file",
+      "to": "popstats",
+      "kind": "input"
+    },
+    {
+      "from": "popstats",
+      "to": "popstats_result",
+      "kind": "output"
+    },
+    {
+      "from": "beagle_file",
+      "to": "fst_pairwise",
+      "kind": "input"
+    },
+    {
+      "from": "fst_pairwise",
+      "to": "fst_windows",
+      "kind": "output"
+    },
+    {
+      "from": "beagle_file",
+      "to": "theta_pi",
+      "kind": "input"
+    },
+    {
+      "from": "theta_pi",
+      "to": "theta_pi_windows",
+      "kind": "output"
+    },
+    {
+      "from": "beagle_file",
+      "to": "dxy",
+      "kind": "input"
+    },
+    {
+      "from": "dxy",
+      "to": "dxy_windows",
+      "kind": "output"
+    },
+    {
+      "from": "window_band_calls",
+      "to": "iv_candidate_promoter",
+      "kind": "input"
+    },
+    {
+      "from": "l3_contingency",
+      "to": "iv_candidate_promoter",
+      "kind": "input"
+    },
+    {
+      "from": "dosage_summary",
+      "to": "iv_candidate_promoter",
+      "kind": "input"
+    },
+    {
+      "from": "iv_candidate_promoter",
+      "to": "candidate_registry",
+      "kind": "output"
+    },
+    {
+      "from": "iv_candidate_promoter",
+      "to": "chain_evidence",
+      "kind": "output"
+    },
+    {
+      "from": "candidate_registry",
+      "to": "karyotype_auto_caller",
+      "kind": "input"
+    },
+    {
+      "from": "chain_evidence",
+      "to": "karyotype_auto_caller",
+      "kind": "input"
+    },
+    {
+      "from": "dosage_summary",
+      "to": "karyotype_auto_caller",
+      "kind": "input"
+    },
+    {
+      "from": "window_band_calls",
+      "to": "karyotype_auto_caller",
+      "kind": "input"
+    },
+    {
+      "from": "karyotype_auto_caller",
+      "to": "unpolarized_karyotype_calls",
+      "kind": "output"
+    },
+    {
+      "from": "unpolarized_karyotype_calls",
+      "to": "karyotype_polarizer",
+      "kind": "input"
+    },
+    {
+      "from": "reference_genome_layer",
+      "to": "karyotype_polarizer",
+      "kind": "input"
+    },
+    {
+      "from": "karyotype_polarizer",
+      "to": "polarized_karyotype_calls",
+      "kind": "output"
+    },
+    {
+      "from": "karyotype_calls",
+      "to": "mendelian_page_load",
+      "kind": "hook_required"
+    },
+    {
+      "from": "inversion_candidates",
+      "to": "mendelian_page_load",
+      "kind": "hook_required"
+    },
+    {
+      "from": "relatedness_res",
+      "to": "mendelian_page_load",
+      "kind": "hook_required"
+    },
+    {
+      "from": "pedigree_result",
+      "to": "mendelian_page_load",
+      "kind": "hook_required"
+    },
+    {
+      "from": "mendelian_result",
+      "to": "mendelian_page_load",
+      "kind": "hook_required"
+    },
+    {
+      "from": "karyotype_calls",
+      "to": "popstats_page_load",
+      "kind": "hook_required"
+    },
+    {
+      "from": "inversion_candidates",
+      "to": "popstats_page_load",
+      "kind": "hook_required"
+    },
+    {
+      "from": "popstats_result",
+      "to": "popstats_page_load",
+      "kind": "hook_required"
+    },
+    {
+      "from": "sample_set",
+      "to": "relatedness_chain_view",
+      "kind": "hook_required"
+    },
+    {
+      "from": "interval_set",
+      "to": "relatedness_chain_view",
+      "kind": "hook_required"
+    },
+    {
+      "from": "relatedness_res",
+      "to": "relatedness_chain_view",
+      "kind": "hook_required"
+    },
+    {
+      "from": "pedigree_result",
+      "to": "relatedness_chain_view",
+      "kind": "hook_required"
+    },
+    {
+      "from": "relatedness_res",
+      "to": "catalogue_dashboard",
+      "kind": "hook_required"
+    },
+    {
+      "from": "pedigree_result",
+      "to": "catalogue_dashboard",
+      "kind": "hook_required"
+    },
+    {
+      "from": "mendelian_result",
+      "to": "catalogue_dashboard",
+      "kind": "hook_required"
+    },
+    {
+      "from": "popstats_result",
+      "to": "catalogue_dashboard",
+      "kind": "hook_required"
+    },
+    {
+      "from": "fst_windows",
+      "to": "catalogue_dashboard",
+      "kind": "hook_required"
+    },
+    {
+      "from": "theta_pi_windows",
+      "to": "catalogue_dashboard",
+      "kind": "hook_required"
+    },
+    {
+      "from": "dxy_windows",
+      "to": "catalogue_dashboard",
+      "kind": "hook_required"
+    },
+    {
+      "from": "inversion_candidates",
+      "to": "candidate_review_hook",
+      "kind": "hook_required"
+    },
+    {
+      "from": "karyotype_calls",
+      "to": "candidate_review_hook",
+      "kind": "hook_required"
+    },
+    {
+      "from": "long_range_haplotype_regime",
+      "to": "candidate_review_hook",
+      "kind": "hook_optional"
+    },
+    {
+      "from": "popstats_result",
+      "to": "candidate_review_hook",
+      "kind": "hook_optional"
+    },
+    {
+      "from": "mendelian_result",
+      "to": "candidate_review_hook",
+      "kind": "hook_optional"
+    },
+    {
+      "from": "fst_windows",
+      "to": "candidate_review_hook",
+      "kind": "hook_optional"
+    },
+    {
+      "from": "inversion_candidates",
+      "to": "candidate_overview_panel",
+      "kind": "panel_renders"
+    },
+    {
+      "from": "candidate_registry",
+      "to": "candidate_review_panel",
+      "kind": "panel_renders"
+    },
+    {
+      "from": "karyotype_calls",
+      "to": "karyotype_panel",
+      "kind": "panel_renders"
+    },
+    {
+      "from": "long_range_haplotype_regime",
+      "to": "long_range_regime_panel",
+      "kind": "panel_renders"
+    },
+    {
+      "from": "popstats_result",
+      "to": "popstats_panel",
+      "kind": "panel_renders"
+    },
+    {
+      "from": "mendelian_result",
+      "to": "mendelian_panel",
+      "kind": "panel_renders"
+    },
+    {
+      "from": "fst_windows",
+      "to": "fst_panel",
+      "kind": "panel_renders"
+    },
+    {
+      "from": "relatedness_chain_view",
+      "to": "registries",
+      "kind": "page_hook"
+    },
+    {
+      "from": "catalogue_dashboard",
+      "to": "catalogue",
+      "kind": "page_hook"
+    },
+    {
+      "from": "candidate_overview_panel",
+      "to": "candidate_review",
+      "kind": "page_member"
+    },
+    {
+      "from": "karyotype_panel",
+      "to": "candidate_review",
+      "kind": "page_member"
+    },
+    {
+      "from": "long_range_regime_panel",
+      "to": "candidate_review",
+      "kind": "page_member"
+    },
+    {
+      "from": "popstats_panel",
+      "to": "candidate_review",
+      "kind": "page_member"
+    },
+    {
+      "from": "mendelian_panel",
+      "to": "candidate_review",
+      "kind": "page_member"
+    },
+    {
+      "from": "fst_panel",
+      "to": "candidate_review",
+      "kind": "page_member"
+    },
+    {
+      "from": "candidate_review_hook",
+      "to": "candidate_review",
+      "kind": "page_hook"
+    },
+    {
+      "from": "iv_candidate_promoter",
+      "to": "discovery_karyotype_package",
+      "kind": "package_analysis"
+    },
+    {
+      "from": "karyotype_auto_caller",
+      "to": "discovery_karyotype_package",
+      "kind": "package_analysis"
+    },
+    {
+      "from": "karyotype_polarizer",
+      "to": "discovery_karyotype_package",
+      "kind": "package_analysis"
+    },
+    {
+      "from": "candidate_overview_panel",
+      "to": "discovery_karyotype_package",
+      "kind": "package_panel"
+    },
+    {
+      "from": "candidate_review_panel",
+      "to": "discovery_karyotype_package",
+      "kind": "package_panel"
+    },
+    {
+      "from": "karyotype_panel",
+      "to": "discovery_karyotype_package",
+      "kind": "package_panel"
+    },
+    {
+      "from": "iv_candidate_promoter_adapter",
+      "to": "iv_candidate_promoter",
+      "kind": "adapter_backs"
+    },
+    {
+      "from": "karyotype_auto_caller_adapter",
+      "to": "karyotype_auto_caller",
+      "kind": "adapter_backs"
+    },
+    {
+      "from": "karyotype_polarizer_adapter",
+      "to": "karyotype_polarizer",
+      "kind": "adapter_backs"
+    }
+  ],
+  "adapters": [
+    {
+      "analysis_id": "iv_candidate_promoter",
+      "analysis_version": "v1",
+      "atlas_id": "inversion_atlas",
+      "schema_version": "adapter_atlas_v1",
+      "label": "Inversion candidate promoter",
+      "description": "\"Promotes window-band signals into candidate intervals with chain evidence. Inputs: window_band_calls",
+      "dosage_summary. Outputs": "candidate_registry",
+      "input_layer_types": [
+        "window_band_calls",
+        "l3_contingency",
+        "dosage_summary"
+      ],
+      "produces": [
+        "candidate_registry",
+        "chain_evidence"
+      ],
+      "engine": "atlas_js",
+      "schema_in": "./schema_in.json",
+      "schema_out": "./schema_out.json",
+      "example_input": "./example_input.json",
+      "example_output": "./example_output.json",
+      "trigger_policy": "manual",
+      "status": "active",
+      "_path": "analysis/iv_candidate_promoter/adapter_atlas.js"
+    },
+    {
+      "analysis_id": "karyotype_auto_caller",
+      "analysis_version": "v0",
+      "atlas_id": "inversion_atlas",
+      "schema_version": "adapter_atlas_v1",
+      "label": "Karyotype auto caller",
+      "description": "Calls per-sample karyotype (0/1/2) for each candidate from dosage + window-band signals + the candidate_registry.",
+      "input_layer_types": [
+        "candidate_registry",
+        "chain_evidence",
+        "dosage_summary",
+        "window_band_calls"
+      ],
+      "produces": [
+        "unpolarized_karyotype_calls"
+      ],
+      "engine": "atlas_js",
+      "schema_in": "./schema_in.json",
+      "schema_out": "./schema_out.json",
+      "example_input": "./example_input.json",
+      "example_output": "./example_output.json",
+      "trigger_policy": "manual",
+      "status": "stub",
+      "_path": "analysis/karyotype_auto_caller/adapter_atlas.js"
+    },
+    {
+      "analysis_id": "karyotype_polarizer",
+      "analysis_version": "v0",
+      "atlas_id": "inversion_atlas",
+      "schema_version": "adapter_atlas_v1",
+      "label": "Karyotype polarizer",
+      "description": "Polarises unpolarized_karyotype_calls against a reference / ancestral comparison so 0/1/2 carries direction.",
+      "input_layer_types": [
+        "unpolarized_karyotype_calls",
+        "reference_genome_layer"
+      ],
+      "produces": [
+        "polarized_karyotype_calls"
+      ],
+      "engine": "atlas_js",
+      "schema_in": "./schema_in.json",
+      "schema_out": "./schema_out.json",
+      "example_input": "./example_input.json",
+      "example_output": "./example_output.json",
+      "trigger_policy": "manual",
+      "status": "stub",
+      "_path": "analysis/karyotype_polarizer/adapter_atlas.js"
+    }
+  ],
+  "packages": [
+    {
+      "package_id": "discovery_karyotype_package",
+      "schema_version": "package_manifest_v1",
+      "atlas_id": "inversion_atlas",
+      "label": "Discovery + karyotype (coupled)",
+      "description": "Three coupled analyses that take raw window-band / L3 / dosage signals through to polarised per-sample karyotype calls. Standalone but tightly chained: candidate_registry \u2192 unpolarized_karyotype_calls \u2192 polarized_karyotype_calls. Sibling adapters share the same input scope but each is its own registry entry.",
+      "version": "0.1.0",
+      "status": "experimental",
+      "analyses": [
+        {
+          "analysis_id": "iv_candidate_promoter",
+          "required": true,
+          "rationale": "produces candidate_registry + chain_evidence from raw signals"
+        },
+        {
+          "analysis_id": "karyotype_auto_caller",
+          "required": true,
+          "rationale": "classifies each (sample, candidate) into 0/1/2 from dosage + chain evidence"
+        },
+        {
+          "analysis_id": "karyotype_polarizer",
+          "required": false,
+          "rationale": "adds direction; not required if downstream consumers tolerate unpolarized"
+        }
+      ],
+      "layers": [
+        {
+          "layer_id": "candidate_registry",
+          "role": "produced",
+          "rationale": "core output \u2014 the candidate axis for all downstream work"
+        },
+        {
+          "layer_id": "chain_evidence",
+          "role": "produced",
+          "rationale": "provenance trail \u2014 which window/site/dosage hit promoted this candidate"
+        },
+        {
+          "layer_id": "unpolarized_karyotype_calls",
+          "role": "produced",
+          "rationale": "intermediate; consumed internally"
+        },
+        {
+          "layer_id": "polarized_karyotype_calls",
+          "role": "produced",
+          "rationale": "final canonical karyotype layer"
+        },
+        {
+          "layer_id": "karyotype_calls",
+          "role": "consumed_external",
+          "rationale": "the existing manuscript file-kind layer; this package's polarized output supersedes manual curation when it stabilises"
+        },
+        {
+          "layer_id": "window_band_calls",
+          "role": "consumed_external",
+          "rationale": "raw signal input"
+        },
+        {
+          "layer_id": "l3_contingency",
+          "role": "consumed_external",
+          "rationale": "raw signal input"
+        },
+        {
+          "layer_id": "dosage_summary",
+          "role": "consumed_external",
+          "rationale": "raw signal input"
+        }
+      ],
+      "panels": [
+        {
+          "panel_id": "candidate_overview_panel",
+          "rationale": "renders candidate_registry rows for the current candidate scope"
+        },
+        {
+          "panel_id": "candidate_review_panel",
+          "rationale": "composite panel for page 6 (Candidate review)"
+        },
+        {
+          "panel_id": "karyotype_panel",
+          "rationale": "renders (un)polarized_karyotype_calls per sample \u00d7 candidate"
+        }
+      ],
+      "pages": [
+        {
+          "hook_id": "candidate_review_hook",
+          "rationale": "this package contributes the two required panels of page 6"
+        }
+      ],
+      "requires_packages": [],
+      "_path": "packages/discovery_karyotype_package/manifest.json"
+    }
+  ]
+}

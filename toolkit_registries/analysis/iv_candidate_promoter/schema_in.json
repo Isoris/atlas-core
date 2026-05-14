@@ -1,0 +1,17 @@
+{
+  "$id": "adapter_in_iv_candidate_promoter_v1",
+  "schema_version": "adapter_in_v1",
+  "params": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "min_band_score":   { "type": "number",  "default": 0.5,    "description": "Minimum band_score to keep a window from window_band_calls." },
+      "merge_windows_bp": { "type": "integer", "default": 50000,  "description": "Two adjacent windows are merged when the gap between them is <= this many bp." }
+    }
+  },
+  "inputs": {
+    "window_band_calls": { "description": "Per-window band call rows with band_score (one row per window).", "required": true },
+    "l3_contingency":    { "description": "Per-site L3 contingency hits (chrom, pos, optional site_id).",     "required": true },
+    "dosage_summary":    { "description": "Per-bin dosage summary (chrom, start, end, optional bin_id).",      "required": true }
+  }
+}

@@ -1,0 +1,7 @@
+{"panel_id": "candidate_overview_panel", "schema_version": "panel_v1", "label": "Candidate overview", "layer_id": "inversion_candidates", "renderer": "table", "package_id": "discovery_karyotype_package", "status": "active"}
+{"panel_id": "candidate_review_panel", "schema_version": "panel_v1", "label": "Candidate review composite", "layer_id": "candidate_registry", "optional_layers": ["chain_evidence"], "preview_via_adapter": true, "renderer": "custom", "package_id": "discovery_karyotype_package", "status": "experimental"}
+{"panel_id": "karyotype_panel", "schema_version": "panel_v1", "label": "Karyotype panel", "layer_id": "karyotype_calls", "optional_layers": ["polarized_karyotype_calls"], "renderer": "table", "package_id": "discovery_karyotype_package", "status": "active"}
+{"panel_id": "long_range_regime_panel", "schema_version": "panel_v1", "label": "Long-range haplotype regimes", "layer_id": "long_range_haplotype_regime", "renderer": "track", "status": "experimental"}
+{"panel_id": "popstats_panel", "schema_version": "panel_v1", "label": "Popstats (FST / dxy / piN / piS)", "layer_id": "popstats_result", "renderer": "track", "status": "active"}
+{"panel_id": "mendelian_panel", "schema_version": "panel_v1", "label": "Mendelian per-trio rate", "layer_id": "mendelian_result", "renderer": "table", "status": "active"}
+{"panel_id": "fst_panel", "schema_version": "panel_v1", "label": "Pairwise FST windows", "layer_id": "fst_windows", "renderer": "track", "status": "experimental"}

@@ -1,0 +1,29 @@
+{
+  "$id": "adapter_out_iv_candidate_promoter_v1",
+  "schema_version": "adapter_out_v1",
+  "produces": {
+    "candidate_registry": {
+      "description": "One row per promoted candidate interval.",
+      "row_fields": {
+        "candidate_id": "string",
+        "chrom":        "string",
+        "start":        "integer",
+        "end":          "integer",
+        "band_count":   "integer",
+        "l3_hits":      "integer",
+        "dosage_hits":  "integer",
+        "confidence":   "string (high|medium|low)"
+      },
+      "stage": "normalized"
+    },
+    "chain_evidence": {
+      "description": "Per-candidate evidence trail rows.",
+      "row_fields": {
+        "candidate_id": "string",
+        "evidence_kind":"string (window_band|l3_contingency|dosage_summary)",
+        "evidence_id":  "string"
+      },
+      "stage": "normalized"
+    }
+  }
+}

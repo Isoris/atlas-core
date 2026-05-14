@@ -1,0 +1,21 @@
+{
+  "window_band_calls": [
+    { "window_id": "w_LG28_001", "chrom": "C_gar_LG28", "start": 1200000, "end": 1240000, "band_score": 0.71 },
+    { "window_id": "w_LG28_002", "chrom": "C_gar_LG28", "start": 1240000, "end": 1280000, "band_score": 0.62 },
+    { "window_id": "w_LG28_003", "chrom": "C_gar_LG28", "start": 1280000, "end": 1320000, "band_score": 0.34 },
+    { "window_id": "w_LG28_004", "chrom": "C_gar_LG28", "start": 4100000, "end": 4140000, "band_score": 0.81 },
+    { "window_id": "w_LG28_005", "chrom": "C_gar_LG28", "start": 4140000, "end": 4180000, "band_score": 0.77 },
+    { "window_id": "w_LG01_001", "chrom": "C_gar_LG01", "start": 34000000, "end": 34040000, "band_score": 0.64 },
+    { "window_id": "w_LG01_002", "chrom": "C_gar_LG01", "start": 34040000, "end": 34080000, "band_score": 0.69 }
+  ],
+  "l3_contingency": [
+    { "site_id": "s_LG28_a", "chrom": "C_gar_LG28", "pos": 1230000 },
+    { "site_id": "s_LG28_b", "chrom": "C_gar_LG28", "pos": 1250000 },
+    { "site_id": "s_LG28_c", "chrom": "C_gar_LG28", "pos": 4120000 },
+    { "site_id": "s_LG01_a", "chrom": "C_gar_LG01", "pos": 34070000 }
+  ],
+  "dosage_summary": [
+    { "bin_id": "d_LG28_a", "chrom": "C_gar_LG28", "start": 1210000, "end": 1260000 },
+    { "bin_id": "d_LG01_a", "chrom": "C_gar_LG01", "start": 34020000, "end": 34070000 }
+  ]
+}

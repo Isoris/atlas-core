@@ -595,6 +595,93 @@ This page does **not** run anything.  Per spec §9: the librarian /
 dispatcher split says connect ≠ compute.  The graph here is a *contract
 draft*; running it is the dispatcher's job (Phase F, deferred).
 
+## Adapters, packages, the connection map + the readiness planner
+
+Per **`toolkit_registries/ADAPTER_CONTRACT.md`** — every analysis kind
+lives at `analysis/<analysis_id>/`:
+
+```
+analysis/<analysis_id>/
+├── compute.js            pure JSON-in / JSON-out (no registry, no DOM)
+├── adapter_atlas.js      bridges compute() to Atlas/APLR runtime; exports `meta`, `run`, optionally `preview`
+├── schema_in.json
+├── schema_out.json
+├── example_input.json
+└── example_output.json
+```
+
+A **package** bundles related analyses + layers + panels into one
+distribution unit; see `packages/<package_id>/manifest.json`.
+
+### Canonical storage: JSONL, not TSV
+
+Per ADAPTER_CONTRACT.md §5.4: **JSONL is canonical, TSV is derived.**
+The canonical registries live as `01_registry/*.jsonl`:
+
+```
+01_registry/
+├── layer_registry.jsonl          canonical
+├── hook_registry.jsonl           canonical
+├── analysis_registry.jsonl       canonical
+├── analysis_results.jsonl        canonical
+├── panels.jsonl                  canonical
+├── pages.jsonl                   canonical
+└── connection_map.json           generated
+plus the TSV versions for grep / pandas / Excel (derived, never edited by hand for adapter-backed rows).
+```
+
+### The build / plan pipeline
+
+```bash
+# 1) Scan adapters + packages + pages + panels, emit the connection map.
+python3 -m lib.build_connection_map
+# → 01_registry/connection_map.json   (n nodes × m edges, 0 warnings = OK)
+
+# 2) Plan a user's request.
+python3 -m lib.readiness_planner --page candidate_review \
+        --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1
+# → aggregate state + per-hook + per-layer states + ready_actions[]
+
+python3 -m lib.readiness_planner --package discovery_karyotype_package \
+        --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1
+
+# 3) Regenerate the TSV derived view from JSONL (one-way; do not edit TSVs by hand).
+python3 -m lib.tsv_from_jsonl
+```
+
+The planner walks layer → producer adapter → producer's inputs
+recursively; each layer ends in one of the 9 librarian states
+(RESOLVED / COMPLETE / READY_TO_RUN / BLOCKED_BY_INPUT / KNOWN_MISSING
+/ UNKNOWN_CONTRACT / FAILED / STALE / PARTIAL).  Aggregate hook /
+package / page state is the roll-up.
+
+**Nothing runs.**  `ready_actions[]` lists what *would* run (per spec §9
+— the dispatcher is separate).
+
+### Live example — discovery_karyotype_package
+
+```
+$ python3 -m lib.readiness_planner --package discovery_karyotype_package \
+        --sample-set samples_226_v1 --interval-set inv_LG28_INV_001_v1
+aggregate: COMPLETE
+  hook candidate_review_hook: COMPLETE  (req=2, opt=4)
+  layers: 10
+    [BLOCKED_BY_INPUT] candidate_registry        (missing=window_band_calls,l3_contingency,dosage_summary)
+    [BLOCKED_BY_INPUT] chain_evidence            (missing=window_band_calls,l3_contingency,dosage_summary)
+    [RESOLVED        ] inversion_candidates      (file=02_sets/candidates/inversion_candidates.tsv)
+    [RESOLVED        ] karyotype_calls           (file=02_sets/karyotype/karyotype_calls.tsv)
+    [UNKNOWN_CONTRACT] long_range_haplotype_regime
+    [COMPLETE        ] mendelian_result          (result=mendelian_LG28_v2)
+    [BLOCKED_BY_INPUT] polarized_karyotype_calls (missing=unpolarized_karyotype_calls,reference_genome_layer)
+    [COMPLETE        ] popstats_result           (result=popstats_LG28_v1)
+    [BLOCKED_BY_INPUT] unpolarized_karyotype_calls (missing=candidate_registry,...)
+```
+
+The required panels for page 6 are already COMPLETE (the file-kind
+layers exist); the package's adapter chain — promoter → caller →
+polarizer — would unblock the four optional panels once raw signal
+inputs arrive.
+
 ## The resolver — let the registry do the thinking
 
 You don't want to remember which sample_set + which thin500 + which BEAGLE

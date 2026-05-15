@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 60,
-  "n_edges": 85,
+  "n_nodes": 73,
+  "n_edges": 103,
   "warnings": [],
   "nodes": [
     {
@@ -153,6 +153,42 @@
       "id": "reference_genome_layer",
       "type": "layer",
       "label": "Reference genome (assembly + ancestral context)",
+      "status": "stub"
+    },
+    {
+      "id": "interchromosomal_effects_layer",
+      "type": "layer",
+      "label": "Interchromosomal Effects Layer",
+      "status": "experimental"
+    },
+    {
+      "id": "coincidence_matrix",
+      "type": "layer",
+      "label": "Coefficient of coincidence (C) matrix",
+      "status": "stub"
+    },
+    {
+      "id": "local_inv_controls",
+      "type": "layer",
+      "label": "Local inversion covariates on tested chromosomes",
+      "status": "stub"
+    },
+    {
+      "id": "family_aware_permutation_design",
+      "type": "layer",
+      "label": "Family-aware permutation design",
+      "status": "stub"
+    },
+    {
+      "id": "co_rate_matrix",
+      "type": "layer",
+      "label": "CO rate matrix (focal_inv x tested_chr)",
+      "status": "stub"
+    },
+    {
+      "id": "dco_rate_matrix",
+      "type": "layer",
+      "label": "DCO rate matrix (focal_inv x tested_chr)",
       "status": "stub"
     },
     {
@@ -347,6 +383,55 @@
       "type": "package",
       "label": "Discovery + karyotype (coupled)",
       "status": "experimental"
+    },
+    {
+      "id": "atlas_core",
+      "type": "atlas",
+      "label": "Atlas Core",
+      "status": "active",
+      "color": "#1a2540"
+    },
+    {
+      "id": "inversion_atlas",
+      "type": "atlas",
+      "label": "Inversion Atlas",
+      "status": "experimental",
+      "color": "#2d6cb6"
+    },
+    {
+      "id": "relatedness_atlas",
+      "type": "atlas",
+      "label": "Relatedness Atlas",
+      "status": "experimental",
+      "color": "#2f7d8d"
+    },
+    {
+      "id": "meiosis_atlas",
+      "type": "atlas",
+      "label": "Meiosis Atlas",
+      "status": "experimental",
+      "color": "#b87a14"
+    },
+    {
+      "id": "evolution_atlas",
+      "type": "atlas",
+      "label": "Evolution Atlas",
+      "status": "stub",
+      "color": "#6b3aa6"
+    },
+    {
+      "id": "genome_synteny_atlas",
+      "type": "atlas",
+      "label": "Genome / Synteny Atlas",
+      "status": "stub",
+      "color": "#2f8550"
+    },
+    {
+      "id": "marker_design",
+      "type": "atlas",
+      "label": "Marker Design",
+      "status": "stub",
+      "color": "#b13030"
     },
     {
       "id": "inversion_pair_incompatibility_adapter",
@@ -830,6 +915,96 @@
       "from": "karyotype_polarizer_adapter",
       "to": "karyotype_polarizer",
       "kind": "adapter_backs"
+    },
+    {
+      "from": "inversion_candidates.v1",
+      "to": "inversion_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "inversion_karyotypes.v1",
+      "to": "inversion_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "long_range_haplotype_regimes.v1",
+      "to": "inversion_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "mendelian_status.v1",
+      "to": "relatedness_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "family_hubs.v1",
+      "to": "relatedness_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "parent_offspring_edges.v1",
+      "to": "relatedness_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "pedigree_dyads.v1",
+      "to": "relatedness_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "chromosome_meiosis_events.v1",
+      "to": "relatedness_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "inversion_meiosis_effects.v1",
+      "to": "inversion_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "inversion_pair_distortion_LG01_LG28.v1",
+      "to": "inversion_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "coincidence_matrix.v1",
+      "to": "meiosis_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "local_inv_controls.v1",
+      "to": "meiosis_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "family_aware_permutation_design.v1",
+      "to": "meiosis_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "inversion_effect_on_meiosis_per_chromosome",
+      "to": "meiosis_atlas",
+      "kind": "atlas_member_question"
+    },
+    {
+      "from": "mendelian_qc_on_LG28_candidate",
+      "to": "relatedness_atlas",
+      "kind": "atlas_member_question"
+    },
+    {
+      "from": "popstats_between_karyotype_groups_LG28",
+      "to": "relatedness_atlas",
+      "kind": "atlas_member_question"
+    },
+    {
+      "from": "inversion_pair_incompatibility_LG01_LG28",
+      "to": "inversion_atlas",
+      "kind": "atlas_member_question"
+    },
+    {
+      "from": "meiosis_interchromosomal_effects",
+      "to": "meiosis_atlas",
+      "kind": "atlas_member_question"
     }
   ],
   "adapters": [

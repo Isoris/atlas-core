@@ -73,6 +73,7 @@ contract layer between them.
 | `research_product_v1.schema.json` | One row per registered biological object the Manager tracks. `kind` ∈ {biological_object, derived_table, intermediate}; only `biological_object` is tracked. Status (ready/validated/available/missing/blocked/stale/deprecated) is **computed live** by `lib/manager.py`, never stored. | active, v1 |
 | `research_question_v1.schema.json` | One row per scientific question the user wants answered. Declares `requires` (product_ids + role) and `outputs`. Status (ready_to_run / partial / blocked / unknown) is computed by the manager. | active, v1 |
 | `estimand_v1.schema.json` | One specific scientific claim a question lets us make. Per `MANAGER_SPEC.md` §3.5 (Estimability Manager sub-role). Declares `preconditions[]` over products / layers / sample_attributes. Status (estimable / partially_estimable / not_estimable / needs_extra_data) is computed by `lib/estimability.py`. | active, v1 |
+| `atlas_v1.schema.json` | One descriptor row per registered atlas (`inversion_atlas`, `meiosis_atlas`, ...). Carries label / color / icon / lead_question_id / primary_products[] / depends_on_atlases[]. Page 9's sidebar + global readiness bar render from `atlases.jsonl`. | active, v1 |
 
 ---
 

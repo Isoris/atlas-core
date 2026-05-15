@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atlas Manager: Layer Connector</title>
+<style>
+  :root {
+    --fg: #1a202c;
+    --muted: #6c727f;
+    --bg: #f4f6f9;
+    --bg-card: #ffffff;
+    --border: #d8dce3;
+    --accent: #2b6cb0;
+    --nav-bg: #1a2540;
+    --nav-bg-hover: #233055;
+    --nav-bg-current: #2b6cb0;
+    --nav-fg: #cbd5e0;
+    --nav-fg-section: #7c8aa3;
+    --st-ready:    #2f855a;  --st-ready-bg:    #def0e0;
+    --st-partial:  #b87a14;  --st-partial-bg:  #fdecd2;
+    --st-missing:  #b13030;  --st-missing-bg:  #f8e6e6;
+    --st-blocked:  #b13030;  --st-blocked-bg:  #f8e6e6;
+    --st-stale:    #b87a14;  --st-stale-bg:    #fdecd2;
+    --st-deprecated:#6c727f; --st-deprecated-bg:#eaecf0;
+    --st-unknown:  #6c727f;  --st-unknown-bg:  #eaecf0;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
+  body { font: 13.5px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  a { color: var(--accent); text-decoration: none; }
+
+  /* ---------- top nav (existing dashboard) ---------- */
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: var(--nav-fg); text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  /* ---------- shell: sidebar + main ---------- */
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 40px); }
+  aside.sidebar {
+    background: var(--nav-bg); color: var(--nav-fg); padding: 14px 0;
+    font-size: 12.5px; user-select: none;
+  }
+  .sb-brand {
+    padding: 0 16px 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .sb-brand .logo { font-size: 20px; }
+  .sb-brand .title { display: flex; flex-direction: column; line-height: 1.2; }
+  .sb-brand .name { color: white; font-weight: 600; font-size: 13px; }
+  .sb-brand .ref  { color: var(--nav-fg-section); font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .sb-section {
+    padding: 14px 16px 4px; color: var(--nav-fg-section);
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600;
+  }
+  .sb-item {
+    display: flex; align-items: center; gap: 8px; padding: 6px 16px;
+    cursor: pointer; color: var(--nav-fg);
+  }
+  .sb-item:hover    { background: var(--nav-bg-hover); }
+  .sb-item.current  { background: var(--nav-bg-current); color: white; }
+  .sb-item .name    { flex: 1; }
+  .sb-item .icon {
+    display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--nav-fg-section);
+  }
+  .sb-item .icon.ready   { background: #38a169; }
+  .sb-item .icon.partial { background: #d69e2e; }
+  .sb-item .icon.missing { background: #e53e3e; }
+  .sb-item .icon.inactive{ background: #4a5568; }
+
+  /* ---------- main content ---------- */
+  main { padding: 14px 18px 28px; min-width: 0; }
+
+  header.page-head {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 16px; display: flex; align-items: center; gap: 16px; margin-bottom: 14px;
+  }
+  header.page-head h1 { font-size: 17px; margin: 0; font-weight: 600; }
+  header.page-head .meta { color: var(--muted); font-size: 12px; }
+  header.page-head .meta code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
+    background: #f4f6f9; padding: 1px 6px; border-radius: 3px;
+  }
+  header.page-head .right { margin-left: auto; display: flex; gap: 8px; }
+  .btn {
+    padding: 6px 11px; font-size: 12.5px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg-card); color: var(--fg);
+  }
+  .btn:hover { background: #f0f2f5; }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-primary:hover { background: #225a96; }
+
+  /* ---------- global readiness cards ---------- */
+  .readiness-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .rb-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
+    border-left: 4px solid var(--border);
+  }
+  .rb-card.ready   { border-left-color: var(--st-ready); }
+  .rb-card.partial { border-left-color: var(--st-partial); }
+  .rb-card.missing { border-left-color: var(--st-missing); }
+  .rb-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .rb-card .value { font-size: 13.5px; font-weight: 600; }
+  .rb-card .pill {
+    display: inline-block; padding: 1px 7px; border-radius: 3px;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    align-self: flex-start;
+  }
+  .pill.ready   { background: var(--st-ready-bg);   color: var(--st-ready); }
+  .pill.partial { background: var(--st-partial-bg); color: var(--st-partial); }
+  .pill.missing { background: var(--st-missing-bg); color: var(--st-missing); }
+  .pill.blocked { background: var(--st-blocked-bg); color: var(--st-blocked); }
+  .pill.stale   { background: var(--st-stale-bg);   color: var(--st-stale); }
+  .pill.validated { background: #e9eef7; color: var(--accent); }
+  .pill.available { background: var(--st-deprecated-bg); color: var(--st-deprecated); }
+  .pill.deprecated{ background: var(--st-deprecated-bg); color: var(--st-deprecated); }
+  .pill.unknown   { background: var(--st-unknown-bg); color: var(--st-unknown); }
+
+  /* ---------- 3-column workspace ---------- */
+  .workspace { display: grid; grid-template-columns: 240px 1fr 320px; gap: 12px; margin-bottom: 14px; }
+  @media (max-width: 1100px) { .workspace { grid-template-columns: 1fr; } }
+
+  section.box {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    overflow: hidden;
+  }
+  section.box > .head {
+    padding: 8px 12px; background: #f7f8fa; border-bottom: 1px solid var(--border);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: var(--muted);
+  }
+  section.box > .body { padding: 12px; }
+
+  .selector .field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 9px; font-size: 11.5px; color: var(--muted); }
+  .selector select, .selector input {
+    padding: 5px 8px; border: 1px solid var(--border); border-radius: 4px; background: white;
+    font: inherit; color: var(--fg);
+  }
+  .selector .summary {
+    padding: 10px; background: #f7f8fa; border-radius: 4px; margin: 10px 0;
+  }
+  .selector .summary .status-row {
+    display: flex; gap: 8px; align-items: center; margin-bottom: 8px;
+  }
+  .selector .summary .label { font-weight: 600; }
+  .selector .progress {
+    height: 6px; background: #e7eaee; border-radius: 3px; overflow: hidden; margin-bottom: 8px;
+  }
+  .selector .progress .bar { height: 100%; background: var(--accent); }
+  .selector .counts { font-size: 11.5px; color: var(--muted); }
+  .selector .counts span { margin-right: 8px; }
+  .selector .quick-actions { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+  .selector .quick-actions .btn { width: 100%; text-align: left; padding: 5px 9px; font-size: 12px; }
+
+  /* ---------- dependency graph ---------- */
+  .graph .body {
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  .gcol {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .gcol h4 {
+    font-size: 10.5px; color: var(--muted); margin: 0 0 4px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .gcol h4 .sub { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 10.5px; margin-left: 4px; }
+
+  .pcard {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 5px;
+    border-left: 3px solid var(--border); padding: 6px 9px; cursor: pointer;
+    display: flex; flex-direction: column; gap: 2px;
+    transition: transform .06s ease, box-shadow .06s ease;
+  }
+  .pcard:hover { transform: translateX(1px); box-shadow: 0 1px 3px rgba(0,0,0,0.07); }
+  .pcard.ready   { border-left-color: var(--st-ready); }
+  .pcard.partial { border-left-color: var(--st-partial); }
+  .pcard.missing { border-left-color: var(--st-missing); }
+  .pcard.blocked { border-left-color: var(--st-blocked); }
+  .pcard.validated { border-left-color: var(--accent); }
+  .pcard .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; font-weight: 600; word-break: break-all; }
+  .pcard .meta { font-size: 10.5px; color: var(--muted); }
+  .pcard .head-row { display: flex; align-items: center; gap: 6px; }
+
+  /* central layer card */
+  .layer-card {
+    background: #f7faff; border: 1px solid var(--accent); border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .layer-card .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; font-size: 13px; word-break: break-all; }
+  .layer-card .label { font-size: 13.5px; font-weight: 600; margin: 4px 0 8px; }
+  .layer-card .desc { color: var(--muted); font-size: 11.5px; margin-bottom: 8px; }
+  .layer-card .grid {
+    display: grid; grid-template-columns: 86px 1fr; gap: 3px 8px;
+    font-size: 11.5px; margin-bottom: 8px;
+  }
+  .layer-card .grid dt { color: var(--muted); }
+  .layer-card .grid dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+  .layer-card .config {
+    margin-top: 8px; padding: 8px 10px; background: white; border: 1px solid var(--border);
+    border-radius: 4px; font-size: 11.5px;
+  }
+  .layer-card .config h5 {
+    font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+    margin: 0 0 5px; font-weight: 700;
+  }
+  .layer-card .config .pair { display: flex; gap: 6px; margin-bottom: 2px; }
+  .layer-card .config .k { color: var(--muted); min-width: 110px; font-size: 11px; }
+  .layer-card .config .v { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+
+  /* readiness report column */
+  .report .body { padding: 0; }
+  .report .group {
+    padding: 10px 12px; border-bottom: 1px solid var(--border);
+  }
+  .report .group:last-child { border-bottom: none; }
+  .report .group h5 {
+    font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+    margin: 0 0 6px; font-weight: 700;
+  }
+  .report .item { font-size: 11.5px; display: flex; gap: 6px; align-items: baseline; margin: 3px 0; line-height: 1.3; }
+  .report .item .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 600; }
+  .report .item .reason { color: var(--muted); font-size: 10.5px; }
+  .report .item .glyph.met  { color: var(--st-ready); }
+  .report .item .glyph.warn { color: var(--st-partial); }
+  .report .item .glyph.miss { color: var(--st-missing); }
+  .report .next-actions ol { margin: 4px 0 0 16px; padding: 0; font-size: 11.5px; }
+  .report .next-actions li { margin: 2px 0; }
+  .report .next-actions .btn { margin-top: 10px; width: 100%; padding: 5px 8px; }
+
+  /* ---------- bottom table ---------- */
+  .table-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .table-wrap > .head {
+    padding: 8px 12px; background: #f7f8fa; border-bottom: 1px solid var(--border);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: var(--muted);
+  }
+  table.lp { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.lp thead th {
+    text-align: left; background: var(--bg-card); padding: 6px 10px;
+    color: var(--muted); font-weight: 600; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+  }
+  table.lp tbody td {
+    padding: 6px 10px; border-bottom: 1px solid #f0f0f0;
+    vertical-align: top;
+  }
+  table.lp tbody tr:hover { background: #f7f8fa; cursor: pointer; }
+  table.lp tbody tr.selected { background: #eef4fc; }
+  table.lp td.id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; }
+  table.lp td.code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; }
+
+  .legend {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    padding: 8px 12px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+  }
+  .legend .pill { font-size: 10px; padding: 1px 6px; }
+
+  /* ---------- drawer ---------- */
+  .drawer-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.18);
+    opacity: 0; pointer-events: none; transition: opacity .14s ease; z-index: 60;
+  }
+  .drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 95vw;
+    background: var(--bg-card); border-left: 1px solid var(--border);
+    transform: translateX(100%); transition: transform .14s ease; z-index: 70;
+    display: flex; flex-direction: column;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .drawer-head .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; font-size: 13px; flex: 1; word-break: break-all; }
+  .drawer-head .close { border: none; background: transparent; cursor: pointer; font-size: 18px; color: var(--muted); padding: 0 4px; }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 14px 16px; font-size: 12.5px; }
+  .drawer-tabs {
+    display: flex; gap: 0; border-bottom: 1px solid var(--border);
+    background: #f7f8fa;
+  }
+  .drawer-tabs .tab {
+    padding: 7px 13px; cursor: pointer; font-size: 12px; color: var(--muted);
+    border-right: 1px solid var(--border);
+  }
+  .drawer-tabs .tab.active { background: white; color: var(--fg); font-weight: 600; }
+  .drawer-tabs .tab .count { color: var(--muted); margin-left: 4px; font-weight: 400; }
+  .drawer .pane h4 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted); margin: 12px 0 6px; font-weight: 700;
+  }
+  .drawer .slot {
+    padding: 6px 9px; border: 1px solid var(--border); border-radius: 4px;
+    margin-bottom: 5px; display: flex; align-items: center; gap: 8px;
+    background: white; cursor: pointer;
+  }
+  .drawer .slot:hover { background: #f7f8fa; }
+  .drawer .slot.connect-mode { box-shadow: 0 0 0 2px var(--accent); border-color: var(--accent); }
+  .drawer .slot .label { flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; font-weight: 600; }
+  .drawer .slot .role  { color: var(--muted); font-size: 10.5px; }
+  .drawer .actions { margin-top: 16px; display: flex; flex-direction: column; gap: 5px; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html"><span class="num">1.</span> Conversation</a>
+  <a href="action.html"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html"><span class="num">4.</span> Catalogue</a>
+  <a href="layers.html"><span class="num">5.</span> Layers</a>
+  <a href="candidate_review.html"><span class="num">6.</span> Candidate review</a>
+  <a href="graph_builder.html"><span class="num">7.</span> Graph builder</a>
+  <a href="readiness.html"><span class="num">8.</span> Readiness</a>
+  <a href="layer_connector.html" class="current"><span class="num">9.</span> Layer Connector</a>
+  <span class="tag">Atlas Manager — page 9</span>
+</nav>
+
+<div class="shell">
+  <!-- ===== Atlas-level sidebar ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <span class="logo">🐟</span>
+      <div class="title">
+        <span class="name">Catfish Atlas</span>
+        <span class="ref">fClaHyb_Gar_LG</span>
+      </div>
+    </div>
+    <!-- Sidebar body is rendered from atlases.jsonl. The empty container
+         below is populated by renderSidebar() in the script section. -->
+    <div id="sb-body"></div>
+  </aside>
+
+  <!-- ===== Main page ===== -->
+  <main>
+    <header class="page-head">
+      <h1>Atlas Manager: Layer Connector</h1>
+      <div class="meta">
+        Dataset: <code id="hdr-dataset">Catfish 226 WGS</code>  ·
+        Reference: <code id="hdr-reference">fClaHyb_Gar_LG</code>  ·
+        Release: <code>v1.3.0</code>
+      </div>
+      <div class="right">
+        <button class="btn" id="btn-export">Export Report</button>
+        <button class="btn btn-primary" id="btn-export-wiring">Export wiring</button>
+      </div>
+    </header>
+
+    <!-- ===== Global readiness cards ===== -->
+    <div class="readiness-bar" id="readiness-bar"></div>
+
+    <!-- ===== 3-column workspace ===== -->
+    <div class="workspace">
+      <!-- col 1: selector + summary -->
+      <section class="box selector">
+        <div class="head">1. Select Atlas / Page</div>
+        <div class="body">
+          <label class="field">Atlas
+            <select id="sel-atlas">
+              <option value="inversion_atlas">Inversion Atlas</option>
+              <option value="relatedness_atlas">Relatedness Atlas</option>
+              <option value="meiosis_atlas" selected>Meiosis Atlas</option>
+              <option value="evolution_atlas">Evolution Atlas</option>
+            </select>
+          </label>
+          <label class="field">Page / Question
+            <select id="sel-page">
+              <!-- populated -->
+            </select>
+          </label>
+          <label class="field">View mode
+            <select id="sel-mode">
+              <option value="page">Page readiness</option>
+              <option value="layer">Layer readiness</option>
+              <option value="product">Product readiness</option>
+              <option value="question" selected>Question readiness</option>
+            </select>
+          </label>
+
+          <div class="summary" id="sel-summary"></div>
+
+          <div class="quick-actions">
+            <button class="btn" id="btn-rebuild">Rebuild this layer</button>
+            <button class="btn" id="btn-deps">Check all dependencies</button>
+            <button class="btn" id="btn-missing-only">Show missing only</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- col 2: dependency graph -->
+      <section class="box graph">
+        <div class="head">2. Layer / Product Dependency Graph — INPUTS → LAYER → OUTPUTS → USED BY</div>
+        <div class="body">
+          <div class="gcol" id="g-inputs">
+            <h4>Inputs <span class="sub">requirements</span></h4>
+          </div>
+          <div class="gcol" id="g-layer">
+            <h4>Layer / Question <span class="sub">selected</span></h4>
+          </div>
+          <div class="gcol" id="g-outputs">
+            <h4>Outputs <span class="sub">provided</span></h4>
+          </div>
+          <div class="gcol" id="g-usedby">
+            <h4>Used by <span class="sub">downstream</span></h4>
+          </div>
+        </div>
+      </section>
+
+      <!-- col 3: readiness report -->
+      <section class="box report">
+        <div class="head">3. Readiness Report &amp; Next Actions</div>
+        <div class="body" id="report-body"></div>
+      </section>
+    </div>
+
+    <!-- ===== Bottom table ===== -->
+    <div class="table-wrap">
+      <div class="head">4. Layer / Product Table</div>
+      <table class="lp">
+        <thead>
+          <tr>
+            <th>Layer / Product</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Provides</th>
+            <th>Grain / Scope</th>
+            <th>Used by</th>
+            <th>Last updated</th>
+            <th>Next action</th>
+          </tr>
+        </thead>
+        <tbody id="lp-tbody"></tbody>
+      </table>
+      <div class="legend">
+        <span class="pill ready">Ready</span>
+        <span class="pill partial">Partial</span>
+        <span class="pill stale">Stale</span>
+        <span class="pill missing">Missing / Blocked</span>
+        <span class="pill deprecated">Deprecated</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ===== Drawer (product / layer detail w/ IN + OUT tabs) ===== -->
+<div class="drawer-backdrop" id="drawer-backdrop"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="id" id="drawer-id">—</div>
+    <button class="close" id="drawer-close" aria-label="close">×</button>
+  </div>
+  <div class="drawer-tabs">
+    <div class="tab active"  data-pane="overview">Overview</div>
+    <div class="tab"         data-pane="in">IN<span class="count" id="tab-in-n"></span></div>
+    <div class="tab"         data-pane="out">OUT<span class="count" id="tab-out-n"></span></div>
+    <div class="tab"         data-pane="used">Used by<span class="count" id="tab-used-n"></span></div>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+</aside>
+
+<script>
+const LS_KEY_WIRING = "atlas_layer_connector_wiring_v1";
+
+// ----- parsers -----
+function parseJSONL(text) { return text.split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse); }
+function csv(s) { if (Array.isArray(s)) return s.filter(Boolean); return (s || "").split(",").map(x => x.trim()).filter(Boolean); }
+
+const DB = {};
+const state = {
+  selected: { kind: "question", id: "meiosis_interchromosomal_effects" },
+  pageFilter: null,
+  manualWiring: [],  // [{from, to, type}]
+  drawerPane: "overview",
+  drawerId: null,
+  connectMode: null,  // {from_id, slot: "in"|"out"}
+};
+
+async function loadDB() {
+  async function jsonl(p) { try { return parseJSONL(await (await fetch(p)).text()); } catch { return []; } }
+  const [products, questions, layers, analyses, results, panels, pages, hooks, estimands, attrs, atlases] = await Promise.all([
+    jsonl("../01_registry/products.jsonl"),
+    jsonl("../01_registry/questions.jsonl"),
+    jsonl("../01_registry/layer_registry.jsonl"),
+    jsonl("../01_registry/analysis_registry.jsonl"),
+    jsonl("../01_registry/analysis_results.jsonl"),
+    jsonl("../01_registry/panels.jsonl"),
+    jsonl("../01_registry/pages.jsonl"),
+    jsonl("../01_registry/hook_registry.jsonl"),
+    jsonl("../01_registry/estimands.jsonl"),
+    jsonl("../01_registry/sample_attributes.jsonl"),
+    jsonl("../01_registry/atlases.jsonl"),
+  ]);
+  DB.products  = Object.fromEntries(products.map(p => [p.product_id, p]));
+  DB.questions = Object.fromEntries(questions.map(q => [q.question_id, q]));
+  DB.layers    = Object.fromEntries(layers.map(l => [l.layer_id, l]));
+  DB.analyses  = Object.fromEntries(analyses.map(a => [a.analysis_id, a]));
+  DB.results   = results;
+  DB.panels    = Object.fromEntries(panels.map(p => [p.panel_id, p]));
+  DB.pages     = Object.fromEntries(pages.map(p => [p.page_id, p]));
+  DB.hooks     = Object.fromEntries(hooks.map(h => [h.hook_id, h]));
+  DB.estimands = Object.fromEntries(estimands.map(e => [e.estimand_id, e]));
+  DB.attributes= Object.fromEntries(attrs.map(a => [a.attribute, a]));
+  DB.atlases   = atlases;  // ordered array; render in declared order
+
+  // Probe file-kind default_paths
+  const probes = Object.values(DB.layers)
+    .filter(l => l.source_kind === "file" && (l.default_path || "").trim())
+    .map(l => fetch("../" + l.default_path, { method: "HEAD" })
+      .then(r => [l.layer_id, r.ok]).catch(() => [l.layer_id, false]));
+  DB.file_present = Object.fromEntries(await Promise.all(probes));
+
+  try {
+    state.manualWiring = JSON.parse(localStorage.getItem(LS_KEY_WIRING) || "[]");
+    if (!Array.isArray(state.manualWiring)) state.manualWiring = [];
+  } catch { state.manualWiring = []; }
+}
+
+// ----- Status Manager (JS port; mirrors lib/manager.py) -----
+function resolveLayerQuick(layerId) {
+  const l = DB.layers[layerId];
+  if (!l) return { state: "UNKNOWN_CONTRACT" };
+  if (l.source_kind === "file") {
+    if ((l.default_path || "").trim()) {
+      return DB.file_present[layerId] === true ? { state: "RESOLVED" } : { state: "KNOWN_MISSING" };
+    }
+    return { state: "KNOWN_MISSING" };
+  }
+  if (l.source_kind === "analysis_result") {
+    const producers = Object.values(DB.analyses)
+      .filter(a => csv(a.produces).includes(layerId)).map(a => a.analysis_id);
+    if (!producers.length) return { state: "UNKNOWN_CONTRACT" };
+    const r = DB.results.find(r => producers.includes(r.analysis_type) && r.status === "active");
+    return r ? { state: "COMPLETE", result_id: r.result_id } : { state: "KNOWN_MISSING" };
+  }
+  return { state: "UNKNOWN_CONTRACT" };
+}
+function checkProductStatus(pid, seen = new Set()) {
+  if (seen.has(pid)) return { status: "blocked", reason: "cycle" };
+  seen = new Set([...seen, pid]);
+  const p = DB.products[pid];
+  if (!p) return { product_id: pid, status: "missing", reason: "no product" };
+
+  // partial-coverage override (richer than backing-layer probe)
+  if (p.partial_coverage && p.partial_coverage.covered !== undefined) {
+    const c = p.partial_coverage;
+    return {
+      product_id: pid, status: "partial",
+      reason: `covered ${c.covered}/${c.total} ${c.kind || "items"}`,
+      backed_by_layers: p.backed_by_layers || [], depends_on: p.depends_on || [],
+      valid_for: p.valid_for || [], produced_by: p.produced_by || {},
+      label: p.label, kind: p.kind,
+    };
+  }
+
+  const layerStates = (p.backed_by_layers || []).map(resolveLayerQuick);
+  const ls = new Set(layerStates.map(s => s.state));
+  let status, reason;
+  if (!layerStates.length)                                { status = "missing"; reason = "no backed_by_layers"; }
+  else if (ls.has("UNKNOWN_CONTRACT"))                     { status = "missing"; reason = "backing contract missing"; }
+  else if (ls.has("FAILED"))                               { status = "blocked"; reason = "backing failed"; }
+  else if (ls.has("BLOCKED_BY_INPUT") || ls.has("KNOWN_MISSING")) { status = "missing"; reason = "backing missing"; }
+  else if ([...ls].every(s => s === "RESOLVED" || s === "COMPLETE")) { status = "available"; reason = "backing resolves"; }
+  else { status = "missing"; reason = "indeterminate"; }
+  const conf = p.confidence || "unreviewed";
+  if (status === "available") {
+    if (conf === "review_passed") status = "ready";
+    else if (conf === "preliminary") status = "validated";
+    else if (conf === "rejected") status = "blocked";
+  }
+  // depends_on
+  for (const d of (p.depends_on || [])) {
+    const r = checkProductStatus(d, seen);
+    if (["missing", "blocked", "deprecated"].includes(r.status)) {
+      status = "blocked"; reason = `upstream ${d}=${r.status}`; break;
+    }
+  }
+  return {
+    product_id: pid, status, reason, confidence: conf,
+    backed_by_layers: p.backed_by_layers || [], depends_on: p.depends_on || [],
+    valid_for: p.valid_for || [], produced_by: p.produced_by || {},
+    label: p.label, kind: p.kind,
+  };
+}
+function checkQuestion(qid) {
+  const q = DB.questions[qid];
+  if (!q) return { question_id: qid, status: "unknown", per_required: [], next_actions: [] };
+  const per = (q.requires || []).map(r => Object.assign(
+    { role: r.role, required: r.required !== false }, checkProductStatus(r.product_id)));
+  const required = per.filter(r => r.required);
+  const set = new Set(required.map(r => r.status));
+  let agg = "partial";
+  if (set.size === 1 && set.has("ready")) agg = "ready_to_run";
+  else if (set.has("missing") || set.has("blocked") || set.has("deprecated")) {
+    agg = (set.has("ready") || set.has("validated") || set.has("available") || set.has("partial")) ? "partial" : "blocked";
+  } else if (set.has("partial")) {
+    agg = "partial";
+  }
+  const next = [];
+  for (const r of per) {
+    if (!r.required) continue;
+    if (r.status === "missing" || r.status === "blocked") {
+      const aid = (r.produced_by || {}).analysis_id;
+      next.push(aid ? `Run ${aid} to produce ${r.product_id}`
+                    : `Register a producing analysis for ${r.product_id}`);
+    } else if (r.status === "partial") {
+      next.push(`Complete coverage of ${r.product_id} (${r.reason || ""})`);
+    }
+  }
+  return { question_id: qid, status: agg, label: q.label, description: q.description,
+           per_required: per, next_actions: next, outputs: q.outputs || [], biological_scope: q.biological_scope || {} };
+}
+
+// ----- selection / page populator -----
+function atlasOf(thing) {
+  if (thing.atlas) return thing.atlas;
+  if (thing.tags && thing.tags.includes("meiosis")) return "meiosis_atlas";
+  return "atlas_core";
+}
+function rebuildPageSelect() {
+  const sel = document.getElementById("sel-page");
+  const atlas = document.getElementById("sel-atlas").value;
+  const opts = [];
+  for (const [qid, q] of Object.entries(DB.questions)) {
+    // crude atlas grouping by tags
+    const tag = (q.tags || []).join(",");
+    let a = "inversion_atlas";
+    if (tag.includes("meiosis")) a = "meiosis_atlas";
+    else if (tag.includes("mendelian") || tag.includes("path_a") || tag.includes("path_b")) a = "relatedness_atlas";
+    if (a !== atlas) continue;
+    opts.push(`<option value="${qid}" ${state.selected.id === qid ? "selected" : ""}>${q.label || qid}</option>`);
+  }
+  if (!opts.length) opts.push(`<option value="">(no questions in this atlas yet)</option>`);
+  sel.innerHTML = opts.join("");
+}
+
+// ----- rendering -----
+function rollupAtlas(atlas_id) {
+  // Walk products + lead_question to compute the atlas's status roll-up.
+  const a = DB.atlases.find(x => x.atlas_id === atlas_id) || {};
+  const owned = Object.values(DB.products).filter(p => p.atlas === atlas_id && p.kind === "biological_object");
+  let nReady = 0, nPartial = 0, nMissing = 0;
+  for (const p of owned) {
+    const s = checkProductStatus(p.product_id).status;
+    if (s === "ready" || s === "validated" || s === "available") nReady++;
+    else if (s === "partial") nPartial++;
+    else nMissing++;
+  }
+  let pageStatus = "inactive";
+  if (a.status === "stub" || !owned.length) pageStatus = "inactive";
+  else if (nMissing && !nReady) pageStatus = "missing";
+  else if (nMissing || nPartial) pageStatus = "partial";
+  else pageStatus = "ready";
+  return { atlas: a, nReady, nPartial, nMissing, nProducts: owned.length, status: pageStatus, owned };
+}
+
+function renderSidebar() {
+  const body = document.getElementById("sb-body");
+  if (!body) return;
+  // Atlas Core first
+  const core = (DB.atlases || []).find(a => a.atlas_id === "atlas_core");
+  const rest = (DB.atlases || []).filter(a => a.atlas_id !== "atlas_core");
+  let html = "";
+  if (core) {
+    html += `<div class="sb-section">${core.icon || ""} ${core.label || "Atlas Core"}</div>`;
+    html += `<div class="sb-item" onclick="location.href='readiness.html'"><span class="name">Home / Datasets</span><span class="icon ready"></span></div>`;
+    html += `<div class="sb-item" onclick="location.href='readiness.html'"><span class="name">Product Status</span><span class="icon ready"></span></div>`;
+    html += `<div class="sb-item" onclick="location.href='readiness.html'"><span class="name">Estimability Manager</span><span class="icon partial"></span></div>`;
+    html += `<div class="sb-item current"><span class="name">Layer Connector</span><span class="icon partial"></span></div>`;
+    html += `<div class="sb-item" onclick="location.href='catalogue.html'"><span class="name">Developer Utilities</span><span class="icon inactive"></span></div>`;
+  }
+  // Other atlases: render section + their products (clickable to drawer)
+  for (const a of rest) {
+    const ru = rollupAtlas(a.atlas_id);
+    html += `<div class="sb-section">${a.icon || ""} ${a.label}</div>`;
+    if (a.lead_question_id && DB.questions[a.lead_question_id]) {
+      const qs = checkQuestion(a.lead_question_id).status;
+      const dot = qs === "ready_to_run" ? "ready" : (qs === "partial" ? "partial" : (qs === "blocked" ? "missing" : "inactive"));
+      html += `<div class="sb-item" data-select-question="${a.lead_question_id}"><span class="name">${DB.questions[a.lead_question_id].label || a.lead_question_id}</span><span class="icon ${dot}"></span></div>`;
+    }
+    for (const pid of (a.primary_products || [])) {
+      const p = DB.products[pid];
+      if (!p) continue;
+      const ps = checkProductStatus(pid).status;
+      const dot = ["ready","validated","available"].includes(ps) ? "ready" :
+                  ps === "partial" ? "partial" : "missing";
+      html += `<div class="sb-item" data-open-product="${pid}"><span class="name">${(p.label || pid).slice(0, 26)}</span><span class="icon ${dot}"></span></div>`;
+    }
+    if (a.status === "stub" && !(a.primary_products || []).length) {
+      html += `<div class="sb-item"><span class="name" style="color: var(--nav-fg-section); font-style: italic">(stub atlas — no products yet)</span><span class="icon inactive"></span></div>`;
+    }
+  }
+  body.innerHTML = html;
+  // wire clicks
+  for (const el of body.querySelectorAll("[data-select-question]")) {
+    el.addEventListener("click", () => {
+      const qid = el.getAttribute("data-select-question");
+      state.selected = { kind: "question", id: qid };
+      rerender();
+    });
+  }
+  for (const el of body.querySelectorAll("[data-open-product]")) {
+    el.addEventListener("click", () => openDrawer(el.getAttribute("data-open-product"), "product"));
+  }
+}
+
+function renderReadinessBar() {
+  const host = document.getElementById("readiness-bar");
+  // Compute headline stats from the data
+  const total_products = Object.values(DB.products).filter(p => p.kind === "biological_object").length;
+  const total_questions = Object.keys(DB.questions).length;
+  let nReady = 0, nMissing = 0, nPartial = 0;
+  for (const p of Object.values(DB.products)) {
+    if (p.kind !== "biological_object") continue;
+    const r = checkProductStatus(p.product_id);
+    if (r.status === "ready") nReady++;
+    else if (r.status === "partial") nPartial++;
+    else if (r.status === "missing" || r.status === "blocked") nMissing++;
+  }
+  // Cards: always-on infrastructure cards + one card per registered atlas.
+  const infra = [
+    { l: "Samples",     v: "226 QC-pass",     s: "ready" },
+    { l: "Reference",   v: "fClaHyb_Gar_LG",  s: "ready" },
+    { l: "Intervals",   v: `${Object.keys(DB.layers).length} layers`, s: "ready" },
+  ];
+  const cards = [...infra];
+  for (const a of (DB.atlases || [])) {
+    if (a.atlas_id === "atlas_core") continue;
+    const ru = rollupAtlas(a.atlas_id);
+    const valueStr = ru.nProducts
+      ? `${ru.nReady} ready · ${ru.nPartial} partial · ${ru.nMissing} missing`
+      : "no products yet";
+    cards.push({ l: a.label, v: valueStr, s: ru.status });
+  }
+  host.innerHTML = cards.map(c => `
+    <div class="rb-card ${c.s === "inactive" ? "missing" : c.s}">
+      <span class="label">${c.l}</span>
+      <span class="value">${c.v}</span>
+      <span class="pill ${c.s === "inactive" ? "deprecated" : c.s}">${c.s}</span>
+    </div>
+  `).join("");
+}
+
+function renderSelectorSummary() {
+  const host = document.getElementById("sel-summary");
+  if (state.selected.kind !== "question") {
+    host.innerHTML = `<div style="color: var(--muted)">Select a question to see its summary.</div>`;
+    return;
+  }
+  const q = checkQuestion(state.selected.id);
+  const n_ready   = q.per_required.filter(r => r.status === "ready").length;
+  const n_val     = q.per_required.filter(r => r.status === "validated" || r.status === "available").length;
+  const n_partial = q.per_required.filter(r => r.status === "partial").length;
+  const n_missing = q.per_required.filter(r => r.status === "missing" || r.status === "blocked").length;
+  const total = q.per_required.length || 1;
+  const pct = Math.round(((n_ready + n_val * 0.7 + n_partial * 0.5) / total) * 100);
+  host.innerHTML = `
+    <div class="status-row">
+      <span class="label">Page Summary</span>
+      <span class="pill ${q.status === "ready_to_run" ? "ready" : q.status}">${q.status.replace(/_/g, " ")}</span>
+    </div>
+    <div class="progress"><div class="bar" style="width: ${pct}%"></div></div>
+    <div class="counts">
+      <span>✓ Ready: <strong>${n_ready}</strong></span>
+      <span>~ Partial: <strong>${n_partial}</strong></span>
+      <span>✗ Missing: <strong>${n_missing}</strong></span>
+    </div>
+    <div style="font-size: 11.5px; color: var(--muted); margin-top: 4px">${pct}% complete</div>
+  `;
+}
+
+function gCard(item, kind) {
+  const status = item.status || "ready";
+  return `
+    <div class="pcard ${status}" data-kind="${kind}" data-id="${item.id}">
+      <div class="head-row">
+        <span class="pill ${status}">${status}</span>
+      </div>
+      <div class="id">${item.id}</div>
+      <div class="meta">${item.label || ""}</div>
+    </div>
+  `;
+}
+
+function renderGraph() {
+  if (state.selected.kind !== "question") return;
+  const qid = state.selected.id;
+  const q = DB.questions[qid] || {};
+  const rep = checkQuestion(qid);
+
+  // Inputs = per_required[]
+  const inputs = rep.per_required.map(r => ({ id: r.product_id, label: r.label || r.role || "", status: r.status }));
+  document.getElementById("g-inputs").innerHTML =
+    `<h4>Inputs <span class="sub">requirements (${inputs.length})</span></h4>` +
+    inputs.map(i => gCard(i, "product")).join("");
+
+  // Central card — render the question as a "layer/question" card
+  document.getElementById("g-layer").innerHTML = `
+    <h4>Layer / Question <span class="sub">selected</span></h4>
+    <div class="layer-card">
+      <div class="head-row">
+        <span class="pill ${rep.status === "ready_to_run" ? "ready" : rep.status}">${rep.status.replace(/_/g, " ")}</span>
+      </div>
+      <div class="id">${qid}</div>
+      <div class="label">${rep.label || ""}</div>
+      <div class="desc">${rep.description || ""}</div>
+      <dl class="grid">
+        <dt>scope</dt><dd>${rep.biological_scope.species || "?"} · ${rep.biological_scope.dataset || "?"}</dd>
+        <dt>reference</dt><dd>${rep.biological_scope.reference || "?"}</dd>
+        <dt>tags</dt><dd>${(q.tags || []).join(", ")}</dd>
+      </dl>
+    </div>
+  `;
+
+  // Outputs = q.outputs[] (when present)  + any output-kind products
+  const out = (q.outputs || []).map(o => {
+    const r = checkProductStatus(o.product_id);
+    return { id: o.product_id, label: r.label, status: r.status };
+  });
+  // If no outputs declared, synthesize from the question's tags
+  if (!out.length) {
+    out.push({ id: "(no declared outputs)", label: "Add output product_ids to this question.", status: "missing" });
+  }
+  document.getElementById("g-outputs").innerHTML =
+    `<h4>Outputs <span class="sub">provided (${out.length})</span></h4>` +
+    out.map(o => gCard(o, "product")).join("");
+
+  // Used by = which pages / panels / questions reference any of the outputs
+  const out_ids = new Set((q.outputs || []).map(o => o.product_id));
+  const used_by = [];
+  for (const [qid2, q2] of Object.entries(DB.questions)) {
+    if (qid2 === qid) continue;
+    const refs = (q2.requires || []).map(r => r.product_id);
+    if (refs.some(r => out_ids.has(r))) {
+      used_by.push({ id: qid2, label: q2.label, status: "ready" });
+    }
+  }
+  // Show panels that consume our backing layers too
+  for (const r of rep.per_required) {
+    for (const lid of (r.backed_by_layers || [])) {
+      for (const [pid, p] of Object.entries(DB.panels)) {
+        if (p.layer_id === lid && !used_by.find(u => u.id === pid)) {
+          used_by.push({ id: pid, label: p.label || "", status: "ready" });
+        }
+      }
+    }
+  }
+  if (!used_by.length) used_by.push({ id: "(no downstream consumers yet)", label: "", status: "missing" });
+  document.getElementById("g-usedby").innerHTML =
+    `<h4>Used by <span class="sub">downstream (${used_by.length})</span></h4>` +
+    used_by.map(u => gCard(u, "consumer")).join("");
+
+  // wire card clicks
+  for (const el of document.querySelectorAll(".pcard")) {
+    el.addEventListener("click", () => openDrawer(el.dataset.id, el.dataset.kind));
+  }
+}
+
+function renderReport() {
+  if (state.selected.kind !== "question") return;
+  const qid = state.selected.id;
+  const rep = checkQuestion(qid);
+  const ready   = rep.per_required.filter(r => r.status === "ready" || r.status === "validated" || r.status === "available");
+  const partial = rep.per_required.filter(r => r.status === "partial");
+  const missing = rep.per_required.filter(r => r.status === "missing" || r.status === "blocked");
+  // synthesize "blocked analyses" from missing products' producers
+  const blockedAn = [];
+  for (const r of missing) {
+    const aid = (r.produced_by || {}).analysis_id;
+    if (aid) blockedAn.push({ analysis: aid, reason: `${r.product_id} not ready` });
+  }
+
+  const host = document.getElementById("report-body");
+  host.innerHTML = `
+    <div class="group">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span class="pill ${rep.status === "ready_to_run" ? "ready" : rep.status}">${rep.status.replace(/_/g, " ")}</span>
+        <strong>Page status</strong>
+      </div>
+    </div>
+    <div class="group">
+      <h5>Ready products (${ready.length})</h5>
+      ${ready.map(r => `
+        <div class="item"><span class="glyph met">✓</span><span class="id">${r.product_id}</span><span class="reason">${r.label || ""}</span></div>
+      `).join("") || "<div class=\"reason\" style=\"color: var(--muted)\">none yet</div>"}
+    </div>
+    ${partial.length ? `
+    <div class="group">
+      <h5>Partial products (${partial.length})</h5>
+      ${partial.map(r => `
+        <div class="item"><span class="glyph warn">~</span><span class="id">${r.product_id}</span><span class="reason">${r.reason || ""}</span></div>
+      `).join("")}
+    </div>` : ""}
+    ${missing.length ? `
+    <div class="group">
+      <h5>Missing products (${missing.length})</h5>
+      ${missing.map(r => `
+        <div class="item"><span class="glyph miss">✗</span><span class="id">${r.product_id}</span><span class="reason">${r.reason || ""}</span></div>
+      `).join("")}
+    </div>` : ""}
+    ${blockedAn.length ? `
+    <div class="group">
+      <h5>Blocked analyses (${blockedAn.length})</h5>
+      ${blockedAn.map(b => `
+        <div class="item"><span class="glyph miss">✗</span><span class="id">${b.analysis}</span><span class="reason">${b.reason}</span></div>
+      `).join("")}
+    </div>` : ""}
+    <div class="group next-actions">
+      <h5>Next actions</h5>
+      <ol>${(rep.next_actions || []).map((a, i) => `<li>${a}</li>`).join("") || "<li>nothing to do — question is ready</li>"}</ol>
+      <button class="btn btn-primary" id="btn-task-list">Create Task List</button>
+    </div>
+  `;
+  document.getElementById("btn-task-list")?.addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({ question_id: qid, next_actions: rep.next_actions }, null, 2)],
+      { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${qid}.task_list.json`;
+    a.click();
+  });
+}
+
+function renderTable() {
+  if (state.selected.kind !== "question") return;
+  const qid = state.selected.id;
+  const rep = checkQuestion(qid);
+  const showMissingOnly = state.pageFilter === "missing";
+  const rows = rep.per_required.filter(r => !showMissingOnly || ["missing", "blocked", "partial"].includes(r.status));
+
+  const host = document.getElementById("lp-tbody");
+  host.innerHTML = rows.map(r => {
+    const p = DB.products[r.product_id] || {};
+    const used = [];
+    for (const [qid2, q2] of Object.entries(DB.questions)) {
+      if (qid2 === qid) continue;
+      if ((q2.requires || []).some(x => x.product_id === r.product_id)) used.push(qid2);
+    }
+    const next = r.status === "missing" || r.status === "blocked"
+      ? (r.produced_by?.analysis_id ? `Run ${r.produced_by.analysis_id}` : "Register producer")
+      : (r.status === "partial" ? `Complete coverage` : "—");
+    return `
+      <tr data-id="${r.product_id}">
+        <td class="id">${r.product_id}</td>
+        <td>${p.kind || "product"}</td>
+        <td><span class="pill ${r.status}">${r.status}</span></td>
+        <td>${p.grain || p.label || ""}</td>
+        <td class="code">${(p.biological_scope?.dataset || "")} · ${(p.coordinate_scope || "—")}</td>
+        <td>${used.join(", ") || "—"}</td>
+        <td class="code">${(p.last_checked || "").slice(0, 10) || "—"}</td>
+        <td>${next}</td>
+      </tr>
+    `;
+  }).join("") || `<tr><td colspan="8" style="color: var(--muted); padding: 16px;">no rows</td></tr>`;
+  // wire row clicks
+  for (const tr of host.querySelectorAll("tr[data-id]")) {
+    tr.addEventListener("click", () => openDrawer(tr.dataset.id, "product"));
+  }
+}
+
+// ----- drawer -----
+function openDrawer(id, kind) {
+  state.drawerId = id;
+  document.getElementById("drawer-id").textContent = id;
+  setDrawerPane("overview");
+  document.getElementById("drawer").classList.add("open");
+  document.getElementById("drawer-backdrop").classList.add("open");
+}
+function closeDrawer() {
+  document.getElementById("drawer").classList.remove("open");
+  document.getElementById("drawer-backdrop").classList.remove("open");
+  state.drawerId = null;
+  state.connectMode = null;
+}
+function setDrawerPane(name) {
+  state.drawerPane = name;
+  for (const t of document.querySelectorAll(".drawer-tabs .tab"))
+    t.classList.toggle("active", t.dataset.pane === name);
+  const body = document.getElementById("drawer-body");
+  if (!state.drawerId) { body.innerHTML = ""; return; }
+  const id = state.drawerId;
+  // Is it a product, layer, or question?
+  if (DB.products[id]) {
+    const p = DB.products[id];
+    const r = checkProductStatus(id);
+    const consumers = [];
+    for (const [qid2, q2] of Object.entries(DB.questions))
+      if ((q2.requires || []).some(x => x.product_id === id)) consumers.push({ id: qid2, label: q2.label });
+    document.getElementById("tab-in-n").textContent  = `(${(p.depends_on || []).length})`;
+    document.getElementById("tab-out-n").textContent = `(${(p.backed_by_layers || []).length})`;
+    document.getElementById("tab-used-n").textContent= `(${consumers.length})`;
+    if (name === "overview") {
+      body.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span class="pill ${r.status}">${r.status}</span>
+          <strong>${p.label || ""}</strong>
+        </div>
+        <p style="color: var(--muted); margin: 0 0 12px;">${p.description || ""}</p>
+        <h4>Scope</h4>
+        <div class="slot"><span class="label">${p.biological_scope?.species || ""}</span><span class="role">${p.biological_scope?.dataset || ""}</span></div>
+        <div class="slot"><span class="label">${p.coordinate_scope || ""}</span><span class="role">coordinate</span></div>
+        <div class="slot"><span class="label">${p.sample_scope || ""}</span><span class="role">sample</span></div>
+        <h4>Reason</h4>
+        <div style="font-size: 12px; color: var(--muted)">${r.reason || ""}</div>
+        ${(p.valid_for || []).length ? `<h4>Valid for</h4><div style="font-size: 12px; color: var(--muted)">${p.valid_for.join(", ")}</div>` : ""}
+      `;
+    } else if (name === "in") {
+      body.innerHTML = `
+        <h4>Depends on (${(p.depends_on || []).length})</h4>
+        ${(p.depends_on || []).map(dep => {
+          const dr = checkProductStatus(dep);
+          return `<div class="slot" data-connect-target="${dep}"><span class="pill ${dr.status}">${dr.status}</span><span class="label">${dep}</span><span class="role">${dr.label || ""}</span></div>`;
+        }).join("") || "<div style='color: var(--muted)'>no upstream products</div>"}
+        <h4>Backed by layers (${(p.backed_by_layers || []).length})</h4>
+        ${(p.backed_by_layers || []).map(lid => {
+          const ls = resolveLayerQuick(lid).state;
+          return `<div class="slot"><span class="pill ${ls === "RESOLVED" || ls === "COMPLETE" ? "ready" : "missing"}">${ls}</span><span class="label">${lid}</span></div>`;
+        }).join("") || "<div style='color: var(--muted)'>no backing layers</div>"}
+        ${renderConnectFooter("in")}
+      `;
+    } else if (name === "out") {
+      body.innerHTML = `
+        <h4>Produces layers (${(p.backed_by_layers || []).length})</h4>
+        ${(p.backed_by_layers || []).map(lid => `<div class="slot"><span class="label">${lid}</span></div>`).join("") || "<div style='color: var(--muted)'>no produced layers</div>"}
+        <h4>Produced by analysis</h4>
+        <div class="slot"><span class="label">${p.produced_by?.analysis_id || "(none registered)"}</span><span class="role">${p.produced_by?.version || ""}</span></div>
+        ${renderConnectFooter("out")}
+      `;
+    } else if (name === "used") {
+      body.innerHTML = `
+        <h4>Questions that consume this (${consumers.length})</h4>
+        ${consumers.map(c => `<div class="slot"><span class="label">${c.id}</span><span class="role">${c.label || ""}</span></div>`).join("") || "<div style='color: var(--muted)'>none yet</div>"}
+      `;
+    }
+  } else if (DB.questions[id]) {
+    const q = DB.questions[id];
+    const rep = checkQuestion(id);
+    document.getElementById("tab-in-n").textContent  = `(${(q.requires || []).length})`;
+    document.getElementById("tab-out-n").textContent = `(${(q.outputs || []).length})`;
+    document.getElementById("tab-used-n").textContent= "";
+    if (name === "overview") {
+      body.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span class="pill ${rep.status === "ready_to_run" ? "ready" : rep.status}">${rep.status.replace(/_/g, " ")}</span>
+          <strong>${q.label || ""}</strong>
+        </div>
+        <p style="color: var(--muted); margin: 0 0 12px;">${q.description || ""}</p>
+      `;
+    } else if (name === "in") {
+      body.innerHTML = `
+        <h4>Required products (${(q.requires || []).length})</h4>
+        ${(q.requires || []).map(req => {
+          const r = checkProductStatus(req.product_id);
+          return `<div class="slot"><span class="pill ${r.status}">${r.status}</span><span class="label">${req.product_id}</span><span class="role">${req.role || ""}</span></div>`;
+        }).join("")}
+      `;
+    } else if (name === "out") {
+      body.innerHTML = `
+        <h4>Outputs (${(q.outputs || []).length})</h4>
+        ${(q.outputs || []).map(o => `<div class="slot"><span class="label">${o.product_id}</span><span class="role">${o.grain || ""}</span></div>`).join("") || "<div style='color: var(--muted)'>no declared outputs</div>"}
+      `;
+    } else if (name === "used") {
+      body.innerHTML = `<div style="color: var(--muted)">questions aren't consumed; consumers are pages / further questions</div>`;
+    }
+  } else {
+    body.innerHTML = `<div style="color: var(--muted)">unknown id</div>`;
+  }
+  // wire connect-target clicks
+  for (const slot of body.querySelectorAll("[data-connect-target]")) {
+    slot.addEventListener("click", () => {
+      if (state.connectMode) {
+        addManualWiring(state.connectMode.from, slot.dataset.connectTarget, state.connectMode.slot);
+        state.connectMode = null;
+      }
+    });
+  }
+}
+function renderConnectFooter(slot) {
+  return `
+    <div class="actions">
+      <button class="btn" onclick="enterConnectMode('${slot}')">Connect this ${slot.toUpperCase()} to another product…</button>
+      <button class="btn btn-primary" onclick="exportWiring()">Export current wiring</button>
+    </div>
+  `;
+}
+function enterConnectMode(slot) {
+  state.connectMode = { from: state.drawerId, slot };
+  alert(`Connect mode: click any product in the graph or the table to wire it as ${slot.toUpperCase()} for ${state.drawerId}.`);
+}
+function addManualWiring(from, to, slot) {
+  const edge = { from, to, type: slot };
+  if (state.manualWiring.find(e => e.from === from && e.to === to && e.type === slot)) return;
+  state.manualWiring.push(edge);
+  localStorage.setItem(LS_KEY_WIRING, JSON.stringify(state.manualWiring));
+  alert(`Added manual wiring: ${from} ─(${slot})→ ${to}`);
+}
+function exportWiring() {
+  const payload = {
+    generated_at: new Date().toISOString(),
+    selected: state.selected,
+    manual_edges: state.manualWiring,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "layer_connector_wiring.json";
+  a.click();
+}
+
+// ----- wiring / events -----
+function rerender() {
+  renderSidebar();
+  renderReadinessBar();
+  rebuildPageSelect();
+  renderSelectorSummary();
+  renderGraph();
+  renderReport();
+  renderTable();
+}
+
+(async () => {
+  await loadDB();
+  // wire selectors
+  document.getElementById("sel-atlas").addEventListener("change", () => {
+    rebuildPageSelect();
+    const sel = document.getElementById("sel-page");
+    if (sel.value) state.selected = { kind: "question", id: sel.value };
+    rerender();
+  });
+  document.getElementById("sel-page").addEventListener("change", e => {
+    state.selected = { kind: "question", id: e.target.value };
+    rerender();
+  });
+  document.getElementById("sel-mode").addEventListener("change", () => rerender());
+  document.getElementById("btn-missing-only").addEventListener("click", () => {
+    state.pageFilter = state.pageFilter === "missing" ? null : "missing";
+    renderTable();
+  });
+  document.getElementById("btn-deps").addEventListener("click", () => alert("Dependency check: 0 errors (status manager already runs on every selection)."));
+  document.getElementById("btn-rebuild").addEventListener("click", () => alert("Rebuild requested — this is a query view; the dispatcher (Phase F) is what would actually run anything."));
+  document.getElementById("btn-export").addEventListener("click", () => {
+    const qid = state.selected.id;
+    const rep = checkQuestion(qid);
+    const blob = new Blob([JSON.stringify(rep, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${qid}.readiness_report.json`;
+    a.click();
+  });
+  document.getElementById("btn-export-wiring").addEventListener("click", exportWiring);
+  for (const tab of document.querySelectorAll(".drawer-tabs .tab"))
+    tab.addEventListener("click", () => setDrawerPane(tab.dataset.pane));
+  document.getElementById("drawer-close").addEventListener("click", closeDrawer);
+  document.getElementById("drawer-backdrop").addEventListener("click", closeDrawer);
+  // sidebar interactivity — when a meiosis item is clicked, switch the selection
+  for (const item of document.querySelectorAll(".sb-item[data-select]")) {
+    item.addEventListener("click", () => {
+      const id = item.dataset.select;
+      if (DB.questions[id]) {
+        state.selected = { kind: "question", id };
+        rerender();
+      }
+    });
+  }
+  // initial render
+  state.selected = { kind: "question", id: "meiosis_interchromosomal_effects" };
+  rerender();
+})();
+
+window.openDrawer = openDrawer;
+window.enterConnectMode = enterConnectMode;
+window.exportWiring = exportWiring;
+</script>
+</body>
+</html>

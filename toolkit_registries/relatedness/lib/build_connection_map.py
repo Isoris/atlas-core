@@ -133,6 +133,9 @@ class ConnectionMapBuilder:
         self.results   = _read_jsonl(reg / "analysis_results.jsonl")
         self.panels    = _read_jsonl(reg / "panels.jsonl")
         self.pages     = _read_jsonl(reg / "pages.jsonl")
+        self.atlases   = _read_jsonl(reg / "atlases.jsonl")
+        self.products  = _read_jsonl(reg / "products.jsonl")
+        self.questions = _read_jsonl(reg / "questions.jsonl")
 
     def build(self) -> Dict:
         adapters  = self._scan_adapters()
@@ -191,6 +194,22 @@ class ConnectionMapBuilder:
         for ad in adapters:
             edges.append({"from": ad["analysis_id"] + "_adapter", "to": ad["analysis_id"], "kind": "adapter_backs"})
 
+        # atlas membership: product → atlas, question → atlas (by tag inference)
+        atlas_ids = {a["atlas_id"] for a in self.atlases}
+        for p in self.products:
+            aid = p.get("atlas", "")
+            if aid in atlas_ids:
+                edges.append({"from": p["product_id"], "to": aid, "kind": "atlas_member_product"})
+        for q in self.questions:
+            tags = q.get("tags", []) or []
+            # crude tag → atlas inference (kept light; the atlas can override)
+            cand = None
+            if "meiosis" in tags or "interchromosomal" in tags: cand = "meiosis_atlas"
+            elif "mendelian" in tags or "path_a" in tags or "path_b" in tags: cand = "relatedness_atlas"
+            elif "inversions" in tags or "pair_relation" in tags: cand = "inversion_atlas"
+            if cand and cand in atlas_ids:
+                edges.append({"from": q["question_id"], "to": cand, "kind": "atlas_member_question"})
+
         # nodes (denormalised view)
         nodes = []
         for l in self.layers:    nodes.append({"id": l["layer_id"],     "type": "layer",    "label": l.get("label", ""),    "status": l.get("status", "")})
@@ -199,6 +218,7 @@ class ConnectionMapBuilder:
         for p in self.panels:    nodes.append({"id": p["panel_id"],     "type": "panel",    "label": p.get("label", ""),    "status": p.get("status", ""), "layer_id": p.get("layer_id")})
         for pg in self.pages:    nodes.append({"id": pg["page_id"],     "type": "page",     "label": pg.get("label", ""),   "status": pg.get("status", "")})
         for pkg in packages:     nodes.append({"id": pkg["package_id"], "type": "package",  "label": pkg.get("label", ""),  "status": pkg.get("status", "")})
+        for atl in self.atlases: nodes.append({"id": atl["atlas_id"],   "type": "atlas",    "label": atl.get("label", ""),  "status": atl.get("status", ""), "color": atl.get("color", "")})
         for ad in adapters:      nodes.append({"id": ad["analysis_id"] + "_adapter", "type": "adapter",
                                               "label": ad.get("label", ""), "status": ad.get("status", ""),
                                               "input_layer_types": ad.get("input_layer_types", []),

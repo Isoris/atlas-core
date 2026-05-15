@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "atlas_v1.schema.json",
+  "title": "Atlas — one biological-domain workspace inside atlas-core",
+  "description": "Per ATLAS_INTEGRATION_PROMPT.md. An atlas is the unit of *biological-domain ownership* — inversion_atlas, meiosis_atlas, evolution_atlas, etc. It bundles a set of products, questions, hooks, and pages under one biological theme. The atlas itself is a registered descriptor, not a folder: a product knows which atlas it belongs to via `atlas`, and `atlases.jsonl` carries the human-facing context (label, color, lead question, primary products).",
+  "type": "object",
+  "required": ["atlas_id", "schema_version", "label", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "atlas_id":       { "type": "string", "pattern": "^[a-z][a-z0-9_]*_atlas$|^marker_design$|^atlas_core$" },
+    "schema_version": { "type": "string", "const": "atlas_v1" },
+    "label":          { "type": "string" },
+    "description":    { "type": "string" },
+    "color":          { "type": "string", "description": "Hex color used as the accent in the sidebar / atlas card." },
+    "icon":           { "type": "string", "description": "Single emoji shown next to the atlas name." },
+    "lead_question_id":   { "type": "string", "description": "FK into questions.jsonl: the canonical question the atlas exists to answer." },
+    "primary_products":   { "type": "array", "items": { "type": "string" }, "description": "FK(s) into products.jsonl: the products this atlas is *meant* to publish." },
+    "depends_on_atlases": { "type": "array", "items": { "type": "string" }, "description": "Other atlas_ids this one's products typically depend on (informational)." },
+    "status":             { "type": "string", "enum": ["active", "experimental", "deprecated", "stub"] },
+    "owner":              { "type": "string", "description": "Free-form owner / maintainer." },
+    "repo":               { "type": "string", "description": "Optional URL or path to the atlas repo (when split out)." },
+    "notes":              { "type": "string" }
+  }
+}

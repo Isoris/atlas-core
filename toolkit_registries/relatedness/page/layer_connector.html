@@ -327,7 +327,7 @@
 
 <div class="shell">
   <!-- ===== Atlas-level sidebar ===== -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sb-brand">
       <span class="logo">🐟</span>
       <div class="title">
@@ -335,41 +335,9 @@
         <span class="ref">fClaHyb_Gar_LG</span>
       </div>
     </div>
-    <div class="sb-section">Atlas Core</div>
-    <div class="sb-item" data-go="readiness"><span class="name">Home / Datasets</span><span class="icon ready"></span></div>
-    <div class="sb-item" data-go="readiness"><span class="name">Product Status</span><span class="icon ready"></span></div>
-    <div class="sb-item" data-go="readiness"><span class="name">Estimability Manager</span><span class="icon partial"></span></div>
-    <div class="sb-item current"><span class="name">Layer Connector</span><span class="icon partial"></span></div>
-    <div class="sb-item" data-go="catalogue"><span class="name">Developer Utilities</span><span class="icon inactive"></span></div>
-
-    <div class="sb-section">Inversion Atlas</div>
-    <div class="sb-item" data-select="iv_candidate_promoter"><span class="name">Discovery</span><span class="icon partial"></span></div>
-    <div class="sb-item" data-select="candidate_review_hook"><span class="name">Candidate Review</span><span class="icon ready"></span></div>
-    <div class="sb-item" data-select="karyotype_auto_caller"><span class="name">Karyotypes</span><span class="icon partial"></span></div>
-    <div class="sb-item"><span class="name">Characterization</span><span class="icon inactive"></span></div>
-    <div class="sb-item"><span class="name">Breakpoint Evidence</span><span class="icon missing"></span></div>
-    <div class="sb-item"><span class="name">Report</span><span class="icon inactive"></span></div>
-
-    <div class="sb-section">Meiosis Atlas</div>
-    <div class="sb-item"><span class="name">Dyads / Triads</span><span class="icon missing"></span></div>
-    <div class="sb-item"><span class="name">CO / DCO / C</span><span class="icon partial"></span></div>
-    <div class="sb-item" data-select="meiosis_interchromosomal_effects" data-kind="question"><span class="name">Interchromosomal</span><span class="icon partial"></span></div>
-
-    <div class="sb-section">Evolution Atlas</div>
-    <div class="sb-item"><span class="name">Arrangement Origin</span><span class="icon inactive"></span></div>
-    <div class="sb-item"><span class="name">Selection Scenarios</span><span class="icon missing"></span></div>
-    <div class="sb-item"><span class="name">Evolution Summary</span><span class="icon inactive"></span></div>
-
-    <div class="sb-section">Genome / Synteny Atlas</div>
-    <div class="sb-item"><span class="name">Chromosome Correspondence</span><span class="icon inactive"></span></div>
-    <div class="sb-item"><span class="name">Cross-species Synteny</span><span class="icon inactive"></span></div>
-    <div class="sb-item"><span class="name">Fusion / Fission</span><span class="icon inactive"></span></div>
-    <div class="sb-item"><span class="name">Breakpoint Catalogue</span><span class="icon inactive"></span></div>
-
-    <div class="sb-section">Marker Design</div>
-    <div class="sb-item"><span class="name">Inversion Panel</span><span class="icon missing"></span></div>
-    <div class="sb-item"><span class="name">Interchromosomal Panel</span><span class="icon missing"></span></div>
-    <div class="sb-item"><span class="name">Assay Readiness</span><span class="icon inactive"></span></div>
+    <!-- Sidebar body is rendered from atlases.jsonl. The empty container
+         below is populated by renderSidebar() in the script section. -->
+    <div id="sb-body"></div>
   </aside>
 
   <!-- ===== Main page ===== -->
@@ -518,7 +486,7 @@ const state = {
 
 async function loadDB() {
   async function jsonl(p) { try { return parseJSONL(await (await fetch(p)).text()); } catch { return []; } }
-  const [products, questions, layers, analyses, results, panels, pages, hooks, estimands, attrs] = await Promise.all([
+  const [products, questions, layers, analyses, results, panels, pages, hooks, estimands, attrs, atlases] = await Promise.all([
     jsonl("../01_registry/products.jsonl"),
     jsonl("../01_registry/questions.jsonl"),
     jsonl("../01_registry/layer_registry.jsonl"),
@@ -529,6 +497,7 @@ async function loadDB() {
     jsonl("../01_registry/hook_registry.jsonl"),
     jsonl("../01_registry/estimands.jsonl"),
     jsonl("../01_registry/sample_attributes.jsonl"),
+    jsonl("../01_registry/atlases.jsonl"),
   ]);
   DB.products  = Object.fromEntries(products.map(p => [p.product_id, p]));
   DB.questions = Object.fromEntries(questions.map(q => [q.question_id, q]));
@@ -540,6 +509,7 @@ async function loadDB() {
   DB.hooks     = Object.fromEntries(hooks.map(h => [h.hook_id, h]));
   DB.estimands = Object.fromEntries(estimands.map(e => [e.estimand_id, e]));
   DB.attributes= Object.fromEntries(attrs.map(a => [a.attribute, a]));
+  DB.atlases   = atlases;  // ordered array; render in declared order
 
   // Probe file-kind default_paths
   const probes = Object.values(DB.layers)
@@ -673,6 +643,75 @@ function rebuildPageSelect() {
 }
 
 // ----- rendering -----
+function rollupAtlas(atlas_id) {
+  // Walk products + lead_question to compute the atlas's status roll-up.
+  const a = DB.atlases.find(x => x.atlas_id === atlas_id) || {};
+  const owned = Object.values(DB.products).filter(p => p.atlas === atlas_id && p.kind === "biological_object");
+  let nReady = 0, nPartial = 0, nMissing = 0;
+  for (const p of owned) {
+    const s = checkProductStatus(p.product_id).status;
+    if (s === "ready" || s === "validated" || s === "available") nReady++;
+    else if (s === "partial") nPartial++;
+    else nMissing++;
+  }
+  let pageStatus = "inactive";
+  if (a.status === "stub" || !owned.length) pageStatus = "inactive";
+  else if (nMissing && !nReady) pageStatus = "missing";
+  else if (nMissing || nPartial) pageStatus = "partial";
+  else pageStatus = "ready";
+  return { atlas: a, nReady, nPartial, nMissing, nProducts: owned.length, status: pageStatus, owned };
+}
+
+function renderSidebar() {
+  const body = document.getElementById("sb-body");
+  if (!body) return;
+  // Atlas Core first
+  const core = (DB.atlases || []).find(a => a.atlas_id === "atlas_core");
+  const rest = (DB.atlases || []).filter(a => a.atlas_id !== "atlas_core");
+  let html = "";
+  if (core) {
+    html += `<div class="sb-section">${core.icon || ""} ${core.label || "Atlas Core"}</div>`;
+    html += `<div class="sb-item" onclick="location.href='readiness.html'"><span class="name">Home / Datasets</span><span class="icon ready"></span></div>`;
+    html += `<div class="sb-item" onclick="location.href='readiness.html'"><span class="name">Product Status</span><span class="icon ready"></span></div>`;
+    html += `<div class="sb-item" onclick="location.href='readiness.html'"><span class="name">Estimability Manager</span><span class="icon partial"></span></div>`;
+    html += `<div class="sb-item current"><span class="name">Layer Connector</span><span class="icon partial"></span></div>`;
+    html += `<div class="sb-item" onclick="location.href='catalogue.html'"><span class="name">Developer Utilities</span><span class="icon inactive"></span></div>`;
+  }
+  // Other atlases: render section + their products (clickable to drawer)
+  for (const a of rest) {
+    const ru = rollupAtlas(a.atlas_id);
+    html += `<div class="sb-section">${a.icon || ""} ${a.label}</div>`;
+    if (a.lead_question_id && DB.questions[a.lead_question_id]) {
+      const qs = checkQuestion(a.lead_question_id).status;
+      const dot = qs === "ready_to_run" ? "ready" : (qs === "partial" ? "partial" : (qs === "blocked" ? "missing" : "inactive"));
+      html += `<div class="sb-item" data-select-question="${a.lead_question_id}"><span class="name">${DB.questions[a.lead_question_id].label || a.lead_question_id}</span><span class="icon ${dot}"></span></div>`;
+    }
+    for (const pid of (a.primary_products || [])) {
+      const p = DB.products[pid];
+      if (!p) continue;
+      const ps = checkProductStatus(pid).status;
+      const dot = ["ready","validated","available"].includes(ps) ? "ready" :
+                  ps === "partial" ? "partial" : "missing";
+      html += `<div class="sb-item" data-open-product="${pid}"><span class="name">${(p.label || pid).slice(0, 26)}</span><span class="icon ${dot}"></span></div>`;
+    }
+    if (a.status === "stub" && !(a.primary_products || []).length) {
+      html += `<div class="sb-item"><span class="name" style="color: var(--nav-fg-section); font-style: italic">(stub atlas — no products yet)</span><span class="icon inactive"></span></div>`;
+    }
+  }
+  body.innerHTML = html;
+  // wire clicks
+  for (const el of body.querySelectorAll("[data-select-question]")) {
+    el.addEventListener("click", () => {
+      const qid = el.getAttribute("data-select-question");
+      state.selected = { kind: "question", id: qid };
+      rerender();
+    });
+  }
+  for (const el of body.querySelectorAll("[data-open-product]")) {
+    el.addEventListener("click", () => openDrawer(el.getAttribute("data-open-product"), "product"));
+  }
+}
+
 function renderReadinessBar() {
   const host = document.getElementById("readiness-bar");
   // Compute headline stats from the data
@@ -686,21 +725,26 @@ function renderReadinessBar() {
     else if (r.status === "partial") nPartial++;
     else if (r.status === "missing" || r.status === "blocked") nMissing++;
   }
-  const cards = [
-    { l: "Samples",      v: "226 QC-pass",            s: "ready" },
-    { l: "Reference",    v: "fClaHyb_Gar_LG",         s: "ready" },
-    { l: "Intervals",    v: `${Object.keys(DB.layers).length} layers`, s: "ready" },
-    { l: "Inversions",   v: `2 candidates`,           s: "ready" },
-    { l: "Relatedness",  v: `ngsrelate ✓ pedigree ✓`, s: "ready" },
-    { l: "Meiosis",      v: `chr coverage 14/29`,     s: "partial" },
-    { l: "Evolution",    v: `not wired`,              s: "partial" },
-    { l: "Markers",      v: `none registered`,        s: "missing" },
+  // Cards: always-on infrastructure cards + one card per registered atlas.
+  const infra = [
+    { l: "Samples",     v: "226 QC-pass",     s: "ready" },
+    { l: "Reference",   v: "fClaHyb_Gar_LG",  s: "ready" },
+    { l: "Intervals",   v: `${Object.keys(DB.layers).length} layers`, s: "ready" },
   ];
+  const cards = [...infra];
+  for (const a of (DB.atlases || [])) {
+    if (a.atlas_id === "atlas_core") continue;
+    const ru = rollupAtlas(a.atlas_id);
+    const valueStr = ru.nProducts
+      ? `${ru.nReady} ready · ${ru.nPartial} partial · ${ru.nMissing} missing`
+      : "no products yet";
+    cards.push({ l: a.label, v: valueStr, s: ru.status });
+  }
   host.innerHTML = cards.map(c => `
-    <div class="rb-card ${c.s}">
+    <div class="rb-card ${c.s === "inactive" ? "missing" : c.s}">
       <span class="label">${c.l}</span>
       <span class="value">${c.v}</span>
-      <span class="pill ${c.s}">${c.s}</span>
+      <span class="pill ${c.s === "inactive" ? "deprecated" : c.s}">${c.s}</span>
     </div>
   `).join("");
 }
@@ -1073,6 +1117,7 @@ function exportWiring() {
 
 // ----- wiring / events -----
 function rerender() {
+  renderSidebar();
   renderReadinessBar();
   rebuildPageSelect();
   renderSelectorSummary();

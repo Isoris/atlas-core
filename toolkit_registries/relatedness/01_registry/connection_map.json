@@ -1,7 +1,7 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 60,
+  "n_nodes": 66,
   "n_edges": 85,
   "warnings": [],
   "nodes": [
@@ -153,6 +153,42 @@
       "id": "reference_genome_layer",
       "type": "layer",
       "label": "Reference genome (assembly + ancestral context)",
+      "status": "stub"
+    },
+    {
+      "id": "interchromosomal_effects_layer",
+      "type": "layer",
+      "label": "Interchromosomal Effects Layer",
+      "status": "experimental"
+    },
+    {
+      "id": "coincidence_matrix",
+      "type": "layer",
+      "label": "Coefficient of coincidence (C) matrix",
+      "status": "stub"
+    },
+    {
+      "id": "local_inv_controls",
+      "type": "layer",
+      "label": "Local inversion covariates on tested chromosomes",
+      "status": "stub"
+    },
+    {
+      "id": "family_aware_permutation_design",
+      "type": "layer",
+      "label": "Family-aware permutation design",
+      "status": "stub"
+    },
+    {
+      "id": "co_rate_matrix",
+      "type": "layer",
+      "label": "CO rate matrix (focal_inv x tested_chr)",
+      "status": "stub"
+    },
+    {
+      "id": "dco_rate_matrix",
+      "type": "layer",
+      "label": "DCO rate matrix (focal_inv x tested_chr)",
       "status": "stub"
     },
     {

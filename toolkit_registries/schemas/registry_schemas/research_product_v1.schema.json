@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "research_product_v1.schema.json",
+  "title": "Research product — one biological object the atlas tracks",
+  "description": "Per MANAGER_SPEC.md §1. A research product is the named, status-bearing biological object that other atlas layers depend on. Only kind=biological_object products are tracked by the manager; derived_table and intermediate stay at the layer / result level. Status is recomputed live by the manager — do not store it.",
+  "type": "object",
+  "required": ["product_id", "schema_version", "label", "kind", "biological_scope", "backed_by_layers"],
+  "additionalProperties": false,
+  "properties": {
+    "product_id":       { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.v[0-9]+)?$", "description": "Stable id. Convention: <snake_case_name>.v<N>." },
+    "schema_version":   { "type": "string", "const": "research_product_v1" },
+    "label":            { "type": "string" },
+    "description":      { "type": "string" },
+    "kind":             { "type": "string", "enum": ["biological_object", "derived_table", "intermediate"], "description": "Only biological_object is tracked by the manager." },
+    "atlas":            { "type": "string", "description": "Owning atlas (inversion_atlas, relatedness_atlas, ...). Optional for cross-atlas products." },
+    "type":             { "type": "string", "enum": ["table", "json", "graph", "scalar_set", "matrix"], "default": "table" },
+    "grain":            { "type": "string", "description": "Free-form description of the row-level grain ('sample x inversion', 'pair x interval', 'window x metric')." },
+
+    "biological_scope": {
+      "type": "object",
+      "description": "What organism / dataset / reference the product is about. Required.",
+      "additionalProperties": false,
+      "properties": {
+        "species":   { "type": "string" },
+        "dataset":   { "type": "string", "description": "Free-form dataset id (e.g. 226_WGS_hatchery)." },
+        "reference": { "type": "string", "description": "Reference assembly id." }
+      }
+    },
+    "sample_scope":     { "type": "string", "description": "Sample-axis reference. Typically '<registry>.<qc_tag>' (e.g. sample_registry.qcpass_226). Free-form for v1." },
+    "coordinate_scope": { "type": "string", "description": "Coordinate-axis reference. Typically '<registry>.<assembly_or_intervalset>'." },
+
+    "backed_by_layers": { "type": "array", "items": { "type": "string" }, "description": "Layer_ids that hold the product's data. The manager resolves each via the librarian when computing status." },
+    "produced_by": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "analysis_id": { "type": "string", "description": "FK into analysis_registry. Empty when the product is curated by hand." },
+        "version":     { "type": "string" },
+        "result_id":   { "type": ["string", "null"], "description": "FK into analysis_results.jsonl when known." }
+      }
+    },
+    "depends_on": { "type": "array", "items": { "type": "string" }, "description": "Other product_ids the product depends on. Walked by the manager for blocked / stale propagation." },
+    "valid_for":  { "type": "array", "items": { "type": "string" }, "description": "Free-form list of downstream-use tokens. Convention: short snake_case verbs." },
+
+    "confidence": { "type": "string", "enum": ["review_passed", "preliminary", "unreviewed", "rejected"], "default": "unreviewed", "description": "Independent of computed status. A product can be 'ready' only when confidence='review_passed'." },
+    "path":       { "type": "string", "description": "Primary file path for the product (relative to registry root). Optional." },
+    "schema_path":{ "type": "string", "description": "Per-product schema path. Optional." },
+    "last_checked":{ "type": "string", "format": "date-time" },
+    "notes":      { "type": "string" }
+  }
+}

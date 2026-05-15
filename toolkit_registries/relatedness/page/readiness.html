@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Readiness — Manager (research products + questions)</title>
+<style>
+  :root {
+    --fg: #1a1a1a; --muted: #6c727f; --bg: #fafafa; --bg-card: #ffffff;
+    --border: #d9dde4; --accent: #2d6cb6;
+    --green: #2f8550; --amber: #b87a14; --red: #b13030; --slate: #44505d;
+    --st-ready:      #def0e0;  --st-ready-fg:      #2f8550;
+    --st-validated:  #e9eef7;  --st-validated-fg:  #2d6cb6;
+    --st-available:  #eef2f7;  --st-available-fg:  #44505d;
+    --st-missing:    #f8e6e6;  --st-missing-fg:    #b13030;
+    --st-blocked:    #fdecd2;  --st-blocked-fg:    #b87a14;
+    --st-stale:      #fdecd2;  --st-stale-fg:      #b87a14;
+    --st-deprecated: #eaecf0;  --st-deprecated-fg: #6c727f;
+    --st-unknown:    #eaecf0;  --st-unknown-fg:    #6c727f;
+  }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 13.5px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--fg); background: var(--bg);
+  }
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  .wrap { padding: 14px 20px 40px; max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+  .lede { color: var(--muted); margin: 0 0 12px; font-size: 12.5px; max-width: 1080px; }
+
+  .scope-bar {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; margin-bottom: 14px; display: flex; align-items: center;
+    gap: 10px; flex-wrap: wrap;
+  }
+  .scope-bar .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+  .scope-bar .chip {
+    display: inline-flex; gap: 6px; align-items: center;
+    padding: 3px 4px 3px 10px; border-radius: 14px;
+    background: #e9eef7; color: var(--accent); font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .scope-bar .chip .x {
+    cursor: pointer; padding: 0 6px; line-height: 1; border-radius: 50%;
+    color: var(--muted); user-select: none;
+  }
+  .scope-bar .chip .x:hover { background: rgba(0,0,0,0.06); color: var(--red); }
+  .scope-bar .empty { color: var(--muted); font-style: italic; font-size: 12.5px; }
+  .scope-bar .clear {
+    margin-left: auto; cursor: pointer; font-size: 11.5px; color: var(--muted);
+    border: 1px solid var(--border); padding: 3px 9px; border-radius: 4px;
+    background: white;
+  }
+  .scope-bar .clear:hover { color: var(--red); border-color: var(--red); }
+
+  .grid {
+    display: grid; grid-template-columns: 2fr 1.4fr; gap: 14px;
+  }
+  @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+
+  section.card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    overflow: hidden;
+  }
+  section.card > h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted); margin: 0; padding: 10px 14px;
+    background: #f7f8fa; border-bottom: 1px solid var(--border); font-weight: 600;
+  }
+  section.card > h2 .n { color: var(--fg); margin-left: 4px; }
+
+  /* products list */
+  .product-list { padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+  .product {
+    display: grid; grid-template-columns: 86px 1fr auto; align-items: center;
+    gap: 9px; padding: 6px 10px; border-radius: 4px;
+    cursor: pointer; border: 1px solid transparent;
+    transition: background .08s ease;
+  }
+  .product:hover { background: #f7f8fa; }
+  .product.selected { background: #eef4fb; border-color: var(--accent); }
+  .product .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 600; }
+  .product .id .label { color: var(--muted); font-weight: 400; margin-left: 6px; font-size: 11.5px; }
+  .product .pill {
+    display: inline-block; padding: 1px 8px; border-radius: 3px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; font-family: inherit; text-align: center;
+  }
+  .pill.ready      { background: var(--st-ready);      color: var(--st-ready-fg); }
+  .pill.validated  { background: var(--st-validated);  color: var(--st-validated-fg); }
+  .pill.available  { background: var(--st-available);  color: var(--st-available-fg); }
+  .pill.missing    { background: var(--st-missing);    color: var(--st-missing-fg); }
+  .pill.blocked    { background: var(--st-blocked);    color: var(--st-blocked-fg); }
+  .pill.stale      { background: var(--st-stale);      color: var(--st-stale-fg); }
+  .pill.deprecated { background: var(--st-deprecated); color: var(--st-deprecated-fg); }
+  .product .kind {
+    font-size: 10px; color: var(--muted); text-transform: lowercase;
+  }
+
+  /* question list */
+  .question-list { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .question {
+    padding: 8px 10px; border-radius: 4px; border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .question:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .question.selected { border-color: var(--accent); background: #f0f6fd; }
+  .question .head { display: flex; align-items: center; gap: 9px; }
+  .question .qid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 600; }
+  .question .label { font-size: 12.5px; color: var(--fg); margin-top: 3px; }
+  .pill.partial   { background: var(--st-blocked);  color: var(--st-blocked-fg); }
+  .pill.ready_to_run { background: var(--st-validated); color: var(--st-validated-fg); }
+  .pill.unknown   { background: var(--st-unknown);  color: var(--st-unknown-fg); }
+
+  /* inspector / detail */
+  .detail { padding: 12px 14px; font-size: 12.5px; }
+  .detail .meta {
+    display: grid; grid-template-columns: 110px 1fr; gap: 3px 12px;
+    font-size: 12px;
+  }
+  .detail .meta dt { color: var(--muted); }
+  .detail .meta dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+  .detail h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+              color: var(--muted); margin: 14px 0 6px; font-weight: 600; }
+  .detail .row { padding: 4px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+  .detail .row:last-child { border: none; }
+  .detail .row .pid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; }
+  .detail .row .role { color: var(--muted); font-size: 11.5px; flex: 1; }
+  .detail .actions { background: #fbfbfd; padding: 8px 12px; border-top: 1px solid var(--border); margin: 14px -14px -12px; }
+  .detail .actions ul { margin: 0; padding-left: 18px; font-size: 12px; }
+  .detail .actions li { margin-bottom: 3px; }
+  .empty-detail { color: var(--muted); text-align: center; padding: 30px 12px; font-style: italic; }
+
+  .filter-bar {
+    display: flex; gap: 10px; align-items: center; padding: 8px 12px;
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    background: #f7f8fa; font-size: 12px; color: var(--muted);
+  }
+  .filter-bar input, .filter-bar select {
+    font: inherit; padding: 4px 8px; border: 1px solid var(--border);
+    border-radius: 3px; background: white; color: var(--fg);
+  }
+
+  .scope-stats {
+    margin: 10px 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    font-size: 11px;
+  }
+  .scope-stats .cell {
+    padding: 6px 9px; border-radius: 4px; text-align: center;
+    background: #f7f8fa; border: 1px solid var(--border);
+  }
+  .scope-stats .cell .n { font-size: 17px; font-weight: 600; display: block; color: var(--fg); }
+  .scope-stats .cell .l { color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-size: 10px; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html"><span class="num">1.</span> Conversation</a>
+  <a href="action.html"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html"><span class="num">4.</span> Catalogue</a>
+  <a href="layers.html"><span class="num">5.</span> Layers</a>
+  <a href="candidate_review.html"><span class="num">6.</span> Candidate review</a>
+  <a href="graph_builder.html"><span class="num">7.</span> Graph builder</a>
+  <a href="readiness.html" class="current"><span class="num">8.</span> Readiness</a>
+  <span class="tag">atlas-core / page 8 — Manager (products + questions)</span>
+</nav>
+
+<div class="wrap">
+  <h1>Readiness — the Manager view</h1>
+  <p class="lede">
+    Click a <strong>research product</strong> to add it to the scope.
+    The right column shows the products' details, the questions that depend on
+    them, and what's <em>around</em> — other products in the same biological /
+    sample / coordinate scope.  Click a question to see its requirements + next
+    useful actions.  <strong>Nothing runs.</strong>  This page is the Manager's
+    query view (per <code>MANAGER_SPEC.md</code>).
+  </p>
+
+  <div class="scope-bar">
+    <span class="lbl">scope:</span>
+    <div id="scope-chips"><span class="empty">click any product below to add it</span></div>
+    <button class="clear" id="btn-clear-scope">clear</button>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Products <span class="n" id="count-products">0</span></h2>
+      <div class="filter-bar">
+        filter
+        <input type="text" id="filter-product" placeholder="substring…" size="20">
+        <select id="filter-status">
+          <option value="">any status</option>
+          <option value="ready">ready</option>
+          <option value="validated">validated</option>
+          <option value="available">available</option>
+          <option value="missing">missing</option>
+          <option value="blocked">blocked</option>
+          <option value="stale">stale</option>
+        </select>
+        <span style="margin-left:auto" id="prod-summary"></span>
+      </div>
+      <div class="product-list" id="product-list"></div>
+    </section>
+
+    <section class="card">
+      <h2>Questions answerable / blocked <span class="n" id="count-questions">0</span></h2>
+      <div class="question-list" id="question-list"></div>
+
+      <h2 style="margin-top: 6px; border-top: 1px solid var(--border)">Detail</h2>
+      <div id="detail-pane">
+        <div class="empty-detail">Click a product or question to see details.</div>
+      </div>
+
+      <h2 style="margin-top: 6px; border-top: 1px solid var(--border)">What's around the scope</h2>
+      <div class="scope-stats" id="scope-stats">
+        <div class="cell"><span class="n" id="ss-selected">0</span><span class="l">selected</span></div>
+        <div class="cell"><span class="n" id="ss-nearby">0</span><span class="l">nearby</span></div>
+        <div class="cell"><span class="n" id="ss-questions">0</span><span class="l">questions</span></div>
+        <div class="cell"><span class="n" id="ss-ready">0</span><span class="l">ready</span></div>
+      </div>
+      <div class="product-list" id="nearby-list"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const LS_KEY = "atlas_manager_scope_v1";
+
+function parseJSONL(text) {
+  return text.split("\n").map(l => l.trim()).filter(Boolean).map(l => JSON.parse(l));
+}
+
+const DB = {};
+const state = {
+  scope: new Set(),
+  detail: null,           // { kind: "product" | "question", id: ... }
+  filterProd: "",
+  filterStatus: "",
+};
+
+async function loadDB() {
+  async function jsonl(p) {
+    try { return parseJSONL(await (await fetch(p)).text()); }
+    catch { return []; }
+  }
+  const [products, questions, layers, analyses, results] = await Promise.all([
+    jsonl("../01_registry/products.jsonl"),
+    jsonl("../01_registry/questions.jsonl"),
+    jsonl("../01_registry/layer_registry.jsonl"),
+    jsonl("../01_registry/analysis_registry.jsonl"),
+    jsonl("../01_registry/analysis_results.jsonl"),
+  ]);
+  DB.products  = Object.fromEntries(products.map(p => [p.product_id, p]));
+  DB.questions = Object.fromEntries(questions.map(q => [q.question_id, q]));
+  DB.layers    = Object.fromEntries(layers.map(l => [l.layer_id, l]));
+  DB.analyses  = Object.fromEntries(analyses.map(a => [a.analysis_id, a]));
+  DB.results   = results;
+
+  // Probe file-kind layers' default_paths once for the librarian fallback.
+  const probes = Object.values(DB.layers)
+    .filter(l => l.source_kind === "file" && (l.default_path || "").trim())
+    .map(l => fetch("../" + l.default_path, { method: "HEAD" })
+      .then(r => [l.layer_id, r.ok]).catch(() => [l.layer_id, false]));
+  DB.file_present = Object.fromEntries(await Promise.all(probes));
+}
+
+function loadScope() {
+  try {
+    const o = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+    if (Array.isArray(o)) state.scope = new Set(o);
+  } catch {}
+}
+function saveScope() { localStorage.setItem(LS_KEY, JSON.stringify([...state.scope])); }
+
+// ----- JS port of the manager's status algorithm -----
+function resolveLayerQuick(layerId) {
+  // mirrors the Python fallback: file → presence by default_path; analysis_result → any matching active result
+  const l = DB.layers[layerId];
+  if (!l) return { state: "UNKNOWN_CONTRACT" };
+  if (l.source_kind === "file") {
+    if ((l.default_path || "").trim()) {
+      return DB.file_present[layerId] === true
+        ? { state: "RESOLVED" }
+        : { state: "KNOWN_MISSING" };
+    }
+    return { state: "KNOWN_MISSING" };
+  }
+  if (l.source_kind === "analysis_result") {
+    const producers = Object.values(DB.analyses)
+      .filter(a => (a.produces || "").split(",").map(s => s.trim()).includes(layerId))
+      .map(a => a.analysis_id);
+    if (!producers.length) return { state: "UNKNOWN_CONTRACT" };
+    const r = DB.results.find(r => producers.includes(r.analysis_type) && r.status === "active");
+    return r ? { state: "COMPLETE", result_id: r.result_id }
+             : { state: "KNOWN_MISSING" };
+  }
+  return { state: "UNKNOWN_CONTRACT" };
+}
+function checkProductStatus(productId, seen = new Set()) {
+  if (seen.has(productId)) return { status: "blocked", reason: "cycle" };
+  seen = new Set([...seen, productId]);
+  const p = DB.products[productId];
+  if (!p) return { product_id: productId, status: "missing", reason: "no product" };
+  const layers = (p.backed_by_layers || []).map(resolveLayerQuick);
+  const ls = new Set(layers.map(x => x.state));
+  let status, reason;
+  if (!layers.length)                              { status = "missing"; reason = "no backed_by_layers"; }
+  else if (ls.has("UNKNOWN_CONTRACT"))            { status = "missing"; reason = "backing contract missing"; }
+  else if (ls.has("FAILED"))                       { status = "blocked"; reason = "backing failed"; }
+  else if (ls.has("BLOCKED_BY_INPUT") || ls.has("KNOWN_MISSING")) { status = "missing"; reason = "backing missing"; }
+  else if ([...ls].every(s => s === "RESOLVED" || s === "COMPLETE")) { status = "available"; reason = "backing resolves"; }
+  else { status = "missing"; reason = "indeterminate"; }
+  const conf = (p.confidence || "unreviewed");
+  if (status === "available") {
+    if (conf === "review_passed")  status = "ready";
+    else if (conf === "preliminary") status = "validated";
+    else if (conf === "rejected")  status = "blocked";
+  }
+  // depends_on
+  const bad = [];
+  for (const dep of (p.depends_on || [])) {
+    const r = checkProductStatus(dep, seen);
+    if (["missing", "blocked", "deprecated"].includes(r.status)) bad.push({ id: dep, status: r.status });
+  }
+  if (bad.length) {
+    status = "blocked";
+    reason = "upstream: " + bad.map(b => `${b.id}(${b.status})`).join(", ");
+  }
+  return { product_id: productId, status, reason, confidence: conf, label: p.label, kind: p.kind,
+           backed_by_layers: p.backed_by_layers || [], layer_states: layers,
+           depends_on: p.depends_on || [], valid_for: p.valid_for || [],
+           produced_by: p.produced_by || {}, sample_scope: p.sample_scope, coordinate_scope: p.coordinate_scope };
+}
+function checkQuestion(qid) {
+  const q = DB.questions[qid];
+  if (!q) return { question_id: qid, status: "unknown" };
+  const per_req = (q.requires || []).map(r => Object.assign(
+    { role: r.role, required: r.required !== false }, checkProductStatus(r.product_id)));
+  const required_statuses = new Set(per_req.filter(r => r.required).map(r => r.status));
+  let agg = "partial";
+  if (required_statuses.size === 1 && required_statuses.has("ready")) agg = "ready_to_run";
+  else if (required_statuses.has("missing") || required_statuses.has("blocked") || required_statuses.has("deprecated")) {
+    agg = (required_statuses.has("ready") || required_statuses.has("validated") || required_statuses.has("available")) ? "partial" : "blocked";
+  }
+  // next_actions
+  const next = [];
+  for (const r of per_req) {
+    if (!r.required) continue;
+    if (r.status === "missing" || r.status === "blocked") {
+      const aid = (r.produced_by || {}).analysis_id;
+      next.push(aid
+        ? { label: `Run ${aid} to produce ${r.product_id}` }
+        : { label: `Register a producing analysis for ${r.product_id}` });
+    }
+  }
+  return { question_id: qid, status: agg, label: q.label, description: q.description,
+           per_required: per_req, next_actions: next, outputs: q.outputs || [] };
+}
+
+// ----- rendering -----
+function renderProducts() {
+  const host = document.getElementById("product-list");
+  host.innerHTML = "";
+  const ids = Object.keys(DB.products).sort();
+  const f = state.filterProd.toLowerCase();
+  const fs = state.filterStatus;
+  let nReady = 0, nMissing = 0, total = 0;
+  for (const pid of ids) {
+    if (DB.products[pid].kind !== "biological_object") continue; // only track biological_object per spec §1
+    total++;
+    if (f && !pid.toLowerCase().includes(f) && !(DB.products[pid].label || "").toLowerCase().includes(f)) continue;
+    const rec = checkProductStatus(pid);
+    if (fs && rec.status !== fs) continue;
+    if (rec.status === "ready") nReady++;
+    if (rec.status === "missing" || rec.status === "blocked") nMissing++;
+    const el = document.createElement("div");
+    el.className = "product" + (state.scope.has(pid) ? " selected" : "");
+    el.innerHTML = `
+      <span class="pill ${rec.status}">${rec.status}</span>
+      <div>
+        <div class="id">${pid}<span class="label">${rec.label || ""}</span></div>
+      </div>
+      <span class="kind">${rec.kind || ""}</span>
+    `;
+    el.addEventListener("click", () => toggleScope(pid));
+    el.addEventListener("dblclick", () => openProductDetail(pid));
+    host.appendChild(el);
+  }
+  document.getElementById("count-products").textContent = total;
+  document.getElementById("prod-summary").textContent = `${nReady} ready / ${nMissing} missing or blocked`;
+}
+function renderQuestions() {
+  const host = document.getElementById("question-list");
+  host.innerHTML = "";
+  const ids = Object.keys(DB.questions).sort();
+  document.getElementById("count-questions").textContent = ids.length;
+  for (const qid of ids) {
+    const r = checkQuestion(qid);
+    // does this question intersect the scope?
+    const reqIds = (DB.questions[qid].requires || []).map(x => x.product_id);
+    const overlap = [...state.scope].some(s => reqIds.includes(s));
+    const el = document.createElement("div");
+    el.className = "question" + ((state.detail && state.detail.kind === "question" && state.detail.id === qid) ? " selected" : "");
+    el.innerHTML = `
+      <div class="head">
+        <span class="pill ${r.status}">${r.status.replace(/_/g, " ")}</span>
+        <span class="qid">${qid}</span>
+        ${overlap ? '<span class="kind" style="margin-left:auto; color: var(--accent); font-size: 10.5px; font-weight: 600">USES SCOPE</span>' : ""}
+      </div>
+      <div class="label">${r.label || ""}</div>
+    `;
+    el.addEventListener("click", () => openQuestionDetail(qid));
+    host.appendChild(el);
+  }
+}
+function renderScopeBar() {
+  const host = document.getElementById("scope-chips");
+  host.innerHTML = "";
+  if (!state.scope.size) {
+    host.innerHTML = '<span class="empty">click any product below to add it</span>';
+    return;
+  }
+  for (const pid of state.scope) {
+    const c = document.createElement("span");
+    c.className = "chip";
+    c.innerHTML = `${pid} <span class="x" title="remove">×</span>`;
+    c.querySelector(".x").addEventListener("click", e => {
+      e.stopPropagation();
+      state.scope.delete(pid); saveScope(); rerender();
+    });
+    host.appendChild(c);
+  }
+}
+function renderNearby() {
+  // Compute scope-intersection nearby + answerable-question counts.
+  const host = document.getElementById("nearby-list");
+  host.innerHTML = "";
+  if (!state.scope.size) {
+    document.getElementById("ss-selected").textContent = "0";
+    document.getElementById("ss-nearby").textContent   = "0";
+    document.getElementById("ss-questions").textContent= "0";
+    document.getElementById("ss-ready").textContent    = "0";
+    return;
+  }
+  const selected = [...state.scope];
+  const selectedRecs = selected.map(checkProductStatus);
+  const sampleScopes = new Set(selectedRecs.map(r => DB.products[r.product_id].sample_scope).filter(Boolean));
+  const coordScopes  = new Set(selectedRecs.map(r => DB.products[r.product_id].coordinate_scope).filter(Boolean));
+  let nNearby = 0, nReadyNearby = 0;
+  for (const pid in DB.products) {
+    if (state.scope.has(pid)) continue;
+    const p = DB.products[pid];
+    if (p.kind !== "biological_object") continue;
+    const overlap = (p.sample_scope && sampleScopes.has(p.sample_scope))
+                 || (p.coordinate_scope && coordScopes.has(p.coordinate_scope));
+    if (!overlap) continue;
+    nNearby++;
+    const rec = checkProductStatus(pid);
+    if (rec.status === "ready") nReadyNearby++;
+    const el = document.createElement("div");
+    el.className = "product";
+    el.innerHTML = `
+      <span class="pill ${rec.status}">${rec.status}</span>
+      <div>
+        <div class="id">${pid}<span class="label">${rec.label || ""}</span></div>
+      </div>
+      <span class="kind">${p.kind}</span>
+    `;
+    el.addEventListener("click", () => toggleScope(pid));
+    el.addEventListener("dblclick", () => openProductDetail(pid));
+    host.appendChild(el);
+  }
+  // Count answerable questions that use scope
+  let nQ = 0;
+  for (const qid in DB.questions) {
+    const reqIds = (DB.questions[qid].requires || []).map(x => x.product_id);
+    if (selected.some(s => reqIds.includes(s))) nQ++;
+  }
+  document.getElementById("ss-selected").textContent = selected.length;
+  document.getElementById("ss-nearby").textContent   = nNearby;
+  document.getElementById("ss-questions").textContent= nQ;
+  document.getElementById("ss-ready").textContent    = selectedRecs.filter(r => r.status === "ready").length + nReadyNearby;
+}
+function renderDetail() {
+  const host = document.getElementById("detail-pane");
+  if (!state.detail) {
+    host.innerHTML = '<div class="empty-detail">Click a product or question to see details.</div>';
+    return;
+  }
+  if (state.detail.kind === "product") {
+    const pid = state.detail.id;
+    const p = DB.products[pid] || {};
+    const r = checkProductStatus(pid);
+    host.innerHTML = `
+      <div class="detail">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="pill ${r.status}">${r.status}</span>
+          <span class="id" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600">${pid}</span>
+        </div>
+        <p style="color: var(--muted); margin: 8px 0 12px;">${p.description || p.label || ""}</p>
+        <dl class="meta">
+          <dt>kind</dt><dd>${p.kind || ""}</dd>
+          <dt>atlas</dt><dd>${p.atlas || ""}</dd>
+          <dt>confidence</dt><dd>${p.confidence || "unreviewed"}</dd>
+          <dt>sample scope</dt><dd>${p.sample_scope || ""}</dd>
+          <dt>coord scope</dt><dd>${p.coordinate_scope || ""}</dd>
+          <dt>reason</dt><dd>${r.reason || ""}</dd>
+        </dl>
+        <h3>Backed by layers</h3>
+        ${r.layer_states.length ? r.layer_states.map(l =>
+          `<div class="row"><span class="pid">${l.layer_id}</span><span class="role">${l.state}</span></div>`
+        ).join("") : "<div class=\"empty-detail\">no backed_by_layers</div>"}
+        <h3>Depends on</h3>
+        ${r.depends_on.length ? r.depends_on.map(d => {
+          const dr = checkProductStatus(d);
+          return `<div class="row"><span class="pill ${dr.status}">${dr.status}</span><span class="pid">${d}</span></div>`;
+        }).join("") : "<div class=\"empty-detail\">no dependencies</div>"}
+        <h3>Valid for</h3>
+        ${r.valid_for.length ? "<div class=\"row\" style=\"color: var(--muted); font-size: 11.5px\">" + r.valid_for.join(", ") + "</div>" : "<div class=\"empty-detail\">no downstream uses listed</div>"}
+      </div>
+    `;
+  } else {
+    const qid = state.detail.id;
+    const q = DB.questions[qid] || {};
+    const r = checkQuestion(qid);
+    host.innerHTML = `
+      <div class="detail">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="pill ${r.status}">${r.status.replace(/_/g, " ")}</span>
+          <span class="id" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600">${qid}</span>
+        </div>
+        <p style="color: var(--muted); margin: 8px 0 12px;">${q.description || q.label || ""}</p>
+        <h3>Required products</h3>
+        ${r.per_required.map(rec => `
+          <div class="row">
+            <span class="pill ${rec.status}">${rec.status}</span>
+            <span class="pid">${rec.product_id}</span>
+            <span class="role">${rec.role || ""}</span>
+          </div>
+        `).join("")}
+        ${r.next_actions.length ? `
+          <div class="actions">
+            <h3 style="margin-top: 0; color: var(--muted)">Next useful actions</h3>
+            <ul>${r.next_actions.map(a => `<li>${a.label}</li>`).join("")}</ul>
+          </div>
+        ` : ""}
+      </div>
+    `;
+  }
+}
+function rerender() {
+  renderScopeBar();
+  renderProducts();
+  renderQuestions();
+  renderNearby();
+  renderDetail();
+}
+
+function toggleScope(pid) {
+  if (state.scope.has(pid)) state.scope.delete(pid);
+  else state.scope.add(pid);
+  saveScope();
+  state.detail = { kind: "product", id: pid };
+  rerender();
+}
+function openProductDetail(pid)  { state.detail = { kind: "product",  id: pid }; rerender(); }
+function openQuestionDetail(qid) { state.detail = { kind: "question", id: qid }; rerender(); }
+
+(async () => {
+  await loadDB();
+  loadScope();
+  document.getElementById("filter-product").addEventListener("input", e => { state.filterProd = e.target.value; renderProducts(); });
+  document.getElementById("filter-status").addEventListener("change", e => { state.filterStatus = e.target.value; renderProducts(); });
+  document.getElementById("btn-clear-scope").addEventListener("click", () => { state.scope.clear(); saveScope(); rerender(); });
+  rerender();
+})();
+</script>
+</body>
+</html>

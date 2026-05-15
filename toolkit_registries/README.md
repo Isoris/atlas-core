@@ -28,6 +28,7 @@ contract layer between them.
 | **schemas/specs/** | 3 deeper specs: `INVERSION_REGISTRY_SPECIFICATION_v2.md`, `STRUCTURED_BLOCK_SCHEMAS.md`, `CHARACTERIZATION_CONVERGENCE_RULES.md` | canonical scientific contracts; no LANTA-API contamination |
 | **LAYER_GRAPH_BUILDER_SPEC.md** | Full contract for the Layer Graph Builder: five-node vocabulary (set / filter / layer / analysis / hook), edge validation rules, the 9 librarian states, the 5 panel states, the page composition plan, the three UI modes (Ask / Inspect / Commit), and the LLM proposal pipeline. The invariant document this PR locks down. | active, v1 |
 | **ADAPTER_CONTRACT.md** | What every `analysis/<id>/adapter_atlas.js` must export: identity, contract (input/produced layers), runtime, schemas, fixtures + the §rules separating `compute.js` (pure science, no registry imports) from `adapter_atlas.js` (registry-aware bridge). Plus the build/validate pipeline, packages, recipes. Per-adapter JSON + JSONL is canonical; TSV is the derived view. | active, v1 |
+| **MANAGER_SPEC.md** | The readiness layer above the librarian. *Librarian = where things are; Manager = whether they are usable now.* Defines research products (biological objects worth tracking), research questions (what we're trying to answer), and the algorithm `lib/manager.py` uses to compute product status + question readiness. Includes the growth rule: define products progressively, never pre-define 200. | active, v1 |
 
 ### registry_schemas/ breakdown
 
@@ -69,6 +70,8 @@ contract layer between them.
 | `package_manifest_v1.schema.json` | One row per `packages/<id>/manifest.json` — bundle of related analyses + layers + panels + pages. The unit of distribution. Per ADAPTER_CONTRACT.md §7. | active, v1 |
 | `page_v1.schema.json` | One row per `pages.jsonl` entry — a dashboard page, its hook, and its ordered list of panels. | active, v1 |
 | `panel_v1.schema.json` | One row per `panels.jsonl` entry — a visual component that renders exactly one `layer_id` (with optional decoration layers). | active, v1 |
+| `research_product_v1.schema.json` | One row per registered biological object the Manager tracks. `kind` ∈ {biological_object, derived_table, intermediate}; only `biological_object` is tracked. Status (ready/validated/available/missing/blocked/stale/deprecated) is **computed live** by `lib/manager.py`, never stored. | active, v1 |
+| `research_question_v1.schema.json` | One row per scientific question the user wants answered. Declares `requires` (product_ids + role) and `outputs`. Status (ready_to_run / partial / blocked / unknown) is computed by the manager. | active, v1 |
 
 ---
 

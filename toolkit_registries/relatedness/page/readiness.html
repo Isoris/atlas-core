@@ -118,6 +118,35 @@
   .pill.ready_to_run { background: var(--st-validated); color: var(--st-validated-fg); }
   .pill.unknown   { background: var(--st-unknown);  color: var(--st-unknown-fg); }
 
+  /* estimability pills */
+  .pill.estimable           { background: var(--st-ready);     color: var(--st-ready-fg); }
+  .pill.partially_estimable { background: var(--st-validated); color: var(--st-validated-fg); }
+  .pill.not_estimable       { background: var(--st-missing);   color: var(--st-missing-fg); }
+  .pill.needs_extra_data    { background: var(--st-blocked);   color: var(--st-blocked-fg); }
+  .pill.fully_estimable     { background: var(--st-ready);     color: var(--st-ready-fg); }
+  .pill.limited             { background: var(--st-missing);   color: var(--st-missing-fg); }
+
+  .est-section h4 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--muted); margin: 12px 0 6px; font-weight: 600;
+  }
+  .est-row {
+    padding: 5px 8px; border-radius: 4px; margin-bottom: 4px;
+    background: #f7f8fa; border: 1px solid var(--border);
+  }
+  .est-row .head { display: flex; align-items: center; gap: 8px; }
+  .est-row .head .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; font-weight: 600; flex: 1; }
+  .est-row .reason { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+  .est-row .pre {
+    margin-top: 4px; font-size: 10.5px; color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .est-row .pre .mark { display: inline-block; width: 12px; }
+  .est-row .pre .met  { color: var(--green); }
+  .est-row .pre .miss { color: var(--red); }
+  .est-row .pre .soft { color: var(--amber); }
+  .est-row .limit { color: var(--amber); font-size: 11px; margin-top: 4px; }
+
   /* inspector / detail */
   .detail { padding: 12px 14px; font-size: 12.5px; }
   .detail .meta {
@@ -251,18 +280,22 @@ async function loadDB() {
     try { return parseJSONL(await (await fetch(p)).text()); }
     catch { return []; }
   }
-  const [products, questions, layers, analyses, results] = await Promise.all([
+  const [products, questions, layers, analyses, results, estimands, attributes] = await Promise.all([
     jsonl("../01_registry/products.jsonl"),
     jsonl("../01_registry/questions.jsonl"),
     jsonl("../01_registry/layer_registry.jsonl"),
     jsonl("../01_registry/analysis_registry.jsonl"),
     jsonl("../01_registry/analysis_results.jsonl"),
+    jsonl("../01_registry/estimands.jsonl"),
+    jsonl("../01_registry/sample_attributes.jsonl"),
   ]);
   DB.products  = Object.fromEntries(products.map(p => [p.product_id, p]));
   DB.questions = Object.fromEntries(questions.map(q => [q.question_id, q]));
   DB.layers    = Object.fromEntries(layers.map(l => [l.layer_id, l]));
   DB.analyses  = Object.fromEntries(analyses.map(a => [a.analysis_id, a]));
   DB.results   = results;
+  DB.estimands = Object.fromEntries(estimands.map(e => [e.estimand_id, e]));
+  DB.attributes= Object.fromEntries(attributes.map(a => [a.attribute,  a]));
 
   // Probe file-kind layers' default_paths once for the librarian fallback.
   const probes = Object.values(DB.layers)
@@ -363,6 +396,74 @@ function checkQuestion(qid) {
   }
   return { question_id: qid, status: agg, label: q.label, description: q.description,
            per_required: per_req, next_actions: next, outputs: q.outputs || [] };
+}
+
+// ----- estimability (JS mirror of lib/estimability.py §3.5) -----
+const ATTR_MET     = new Set(["known", "covered"]);
+const ATTR_PARTIAL = new Set(["partial"]);
+function resolvePrecondition(pre) {
+  if (pre.kind === "product") {
+    const r = checkProductStatus(pre.product_id);
+    return { kind: "product", id: pre.product_id, met: ["ready","validated","available"].includes(r.status),
+             reason: `product = ${r.status}`,
+             reason_kind: ["missing","blocked"].includes(r.status) ? "registry_resolvable" : "ok" };
+  }
+  if (pre.kind === "layer") {
+    const l = resolveLayerQuick(pre.layer_id);
+    const met = ["RESOLVED","COMPLETE"].includes(l.state);
+    return { kind: "layer", id: pre.layer_id, met,
+             reason: `layer = ${l.state}`, reason_kind: "registry_resolvable" };
+  }
+  if (pre.kind === "sample_attribute") {
+    const row = DB.attributes[pre.attribute];
+    if (!row) return { kind: "sample_attribute", id: pre.attribute, met: false,
+                       reason: "not in sample_attributes.jsonl",
+                       reason_kind: "structurally_missing" };
+    if (ATTR_MET.has(row.status))
+      return { kind: "sample_attribute", id: pre.attribute, met: true,
+               reason: `attribute ${row.status} (${row.n_covered}/${row.n_total})`, reason_kind: "ok" };
+    return { kind: "sample_attribute", id: pre.attribute, met: false,
+             reason: `attribute ${row.status}: ${row.reason || ""}`,
+             reason_kind: "structurally_missing" };
+  }
+  return { kind: pre.kind, id: "?", met: false, reason: "unknown kind", reason_kind: "schema_error" };
+}
+function checkEstimand(eid) {
+  const e = DB.estimands[eid];
+  if (!e) return { estimand_id: eid, status: "not_estimable", reason: "no estimand row" };
+  const met = [], missing = [], soft = [];
+  for (const pre of (e.preconditions || [])) {
+    const r = resolvePrecondition(pre); r.precondition = pre;
+    if (r.met) met.push(r);
+    else if (pre.required !== false) missing.push(r);
+    else soft.push(r);
+  }
+  let status, reason;
+  if (!missing.length && !soft.length) {
+    status = "estimable"; reason = "all preconditions met";
+  } else if (!missing.length && soft.length) {
+    status = "partially_estimable"; reason = "optional missing: " + soft.map(s => s.id).join(", ");
+  } else if (missing.some(m => m.kind === "sample_attribute" && m.reason_kind === "structurally_missing")) {
+    status = "needs_extra_data";
+    reason = "needs metadata: " + missing.filter(m => m.kind === "sample_attribute").map(m => m.id).join(", ");
+  } else {
+    status = "not_estimable";
+    reason = "missing: " + missing.map(m => m.id).join(", ");
+  }
+  return { estimand_id: eid, question_id: e.question_id, label: e.label,
+           description: e.description, status, reason,
+           met, missing, soft_missing: soft, limitations: e.limitations || [] };
+}
+function checkQuestionEstimability(qid) {
+  const eids = Object.values(DB.estimands).filter(e => e.question_id === qid).map(e => e.estimand_id);
+  if (!eids.length) return { question_id: qid, status: "unknown", per: [] };
+  const per = eids.map(checkEstimand);
+  const s = new Set(per.map(p => p.status));
+  let agg = "limited";
+  if (s.size === 1 && s.has("estimable")) agg = "fully_estimable";
+  else if ([...s].every(x => x === "estimable" || x === "partially_estimable")) agg = "partially_estimable";
+  else if (s.has("needs_extra_data")) agg = "needs_extra_data";
+  return { question_id: qid, status: agg, per };
 }
 
 // ----- rendering -----
@@ -531,14 +632,16 @@ function renderDetail() {
     const qid = state.detail.id;
     const q = DB.questions[qid] || {};
     const r = checkQuestion(qid);
+    const est = checkQuestionEstimability(qid);
     host.innerHTML = `
       <div class="detail">
-        <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="pill ${r.status}">${r.status.replace(/_/g, " ")}</span>
+          <span class="pill ${est.status}" title="estimability (sub-role of Manager)">${est.status.replace(/_/g, " ")}</span>
           <span class="id" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600">${qid}</span>
         </div>
         <p style="color: var(--muted); margin: 8px 0 12px;">${q.description || q.label || ""}</p>
-        <h3>Required products</h3>
+        <h3>Required products (Status Manager)</h3>
         ${r.per_required.map(rec => `
           <div class="row">
             <span class="pill ${rec.status}">${rec.status}</span>
@@ -546,6 +649,25 @@ function renderDetail() {
             <span class="role">${rec.role || ""}</span>
           </div>
         `).join("")}
+
+        ${est.per && est.per.length ? `
+        <div class="est-section">
+          <h4>Estimability (what can we actually claim?)</h4>
+          ${est.per.map(p => `
+            <div class="est-row">
+              <div class="head">
+                <span class="pill ${p.status}">${p.status.replace(/_/g, " ")}</span>
+                <span class="id">${p.estimand_id}</span>
+              </div>
+              ${p.label ? `<div class="reason"><strong>${p.label}</strong></div>` : ""}
+              <div class="reason">${p.reason}</div>
+              ${(p.met || []).map(m => `<div class="pre"><span class="mark met">+</span> ${m.kind}: ${m.id} <span style="color: var(--muted)">— ${m.reason}</span></div>`).join("")}
+              ${(p.missing || []).map(m => `<div class="pre"><span class="mark miss">✗</span> ${m.kind}: ${m.id} <span style="color: var(--muted)">— ${m.reason}</span></div>`).join("")}
+              ${(p.soft_missing || []).map(m => `<div class="pre"><span class="mark soft">·</span> ${m.kind}: ${m.id} <span style="color: var(--muted)">— (soft) ${m.reason}</span></div>`).join("")}
+              ${(p.limitations || []).map(l => `<div class="limit">⚠ ${l}</div>`).join("")}
+            </div>
+          `).join("")}
+        </div>` : ""}
         ${r.next_actions.length ? `
           <div class="actions">
             <h3 style="margin-top: 0; color: var(--muted)">Next useful actions</h3>

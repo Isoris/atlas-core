@@ -3,10 +3,25 @@
 Status: **v1 (frozen)**.  Schema version: `manager_v1`.
 
 > **Librarian** = knows *where* data / results are.
-> **Manager**   = knows *whether* they are usable now.
+> **Status Manager** = knows *whether* they are usable now.
+> **Estimability Manager** = knows *what they let us actually estimate*.
 
-The manager does **not replace** the librarian.  It sits above it and
-answers six questions per page / layer / analysis:
+The Manager does **not replace** the librarian.  It sits above it and
+splits into **two sub-roles**:
+
+| Sub-role | Question |
+|---|---|
+| **Status Manager**      | Is this *product* ready / available / blocked / stale? |
+| **Estimability Manager**| Given the data we have, what can we **scientifically claim** about this question? |
+
+A question can be `ready_to_run` (all products available) but its specific
+**estimands** can still be `not_estimable` (the data exists but doesn't
+have the structure / scope to support that specific claim).  Example:
+inversion × meiosis is `ready_to_run` for observed-inheritance effects,
+but `not_estimable` for sex-specific recombination rates unless parent
+sex metadata is registered.
+
+The Manager answers six questions per page / layer / analysis:
 
 1. Which biological objects does this provide?
 2. Are those objects `ready` / `partial` / `missing` / `blocked` / `stale`?
@@ -218,7 +233,75 @@ no result row is mutated.  Status is recomputed on every call.
 
 ---
 
-## §4 §refusals
+## §3.5 The Estimability Manager (sub-role)
+
+The Status Manager answers *"can we even open the table?"*.  The
+Estimability Manager answers *"if we open it, what can we claim?"*.  The
+two roles share storage and recursion patterns; they differ in vocabulary
+and in *what* counts as a precondition.
+
+### Vocabulary
+
+| `status` (estimand) | Meaning |
+|---|---|
+| `estimable`            | All preconditions met; the claim can be made from the data we have. |
+| `partially_estimable`  | Core preconditions met; precision / scope limitations apply (recorded in `limitations[]`). |
+| `not_estimable`        | At least one critical precondition is missing in a way the dataset cannot fix. |
+| `needs_extra_data`     | Critical precondition is structurally missing (e.g. parent sex unrecorded); needs new metadata or new samples, not new compute. |
+
+### The `estimand_v1` shape (per `schemas/registry_schemas/estimand_v1.schema.json`)
+
+```json
+{
+  "estimand_id":     "observed_inheritance_effects",
+  "schema_version":  "estimand_v1",
+  "question_id":     "inversion_effect_on_meiosis_per_chromosome",
+  "label":           "Observed inheritance effects",
+  "description":     "Whether inversion carriers transmit haplotypes differently than expected.",
+  "preconditions": [
+    { "kind": "product",          "product_id": "inversion_karyotypes.v1",  "required": true,  "rationale": "carriers must be classified" },
+    { "kind": "product",          "product_id": "pedigree_dyads.v1",        "required": true,  "rationale": "parent-offspring meioses needed" },
+    { "kind": "sample_attribute", "attribute":  "parent_sex_known",         "required": false, "rationale": "needed only for sex-specific rates" }
+  ],
+  "limitations": [
+    "cannot distinguish CO from NCO without finer phasing",
+    "cannot resolve sex-specific rates without parent_sex_known"
+  ]
+}
+```
+
+A `precondition` is one of:
+
+- `{ kind: "product",          product_id: ... }` — resolved via the Status Manager.
+- `{ kind: "sample_attribute", attribute:  ... }` — resolved against `sample_attributes.jsonl` (defaults to **unknown** when absent).
+- `{ kind: "layer",            layer_id:   ... }` — resolved via the librarian.
+
+### The algorithm
+
+```
+check_estimand(estimand_id, scope)
+  1. for each precondition, resolve:
+       product           → Status Manager → ready/validated → met; else missing
+       sample_attribute  → sample_attributes.jsonl          → met/unknown
+       layer             → librarian                        → met/missing
+  2. count required preconditions met vs missing.
+       all required met   AND no soft (required=false) gap     → estimable
+       all required met   AND some soft gap                    → partially_estimable
+       any required missing  AND fixable by registry           → not_estimable
+       any required missing  AND structurally unrecorded       → needs_extra_data
+  3. return { status, reason, met[], missing[], limitations[] }
+
+check_question_estimability(question_id, scope)
+  per_estimand[] = [check_estimand(eid) for each estimand of the question]
+  aggregate:
+    all estimable               → "fully_estimable"
+    mix of estimable / partial  → "partially_estimable"
+    any not_estimable           → "limited"
+    any needs_extra_data        → "needs_extra_data"
+```
+
+The Estimability Manager is read-only and recursive over the Status
+Manager.  It never triggers compute.
 
 1. **No silent compute on read.**  `check_product_status` and
    `check_question_readiness` are *queries*; they never trigger work.

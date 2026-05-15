@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "estimand_v1.schema.json",
+  "title": "Estimand — one specific scientific claim a question lets us make",
+  "description": "Per MANAGER_SPEC.md §3.5. An estimand is one specific thing you'd like to estimate within a research question. A single question can have many estimands at different status levels: 'observed_inheritance_effects' may be estimable while 'sex_specific_recombination_rates' is needs_extra_data. status is COMPUTED by lib/estimability.py — authors set preconditions[] + limitations[].",
+  "type": "object",
+  "required": ["estimand_id", "schema_version", "question_id", "label", "preconditions"],
+  "additionalProperties": false,
+  "properties": {
+    "estimand_id":    { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "schema_version": { "type": "string", "const": "estimand_v1" },
+    "question_id":    { "type": "string", "description": "FK into questions.jsonl." },
+    "label":          { "type": "string" },
+    "description":    { "type": "string" },
+    "preconditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind"],
+        "additionalProperties": false,
+        "properties": {
+          "kind":       { "type": "string", "enum": ["product", "layer", "sample_attribute"] },
+          "product_id": { "type": "string" },
+          "layer_id":   { "type": "string" },
+          "attribute":  { "type": "string", "description": "Required when kind=sample_attribute. Resolved against sample_attributes.jsonl." },
+          "required":   { "type": "boolean", "default": true, "description": "When false, missing this precondition downgrades status to partially_estimable rather than not_estimable." },
+          "rationale":  { "type": "string" }
+        }
+      }
+    },
+    "limitations":    { "type": "array", "items": { "type": "string" }, "description": "Free-text caveats applied even when the estimand is estimable." },
+    "tags":           { "type": "array", "items": { "type": "string" } },
+    "notes":          { "type": "string" }
+  }
+}

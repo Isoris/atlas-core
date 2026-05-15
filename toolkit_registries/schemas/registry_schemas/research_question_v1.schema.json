@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "research_question_v1.schema.json",
+  "title": "Research question — what we're trying to answer",
+  "description": "Per MANAGER_SPEC.md §2. A research question declares which research products it requires and which products it produces as outputs. Status is computed live by manager.check_question_readiness — do not store it.",
+  "type": "object",
+  "required": ["question_id", "schema_version", "label", "biological_scope", "requires"],
+  "additionalProperties": false,
+  "properties": {
+    "question_id":      { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "schema_version":   { "type": "string", "const": "research_question_v1" },
+    "label":            { "type": "string" },
+    "description":      { "type": "string" },
+    "biological_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "species":   { "type": "string" },
+        "dataset":   { "type": "string" },
+        "reference": { "type": "string" }
+      }
+    },
+    "requires": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["product_id", "role"],
+        "additionalProperties": false,
+        "properties": {
+          "product_id": { "type": "string" },
+          "role":       { "type": "string", "description": "Why this product is needed (e.g. 'define inversion intervals')." },
+          "required":   { "type": "boolean", "default": true }
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["product_id"],
+        "additionalProperties": false,
+        "properties": {
+          "product_id": { "type": "string" },
+          "type":       { "type": "string" },
+          "grain":      { "type": "string" }
+        }
+      }
+    },
+    "tags":   { "type": "array", "items": { "type": "string" } },
+    "status": { "type": "string", "enum": ["ready_to_run", "partial", "blocked", "unknown"], "description": "Computed live by the manager. Authors do NOT set this." },
+    "notes":  { "type": "string" }
+  }
+}

@@ -1,0 +1,3 @@
+{"attribute": "parent_sex_known", "scope": "sample_registry.qcpass_226", "status": "unknown", "n_covered": 0, "n_total": 226, "reason": "parent sex not yet ingested for the catfish cohort", "schema_version": "sample_attribute_v1"}
+{"attribute": "phased_offspring", "scope": "sample_registry.qcpass_226", "status": "unknown", "n_covered": 0, "n_total": 226, "reason": "no phased offspring genotype layer registered yet", "schema_version": "sample_attribute_v1"}
+{"attribute": "sib_groups_resolved", "scope": "sample_registry.qcpass_226", "status": "partial", "n_covered": 80, "n_total": 226, "reason": "preliminary sib resolution from ngsRelate; not reviewed", "schema_version": "sample_attribute_v1"}

@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 58,
-  "n_edges": 81,
+  "n_nodes": 60,
+  "n_edges": 85,
   "warnings": [],
   "nodes": [
     {
@@ -105,7 +105,7 @@
       "id": "distortion_summary",
       "type": "layer",
       "label": "Genotype-distortion summary",
-      "status": "stub"
+      "status": "experimental"
     },
     {
       "id": "candidate_registry",
@@ -214,6 +214,12 @@
       "type": "analysis",
       "label": "Karyotype polarizer",
       "status": "stub"
+    },
+    {
+      "id": "inversion_pair_incompatibility",
+      "type": "analysis",
+      "label": "Inversion pair incompatibility test",
+      "status": "experimental"
     },
     {
       "id": "mendelian_page_load",
@@ -341,6 +347,19 @@
       "type": "package",
       "label": "Discovery + karyotype (coupled)",
       "status": "experimental"
+    },
+    {
+      "id": "inversion_pair_incompatibility_adapter",
+      "type": "adapter",
+      "label": "Inversion pair incompatibility test",
+      "status": "experimental",
+      "input_layer_types": [
+        "inversion_candidates",
+        "karyotype_calls"
+      ],
+      "produces": [
+        "distortion_summary"
+      ]
     },
     {
       "id": "iv_candidate_promoter_adapter",
@@ -540,6 +559,21 @@
     {
       "from": "karyotype_polarizer",
       "to": "polarized_karyotype_calls",
+      "kind": "output"
+    },
+    {
+      "from": "inversion_candidates",
+      "to": "inversion_pair_incompatibility",
+      "kind": "input"
+    },
+    {
+      "from": "karyotype_calls",
+      "to": "inversion_pair_incompatibility",
+      "kind": "input"
+    },
+    {
+      "from": "inversion_pair_incompatibility",
+      "to": "distortion_summary",
       "kind": "output"
     },
     {
@@ -778,6 +812,11 @@
       "kind": "package_panel"
     },
     {
+      "from": "inversion_pair_incompatibility_adapter",
+      "to": "inversion_pair_incompatibility",
+      "kind": "adapter_backs"
+    },
+    {
       "from": "iv_candidate_promoter_adapter",
       "to": "iv_candidate_promoter",
       "kind": "adapter_backs"
@@ -794,6 +833,29 @@
     }
   ],
   "adapters": [
+    {
+      "analysis_id": "inversion_pair_incompatibility",
+      "analysis_version": "v0",
+      "atlas_id": "inversion_atlas",
+      "schema_version": "adapter_atlas_v1",
+      "label": "Inversion pair incompatibility test",
+      "description": "\"Scores observed-vs-expected joint karyotype counts for a pair of inversions on different chromosomes (the manuscript LG01 \u00d7 LG28 target). Emits distortion_summary + pair_meta (chi-square",
+      "input_layer_types": [
+        "inversion_candidates",
+        "karyotype_calls"
+      ],
+      "produces": [
+        "distortion_summary"
+      ],
+      "engine": "atlas_js",
+      "schema_in": "./schema_in.json",
+      "schema_out": "./schema_out.json",
+      "example_input": "./example_input.json",
+      "example_output": "./example_output.json",
+      "trigger_policy": "manual",
+      "status": "experimental",
+      "_path": "analysis/inversion_pair_incompatibility/adapter_atlas.js"
+    },
     {
       "analysis_id": "iv_candidate_promoter",
       "analysis_version": "v1",

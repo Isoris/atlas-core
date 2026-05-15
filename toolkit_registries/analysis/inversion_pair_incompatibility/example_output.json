@@ -1,0 +1,103 @@
+{
+  "distortion_summary": [
+    {
+      "candidate_a": "inv_LG01_INV_001",
+      "candidate_b": "inv_LG28_INV_001",
+      "karyo_a": "0",
+      "karyo_b": "0",
+      "observed": 1,
+      "expected": 0.67,
+      "chi_sq": 0.167,
+      "cell_ok": true
+    },
+    {
+      "candidate_a": "inv_LG01_INV_001",
+      "candidate_b": "inv_LG28_INV_001",
+      "karyo_a": "0",
+      "karyo_b": "1",
+      "observed": 1,
+      "expected": 0.67,
+      "chi_sq": 0.167,
+      "cell_ok": true
+    },
+    {
+      "candidate_a": "inv_LG01_INV_001",
+      "candidate_b": "inv_LG28_INV_001",
+      "karyo_a": "0",
+      "karyo_b": "2",
+      "observed": 0,
+      "expected": 0.67,
+      "chi_sq": 0.667,
+      "cell_ok": false
+    },
+    {
+      "candidate_a": "inv_LG01_INV_001",
+      "candidate_b": "inv_LG28_INV_001",
+      "karyo_a": "1",
+      "karyo_b": "0",
+      "observed": 1,
+      "expected": 1,
+      "chi_sq": 0,
+      "cell_ok": true
+    },
+    {
+      "candidate_a": "inv_LG01_INV_001",
+      "candidate_b": "inv_LG28_INV_001",
+      "karyo_a": "1",
+      "karyo_b": "1",
+      "observed": 1,
+      "expected": 1,
+      "chi_sq": 0,
+      "cell_ok": true
+    },
+    {
+      "candidate_a": "inv_LG01_INV_001",
+      "candidate_b": "inv_LG28_INV_001",
+      "karyo_a": "1",
+      "karyo_b": "2",
+      "observed": 1,
+      "expected": 1,
+      "chi_sq": 0,
+      "cell_ok": true
+    },
+    {
+      "candidate_a": "inv_LG01_INV_001",
+      "candidate_b": "inv_LG28_INV_001",
+      "karyo_a": "2",
+      "karyo_b": "0",
+      "observed": 0,
+      "expected": 0.33,
+      "chi_sq": 0.333,
+      "cell_ok": false
+    },
+    {
+      "candidate_a": "inv_LG01_INV_001",
+      "candidate_b": "inv_LG28_INV_001",
+      "karyo_a": "2",
+      "karyo_b": "1",
+      "observed": 0,
+      "expected": 0.33,
+      "chi_sq": 0.333,
+      "cell_ok": false
+    },
+    {
+      "candidate_a": "inv_LG01_INV_001",
+      "candidate_b": "inv_LG28_INV_001",
+      "karyo_a": "2",
+      "karyo_b": "2",
+      "observed": 1,
+      "expected": 0.33,
+      "chi_sq": 1.333,
+      "cell_ok": true
+    }
+  ],
+  "pair_meta": {
+    "candidate_a": "inv_LG01_INV_001",
+    "candidate_b": "inv_LG28_INV_001",
+    "n_samples": 6,
+    "total_chi_sq": 3,
+    "df": 4,
+    "status": "ok",
+    "cells_below_min": 3
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$id": "adapter_in_inversion_pair_incompatibility_v0",
+  "schema_version": "adapter_in_v1",
+  "params": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "candidate_a":     { "type": "string", "description": "First candidate_id (e.g. inv_LG01_INV_001)." },
+      "candidate_b":     { "type": "string", "description": "Second candidate_id on a different chromosome." },
+      "min_n_per_cell":  { "type": "integer", "default": 1, "description": "Cells below this threshold are flagged cell_ok=false (informational; not enforced)." }
+    }
+  },
+  "inputs": {
+    "inversion_candidates": { "description": "Candidate table; rows with chrom/start/end keyed by candidate_id.", "required": true },
+    "karyotype_calls":      { "description": "Per (sample, candidate) karyotype 0/1/2 calls.", "required": true }
+  }
+}

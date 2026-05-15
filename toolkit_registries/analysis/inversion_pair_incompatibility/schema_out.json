@@ -1,0 +1,20 @@
+{
+  "$id": "adapter_out_inversion_pair_incompatibility_v0",
+  "schema_version": "adapter_out_v1",
+  "produces": {
+    "distortion_summary": {
+      "description": "One row per (candidate_a, candidate_b, karyo_a, karyo_b) joint karyotype cell.",
+      "row_fields": {
+        "candidate_a": "string",
+        "candidate_b": "string",
+        "karyo_a":     "string (0|1|2)",
+        "karyo_b":     "string (0|1|2)",
+        "observed":    "integer",
+        "expected":    "number",
+        "chi_sq":      "number",
+        "cell_ok":     "boolean"
+      },
+      "stage": "normalized"
+    }
+  }
+}

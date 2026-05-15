@@ -1,0 +1,28 @@
+<!-- atlases/core/pages/catalogue.html
+     Catalogue page — modules and analyses browser. Round-1 migration from
+     toolkit_registries/relatedness/page/catalogue.html. -->
+<div class="core-page core-page-catalogue">
+
+  <header>
+    <h1>Catalogue — modules &amp; analyses</h1>
+    <div class="sub">All biomod modules and all analysis modes the registry knows about. Click a module to see the analyses it backs; click an analysis to see the module it runs on.</div>
+  </header>
+
+  <nav class="tabs">
+    <div class="tab active" data-tab="modules">Modules <span class="count" id="count-modules"></span></div>
+    <div class="tab"        data-tab="analyses">Analyses <span class="count" id="count-analyses"></span></div>
+  </nav>
+
+  <div class="controls">
+    <label>filter <input id="filter" type="text" placeholder="match name / family / mode…" autocomplete="off"></label>
+    <span class="stat" id="stat"></span>
+  </div>
+
+  <section>
+    <div id="modules" class="view"></div>
+    <div id="analyses" class="view" style="display:none"></div>
+  </section>
+
+  <div class="footer" id="footer"></div>
+
+</div>

@@ -63,8 +63,25 @@ echo "==> copying atlas_core: $ATLAS_CORE"
 ( cd "$ATLAS_CORE" && tar -cf - --exclude=build --exclude=.git . ) \
   | ( cd "$WORKSPACE" && tar -xf - )
 
-# 3. Copy each other atlas -----------------------------------------------
+# 2b. Pick up atlases bundled inside atlas-core itself -------------------
+# atlas-core may ship its own atlas package(s) under atlas-core/atlases/<id>/
+# (e.g. the `core` atlas — the registry-dashboard pages: conversation, action,
+# registries, catalogue). The tar copy in step 2 already moved them into
+# $WORKSPACE/atlases/<id>/; here we just record their ids so they end up at
+# the FRONT of atlas_ids (i.e. first in atlases/_index.json, which makes
+# them the default atlas the router opens).
 atlas_ids=()
+if [ -d "$WORKSPACE/atlases" ]; then
+  for sub in "$WORKSPACE/atlases"/*/; do
+    [ -d "$sub" ] || continue
+    aid="$(basename "$sub")"
+    [ -f "$sub/manifest.json" ] || continue
+    echo "==> bundled atlas $aid: $sub (from atlas-core)"
+    atlas_ids+=("$aid")
+  done
+fi
+
+# 3. Copy each other atlas -----------------------------------------------
 for key in "${kv_keys[@]}"; do
   case "$key" in
     atlas_core|data|server_config) continue ;;
@@ -93,13 +110,25 @@ for key in "${kv_keys[@]}"; do
 done
 
 # 4. Write atlases/_index.json -------------------------------------------
+# Dedupe atlas_ids while preserving order: if an external atlas in step 3
+# shadows a bundled one from step 2b, the bundled id stays at the front
+# (which keeps it as the default) and the duplicate from step 3 is dropped.
+deduped_ids=()
+declare -A seen_ids=()
+for aid in "${atlas_ids[@]}"; do
+  if [ -z "${seen_ids[$aid]:-}" ]; then
+    deduped_ids+=("$aid")
+    seen_ids[$aid]=1
+  fi
+done
+
 {
   echo "{"
-  echo "  \"_doc\":          \"Atlas list. Written by assemble.sh.\","
+  echo "  \"_doc\":          \"Atlas list. Written by assemble.sh. Bundled atlases (shipped inside atlas-core/atlases/) come first, then external atlases in atlas.config order. The router opens the first listed atlas as the default.\","
   echo "  \"_assembled_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\","
   echo -n "  \"atlases\":      ["
   first=1
-  for aid in "${atlas_ids[@]}"; do
+  for aid in "${deduped_ids[@]}"; do
     if [ $first -eq 1 ]; then first=0; else echo -n ","; fi
     echo -n "\"$aid\""
   done

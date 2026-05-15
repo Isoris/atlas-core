@@ -45,3 +45,15 @@ node atlases/relatedness/pages/hub/test_compatibility_data_source.js 2>&1 | tail
 echo '--- genome-atlas page1 (envelope-aware chip wiring) ---'
 cd /mnt/c/Users/quent/Desktop/genome-atlas
 node atlases/genome/pages/assembly/test_page1_chips.js 2>&1 | tail -2
+
+echo '--- diversity-atlas per_sample/page1 (envelope-provenance badge) ---'
+cd /mnt/c/Users/quent/Desktop/diversity-atlas
+node atlases/diversity/pages/per_sample/test_page1_provenance.js 2>&1 | tail -2
+
+echo '--- population-atlas structure/page3 (multi-type panel-slot status) ---'
+cd /mnt/c/Users/quent/Desktop/population-atlas
+node atlases/population/pages/structure/test_page3_envelope_status.js 2>&1 | tail -2
+
+echo '--- inversion-atlas page_overview (workspace-wide envelope inventory) ---'
+cd /mnt/c/Users/quent/Desktop/inversion-atlas
+node atlases/inversion/pages/catalogue/test_page_overview_inventory.js 2>&1 | tail -2

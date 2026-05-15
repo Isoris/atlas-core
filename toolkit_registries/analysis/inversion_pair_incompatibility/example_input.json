@@ -1,0 +1,108 @@
+{
+  "inversion_candidates": [
+    {
+      "candidate_id": "inv_LG28_INV_001",
+      "chrom": "C_gar_LG28",
+      "start": "1200000",
+      "end": "8400000",
+      "karyotype_axis": "0_1_2",
+      "confidence": "high",
+      "notes": "synthetic; the manuscript stress-test candidate on LG28"
+    },
+    {
+      "candidate_id": "inv_LG01_INV_001",
+      "chrom": "C_gar_LG01",
+      "start": "34000000",
+      "end": "41200000",
+      "karyotype_axis": "0_1_2",
+      "confidence": "medium",
+      "notes": "synthetic; the paired LG01 candidate (LG28 × LG01 pair-relation test target)"
+    }
+  ],
+  "karyotype_calls": [
+    {
+      "sample_id": "GAR001",
+      "candidate_id": "inv_LG28_INV_001",
+      "karyotype": "0",
+      "confidence": "high",
+      "method": "pca_dosage_v1"
+    },
+    {
+      "sample_id": "GAR002",
+      "candidate_id": "inv_LG28_INV_001",
+      "karyotype": "0",
+      "confidence": "high",
+      "method": "pca_dosage_v1"
+    },
+    {
+      "sample_id": "GAR003",
+      "candidate_id": "inv_LG28_INV_001",
+      "karyotype": "1",
+      "confidence": "medium",
+      "method": "pca_dosage_v1"
+    },
+    {
+      "sample_id": "GAR004",
+      "candidate_id": "inv_LG28_INV_001",
+      "karyotype": "1",
+      "confidence": "high",
+      "method": "pca_dosage_v1"
+    },
+    {
+      "sample_id": "GAR005",
+      "candidate_id": "inv_LG28_INV_001",
+      "karyotype": "2",
+      "confidence": "high",
+      "method": "pca_dosage_v1"
+    },
+    {
+      "sample_id": "GAR006",
+      "candidate_id": "inv_LG28_INV_001",
+      "karyotype": "2",
+      "confidence": "medium",
+      "method": "pca_dosage_v1"
+    },
+    {
+      "sample_id": "GAR001",
+      "candidate_id": "inv_LG01_INV_001",
+      "karyotype": "0",
+      "confidence": "medium",
+      "method": "pca_dosage_v1"
+    },
+    {
+      "sample_id": "GAR002",
+      "candidate_id": "inv_LG01_INV_001",
+      "karyotype": "1",
+      "confidence": "medium",
+      "method": "pca_dosage_v1"
+    },
+    {
+      "sample_id": "GAR003",
+      "candidate_id": "inv_LG01_INV_001",
+      "karyotype": "1",
+      "confidence": "high",
+      "method": "pca_dosage_v1"
+    },
+    {
+      "sample_id": "GAR004",
+      "candidate_id": "inv_LG01_INV_001",
+      "karyotype": "0",
+      "confidence": "medium",
+      "method": "pca_dosage_v1"
+    },
+    {
+      "sample_id": "GAR005",
+      "candidate_id": "inv_LG01_INV_001",
+      "karyotype": "2",
+      "confidence": "high",
+      "method": "pca_dosage_v1"
+    },
+    {
+      "sample_id": "GAR006",
+      "candidate_id": "inv_LG01_INV_001",
+      "karyotype": "1",
+      "confidence": "low",
+      "method": "pca_dosage_v1"
+    }
+  ]
+}

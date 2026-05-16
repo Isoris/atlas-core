@@ -216,6 +216,95 @@ export class AtlasRouter {
         bar.appendChild(wrap);
       }
     }
+
+    // Populate any pickers that declared `auto_options_from: <root_name>`.
+    // Fires async (the server scans the FS); the placeholder/static options
+    // are visible immediately, the discovered list replaces them on arrival.
+    // We don't await — render must stay sync for the rest of the boot path.
+    this._populateAutoOptions(currentAtlas).catch(err => {
+      console.warn('scope-picker auto_options_from failed:', err);
+    });
+  }
+
+  /**
+   * For each scope_picker that declares `auto_options_from: <root_name>`,
+   * fetch GET /api/precomp_index?root=<name> and replace the select's
+   * option list with the discovered chromosomes (preserving any current
+   * selection if it still exists in the new list).
+   *
+   * Lets a manifest say:
+   *   "scope_pickers": [{
+   *     "slot": "activeChrom",
+   *     "auto_options_from": "precomp_zblocks"
+   *   }]
+   * and have the dropdown stay in sync with whatever files the pipeline
+   * has produced — no need to edit the manifest each time a new chrom
+   * lands.
+   */
+  async _populateAutoOptions(currentAtlas) {
+    const bar = document.getElementById('scopebar');
+    if (!bar) return;
+    const targets = currentAtlas && this.manifests.has(currentAtlas)
+      ? [[currentAtlas, this.manifests.get(currentAtlas)]]
+      : [...this.manifests];
+    for (const [atlas_id, manifest] of targets) {
+      const pickers = Array.isArray(manifest.scope_pickers) ? manifest.scope_pickers : [];
+      for (const picker of pickers) {
+        if (!picker || !picker.slot || !picker.auto_options_from) continue;
+        const rootName = picker.auto_options_from;
+        let index;
+        try {
+          const resp = await fetch(`/api/precomp_index?root=${encodeURIComponent(rootName)}`);
+          if (!resp.ok) {
+            console.warn(
+              `scope-picker '${picker.slot}': auto_options_from='${rootName}' ` +
+              `→ HTTP ${resp.status}; keeping static options`
+            );
+            continue;
+          }
+          index = await resp.json();
+        } catch (e) {
+          console.warn(`scope-picker '${picker.slot}': fetch failed:`, e);
+          continue;
+        }
+        const chroms = Object.keys((index && index.chroms) || {});
+        chroms.sort((a, b) => {
+          const ma = a.match(/^LG(\d+)$/);
+          const mb = b.match(/^LG(\d+)$/);
+          if (ma && mb) return Number(ma[1]) - Number(mb[1]);
+          return a.localeCompare(b);
+        });
+
+        const wrap = bar.querySelector(
+          `.scope-picker[data-atlas="${atlas_id}"][data-slot="${picker.slot}"]`
+        );
+        if (!wrap) continue;
+        const sel = wrap.querySelector('select');
+        if (!sel) continue;
+
+        const preserved = sel.value;
+        // Remove all options except a placeholder (value === '').
+        Array.from(sel.querySelectorAll('option')).forEach(o => {
+          if (o.value !== '') o.remove();
+        });
+        for (const c of chroms) {
+          const o = document.createElement('option');
+          o.value = c; o.textContent = c;
+          sel.appendChild(o);
+        }
+        if (preserved && chroms.includes(preserved)) {
+          sel.value = preserved;
+        } else {
+          const isShared = picker.shared !== false;
+          const stateVal = isShared
+            ? this.state.shared[picker.slot]
+            : (this.state[atlas_id] || {})[picker.slot];
+          if (stateVal && chroms.includes(String(stateVal))) {
+            sel.value = String(stateVal);
+          }
+        }
+      }
+    }
   }
 
   /**

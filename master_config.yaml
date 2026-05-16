@@ -16,11 +16,11 @@
 atlas:
   workspace_root: "."
   active_atlas:   "inversion"
-  # Use the bare chrom id ("LG28") here, matching the precomp file name
-  # data/precomp/LG28.json and the manifest's scope_picker options. The
-  # data file's internal data.chrom field is the species-prefixed form
-  # ("C_gar_LG28"); those are read from data after fetch, not used to
-  # build the fetch path.
+  # Use the bare chrom id ("LG28") here, matching the manifest's
+  # scope_picker options and the {chrom} placeholder in layer templates.
+  # The on-disk filename is species-prefixed (C_gar_LG28.atlas.json) —
+  # the species prefix is baked into the layer's path_under_root, not
+  # into active_chrom.
   active_chrom:   "LG28"
 
 species:
@@ -67,13 +67,13 @@ roots:
     path: "/mnt/e/results_inversions/local_PCA_MDS_z/09_atlas_json"
     role: "intervals"
     species_scoped: false
-    description: "Per-chromosome atlas JSONs from the z-blocks local-PCA path. Auto-loaded by atlas pages. Bumped 2026-05-14 from 04_atlas_json to 09_atlas_json (new pipeline output dir; the pipeline now writes <chrom>.json here)."
+    description: "Per-chromosome atlas JSONs from the z-blocks local-PCA path. Auto-loaded by atlas pages. Bumped 2026-05-14 from 04_atlas_json to 09_atlas_json (new pipeline output dir). Files are written as C_gar_LG{NN}.atlas.json — the species prefix and .atlas infix are baked into the scrubber_main layer's path_under_root."
 
   precomp_thetapi:
-    path: "/mnt/e/results_inversions/local_PCA_MDS_theta_pi/09_atlas_json"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_theta_pi/04_atlas_json"
     role: "intervals"
     species_scoped: false
-    description: "Per-chromosome atlas JSONs from the theta-pi local-PCA path. Auto-loaded by atlas pages. Bumped 2026-05-14 from 04_atlas_json to 09_atlas_json (new pipeline output dir)."
+    description: "Per-chromosome atlas JSONs from the theta-pi local-PCA path. Auto-loaded by atlas pages. Note: theta-pi files are laid out as 04_atlas_json/C_gar_LG{NN}/C_gar_LG{NN}_phase2_theta.json (per-chrom subfolder, distinct from the z-blocks flat layout). The /api/precomp_index endpoint handles both via depth-2 scan, so the scrubber_thetapi layer can stay auto_index: true."
 
   precomp_ghsl:
     path: "/mnt/e/results_inversions/local_PCA_MDS_GHSL/09_atlas_json"

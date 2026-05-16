@@ -466,6 +466,38 @@ export class Registry {
   }
 
   /**
+   * Fetch (and cache) the per-chromosome file index for a master_config
+   * root. Powers `auto_index: true` layers — the server walks the root
+   * directory and returns {chrom_id → relative path}, eliminating the
+   * need to template filenames whose convention the registry can't
+   * predict (species prefixes, per-chrom subdirs, etc.).
+   *
+   * Cache lifetime: process-wide. The server keys its own response cache
+   * on max-mtime under the root, so stale entries auto-refresh on the
+   * server side; clearing this client-side cache is rarely needed.
+   * Concurrent calls dedupe on the in-flight Promise.
+   */
+  async _fetchPrecompIndex(rootName) {
+    if (!this._precompIndexCache) this._precompIndexCache = new Map();
+    const cached = this._precompIndexCache.get(rootName);
+    if (cached) return cached;
+    const url = `/api/precomp_index?root=${encodeURIComponent(rootName)}`;
+    const p = (async () => {
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        throw new Error(
+          `Registry: GET ${url} → HTTP ${resp.status} ${resp.statusText}. ` +
+          `Check that '${rootName}' exists in master_config.yaml > roots.`
+        );
+      }
+      return resp.json();
+    })();
+    this._precompIndexCache.set(rootName, p);
+    p.catch(() => this._precompIndexCache.delete(rootName));
+    return p;
+  }
+
+  /**
    * Dispatch the actual fetch based on entry.source.
    */
   async _fetchFromSource(entry, args, atlas_id) {
@@ -486,17 +518,43 @@ export class Registry {
           );
         }
       }
-      // Two ways to specify a file path on a layer:
+      // Three ways to specify a file path on a layer:
       //   (a) `path: <template>` — atlas-relative; legacy form. Resolved
       //       by prepending atlases/<atlas_id>/ via _resolveAtlasFilePath.
       //   (b) `root: <name>` + `path_under_root: <template>` — portable
       //       form per toolkit_registries/MASTER_CONFIG.md. Root resolves
       //       through the loaded master_config; the under-root template
       //       is then filled with args / state.
-      // The two forms are mutually exclusive on a single layer; the
-      // master-config form takes precedence if both are present.
+      //   (c) `root: <name>` + `auto_index: true` — autodiscovery form.
+      //       The server's GET /api/precomp_index?root=<name> walks the
+      //       root and returns {chrom_id → relative-path}; the resolved
+      //       URL is <root_path>/<index.chroms[args.chrom]>. Eliminates
+      //       hardcoded filename templates for pipelines whose output
+      //       naming the registry can't predict (species prefixes,
+      //       per-chrom subdirs, etc.).
       let path;
-      if (entry.root) {
+      if (entry.root && entry.auto_index === true) {
+        const chrom = (args && args.chrom)
+          || (this.state && this.state.shared && this.state.shared.activeChrom);
+        if (!chrom) {
+          throw new Error(
+            `Registry: auto_index layer (root='${entry.root}') requires ` +
+            `args.chrom or state.shared.activeChrom; got neither.`
+          );
+        }
+        const index = await this._fetchPrecompIndex(entry.root);
+        const relPath = index && index.chroms ? index.chroms[chrom] : null;
+        if (!relPath) {
+          const known = index && index.chroms ? Object.keys(index.chroms).join(', ') : '(empty)';
+          throw new Error(
+            `Registry: auto_index for root '${entry.root}' has no file ` +
+            `for chrom '${chrom}'. Known chroms: ${known}. ` +
+            `(Server scanned ${index && index.root_path}; ` +
+            `pipeline may not have produced this chromosome yet.)`
+          );
+        }
+        path = _joinPath(index.root_path, relPath);
+      } else if (entry.root) {
         const rootPath = this._resolveRootPathForLayer(entry, args);
         const sub = entry.path_under_root
           ? templateFill(entry.path_under_root, args, this.state)

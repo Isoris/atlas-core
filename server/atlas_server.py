@@ -1465,6 +1465,16 @@ def _bootstrap_static(workspace_root: Path) -> None:
                     "(atlas discovery will fail; rerun assemble.sh)", root)
 
     WORKSPACE_ROOT = root
+
+    # Mount external data roots BEFORE the workspace catch-all so they
+    # match first. Without this, requests for /mnt/e/X hit the workspace
+    # mount, which Starlette's StaticFiles rejects: it realpath's the
+    # symlinked path, sees the target lives outside the workspace dir,
+    # and 404s under its path-traversal guard. Mounting /mnt/e as its
+    # own StaticFiles (directory=/mnt/e) keeps the realpath check happy
+    # because the file is now inside the mount's own directory.
+    _bootstrap_external_root_mounts(root)
+
     # Mount LAST: FastAPI dispatches in registration order. Any route
     # registered before this point (every @app.get / @app.post above)
     # wins for /api/*, /file/*, /compute/*, /health. Anything else
@@ -1479,6 +1489,75 @@ def _bootstrap_static(workspace_root: Path) -> None:
         name="atlas_workspace_static",
     )
     log.info("static subsystem ready: workspace_root=%s", root)
+
+
+def _bootstrap_external_root_mounts(workspace_root: Path) -> None:
+    """Mount filesystem prefixes that master_config roots point at, so
+    that absolute-path URLs (like /mnt/e/results_inversions/...) are
+    served from where the symlink mirror actually points.
+
+    Scans master_config.yaml's roots.* entries; for each absolute path
+    outside the workspace, computes the top-level filesystem prefix
+    (e.g. /mnt/e, /mnt/c) and adds an app.mount(prefix, StaticFiles(...))
+    entry. Idempotent across roots that share a prefix.
+
+    Why this is needed even though assemble.sh creates a symlink mirror:
+    Starlette's StaticFiles guards against path-traversal by realpath'ing
+    both the requested path and the mount's directory and confirming the
+    file still lives inside. A symlink that points OUT of the directory
+    (which is exactly what the /mnt/e mirror does) fails that check
+    silently and returns 404. By mounting /mnt/e as its own static root,
+    the realpath check passes (the file is inside the mount's own dir).
+    """
+    mc_path = workspace_root / "master_config.yaml"
+    if not mc_path.exists():
+        return
+    try:
+        with open(mc_path) as fh:
+            doc = yaml.safe_load(fh) or {}
+    except Exception as e:
+        log.warning("could not parse master_config.yaml for external mounts: %s", e)
+        return
+    roots = doc.get("roots") or {}
+    workspace_realpath = workspace_root.resolve()
+    seen_prefixes: set = set()
+    for name, entry in roots.items():
+        if not isinstance(entry, dict):
+            continue
+        p = entry.get("path")
+        if not isinstance(p, str) or not p.startswith("/"):
+            continue
+        # Top-level prefix: /mnt/e from /mnt/e/results_inversions/...,
+        # /mnt/c from /mnt/c/Users/.../bin/... . Two path components
+        # after the leading slash. (One component, /home for instance,
+        # would also work but is too coarse; two components is the
+        # natural granularity for /mnt/<drive_letter> on WSL and
+        # /home/<user> on Linux.)
+        parts = Path(p).parts
+        if len(parts) < 3:
+            continue
+        prefix = "/" + "/".join(parts[1:3])
+        if prefix in seen_prefixes:
+            continue
+        prefix_path = Path(prefix)
+        if not prefix_path.exists() or not prefix_path.is_dir():
+            continue
+        # Skip if this prefix is already inside the workspace (no
+        # symlink needed; the workspace mount already serves it).
+        try:
+            prefix_path.resolve().relative_to(workspace_realpath)
+            continue
+        except ValueError:
+            pass
+        mount_name = "external_root_" + re.sub(r"[^A-Za-z0-9]", "_", prefix).strip("_")
+        app.mount(
+            prefix,
+            StaticFiles(directory=str(prefix_path), html=False, check_dir=False),
+            name=mount_name,
+        )
+        log.info("mounted external root: %s -> %s (declared by master_config.roots.%s)",
+                 prefix, prefix_path, name)
+        seen_prefixes.add(prefix)
 
 
 # turn 146 — kill caching for static content during development.
@@ -2322,6 +2401,200 @@ def _last_pos_in_sites(sites_gz: Path) -> int:
         return last
     except Exception:
         return 0
+
+
+# =============================================================================
+# Precomp index — GET /api/precomp_index?root=<name>
+# =============================================================================
+# Scans a master_config root for per-chromosome JSON files and returns a
+# {chrom_id → relative-path-under-root} index. Replaces hardcoded filename
+# templates and hardcoded chromosome lists in atlas manifests: the browser
+# registry uses this for auto_index layers (URL construction) and the
+# scopebar uses it to populate the chromosome dropdown.
+#
+# Why server-side: filenames are pipeline outputs that the browser can't
+# enumerate (no directory listing over HTTP). Server walks the FS once,
+# caches per-root keyed by max-mtime under the root, and returns a small
+# JSON map. Browser caches the result for the session.
+#
+# Handles both layouts the inversion pipelines use today:
+#   flat:    09_atlas_json/C_gar_LG28.atlas.json
+#   nested:  04_atlas_json/C_gar_LG28/C_gar_LG28_phase2_theta.json
+# (depth=2 scan; chrom id extracted from filename via /(LG\d+)/.)
+
+# Extracts an LG\d+ token from a filename. Negative look-around prevents
+# matching inside longer alphanumerics (e.g. "LG28" but not "LG285alpha").
+_CHROM_TOKEN_RE = re.compile(r"(?<![A-Za-z0-9])(LG\d+)(?![0-9])")
+
+# Per-root cache: {root_name: (max_mtime, payload_dict)}.
+# Invalidated when any file mtime under the root exceeds the cached value.
+_PRECOMP_INDEX_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}
+
+
+def _chrom_sort_key(c: str) -> Tuple[int, Any]:
+    """Sort key: numeric LG\\d+ ascending, then everything else lexically."""
+    m = re.match(r"^LG(\d+)$", c)
+    if m:
+        return (0, int(m.group(1)))
+    return (1, c)
+
+
+def _scan_precomp_root(root_path: Path, max_depth: int = 2) -> Dict[str, Dict[str, Any]]:
+    """Walk root_path up to max_depth, group .json files by chrom id.
+
+    Returns {chrom_id: {"path": rel_posix_path, "bytes": int}}. When
+    multiple files match the same chrom, picks the largest (the atlas
+    JSON; sidecars like a sketch or a manifest will be smaller).
+    """
+    out: Dict[str, Dict[str, Any]] = {}
+    if not root_path.exists() or not root_path.is_dir():
+        return out
+    root_resolved = root_path.resolve()
+
+    def _walk(dir_path: Path, depth: int) -> None:
+        if depth > max_depth:
+            return
+        try:
+            entries = list(dir_path.iterdir())
+        except OSError:
+            return
+        for entry in entries:
+            try:
+                if entry.is_dir():
+                    _walk(entry, depth + 1)
+                    continue
+                if not entry.is_file():
+                    continue
+            except OSError:
+                continue
+            name = entry.name
+            if not name.endswith(".json"):
+                continue
+            m = _CHROM_TOKEN_RE.search(name)
+            if not m:
+                continue
+            chrom = m.group(1)
+            try:
+                size = entry.stat().st_size
+            except OSError:
+                continue
+            try:
+                rel = entry.relative_to(root_resolved).as_posix()
+            except ValueError:
+                rel = entry.name
+            prev = out.get(chrom)
+            if prev is None or size > prev["bytes"]:
+                out[chrom] = {"path": rel, "bytes": size}
+
+    _walk(root_resolved, 0)
+    return out
+
+
+def _max_mtime_under(root_path: Path, max_depth: int = 2) -> float:
+    """Largest mtime among regular files under root_path, depth-limited.
+    Used as the cache key for /api/precomp_index — when any file is
+    written the cached payload is recomputed; idle reads are O(1).
+    """
+    if not root_path.exists() or not root_path.is_dir():
+        return 0.0
+    root_resolved = root_path.resolve()
+    best = 0.0
+
+    def _walk(dir_path: Path, depth: int) -> None:
+        nonlocal best
+        if depth > max_depth:
+            return
+        try:
+            entries = list(dir_path.iterdir())
+        except OSError:
+            return
+        for entry in entries:
+            try:
+                if entry.is_dir():
+                    _walk(entry, depth + 1)
+                    continue
+                if not entry.is_file():
+                    continue
+                mt = entry.stat().st_mtime
+                if mt > best:
+                    best = mt
+            except OSError:
+                continue
+
+    _walk(root_resolved, 0)
+    return best
+
+
+def _resolve_root_from_master_config(root_name: str) -> Path:
+    """Read <workspace>/master_config.yaml and return roots[root_name].path."""
+    if WORKSPACE_ROOT is None:
+        raise HTTPException(503, "workspace root not configured")
+    mc_path = WORKSPACE_ROOT / "master_config.yaml"
+    if not mc_path.exists():
+        raise HTTPException(503, f"master_config.yaml not found at {mc_path}")
+    try:
+        with open(mc_path) as fh:
+            doc = yaml.safe_load(fh) or {}
+    except Exception as e:
+        raise HTTPException(500, f"could not parse master_config.yaml: {e}")
+    roots = doc.get("roots") or {}
+    entry = roots.get(root_name)
+    if not entry or not isinstance(entry, dict):
+        raise HTTPException(
+            404,
+            f"unknown root '{root_name}' in master_config.yaml. "
+            f"known roots: {sorted(roots.keys())}",
+        )
+    p = entry.get("path")
+    if not p:
+        raise HTTPException(500, f"root '{root_name}' has no path field")
+    return Path(p)
+
+
+@app.get("/api/precomp_index")
+def precomp_index(root: str) -> Dict[str, Any]:
+    """Per-chromosome file index for a master_config root.
+
+    Query params:
+        root: name of a roots.* entry in master_config.yaml
+              (e.g. precomp_zblocks, precomp_thetapi, precomp_ghsl)
+
+    Response:
+        {
+          "root": "precomp_zblocks",
+          "root_path": "/mnt/e/results_inversions/local_PCA_MDS_z/09_atlas_json",
+          "chroms": {
+            "LG01": "C_gar_LG01.atlas.json",
+            ...
+            "LG28": "C_gar_LG28.atlas.json"
+          },
+          "file_count": 28
+        }
+
+    The browser constructs file URLs as `<root_path>/<chroms[chrom]>` —
+    the workspace's /mnt/e symlink mirror serves them via the static
+    mount with no further routing.
+    """
+    root_path = _resolve_root_from_master_config(root)
+    max_mtime = _max_mtime_under(root_path)
+    cached = _PRECOMP_INDEX_CACHE.get(root)
+    if cached is not None and cached[0] >= max_mtime and max_mtime > 0.0:
+        return cached[1]
+    files = _scan_precomp_root(root_path)
+    chroms_sorted = {
+        c: files[c]["path"]
+        for c in sorted(files.keys(), key=_chrom_sort_key)
+    }
+    payload: Dict[str, Any] = {
+        "root": root,
+        "root_path": str(root_path),
+        "chroms": chroms_sorted,
+        "file_count": len(chroms_sorted),
+    }
+    if not root_path.exists():
+        payload["error"] = f"root path does not exist on disk: {root_path}"
+    _PRECOMP_INDEX_CACHE[root] = (max_mtime, payload)
+    return payload
 
 
 # =============================================================================

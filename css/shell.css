@@ -112,14 +112,25 @@
   text-transform: uppercase;
   font-size: 9.5px;
 }
+/* 2026-05-19: pinned the atlas-switcher select to the same vertical
+   box geometry as header .header-folder-btn (padding 3px 9px,
+   line-height 1, font-size 10px, 1px border). Earlier the select sat
+   ~3px taller than the folder buttons + the scopebar select, so its
+   top edge poked above the row centerline and looked misaligned. The
+   explicit height + line-height + box-sizing locks the visual height
+   so all three element families (folder buttons, atlas select,
+   scopebar select) share a single 20px row centerline. */
 #topbar .atlas-switcher-select,
 #atlas-switcher-host .atlas-switcher-select {
   background: var(--panel-2); color: var(--ink);
   border: 1px solid var(--rule); border-radius: 2px;
-  padding: 3px 8px;
-  font-family: var(--mono); font-size: 10.5px;
+  padding: 0 8px;
+  height: 20px; line-height: 1;
+  box-sizing: border-box;
+  font-family: var(--mono); font-size: 10px;
   letter-spacing: 0.04em;
   cursor: pointer;
+  vertical-align: middle;
 }
 #topbar .atlas-switcher-select:hover,
 #atlas-switcher-host .atlas-switcher-select:hover {
@@ -378,6 +389,14 @@ header #scopebar .scope-picker-label {
   font-size: 9px;
 }
 
+/* 2026-05-19: matched height + padding to the atlas-switcher select
+   above (and to .header-folder-btn). Was padding 2px 6px which gave a
+   16px-tall box; now 20px to share the same centerline as every other
+   header element. The scopebar's vertical-align via align-items:center
+   on the parent (header) doesn't help when the children have DIFFERENT
+   intrinsic heights — the row stretches to the tallest, and shorter
+   ones sit lower than the centerline of taller ones. Locking heights
+   removes that drift. */
 header #scopebar select {
   background: var(--panel-2);
   border: 1px solid var(--rule);
@@ -385,9 +404,12 @@ header #scopebar select {
   color: var(--ink);
   font-family: var(--mono);
   font-size: 10px;
-  padding: 2px 6px;
+  padding: 0 6px;
+  height: 20px; line-height: 1;
+  box-sizing: border-box;
   cursor: pointer;
   letter-spacing: 0.02em;
+  vertical-align: middle;
 }
 
 header #scopebar select:hover {

@@ -122,9 +122,26 @@ export class PrewarmScheduler {
         await this.registry.resolve(layerKey, args);
       } catch (e) {
         const msg = (e && e.message) || String(e);
-        if (msg.includes('HTTP 404')) {
+        // 2026-05-19: broadened expected-error filter to match the
+        // chrom-change path below. Per-page preloads commonly fail
+        // because: (a) the file isn't on disk yet (404), (b) the
+        // auto-indexer has no entry for the current chrom or returned
+        // empty, (c) the layer needs an arg the prewarm scheduler can't
+        // supply from canonical scope aliases (chrom / candidate_id /
+        // species) — e.g. ancestry K, version_id of a per-candidate
+        // lineage. These are configuration issues that should be fixed
+        // at the registry side (declare `preload_on: 'explicit'` on
+        // those layers); until then we downgrade the noise to debug
+        // since the actual data path works fine when the page asks
+        // for it with the right args at render time.
+        const isExpected = msg.includes('HTTP 404')
+                        || msg.includes('AUTO_INDEX_EMPTY')
+                        || msg.includes('AUTO_INDEX_MISS')
+                        || msg.includes('unresolved placeholder')
+                        || msg.includes('requires args.');
+        if (isExpected) {
           if (typeof console.debug === 'function') {
-            console.debug(`Prewarm onPageMount: ${atlas_id}/${page_id} optional preload '${layerKey}' missing (404)`);
+            console.debug(`Prewarm onPageMount: ${atlas_id}/${page_id} optional preload '${layerKey}' skipped:`, msg);
           }
         } else {
           console.warn(`Prewarm onPageMount: ${atlas_id}/${page_id} preload '${layerKey}' failed:`, e);
@@ -166,11 +183,26 @@ export class PrewarmScheduler {
     // at warn level because it's a naming-convention bug.
     await Promise.all(tasks.map(t => t.catch(e => {
       const msg = (e && e.message) || String(e);
-      const isExpected = msg.includes('HTTP 404') || msg.includes('AUTO_INDEX_EMPTY');
+      // 2026-05-19: broadened expected-error filter.
+      // Adds AUTO_INDEX_MISS (chroms exist but not THIS one — e.g. GHSL
+      // ships only LG01 while the user picks LG02) and `requires args.`
+      // (registry layers that need extra context like version_id which
+      // the prewarm scheduler can't supply from scope aliases alone).
+      // Both were previously falling through to console.warn and
+      // cluttering the dev console on every chrom change.
+      const isExpected = msg.includes('HTTP 404')
+                      || msg.includes('AUTO_INDEX_EMPTY')
+                      || msg.includes('AUTO_INDEX_MISS')
+                      || msg.includes('unresolved placeholder')
+                      || msg.includes('requires args.');
       if (isExpected) {
         if (typeof console.debug === 'function') {
-          const kind = msg.includes('AUTO_INDEX_EMPTY') ? 'empty root' : '404';
-          console.debug(`Prewarm ${eventName}: optional layer missing (${kind}):`, msg);
+          const kind = msg.includes('AUTO_INDEX_EMPTY') ? 'empty root'
+                     : msg.includes('AUTO_INDEX_MISS')  ? 'chrom not in index'
+                     : msg.includes('unresolved placeholder') ? 'unresolved arg'
+                     : msg.includes('requires args.')   ? 'missing args'
+                     : '404';
+          console.debug(`Prewarm ${eventName}: optional layer skipped (${kind}):`, msg);
         }
       } else {
         console.warn(`Prewarm ${eventName}: layer preload failed:`, e);

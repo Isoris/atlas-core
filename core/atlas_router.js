@@ -307,19 +307,32 @@ export class AtlasRouter {
       for (const picker of pickers) {
         if (!picker || !picker.slot || !picker.auto_options_from) continue;
         const rootName = picker.auto_options_from;
+        // 2026-05-20: cache /api/precomp_index?root=... across page
+        // navigations. Was re-fetched on every page mount via
+        // _renderScopebar → _populateAutoOptions, even though the chrom
+        // list doesn't change between navigations. Cache hit returns the
+        // same Promise so concurrent callers also dedup. Cleared on
+        // explicit cache-invalidate (none yet wired) or a page reload.
+        if (!this._autoOptionsCache) this._autoOptionsCache = new Map();
+        let indexPromise = this._autoOptionsCache.get(rootName);
+        if (!indexPromise) {
+          indexPromise = fetch(`/api/precomp_index?root=${encodeURIComponent(rootName)}`)
+            .then(r => {
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              return r.json();
+            });
+          this._autoOptionsCache.set(rootName, indexPromise);
+          // On error, drop the cache slot so the next page mount can retry.
+          indexPromise.catch(() => this._autoOptionsCache.delete(rootName));
+        }
         let index;
         try {
-          const resp = await fetch(`/api/precomp_index?root=${encodeURIComponent(rootName)}`);
-          if (!resp.ok) {
-            console.warn(
-              `scope-picker '${picker.slot}': auto_options_from='${rootName}' ` +
-              `→ HTTP ${resp.status}; keeping static options`
-            );
-            continue;
-          }
-          index = await resp.json();
+          index = await indexPromise;
         } catch (e) {
-          console.warn(`scope-picker '${picker.slot}': fetch failed:`, e);
+          console.warn(
+            `scope-picker '${picker.slot}': auto_options_from='${rootName}' → `
+            + (e && e.message ? e.message : e) + '; keeping static options'
+          );
           continue;
         }
         const chroms = Object.keys((index && index.chroms) || {});

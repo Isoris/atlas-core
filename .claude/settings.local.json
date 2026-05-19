@@ -293,7 +293,32 @@
       "PowerShell(wsl bash -c \"cd /mnt/c/Users/quent/Desktop/meiosis-atlas && node atlases/meiosis/pages/hub/test_nco_envelope.js 2>&1 | tail -40\")",
       "Bash(touch C:/Users/quent/Desktop/diversity-atlas/atlases/diversity/registries/tests/__init__.py)",
       "Bash(ATLAS_MASTER_CONFIG=/c/Users/quent/Desktop/atlas-core/master_config.yaml python atlases/diversity/registries/tests/test_harvest_roundtrip.py -v)",
-      "Bash(awk 'NR>=380 && NR<=445' atlases/inversion/pages/discovery/local_pca_dosage/sim_panel.js)"
+      "Bash(awk 'NR>=380 && NR<=445' atlases/inversion/pages/discovery/local_pca_dosage/sim_panel.js)",
+      "Bash(node atlases/diversity/pages/per_sample/test_samples_modeb.js)",
+      "Bash(python \"C:/Users/quent/Desktop/atlas-core/_tmp_fix_registry_mismatches.py\")",
+      "Bash(grep -nA 15 \"^def _safe_project_path\" server/atlas_server.py)",
+      "Bash(grep -nA 10 \"def _ensure_project_root\" server/atlas_server.py)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('server/diversity_endpoint.py', encoding='utf-8'\\).read\\(\\)\\); print\\('SYNTAX OK'\\)\")",
+      "PowerShell(wsl bash /mnt/c/Users/quent/Desktop/atlas-core/build/assemble.sh 2>&1 | Select-Object -Last 2 ; $count = wsl bash /mnt/c/Users/quent/Desktop/atlas-core/scripts/_run_all_tests.sh 2>&1 | Select-String \"ALL OK\" | Measure-Object ; Write-Host \"umbrella ALL OK: $\\($count.Count\\)\" ; echo \"---spec files---\" ; ls 'C:/Users/quent/Desktop/meiosis-atlas/specs_done' 'C:/Users/quent/Desktop/meiosis-atlas/specs_todo' 'C:/Users/quent/Desktop/relatedness-atlas/specs_done' 'C:/Users/quent/Desktop/relatedness-atlas/specs_todo' 2>&1)",
+      "PowerShell($count = wsl bash /mnt/c/Users/quent/Desktop/atlas-core/scripts/_run_all_tests.sh 2>&1 | Select-String \"ALL OK\" | Measure-Object ; Write-Host \"umbrella ALL OK: $\\($count.Count\\)\")",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/shared/cramers_v_merge.js\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/shared/cramers_v_merge.js\")",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/haplotype_regimes.html\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/pages/discovery/haplotype_regimes.html\")",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/haplotype_regimes.js\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/pages/discovery/haplotype_regimes.js\")",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/local_pca_dosage.html\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/pages/discovery/local_pca_dosage.html\")",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/css/inversion.css\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/css/inversion.css\")",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/shared/cramers_v_merge.js\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/shared/cramers_v_merge.js\" && echo \"OK — Mode 2 mirrored\")",
+      "Bash(mkdir -p 'C:/Users/quent/Desktop/diversity-atlas/specs_done' 'C:/Users/quent/Desktop/diversity-atlas/specs_todo' && echo done)",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/specs_todo/SPEC_local_pca_comparator.md\" \"c:/Users/quent/Desktop/atlas-workspace/specs_todo/SPEC_local_pca_comparator.md\" 2>/dev/null && echo \"OK mirror\" || echo \"no atlas-workspace specs_todo\")",
+      "Bash(python test_adapter_smoke.py)",
+      "Bash(node --check c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/haplotype_regimes.js)",
+      "Bash(PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python test_adapter_smoke.py)",
+      "PowerShell(try { $null = [System.Reflection.Assembly]::LoadWithPartialName\\('Microsoft.JScript'\\) } catch {}; Get-Content c:\\\\Users\\\\quent\\\\Desktop\\\\inversion-atlas\\\\atlases\\\\inversion\\\\pages\\\\discovery\\\\haplotype_regimes.js | Measure-Object -Line)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('server/diversity_endpoint.py', encoding='utf-8'\\).read\\(\\)\\); ast.parse\\(open\\('server/dosage_bridge.py', encoding='utf-8'\\).read\\(\\)\\); ast.parse\\(open\\('server/atlas_server.py', encoding='utf-8'\\).read\\(\\)\\); print\\('PYTHON SYNTAX OK'\\)\")",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/pca_comparator/renderer.js\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/pages/discovery/pca_comparator/renderer.js\" && echo \"OK\")",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/haplotype_regimes.js\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/pages/discovery/haplotype_regimes.js\" && echo \"OK — haplotype_regimes.js mirrored\")",
+      "Bash(node atlases/meiosis/pages/hub/test_crossovers_envelope.js)",
+      "Bash(ATLAS_MASTER_CONFIG=/c/Users/quent/Desktop/atlas-core/master_config.yaml python atlases/diversity/registries/tests/test_harvest_roundtrip.py)",
+      "Bash(git -C \"C:/Users/quent/Desktop/meiosis-atlas\" mv specs_todo/SPEC_crossovers_page.md specs_done/SPEC_crossovers_page.md)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",
@@ -304,7 +329,12 @@
       "C:\\Users\\quent\\Desktop\\meiosis-atlas\\atlases\\meiosis\\css",
       "C:\\Users\\quent\\Desktop\\diversity-atlas\\atlases\\diversity\\pages\\*",
       "C:\\Users\\quent\\Desktop\\meiosis-atlas\\atlases\\meiosis\\registries",
-      "C:\\Users\\quent\\Desktop\\meiosis-atlas"
+      "C:\\Users\\quent\\Desktop\\meiosis-atlas",
+      "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\shared",
+      "C:\\Users\\quent\\Desktop\\diversity-atlas",
+      "c:\\Users\\quent\\Desktop\\atlas-workspace\\specs_todo",
+      "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\pages\\discovery\\pca_comparator",
+      "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\pages\\discovery"
     ]
   }
 }

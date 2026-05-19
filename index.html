@@ -170,17 +170,42 @@ import { attachShellChrome } from './core/shell_chrome.js';
       return;
     }
 
-    // Register each atlas with state + registry
-    for (const [atlas_id, manifest] of manifests) {
-      const configs = await loadAtlasConfigs(atlas_id, manifest);
-      registry.register_atlas(atlas_id, configs);
-      state.registerAtlasSlots(atlas_id, configs.slots.slots || {});
-      // Load atlas-specific stylesheets if declared. Each atlas can
-      // declare a `stylesheets` array in its manifest; paths are relative
-      // to the workspace root (e.g. "atlases/inversion/css/widgets.css").
-      // Per-page styles are not loaded here — they're loaded by the
-      // router when the page mounts.
-      loadAtlasStylesheets(manifest);
+    // Register each atlas with state + registry. Per-atlas failures are
+    // isolated: a malformed or incomplete atlas package (e.g. a new
+    // scaffold missing one of its five registry JSONs) logs a console
+    // error and is dropped from the manifests map, but the rest of the
+    // shell still boots. This matters because scaffold atlases get
+    // added often, and a missing registries/data/*.json file on any
+    // single atlas used to kill the entire shell.
+    const failedAtlases = [];
+    for (const [atlas_id, manifest] of [...manifests]) {
+      try {
+        const configs = await loadAtlasConfigs(atlas_id, manifest);
+        registry.register_atlas(atlas_id, configs);
+        state.registerAtlasSlots(atlas_id, configs.slots.slots || {});
+        // Load atlas-specific stylesheets if declared. Each atlas can
+        // declare a `stylesheets` array in its manifest; paths are relative
+        // to the workspace root (e.g. "atlases/inversion/css/widgets.css").
+        // Per-page styles are not loaded here — they're loaded by the
+        // router when the page mounts.
+        loadAtlasStylesheets(manifest);
+      } catch (err) {
+        console.error(`Atlas '${atlas_id}' failed to load — dropping from shell:`, err);
+        failedAtlases.push({ atlas_id, error: err.message || String(err) });
+        manifests.delete(atlas_id);
+      }
+    }
+    // Surface failures on a banner so dev knows an atlas was dropped
+    // (otherwise the shell quietly works minus one atlas, which is
+    // confusing). Banner is dismissable; doesn't block any UX.
+    if (failedAtlases.length > 0) {
+      _showFailedAtlasesBanner(failedAtlases);
+    }
+    if (manifests.size === 0) {
+      document.getElementById('boot').innerHTML =
+        '<h2>No atlases loaded</h2>' +
+        '<p>Every installed atlas failed to load. See console for details.</p>';
+      return;
     }
 
     // Wire prewarm scheduler
@@ -216,6 +241,30 @@ async function loadAtlasConfigs(atlas_id, manifest) {
     out[name] = await resp.json();
   }
   return out;
+}
+
+/**
+ * Surface a small dismissable banner naming each atlas that failed to
+ * load. Without this the shell silently boots minus the broken atlas,
+ * which is confusing — the user just sees a missing tab and can't tell
+ * why. The banner gives them the file path or error to act on.
+ */
+function _showFailedAtlasesBanner(failures) {
+  const wrap = document.createElement('div');
+  wrap.id = 'failed-atlases-banner';
+  wrap.style.cssText =
+    'position:fixed;top:0;left:0;right:0;z-index:9999;' +
+    'padding:8px 14px;background:rgba(232,90,60,0.12);' +
+    'border-bottom:1px solid rgba(232,90,60,0.6);' +
+    'color:var(--ink,#ddd);font:12px/1.5 var(--mono,monospace);' +
+    'display:flex;align-items:flex-start;gap:12px;';
+  const msg = failures.map(f => `<b>${f.atlas_id}</b>: ${f.error}`).join('<br>');
+  wrap.innerHTML =
+    `<div style="flex:1;">⚠ ${failures.length} atlas${failures.length === 1 ? '' : 'es'} failed to load (shell still booted without):` +
+    `<br>${msg}</div>` +
+    `<button type="button" style="background:transparent;border:1px solid currentColor;color:inherit;padding:2px 8px;cursor:pointer;border-radius:2px;">dismiss</button>`;
+  wrap.querySelector('button').addEventListener('click', () => wrap.remove());
+  document.body.appendChild(wrap);
 }
 
 /**

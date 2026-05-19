@@ -147,11 +147,19 @@ export class PrewarmScheduler {
     // etc.) are expected when the precomp ships only the main scrubber JSON.
     // Downgrade those to debug-only so the console isn't drowned in noise;
     // genuine errors (5xx, network, parse failures) still console.warn.
+    //
+    // AUTO_INDEX_EMPTY also downgrades to debug — that's the case where a
+    // master_config root points at a pipeline output dir that hasn't been
+    // produced yet (e.g. precomp_ghsl before the GHSL pipeline runs). The
+    // distinct AUTO_INDEX_MISS tag (chroms exist but not this one) stays
+    // at warn level because it's a naming-convention bug.
     await Promise.all(tasks.map(t => t.catch(e => {
       const msg = (e && e.message) || String(e);
-      if (msg.includes('HTTP 404')) {
+      const isExpected = msg.includes('HTTP 404') || msg.includes('AUTO_INDEX_EMPTY');
+      if (isExpected) {
         if (typeof console.debug === 'function') {
-          console.debug(`Prewarm ${eventName}: optional layer missing (404):`, msg);
+          const kind = msg.includes('AUTO_INDEX_EMPTY') ? 'empty root' : '404';
+          console.debug(`Prewarm ${eventName}: optional layer missing (${kind}):`, msg);
         }
       } else {
         console.warn(`Prewarm ${eventName}: layer preload failed:`, e);

@@ -78,6 +78,21 @@ export class AtlasRouter {
     if (typeof module.mount !== 'function') {
       throw new Error(`Page ${atlas_id}/${page_id}: module has no mount() export`);
     }
+    // Register this page module so the shell's JS-badge modal can list it.
+    // The badge in shell_chrome.js reads window.__atlasJsRegistry — page
+    // modules opt in by pushing here. Dedup on path so re-navigating to
+    // the same page doesn't double-count.
+    try {
+      if (!Array.isArray(window.__atlasJsRegistry)) window.__atlasJsRegistry = [];
+      const entry = {
+        name: `${atlas_id}/${page_id}`,
+        path: page.module,
+        kind: 'page',
+      };
+      if (!window.__atlasJsRegistry.some(e => e && e.path === entry.path)) {
+        window.__atlasJsRegistry.push(entry);
+      }
+    } catch (_) { /* never fail navigation on a badge update */ }
 
     // Update state, fire page_mount event for prewarm scheduler
     this.state.shared.currentPage = { atlas_id, page_id };

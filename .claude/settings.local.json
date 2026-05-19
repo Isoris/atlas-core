@@ -219,7 +219,8 @@
       "Bash(grep -n \"tmpdir\\\\\\\\|file.path.*tmp\\\\\\\\|outdir.*tmp\" local_PCA_MDS_z/STEP_ZO_C_local_pca_compute.R local_PCA_MDS_z/STEP_ZO_D_local_pca_merge.R)",
       "Bash(grep -n \"outdir\\\\\\\\b\" local_PCA_MDS_z/STEP_ZO_C_local_pca_compute.R)",
       "Bash(wsl --version)",
-      "Bash(ls \"C:\\\\\\\\Users\\\\\\\\quent\\\\\\\\Desktop\\\\\\\\atlas-workspace\\\\\\\\atlases\\\\\\\\\")"
+      "Bash(ls \"C:\\\\\\\\Users\\\\\\\\quent\\\\\\\\Desktop\\\\\\\\atlas-workspace\\\\\\\\atlases\\\\\\\\\")",
+      "Bash(grep -n \"out <-\\\\\\\\|write_json\\\\\\\\|toJSON\\\\\\\\|theta_pi_local_pca\\\\\\\\|theta_pi_per_window\\\\\\\\|theta_pi_envelopes\\\\\\\\|theta_pi_cusum\\\\\\\\|theta_pi_grid_map\\\\\\\\|samples_json\\\\\\\\|windows_json\" local_PCA_MDS_theta_pi/STEP_TR_J_atlas_json.R)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

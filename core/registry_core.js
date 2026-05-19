@@ -545,12 +545,22 @@ export class Registry {
         const index = await this._fetchPrecompIndex(entry.root);
         const relPath = index && index.chroms ? index.chroms[chrom] : null;
         if (!relPath) {
-          const known = index && index.chroms ? Object.keys(index.chroms).join(', ') : '(empty)';
+          const knownList = index && index.chroms ? Object.keys(index.chroms) : [];
+          // Distinguish two failure modes so callers (the prewarm
+          // scheduler) can decide log severity:
+          //   - empty: the pipeline hasn't produced anything yet
+          //     (the root is empty). Expected during early development;
+          //     should not pollute the console.
+          //   - mismatch: the index has chroms but not this one. That's
+          //     a real bug (typo, naming-convention drift) and warrants
+          //     a loud warn. We prefix the message with a stable tag
+          //     the scheduler can grep for.
+          const tag = knownList.length === 0 ? 'AUTO_INDEX_EMPTY' : 'AUTO_INDEX_MISS';
           throw new Error(
-            `Registry: auto_index for root '${entry.root}' has no file ` +
-            `for chrom '${chrom}'. Known chroms: ${known}. ` +
+            `Registry: ${tag}: auto_index for root '${entry.root}' has no file ` +
+            `for chrom '${chrom}'. Known chroms: ${knownList.length === 0 ? '(empty)' : knownList.join(', ')}. ` +
             `(Server scanned ${index && index.root_path}; ` +
-            `pipeline may not have produced this chromosome yet.)`
+            `${knownList.length === 0 ? 'pipeline may not have produced this root yet' : 'naming-convention or chrom-id drift'}.)`
           );
         }
         path = _joinPath(index.root_path, relPath);

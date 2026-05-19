@@ -144,11 +144,45 @@ class Dispatcher:
             p = self.queue_dir / f"{m['action_id']}.json"
             p.write_text(json.dumps(m, indent=2, sort_keys=True) + "\n", encoding="utf-8")
             written.append({"path": str(p), "action_id": m["action_id"], "type": m["type"]})
+        self._rewrite_index()
         return {"committed": len(written),
                 "skipped":   len(plan["manifests"]) - len(runnable),
                 "queue_dir": str(self.queue_dir),
                 "written":   written,
                 "all":       plan["manifests"]}
+
+    def _rewrite_index(self) -> None:
+        """Maintain 02_queue/index.json so browser-side pages can list the queue
+        without filesystem access. Called after every commit and clear."""
+        idx_path = self.queue_dir / "index.json"
+        entries = []
+        if self.queue_dir.is_dir():
+            for p in sorted(self.queue_dir.glob("act_*.json")):
+                try:
+                    m = json.loads(p.read_text(encoding="utf-8"))
+                except Exception:
+                    continue
+                entries.append({
+                    "action_id":     m.get("action_id", p.stem),
+                    "type":          m.get("type", ""),
+                    "dataset_id":    m.get("dataset_id", ""),
+                    "runner":        m.get("runner", ""),
+                    "submitted_at":  m.get("submitted_at", ""),
+                    "submitted_by":  m.get("submitted_by", ""),
+                    "expected_outputs": m.get("expected_outputs", []),
+                    "_dispatch":     m.get("_dispatch", {}),
+                    "file":          p.name,
+                })
+        idx = {
+            "schema_version": "queue_index_v1",
+            "queue_dir":      str(self.queue_dir),
+            "rewritten_at":   time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "n":              len(entries),
+            "entries":        entries,
+        }
+        # always write the index (even when empty) so page 11 can show "empty"
+        self.queue_dir.mkdir(parents=True, exist_ok=True)
+        idx_path.write_text(json.dumps(idx, indent=2) + "\n", encoding="utf-8")
 
     def list_queued(self) -> List[Dict]:
         if not self.queue_dir.is_dir(): return []
@@ -166,6 +200,7 @@ class Dispatcher:
         for p in self.queue_dir.glob("act_*.json"):
             p.unlink()
             n += 1
+        self._rewrite_index()
         return n
 
     # ---- internals ----

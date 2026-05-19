@@ -12,3 +12,8 @@ __pycache__/
 # OS junk
 .DS_Store
 Thumbs.db
+
+# dispatcher queue is runtime state — per-commit manifests + their index
+# are written by lib/dispatcher.py and consumed by page 11 (Queue).
+# The directory is created on demand; not tracked in git.
+toolkit_registries/relatedness/02_queue/

@@ -76,10 +76,10 @@ roots:
     description: "Per-chromosome atlas JSONs from the theta-pi local-PCA path. Auto-loaded by atlas pages. Note: theta-pi files are laid out as 04_atlas_json/C_gar_LG{NN}/C_gar_LG{NN}_phase2_theta.json (per-chrom subfolder, distinct from the z-blocks flat layout). The /api/precomp_index endpoint handles both via depth-2 scan, so the scrubber_thetapi layer can stay auto_index: true."
 
   precomp_ghsl:
-    path: "/mnt/e/results_inversions/local_PCA_MDS_GHSL/09_atlas_json"
+    path: "/mnt/e/results_inversions/local_PCA_MDS_GHSL/10_atlas_json"
     role: "intervals"
     species_scoped: false
-    description: "Per-chromosome atlas JSONs from the GHSL local-PCA path. Auto-loaded by atlas pages. Bumped 2026-05-14 from 04_atlas_json to 09_atlas_json (new pipeline output dir)."
+    description: "Per-chromosome atlas JSONs from the GHSL local-PCA path. Layout mirrors theta-pi: 10_atlas_json/C_gar_LG{NN}/C_gar_LG{NN}_phase3_ghsl.json (per-chrom subfolders). Discovered via /api/precomp_index. Only some chroms produced today — AUTO_INDEX_EMPTY for missing chroms is downgraded to debug per the prewarm scheduler."
 
   per_chrom_zblocks:
     path: "/mnt/e/results_inversions/local_PCA_MDS_z/03_per_chrom"

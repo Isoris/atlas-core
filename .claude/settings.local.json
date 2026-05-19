@@ -220,7 +220,13 @@
       "Bash(grep -n \"outdir\\\\\\\\b\" local_PCA_MDS_z/STEP_ZO_C_local_pca_compute.R)",
       "Bash(wsl --version)",
       "Bash(ls \"C:\\\\\\\\Users\\\\\\\\quent\\\\\\\\Desktop\\\\\\\\atlas-workspace\\\\\\\\atlases\\\\\\\\\")",
-      "Bash(grep -n \"out <-\\\\\\\\|write_json\\\\\\\\|toJSON\\\\\\\\|theta_pi_local_pca\\\\\\\\|theta_pi_per_window\\\\\\\\|theta_pi_envelopes\\\\\\\\|theta_pi_cusum\\\\\\\\|theta_pi_grid_map\\\\\\\\|samples_json\\\\\\\\|windows_json\" local_PCA_MDS_theta_pi/STEP_TR_J_atlas_json.R)"
+      "Bash(grep -n \"out <-\\\\\\\\|write_json\\\\\\\\|toJSON\\\\\\\\|theta_pi_local_pca\\\\\\\\|theta_pi_per_window\\\\\\\\|theta_pi_envelopes\\\\\\\\|theta_pi_cusum\\\\\\\\|theta_pi_grid_map\\\\\\\\|samples_json\\\\\\\\|windows_json\" local_PCA_MDS_theta_pi/STEP_TR_J_atlas_json.R)",
+      "Bash(powershell.exe -Command \"\\(Get-Content 'C:\\\\Users\\\\quent\\\\Desktop\\\\genome-atlas\\\\atlases\\\\genome\\\\css\\\\genome.css'\\).Length\")",
+      "PowerShell(\"removed\")",
+      "PowerShell(wsl -d Ubuntu -e bash -c \"cd /mnt/c/Users/quent/Desktop && bash atlas-core/build/assemble.sh 2>&1 | tail -20\")",
+      "PowerShell(wsl -l -q 2>&1)",
+      "PowerShell(wsl -d Ubuntu-24.04 -e bash -c \"cd /mnt/c/Users/quent/Desktop && bash atlas-core/build/assemble.sh 2>&1 | tail -20\")",
+      "PowerShell(\"---\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

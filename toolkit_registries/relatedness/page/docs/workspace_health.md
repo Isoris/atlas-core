@@ -42,3 +42,17 @@ This is **read-only**. Per `MANAGER_SPEC.md`: status is recomputed live on every
 ## Universal search (every page)
 
 Hit `Cmd/Ctrl+K` from any page to open the universal search modal. Type any product / question / layer / atlas / estimand / hook id — Enter jumps to the right page with the item pre-selected (or flashed). The "🔎 Search" floating button does the same.
+
+## Sticky scope ribbon (every page)
+
+A thin ribbon under the top nav shows the current `sample_set` / `interval_set` / `candidate_id` and persists them via `localStorage`. Edit any field → Enter or blur saves. Pages 6 / 8 / 9 / 10 listen for changes (`scope-changed` event) and re-render. Two helpers for any other page:
+
+```
+window.getScope()             → { sample_set, interval_set, candidate_id }
+window.setScope(partial)      → merge + persist + dispatch event
+window.onScopeChange(fn)      → subscribe
+```
+
+## Per-atlas color stripes
+
+`page/atlas-colors.js` reads `atlases.jsonl` + `products.jsonl` and decorates every product card on pages 8 / 9 / 10 with a 4px left border in the owning atlas's color. Re-scans on render via `MutationObserver`. Add `color: "#RRGGBB"` to your atlas row to change the stripe.

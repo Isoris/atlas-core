@@ -399,8 +399,10 @@ function renderKPI() {
 function renderAtlases() {
   const host = document.getElementById("atlas-grid");
   const cards = [];
+  const scopeAtlas = (window.getScope && window.getScope().atlas) || "";
   for (const a of DB.atlases) {
     if (a.atlas_id === "atlas_core") continue;
+    if (scopeAtlas && a.atlas_id !== scopeAtlas) continue;
     const ru = rollupAtlas(a.atlas_id);
     const q = a.lead_question_id && DB.questions[a.lead_question_id]
       ? checkQuestion(a.lead_question_id) : null;
@@ -437,8 +439,10 @@ function renderAtlases() {
 function renderBottlenecks() {
   // Rank missing products by downstream fan-out.
   const rows = [];
+  const scopeAtlas = (window.getScope && window.getScope().atlas) || "";
   for (const p of Object.values(DB.products)) {
     if (p.kind !== "biological_object") continue;
+    if (scopeAtlas && p.atlas !== scopeAtlas) continue;
     const s = checkProductStatus(p.product_id).status;
     if (!["missing", "blocked", "partial"].includes(s)) continue;
     rows.push({
@@ -468,7 +472,22 @@ function renderBottlenecks() {
 function renderQuestions() {
   // Rank questions by closeness-to-ready (% ready).
   const rows = [];
+  const scopeAtlas = (window.getScope && window.getScope().atlas) || "";
+  // A question "belongs" to an atlas when at least one of its required
+  // products is owned by that atlas, OR when its lead_question_id matches
+  // an atlas in atlases.jsonl.
+  const questionInAtlas = (qid) => {
+    if (!scopeAtlas) return true;
+    const q = DB.questions[qid];
+    for (const r of (q.requires || [])) {
+      const p = DB.products[r.product_id];
+      if (p && p.atlas === scopeAtlas) return true;
+    }
+    const owner = (DB.atlases || []).find(a => a.lead_question_id === qid);
+    return owner && owner.atlas_id === scopeAtlas;
+  };
   for (const qid of Object.keys(DB.questions)) {
+    if (!questionInAtlas(qid)) continue;
     const r = checkQuestion(qid);
     const pct = r.total ? Math.round(100 * r.n_ready / r.total) : 0;
     rows.push({ qid, label: r.label, status: r.status, pct,
@@ -489,7 +508,19 @@ function renderQuestions() {
 
 function renderEstimability() {
   const rows = [];
+  const scopeAtlas = (window.getScope && window.getScope().atlas) || "";
+  const questionInAtlas = (qid) => {
+    if (!scopeAtlas) return true;
+    const q = DB.questions[qid];
+    for (const r of (q.requires || [])) {
+      const p = DB.products[r.product_id];
+      if (p && p.atlas === scopeAtlas) return true;
+    }
+    const owner = (DB.atlases || []).find(a => a.lead_question_id === qid);
+    return owner && owner.atlas_id === scopeAtlas;
+  };
   for (const qid of Object.keys(DB.questions)) {
+    if (!questionInAtlas(qid)) continue;
     const e = checkQuestionEstimability(qid);
     rows.push({ qid, status: e.status, n: e.n });
   }
@@ -511,11 +542,16 @@ function renderEstimability() {
 
 (async () => {
   await loadDB();
-  renderKPI();
-  renderAtlases();
-  renderBottlenecks();
-  renderQuestions();
-  renderEstimability();
+  function renderAll() {
+    renderKPI();
+    renderAtlases();
+    renderBottlenecks();
+    renderQuestions();
+    renderEstimability();
+  }
+  renderAll();
+  // re-render when the global scope ribbon (scope.atlas) changes
+  try { window.onScopeChange && window.onScopeChange(() => renderAll()); } catch {}
   // ?focus=<id> deep link from search.js — flash the matching row.
   try {
     const f = (window.readFocusParam && window.readFocusParam()) || null;

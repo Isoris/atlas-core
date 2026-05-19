@@ -475,9 +475,11 @@ function renderProducts() {
   const ids = Object.keys(DB.products).sort();
   const f = state.filterProd.toLowerCase();
   const fs = state.filterStatus;
+  const scopeAtlas = (window.getScope && window.getScope().atlas) || "";
   let nReady = 0, nMissing = 0, total = 0;
   for (const pid of ids) {
     if (DB.products[pid].kind !== "biological_object") continue; // only track biological_object per spec §1
+    if (scopeAtlas && DB.products[pid].atlas !== scopeAtlas) continue;   // atlas filter from scope ribbon (PR #23)
     total++;
     if (f && !pid.toLowerCase().includes(f) && !(DB.products[pid].label || "").toLowerCase().includes(f)) continue;
     const rec = checkProductStatus(pid);
@@ -716,6 +718,8 @@ function openQuestionDetail(qid) { state.detail = { kind: "question", id: qid };
       }
     }
   } catch {}
+  // re-render when the global scope ribbon (scope.atlas) changes
+  try { window.onScopeChange && window.onScopeChange(() => rerender()); } catch {}
   rerender();
   // Flash the focused element after first render (best-effort)
   try {

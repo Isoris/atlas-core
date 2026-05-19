@@ -679,7 +679,10 @@ function renderSidebar() {
     html += `<div class="sb-item" onclick="location.href='catalogue.html'"><span class="name">Developer Utilities</span><span class="icon inactive"></span></div>`;
   }
   // Other atlases: render section + their products (clickable to drawer)
+  // Filter by scope.atlas when set (PR #23 ribbon).
+  const scopeAtlas = (window.getScope && window.getScope().atlas) || "";
   for (const a of rest) {
+    if (scopeAtlas && a.atlas_id !== scopeAtlas) continue;
     const ru = rollupAtlas(a.atlas_id);
     html += `<div class="sb-section">${a.icon || ""} ${a.label}</div>`;
     if (a.lead_question_id && DB.questions[a.lead_question_id]) {
@@ -733,8 +736,10 @@ function renderReadinessBar() {
     { l: "Intervals",   v: `${Object.keys(DB.layers).length} layers`, s: "ready" },
   ];
   const cards = [...infra];
+  const scopeAtlasA = (window.getScope && window.getScope().atlas) || "";
   for (const a of (DB.atlases || [])) {
     if (a.atlas_id === "atlas_core") continue;
+    if (scopeAtlasA && a.atlas_id !== scopeAtlasA) continue;
     const ru = rollupAtlas(a.atlas_id);
     const valueStr = ru.nProducts
       ? `${ru.nReady} ready · ${ru.nPartial} partial · ${ru.nMissing} missing`
@@ -1190,6 +1195,8 @@ function rerender() {
       }
     }
   } catch {}
+  // re-render when the global scope ribbon (scope.atlas) changes
+  try { window.onScopeChange && window.onScopeChange(() => rerender()); } catch {}
   rerender();
 })();
 

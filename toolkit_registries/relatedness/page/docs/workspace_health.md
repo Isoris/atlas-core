@@ -55,6 +55,13 @@ window.onScopeChange(fn)      → subscribe
 
 `scope.js` also injects a small CSS override that makes the page-tab nav span full width (each tab `flex: 1`, the trailing "atlas-core / page N" tag hidden) — clearer at a glance, no compression for wider nav items.
 
+**Pages 8 / 9 / 10 honour the atlas filter.** Pick an atlas in the ribbon:
+- Page 8 (Readiness) hides products whose `atlas` doesn't match.
+- Page 9 (Layer Connector) hides sidebar atlas sections + readiness-bar cards for atlases other than the selected one.
+- Page 10 (Workspace Health) hides non-matching atlas cards, filters bottlenecks to products owned by the atlas, and filters questions / estimability rows whose required products belong to the atlas.
+
+Set the ribbon back to "all atlases" (the default) to remove the filter.
+
 ## Per-atlas color stripes
 
 `page/atlas-colors.js` reads `atlases.jsonl` + `products.jsonl` and decorates every product card on pages 8 / 9 / 10 with a 4px left border in the owning atlas's color. Re-scans on render via `MutationObserver`. Add `color: "#RRGGBB"` to your atlas row to change the stripe.

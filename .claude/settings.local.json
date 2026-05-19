@@ -285,7 +285,15 @@
       "Bash(python -c \"import json; json.load\\(open\\('atlases/diversity/registries/data/layers.registry.json'\\)\\); print\\('VALID JSON'\\)\")",
       "Bash(mkdir -p 'C:/Users/quent/Desktop/meiosis-atlas/specs_done' 'C:/Users/quent/Desktop/meiosis-atlas/specs_todo' && echo done)",
       "Bash(grep -n \"cand-nav-inline\\\\|\\\\\\\\.cnav-\" \"C:/Users/quent/Desktop/inversion-atlas/atlases/inversion/css/inversion.css\")",
-      "Bash(grep -nA 5 \"_bootstrap_external_root_mounts\\\\|def _bootstrap_external\" server/atlas_server.py)"
+      "Bash(grep -nA 5 \"_bootstrap_external_root_mounts\\\\|def _bootstrap_external\" server/atlas_server.py)",
+      "Bash([ -f \"$p.html\" ])",
+      "Bash(grep -oE 'class=\"[^\"]+\"' __TRACKED_VAR__.html)",
+      "Bash(bash -n build/assemble.sh)",
+      "Bash(grep -n \"\\\\\\\\.nested-cand-list-body\\\\\\\\|\\\\\\\\.nested-cand-list\\\\\\\\b\" \"C:/Users/quent/Desktop/inversion-atlas/atlases/inversion/css/inversion.css\")",
+      "PowerShell(wsl bash -c \"cd /mnt/c/Users/quent/Desktop/meiosis-atlas && node atlases/meiosis/pages/hub/test_nco_envelope.js 2>&1 | tail -40\")",
+      "Bash(touch C:/Users/quent/Desktop/diversity-atlas/atlases/diversity/registries/tests/__init__.py)",
+      "Bash(ATLAS_MASTER_CONFIG=/c/Users/quent/Desktop/atlas-core/master_config.yaml python atlases/diversity/registries/tests/test_harvest_roundtrip.py -v)",
+      "Bash(awk 'NR>=380 && NR<=445' atlases/inversion/pages/discovery/local_pca_dosage/sim_panel.js)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

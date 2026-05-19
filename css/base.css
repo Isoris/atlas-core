@@ -40,8 +40,8 @@ main#app-root { flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden; }
    z=9999 inside this stacking context) need the header itself to sit at
    the very top of the page's compositing order so the dropdowns render
    over EVERYTHING. */
-header { padding: 3px 14px; border-bottom: 1px solid var(--rule);
-         display: flex; align-items: center; gap: 8px; min-height: 30px; height: 30px;
+header { padding: 3px 12px; border-bottom: 1px solid var(--rule);
+         display: flex; align-items: center; gap: 6px; min-height: 28px; height: 28px;
          position: relative; z-index: 9999; }
 /* Title + meta are no longer rendered (Quentin's request — top header
    shows scope + tool clusters only). Keep the dead rules as harmless
@@ -63,12 +63,9 @@ header #saveSessionBtn,
 header #loadSessionBtn {
   align-self: center;
   background: var(--panel-2); border: 1px solid var(--rule); color: var(--ink);
-  padding: 4px 12px; font-family: var(--mono); font-size: 11px;
-  border-radius: 3px; cursor: pointer; line-height: 1;
-  /* nowrap + flex-shrink:0 keep button text on one line at narrow viewports.
-     v4 turn 17: added saveSessionBtn + loadSessionBtn (their inline styles
-     lacked nowrap, so emoji + word stacked vertically). display:inline-flex
-     keeps emoji and word on the same line in old browsers too. */
+  padding: 3px 9px; font-family: var(--mono); font-size: 10.5px;
+  border-radius: 2px; cursor: pointer; line-height: 1;
+  letter-spacing: 0.02em;
   white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center;
 }
 
@@ -79,8 +76,8 @@ header #globalSettingsBtn {
   align-self: center; flex-shrink: 0;
   background: transparent;
   color: #d4a017; border: 1px solid #b8860b;
-  border-radius: 3px;
-  padding: 3px 9px; font-family: var(--mono); font-size: 12px;
+  border-radius: 2px;
+  padding: 2px 7px; font-family: var(--mono); font-size: 11px;
   line-height: 1; cursor: pointer;
 }
 header #globalSettingsBtn:hover  { background: rgba(212, 160, 23, 0.12); border-color: #d4a017; }
@@ -133,11 +130,11 @@ header #resetLayoutBtn:hover { background: var(--panel-3); border-color: var(--a
 }
 header #schemaBadge,
 header #jsScriptsBadge {
-  align-self: center; margin-left: 8px;
+  align-self: center; margin-left: 6px;
   background: var(--panel-2); border: 1px solid var(--rule); color: var(--ink-dim);
-  padding: 3px 8px; font-family: var(--mono); font-size: 10px;
-  border-radius: 3px; line-height: 1.4;
-  /* v3.99 turn 9: keep "schema v2 · 0 layers" on a single line. */
+  padding: 2px 7px; font-family: var(--mono); font-size: 10px;
+  border-radius: 2px; line-height: 1.4;
+  letter-spacing: 0.02em;
   white-space: nowrap; flex-shrink: 0;
 }
 header #schemaBadge.v1 { color: var(--ink-dimmer); }
@@ -175,34 +172,34 @@ header .atlas-row[data-color="yellow"]:hover { background: rgba(232, 196, 76, 0.
    Each folder is a button that on hover reveals a popover panel with the
    grouped buttons stacked vertically. Pattern mirrors #atlasModeIndicator. */
 header .header-folder { position: relative; align-self: center; flex-shrink: 0;
-                        font-family: var(--mono); font-size: 10.5px; }
+                        font-family: var(--mono); font-size: 10px; }
 header .header-folder-btn {
   background: var(--panel-2); color: var(--ink);
   border: 1px solid var(--rule);
-  border-radius: 3px; padding: 4px 11px; line-height: 1;
-  font-family: var(--mono); font-size: 10.5px;
-  letter-spacing: 0.03em; cursor: pointer;
+  border-radius: 2px; padding: 3px 9px; line-height: 1;
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.02em; cursor: pointer;
   white-space: nowrap; display: inline-flex; align-items: center;
   transition: background 0.1s, border-color 0.1s;
 }
-header .header-folder-btn .arrow { opacity: 0.55; margin-left: 5px; font-size: 9px; }
+header .header-folder-btn .arrow { opacity: 0.5; margin-left: 4px; font-size: 8px; }
 header .header-folder[data-color="blue"]   .header-folder-btn {
-  background: rgba(64, 144, 220, 0.14); border-color: rgba(64, 144, 220, 0.45);
+  background: transparent; border-color: rgba(64, 144, 220, 0.50);
 }
 header .header-folder[data-color="blue"]:hover .header-folder-btn {
-  background: rgba(64, 144, 220, 0.26); border-color: rgba(64, 144, 220, 0.80);
+  background: rgba(64, 144, 220, 0.10); border-color: rgba(64, 144, 220, 0.80);
 }
 header .header-folder[data-color="green"]  .header-folder-btn {
-  background: rgba(72, 200, 120, 0.14); border-color: rgba(72, 200, 120, 0.45);
+  background: transparent; border-color: rgba(72, 200, 120, 0.50);
 }
 header .header-folder[data-color="green"]:hover .header-folder-btn {
-  background: rgba(72, 200, 120, 0.26); border-color: rgba(72, 200, 120, 0.80);
+  background: rgba(72, 200, 120, 0.10); border-color: rgba(72, 200, 120, 0.80);
 }
 header .header-folder[data-color="yellow"] .header-folder-btn {
-  background: rgba(232, 196, 76, 0.14); border-color: rgba(232, 196, 76, 0.45);
+  background: transparent; border-color: rgba(232, 196, 76, 0.50);
 }
 header .header-folder[data-color="yellow"]:hover .header-folder-btn {
-  background: rgba(232, 196, 76, 0.26); border-color: rgba(232, 196, 76, 0.80);
+  background: rgba(232, 196, 76, 0.10); border-color: rgba(232, 196, 76, 0.80);
 }
 /* Active-state ring when a child button inside has data-active="1"
    (e.g. candidate mode). The folder button itself glows. */
@@ -214,7 +211,7 @@ header .header-folder-panel {
   display: none;
   position: absolute; top: calc(100% + 2px); right: 0;
   background: var(--panel); border: 1px solid var(--rule);
-  border-radius: 3px;
+  border-radius: 2px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.45);
   /* 2026-05-19: was z-index 50 inside header's z-index:200 stacking
      context — should have rendered above page content, but per-page
@@ -286,12 +283,12 @@ header .header-folder[data-color="yellow"] .header-folder-btn .dot { color: rgb(
   flex-shrink: 0;
 }
 #atlasActiveBtn {
-  background: rgba(64, 144, 220, 0.18); color: var(--ink);
+  background: transparent; color: var(--ink);
   border: 1px solid rgba(64, 144, 220, 0.55);
-  border-radius: 3px; padding: 4px 12px;
+  border-radius: 2px; padding: 3px 9px;
   cursor: pointer; line-height: 1.2;
-  font-family: var(--mono); font-size: 10.5px;
-  letter-spacing: 0.04em; white-space: nowrap;
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.02em; white-space: nowrap;
   display: inline-flex; align-items: center; gap: 4px;
 }
 #atlasActiveBtn:hover {
@@ -302,7 +299,7 @@ header .header-folder[data-color="yellow"] .header-folder-btn .dot { color: rgb(
 #atlasDropdown {
   display: none; position: absolute; top: 100%; left: 0; right: 0;
   min-width: 100%; background: var(--panel-2); border: 1px solid var(--rule);
-  border-radius: 0 0 3px 3px; padding: 2px 0; z-index: 200;
+  border-radius: 0 0 2px 2px; padding: 2px 0; z-index: 200;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 #atlasModeIndicator:hover #atlasDropdown,
@@ -330,10 +327,11 @@ header .header-folder[data-color="yellow"] .header-folder-btn .dot { color: rgb(
 /* Server status standalone button — lifted out of the data folder for
    one-click visibility (per turn 145). */
 #atlasServerStandaloneBtn {
-  align-self: center; margin: 0 6px;
-  background: #1c2231; color: #7a8398;
-  border: 1px solid #2a3245; border-radius: 3px;
-  padding: 4px 10px; font-family: var(--mono); font-size: 11px;
+  align-self: center; margin: 0 4px;
+  background: var(--panel-2); color: var(--ink-dim);
+  border: 1px solid var(--rule); border-radius: 2px;
+  padding: 3px 8px; font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.02em;
   cursor: pointer; line-height: 1;
   display: inline-flex; align-items: center;
   flex-shrink: 0;
@@ -351,9 +349,9 @@ header .header-folder[data-color="yellow"] .header-folder-btn .dot { color: rgb(
 header .header-direct-btn {
   align-self: center; flex-shrink: 0;
   background: var(--panel-2); color: var(--ink);
-  border: 1px solid var(--rule); border-radius: 3px;
-  padding: 3px 10px; font-family: var(--mono); font-size: 10.5px;
-  letter-spacing: 0.03em; cursor: pointer;
+  border: 1px solid var(--rule); border-radius: 2px;
+  padding: 3px 9px; font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.02em; cursor: pointer;
   line-height: 1; white-space: nowrap;
   display: inline-flex; align-items: center;
   transition: background 100ms, border-color 100ms;

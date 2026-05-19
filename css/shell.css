@@ -115,7 +115,7 @@
 #topbar .atlas-switcher-select,
 #atlas-switcher-host .atlas-switcher-select {
   background: var(--panel-2); color: var(--ink);
-  border: 1px solid var(--rule); border-radius: 3px;
+  border: 1px solid var(--rule); border-radius: 2px;
   padding: 3px 8px;
   font-family: var(--mono); font-size: 10.5px;
   letter-spacing: 0.04em;
@@ -130,9 +130,9 @@
   background: none; border: none;
   border-bottom: 2px solid transparent;
   color: var(--ink-dim);
-  font-family: var(--mono); font-size: 11px;
-  padding: 0 14px; cursor: pointer;
-  letter-spacing: 0.04em;
+  font-family: var(--mono); font-size: 10.5px;
+  padding: 0 11px; cursor: pointer;
+  letter-spacing: 0.02em;
   white-space: nowrap !important; word-break: keep-all;
   overflow: hidden; text-overflow: ellipsis;
   max-width: 170px; min-width: 0;
@@ -188,13 +188,13 @@
      the pill matches the page-tab height (the 28px topbar row). Vertical
      padding is removed for the same reason; horizontal padding stays. */
   display: inline-flex; align-items: center;
-  font-family: var(--mono); font-size: 10.5px;
+  font-family: var(--mono); font-size: 10px;
   color: var(--ink-dim);
-  letter-spacing: 0.04em; line-height: 1;
-  padding: 0 10px; margin: 0 2px;
+  letter-spacing: 0.02em; line-height: 1;
+  padding: 0 9px; margin: 0 2px;
   background: var(--panel-2);
   border: 1px solid var(--rule);
-  border-radius: 3px;
+  border-radius: 2px;
   white-space: nowrap; flex-shrink: 0;
   cursor: pointer;
   transition: background 100ms ease, border-color 100ms ease, color 100ms ease;
@@ -373,21 +373,21 @@ header #scopebar .scope-picker {
 
 header #scopebar .scope-picker-label {
   color: var(--ink-dimmer);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  font-size: 9.5px;
+  font-size: 9px;
 }
 
 header #scopebar select {
   background: var(--panel-2);
   border: 1px solid var(--rule);
-  border-radius: 3px;
+  border-radius: 2px;
   color: var(--ink);
   font-family: var(--mono);
-  font-size: 11px;
-  padding: 3px 8px;
+  font-size: 10px;
+  padding: 2px 6px;
   cursor: pointer;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 header #scopebar select:hover {

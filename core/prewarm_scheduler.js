@@ -66,13 +66,20 @@ export class PrewarmScheduler {
     await this._preloadByEvent('candidate_change', this._buildArgs({ candidate_id: newCand.id }), ctrl, gen, 'candidate');
   }
 
-  // Pull every primitive from shared state into the resolve args so layer
-  // path templates like 'data/precomp/{chrom}.json' or
-  // 'data/cohort/ancestry/windows/{chrom}_K{K}.tsv' can fill all placeholders
-  // without each event handler needing to know which keys matter.
+  // Resolve the canonical scope aliases (chrom / candidate_id / species)
+  // so layer path templates like `data/precomp/{chrom}.json` or
+  // `data/cohort/ancestry/windows/{chrom}_K{K}.tsv` can fill them. ANY
+  // other placeholder is left to templateFill's `state.shared` fallback —
+  // do NOT widen args here.
   //
-  // Aliases: shared state uses 'activeChrom' but legacy layer templates
-  // use {chrom}; same for {candidate_id} ← shared.activeCandidate.id.
+  // Why: the registry's default cache key is `key + JSON.stringify(args)`.
+  // If the prewarm passes e.g. `{chrom, serverBaseUrl, sampleIds, …}`
+  // while a page passes `{chrom}` for the same layer, the cache keys
+  // diverge and the in-flight Promise dedup misses → the same precomp
+  // JSON is fetched twice on cold boot (once by the prewarm scheduler
+  // firing on chrom_change, once by the page mounting and re-resolving
+  // the same layer). 2026-05-20: scoped args down to the three aliases
+  // so prewarm + page resolves hit the same cache slot.
   _buildArgs(seed) {
     const args = Object.assign({}, seed || {});
     const sh = (this.state && this.state.shared) || {};
@@ -84,12 +91,6 @@ export class PrewarmScheduler {
     }
     if (args.species === undefined && typeof sh.activeSpecies === 'string') {
       args.species = sh.activeSpecies;
-    }
-    for (const [k, v] of Object.entries(sh)) {
-      if (args[k] !== undefined) continue;
-      if (v != null && (typeof v === 'string' || typeof v === 'number')) {
-        args[k] = v;
-      }
     }
     return args;
   }

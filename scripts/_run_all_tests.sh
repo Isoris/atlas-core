@@ -28,6 +28,9 @@ node atlases/core/pages/test_inventory.js 2>&1 | tail -2
 
 echo '--- meiosis-atlas adapter (staging + normalize) ---'
 ( cd /mnt/c/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries && python3 test_adapter_smoke.py 2>&1 | tail -2 )
+
+echo '--- meiosis-atlas nco page (envelope-aware) ---'
+( cd /mnt/c/Users/quent/Desktop/meiosis-atlas && node atlases/meiosis/pages/hub/test_nco_envelope.js 2>&1 | tail -2 )
 cd /mnt/c/Users/quent/Desktop/atlas-core
 
 for atlas in inversion-atlas diversity-atlas population-atlas genome-atlas relatedness-atlas; do

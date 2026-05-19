@@ -155,33 +155,35 @@ done
   echo "}"
 } > "$WORKSPACE/atlases/_index.json"
 
-# 5. Symlink the data folder into the workspace -------------------------
-# Two complementary links, both pointing at the same target:
-#   (a) $WORKSPACE/data            -> $DATA_DIR     (legacy convenience link)
-#   (b) $WORKSPACE/$DATA_DIR       -> $DATA_DIR     (full-path mirror)
-# Link (b) lets master_config.yaml use absolute paths like
-# /mnt/e/results_inversions/01_beagle and have the unified server's
-# static mount serve them: a fetch for /mnt/e/X resolves to
-# $WORKSPACE/mnt/e/X, which (b) bridges back to the real $DATA_DIR/X.
+# 5. Data folder — server handles external roots natively, no symlinks. ----
+# Earlier versions of assemble.sh symlinked $WORKSPACE/data → $DATA_DIR
+# and $WORKSPACE/$DATA_DIR → $DATA_DIR so the static-file mount could
+# serve files outside the workspace tree. Two reasons those are gone now:
+#
+#   1. WSL/DrvFs (Windows /mnt/c) rejects cross-drive symlinks with
+#      EPERM unless WSL is launched as Administrator with metadata mount
+#      options — `ln -s` failing was the visible symptom of "Operation
+#      not permitted" during assemble.
+#   2. They never actually worked for serving content anyway: Starlette's
+#      StaticFiles path-traversal guard realpath's the target and rejects
+#      anything outside the mount's own directory, so a symlink pointing
+#      OUT of $WORKSPACE returned 404 silently. The fix (in
+#      atlas_server._bootstrap_external_root_mounts) was to mount the
+#      external prefix as its OWN StaticFiles entry — see the docstring
+#      on that function. With native mounts in place the symlinks are
+#      pure cruft.
+#
+# We still record kv_data so start.sh / the server can pass it through
+# as an env or use it for sanity reporting, but no filesystem links are
+# created here. If a future workflow needs $WORKSPACE/data to be a real
+# directory (rather than nothing), copy your data in by hand or add a
+# separate config knob — don't bring the symlinks back.
 if [ "${kv_data:-}" ]; then
   DATA_DIR="$(resolve_path "$kv_data")"
   if [ -d "$DATA_DIR" ]; then
-    # (a) legacy convenience link
-    ln -s "$DATA_DIR" "$WORKSPACE/data"
-    echo "==> linked data: $DATA_DIR → $WORKSPACE/data"
-    # (b) full-path mirror (only for absolute DATA_DIR, which it always is
-    # after resolve_path; but be explicit for clarity).
-    case "$DATA_DIR" in
-      /*)
-        PARENT_DIR="$(dirname "$DATA_DIR")"
-        BASENAME="$(basename "$DATA_DIR")"
-        mkdir -p "$WORKSPACE$PARENT_DIR"
-        ln -s "$DATA_DIR" "$WORKSPACE$PARENT_DIR/$BASENAME"
-        echo "==> mirrored absolute path: $DATA_DIR → $WORKSPACE$PARENT_DIR/$BASENAME"
-        ;;
-    esac
+    echo "==> external data root: $DATA_DIR (served by atlas_server.py via _bootstrap_external_root_mounts)"
   else
-    echo "  ! data path not found: $DATA_DIR (skipping links)"
+    echo "  ! data path not found: $DATA_DIR (server will skip native mount for this prefix)"
   fi
 fi
 

@@ -644,3 +644,71 @@
   margin-left: 8px;
 }
 .core-page-inventory .inv-rec-err > summary { color: var(--fail); }
+
+/* Inventory — Simple/JSON view-mode toggle (right side of tab strip) */
+.core-page-inventory .inv-mode {
+  margin-left: auto; display: flex; gap: 2px;
+  align-self: center; padding-bottom: 4px;
+}
+.core-page-inventory .inv-mode-btn {
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font: inherit; font-size: 11.5px;
+  padding: 3px 10px; border-radius: 3px; cursor: pointer;
+}
+.core-page-inventory .inv-mode-btn.active {
+  background: var(--accent); color: white; border-color: var(--accent);
+}
+
+/* Inventory — Simple-mode detail rendering (key→value grid) */
+.core-page-inventory .inv-simple-root { font-size: 13px; }
+.core-page-inventory .inv-simple {
+  display: grid; grid-template-columns: max-content 1fr;
+  gap: 4px 14px; margin: 0; padding: 0;
+}
+.core-page-inventory .inv-simple > dt {
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px; padding-top: 2px;
+  white-space: nowrap;
+}
+.core-page-inventory .inv-simple > dd {
+  margin: 0; min-width: 0; word-break: break-word;
+}
+/* Nested objects/arrays inside an inv-simple cell get a subtle panel +
+   indent so the structure stays scannable. Excludes the root wrapper. */
+.core-page-inventory .inv-simple .inv-simple {
+  background: var(--panel-2); border-radius: 4px;
+  padding: 6px 10px; margin-top: 2px;
+}
+.core-page-inventory .inv-simple-list {
+  list-style: none; margin: 0; padding: 0;
+}
+.core-page-inventory .inv-simple-list > li {
+  padding: 1px 0; padding-left: 12px;
+  position: relative;
+}
+.core-page-inventory .inv-simple-list > li::before {
+  content: '•'; position: absolute; left: 2px; color: var(--muted);
+}
+.core-page-inventory .inv-simple-card {
+  background: var(--panel-2); border-radius: 4px;
+  padding: 6px 10px; margin: 4px 0;
+  border-left: 2px solid var(--border);
+}
+.core-page-inventory .inv-simple-card-i {
+  color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; margin-bottom: 4px;
+}
+.core-page-inventory .inv-simple-empty {
+  color: var(--muted); font-style: italic; font-size: 12.5px;
+}
+.core-page-inventory .inv-simple-bool-true  { color: var(--ok);   font-weight: 500; }
+.core-page-inventory .inv-simple-bool-false { color: var(--muted); }
+.core-page-inventory .inv-simple-num { color: var(--accent); font-variant-numeric: tabular-nums; }
+.core-page-inventory .inv-simple-str { color: var(--fg); }
+
+/* JSONL record body in simple mode — uses inv-simple inside <details> */
+.core-page-inventory .inv-rec-body {
+  padding: 8px 12px; border-top: 1px solid var(--border);
+  background: var(--bg);
+}

@@ -87,20 +87,33 @@
 /* Multi-atlas switcher — small "atlas: [select]" dropdown on the left
  * when more than one atlas is registered. Mirrors the legacy
  * atlasModeIndicator (header line 4902+). */
-#topbar .atlas-switcher {
+/* 2026-05-19: atlas switcher relocated from #topbar to the top-left of
+   the shell header (#atlas-switcher-host). Selectors below cover both
+   places so the styling is identical wherever the switcher gets
+   mounted (the router prefers the header host; falls back to #topbar
+   only on older index.html shells). The "ATLAS:" label markup was
+   removed in atlas_router.js — keeping the .atlas-switcher-label rule
+   in case an older host still emits one. */
+#topbar .atlas-switcher,
+#atlas-switcher-host .atlas-switcher {
   align-self: center;
   display: inline-flex; align-items: center;
   margin: 0 14px 0 0; gap: 6px;
   font-family: var(--mono); font-size: 10.5px;
   flex-shrink: 0;
 }
-#topbar .atlas-switcher-label {
+/* Tighter margin in the header position (no need for topbar's right
+   gutter — the scopebar sits immediately to its right). */
+#atlas-switcher-host .atlas-switcher { margin: 0 10px 0 0; }
+#topbar .atlas-switcher-label,
+#atlas-switcher-host .atlas-switcher-label {
   color: var(--ink-dimmer);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-size: 9.5px;
 }
-#topbar .atlas-switcher-select {
+#topbar .atlas-switcher-select,
+#atlas-switcher-host .atlas-switcher-select {
   background: var(--panel-2); color: var(--ink);
   border: 1px solid var(--rule); border-radius: 3px;
   padding: 3px 8px;
@@ -108,7 +121,8 @@
   letter-spacing: 0.04em;
   cursor: pointer;
 }
-#topbar .atlas-switcher-select:hover {
+#topbar .atlas-switcher-select:hover,
+#atlas-switcher-host .atlas-switcher-select:hover {
   background: var(--panel-3); border-color: var(--accent);
 }
 

@@ -483,19 +483,23 @@ export class AtlasRouter {
 
     const multi = this.manifests.size > 1;
 
-    // Multi-atlas switcher — small <select> at the left of the topbar
-    // when more than one atlas is registered. Pages render to its right
-    // on the same row (topbar uses flex-wrap: nowrap). Switching
-    // navigates to the chosen atlas's first page.
+    // 2026-05-19: multi-atlas switcher moved out of the topbar to the
+    // top-left of the shell header (#atlas-switcher-host). Dropping the
+    // "atlas:" label per user request — the select's current value
+    // identifies the active atlas on its own. The switcher is rebuilt
+    // on every renderTopbar() call to keep the active-option highlight
+    // in sync with the current atlas; idempotent because we clear the
+    // host first. Falls back to appending to the topbar if the shell
+    // host isn't in the DOM (defensive — older index.html lacks it).
     if (multi) {
+      const host = document.getElementById('atlas-switcher-host') || bar;
+      host.innerHTML = '';
       const switcher = document.createElement('span');
       switcher.className = 'atlas-switcher';
-      const label = document.createElement('span');
-      label.className = 'atlas-switcher-label';
-      label.textContent = 'atlas:';
-      switcher.appendChild(label);
       const sel = document.createElement('select');
       sel.className = 'atlas-switcher-select';
+      sel.setAttribute('aria-label', 'Active atlas');
+      sel.title = 'Switch atlas';
       for (const [aid, mf] of this.manifests) {
         const opt = document.createElement('option');
         opt.value = aid;
@@ -512,7 +516,7 @@ export class AtlasRouter {
         }
       });
       switcher.appendChild(sel);
-      bar.appendChild(switcher);
+      host.appendChild(switcher);
     }
 
     for (const [atlas_id, manifest] of this.manifests) {

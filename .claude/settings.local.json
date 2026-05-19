@@ -261,7 +261,19 @@
       "Bash(grep -n \"#[0-9a-fA-F]\\\\{3,6\\\\}\\\\|rgba\\(\" 'C:/Users/quent/Desktop/atlas-core/atlases/core/css/core_pages.css')",
       "Bash(grep -nA 25 \"^export function getActiveModeView\" atlases/inversion/pages/discovery/local_pca_dosage/_data.js)",
       "PowerShell($count = wsl bash /mnt/c/Users/quent/Desktop/atlas-core/scripts/_run_all_tests.sh 2>&1 | Select-String \"ALL OK\" | Measure-Object ; Write-Host \"ALL OK count: $\\($count.Count\\)\")",
-      "Bash(grep -nA 20 \"_synthesizeThetaPiView\\\\|_synthesizeGhslView\" atlases/inversion/shared/page1_data_helpers.js)"
+      "Bash(grep -nA 20 \"_synthesizeThetaPiView\\\\|_synthesizeGhslView\" atlases/inversion/shared/page1_data_helpers.js)",
+      "PowerShell(wsl bash -c \"ls -la /mnt/c/Users/quent/Desktop/atlas-workspace/atlases/inversion/pages/discovery/candidate_focus.html 2>&1 && curl -s -o /dev/null -w '%{http_code}\\\\n' http://127.0.0.1:8000/atlases/inversion/pages/discovery/candidate_focus.html\")",
+      "PowerShell(wsl bash /mnt/c/Users/quent/Desktop/atlas-core/build/assemble.sh 2>&1 | Select-Object -Last 3 ; $count = wsl bash /mnt/c/Users/quent/Desktop/atlas-core/scripts/_run_all_tests.sh 2>&1 | Select-String \"ALL OK\" | Measure-Object ; Write-Host \"ALL OK count: $\\($count.Count\\)\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\quent\\\\Desktop\\\\inversion-atlas\\\\atlases\\\\inversion\\\\registries\" -Directory)",
+      "Bash(Select-Object Name)",
+      "PowerShell(wsl bash -c \"cd /mnt/c/Users/quent/Desktop/atlas-core && node atlases/core/pages/test_inventory.js 2>&1 | tail -25\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('server/atlas_server.py'\\).read\\(\\)\\); print\\('SYNTAX OK'\\)\")",
+      "PowerShell(wsl bash /mnt/c/Users/quent/Desktop/atlas-core/build/assemble.sh 2>&1 | Select-Object -Last 2 ; $count = wsl bash /mnt/c/Users/quent/Desktop/atlas-core/scripts/_run_all_tests.sh 2>&1 | Select-String \"ALL OK\" | Measure-Object ; Write-Host \"umbrella ALL OK: $\\($count.Count\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('server/atlas_server.py', encoding='utf-8'\\).read\\(\\)\\); print\\('SYNTAX OK'\\)\")",
+      "Read(//mnt/e/**)",
+      "Read(//e/results_diversity/**)",
+      "Bash(sed 's/.*\\\\.//')",
+      "Bash(mkdir -p 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/runners' 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/extractors' 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/schemas/schema_in' 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/schemas/schema_out' && echo done)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",
@@ -270,7 +282,8 @@
       "c:\\Users\\quent\\Desktop\\genome-atlas",
       "C:\\Users\\quent\\Desktop\\relatedness-atlas\\atlases\\relatedness\\shared",
       "C:\\Users\\quent\\Desktop\\meiosis-atlas\\atlases\\meiosis\\css",
-      "C:\\Users\\quent\\Desktop\\diversity-atlas\\atlases\\diversity\\pages\\*"
+      "C:\\Users\\quent\\Desktop\\diversity-atlas\\atlases\\diversity\\pages\\*",
+      "C:\\Users\\quent\\Desktop\\meiosis-atlas\\atlases\\meiosis\\registries"
     ]
   }
 }

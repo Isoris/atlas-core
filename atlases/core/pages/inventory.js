@@ -63,6 +63,29 @@ const CACHE = {
 let CURRENT_TAB = 'envelopes';
 let _wired = [];
 
+// Detail-view mode: 'simple' renders objects as key→value rows (the default,
+// readable); 'json' renders raw JSON in a <pre> block (for copy-paste).
+// Persisted in localStorage so the user's preference survives reloads.
+const VIEW_MODE_LS_KEY = 'atlas.inventory.viewMode';
+let VIEW_MODE = (() => {
+  try { return localStorage.getItem(VIEW_MODE_LS_KEY) === 'json' ? 'json' : 'simple'; }
+  catch { return 'simple'; }
+})();
+function setViewMode(mode) {
+  VIEW_MODE = (mode === 'json') ? 'json' : 'simple';
+  try { localStorage.setItem(VIEW_MODE_LS_KEY, VIEW_MODE); } catch {}
+}
+
+// Track the last-rendered detail so the mode toggle can re-render in place.
+let _lastDetail = null;  // { fn, args: [...] }
+function renderDetail(fn, ...args) {
+  _lastDetail = { fn, args };
+  return fn(...args);
+}
+function rerenderDetail() {
+  if (_lastDetail) _lastDetail.fn(..._lastDetail.args);
+}
+
 function wire(el, evt, fn) {
   if (!el) return;
   el.addEventListener(evt, fn);
@@ -371,10 +394,49 @@ function renderToolkitTree(tree, _detail, filter) {
 // ===== Rendering: right detail panel ==================================== //
 
 function renderJsonDetail(detail, title, obj) {
-  const json = esc(JSON.stringify(obj, null, 2));
-  detail.innerHTML =
-    `<div class="inv-det-h">${esc(title)}</div>` +
-    `<pre class="inv-json">${json}</pre>`;
+  const body = (VIEW_MODE === 'json')
+    ? `<pre class="inv-json">${esc(JSON.stringify(obj, null, 2))}</pre>`
+    : `<div class="inv-simple-root">${renderSimpleObject(obj)}</div>`;
+  detail.innerHTML = `<div class="inv-det-h">${esc(title)}</div>` + body;
+}
+
+// Render any JS value as readable HTML — labelled key/value grid for
+// objects, bullet list for arrays of primitives, nested cards for arrays
+// of objects, italic primitives otherwise. Recursion depth is unbounded
+// but each level wraps in a panel so deep nesting is visually grouped.
+export function renderSimpleObject(v) {
+  if (v === null || v === undefined) return '<span class="inv-simple-empty">(none)</span>';
+  if (typeof v === 'boolean') return v ? '<span class="inv-simple-bool inv-simple-bool-true">yes</span>' : '<span class="inv-simple-bool inv-simple-bool-false">no</span>';
+  if (typeof v === 'number') return `<span class="inv-simple-num">${esc(v)}</span>`;
+  if (typeof v === 'string') {
+    if (v === '') return '<span class="inv-simple-empty">(empty string)</span>';
+    return `<span class="inv-simple-str">${esc(v)}</span>`;
+  }
+  if (Array.isArray(v)) {
+    if (v.length === 0) return '<span class="inv-simple-empty">(empty list)</span>';
+    // If every item is primitive, render as a bullet list.
+    const allPrim = v.every(x => x === null || x === undefined ||
+      typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean');
+    if (allPrim) {
+      return '<ul class="inv-simple-list">' +
+        v.map(x => `<li>${renderSimpleObject(x)}</li>`).join('') + '</ul>';
+    }
+    // Mixed / nested → cards.
+    return v.map((x, i) =>
+      `<div class="inv-simple-card"><div class="inv-simple-card-i">[${i}]</div>${renderSimpleObject(x)}</div>`
+    ).join('');
+  }
+  if (typeof v === 'object') {
+    const keys = Object.keys(v);
+    if (keys.length === 0) return '<span class="inv-simple-empty">(empty object)</span>';
+    let html = '<dl class="inv-simple">';
+    for (const k of keys) {
+      html += `<dt>${esc(k)}</dt><dd>${renderSimpleObject(v[k])}</dd>`;
+    }
+    html += '</dl>';
+    return html;
+  }
+  return `<span class="inv-simple-str">${esc(String(v))}</span>`;
 }
 
 async function showEnvelopeDetail(detail, layer_id) {
@@ -435,7 +497,10 @@ function showToolkitJsonlDetail(detail, name) {
     const id = r[key] || `(row ${i + 1})`;
     const lab = labelKey && r[labelKey] ? r[labelKey] : '';
     const sum = lab ? `${esc(id)} <span class="inv-rec-lab">${esc(lab)}</span>` : esc(id);
-    return `<details class="inv-rec"><summary>${sum}</summary><pre class="inv-json">${esc(JSON.stringify(r, null, 2))}</pre></details>`;
+    const body = (VIEW_MODE === 'json')
+      ? `<pre class="inv-json">${esc(JSON.stringify(r, null, 2))}</pre>`
+      : `<div class="inv-rec-body">${renderSimpleObject(r)}</div>`;
+    return `<details class="inv-rec"><summary>${sum}</summary>${body}</details>`;
   }).join('');
   const trunc = rows.length > 500 ? `<div class="inv-trunc">showing first 500 of ${rows.length} records</div>` : '';
   detail.innerHTML =
@@ -477,7 +542,21 @@ function applyFilter(root) {
 // ===== mount / unmount ================================================== //
 
 export async function mount(root, _ctx = {}) {
+  // Restore persisted view-mode and reflect in the button state.
+  for (const b of root.querySelectorAll('.inv-mode-btn')) {
+    b.classList.toggle('active', b.dataset.mode === VIEW_MODE);
+  }
+
   wire(root.querySelector('#inv-tabs'), 'click', (e) => {
+    const modeBtn = e.target.closest('.inv-mode-btn');
+    if (modeBtn) {
+      setViewMode(modeBtn.dataset.mode);
+      for (const b of root.querySelectorAll('.inv-mode-btn')) {
+        b.classList.toggle('active', b.dataset.mode === VIEW_MODE);
+      }
+      rerenderDetail();
+      return;
+    }
     const t = e.target.closest('.inv-tab');
     if (!t || !root.contains(t)) return;
     activateTab(root, t.dataset.tab);
@@ -490,12 +569,12 @@ export async function mount(root, _ctx = {}) {
     if (!row || !root.contains(row)) return;
     const detail = root.querySelector('#inv-detail');
     const kind = row.dataset.kind;
-    if (kind === 'envelope') showEnvelopeDetail(detail, row.dataset.layerId);
-    else if (kind === 'page')     showPageDetail(detail, row.dataset.atlasId, row.dataset.pageId);
-    else if (kind === 'registry')     showRegistryDetail(detail, row.dataset.atlasId, row.dataset.regName);
-    else if (kind === 'toolkit-tsv')   showToolkitTsvDetail(detail, row.dataset.tsvName);
-    else if (kind === 'toolkit-jsonl') showToolkitJsonlDetail(detail, row.dataset.tsvName);
-    else if (kind === 'toolkit-json')  showToolkitJsonDetail(detail, row.dataset.tsvName);
+    if (kind === 'envelope')           renderDetail(showEnvelopeDetail, detail, row.dataset.layerId);
+    else if (kind === 'page')          renderDetail(showPageDetail, detail, row.dataset.atlasId, row.dataset.pageId);
+    else if (kind === 'registry')      renderDetail(showRegistryDetail, detail, row.dataset.atlasId, row.dataset.regName);
+    else if (kind === 'toolkit-tsv')   renderDetail(showToolkitTsvDetail, detail, row.dataset.tsvName);
+    else if (kind === 'toolkit-jsonl') renderDetail(showToolkitJsonlDetail, detail, row.dataset.tsvName);
+    else if (kind === 'toolkit-json')  renderDetail(showToolkitJsonDetail, detail, row.dataset.tsvName);
   });
 
   // Initial load: envelopes (the most volatile source).

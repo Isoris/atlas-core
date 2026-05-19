@@ -28,6 +28,7 @@ import {
   parseJSONL,
   esc,
   countRegistryEntries,
+  renderSimpleObject,
 } from './inventory.js';
 
 let _failed = 0;
@@ -170,6 +171,89 @@ console.log('\ncountRegistryEntries:');
   eq(countRegistryEntries('x', null), '(empty)', 'null data → "(empty)"');
   eq(countRegistryEntries('x', undefined), '(empty)', 'undefined data → "(empty)"');
   eq(countRegistryEntries('x', 'not an object'), '(empty)', 'string data → "(empty)"');
+}
+
+// ====== renderSimpleObject ============================================
+
+console.log('\nrenderSimpleObject:');
+// Each assertion checks substring presence — the exact HTML formatting is
+// not part of the contract, but the structural choices (bullet list vs
+// grid vs nested panel) are. Spot-check via key markers.
+function contains(html, marker, msg) {
+  if (typeof html !== 'string' || !html.includes(marker)) {
+    console.error(`FAIL: ${msg}\n  marker not in output: ${marker}\n  got: ${html}`);
+    _failed++;
+    return;
+  }
+  _passed++;
+  console.log(`  ok: ${msg}`);
+}
+function lacks(html, marker, msg) {
+  if (typeof html === 'string' && html.includes(marker)) {
+    console.error(`FAIL: ${msg}\n  unexpected marker in output: ${marker}\n  got: ${html}`);
+    _failed++;
+    return;
+  }
+  _passed++;
+  console.log(`  ok: ${msg}`);
+}
+{
+  contains(renderSimpleObject(null),      'inv-simple-empty', 'null → empty marker');
+  contains(renderSimpleObject(undefined), 'inv-simple-empty', 'undefined → empty marker');
+  contains(renderSimpleObject(''),        '(empty string)',   'empty string → "(empty string)"');
+  contains(renderSimpleObject([]),        '(empty list)',     'empty array → "(empty list)"');
+  contains(renderSimpleObject({}),        '(empty object)',   'empty object → "(empty object)"');
+}
+{
+  contains(renderSimpleObject(true),  'inv-simple-bool-true',  'true → bool-true marker');
+  contains(renderSimpleObject(false), 'inv-simple-bool-false', 'false → bool-false marker');
+  contains(renderSimpleObject(true),  '>yes<', 'true rendered as "yes"');
+  contains(renderSimpleObject(false), '>no<',  'false rendered as "no"');
+}
+{
+  contains(renderSimpleObject(42),    'inv-simple-num',  'number → num marker');
+  contains(renderSimpleObject(42),    '>42<',            'number value preserved');
+  contains(renderSimpleObject('foo'), 'inv-simple-str',  'string → str marker');
+}
+{
+  // Array of primitives → bullet list.
+  const html = renderSimpleObject(['a', 'b', 'c']);
+  contains(html, 'inv-simple-list', 'array of primitives → bullet list');
+  lacks(html,    'inv-simple-card', 'array of primitives → no cards');
+}
+{
+  // Array of objects → cards with [i] index.
+  const html = renderSimpleObject([{ a: 1 }, { a: 2 }]);
+  contains(html, 'inv-simple-card', 'array of objects → cards');
+  contains(html, '[0]', 'card includes [0] index');
+  contains(html, '[1]', 'card includes [1] index');
+}
+{
+  // Plain object → dl grid.
+  const html = renderSimpleObject({ foo: 'bar', n: 3 });
+  contains(html, '<dl class="inv-simple"', 'object → dl grid');
+  contains(html, '<dt>foo</dt>', 'key as dt');
+  contains(html, 'bar',           'value rendered');
+}
+{
+  // HTML in keys/values must be escaped.
+  const html = renderSimpleObject({ '<bad>': '<script>' });
+  lacks(html,    '<script>',                                 'value HTML escaped');
+  contains(html, '&lt;script&gt;',                          'value angle brackets escaped');
+  contains(html, '&lt;bad&gt;',                             'key angle brackets escaped');
+}
+{
+  // Nested object — two levels deep.
+  const html = renderSimpleObject({ a: { b: 'c' } });
+  // Should contain two <dl class="inv-simple"> wrappers (outer + nested).
+  const matches = html.match(/inv-simple"/g) || [];
+  if (matches.length >= 2) {
+    console.log('  ok: nested object produces nested dl');
+    _passed++;
+  } else {
+    console.error(`FAIL: nested object should produce ≥2 inv-simple wrappers, got: ${matches.length}`);
+    _failed++;
+  }
 }
 
 // ====== summary =========================================================

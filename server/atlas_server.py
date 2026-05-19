@@ -1687,6 +1687,33 @@ async def health_alias() -> Dict[str, Any]:
     return await health()
 
 
+# 2026-05-19: dev-mode atlas list. core/atlas_discovery.js#_listAtlases
+# probes this endpoint first (when devMode=true) and falls back to the
+# static atlases/_index.json on failure. Without this route the dev
+# server logs a 404 on every page boot — harmless but noisy. We resolve
+# by serving the same _index.json contents the static path would return,
+# so the dev and prod codepaths agree. When the workspace isn't mounted
+# we return an empty list (the frontend then falls back gracefully).
+@app.get("/api/_dev/list-atlases")
+async def list_atlases_dev() -> Dict[str, Any]:
+    if WORKSPACE_ROOT is None:
+        return {"atlases": [], "_note": "no workspace mounted"}
+    idx = WORKSPACE_ROOT / "atlases" / "_index.json"
+    if idx.exists():
+        try:
+            return {"atlases": json.loads(idx.read_text(encoding="utf-8")).get("atlases", [])}
+        except Exception as e:
+            log.warning("list_atlases_dev: failed to parse _index.json: %s", e)
+    # Fallback: scan the atlases/ dir for sub-folders containing manifest.json.
+    out = []
+    atlas_dir = WORKSPACE_ROOT / "atlases"
+    if atlas_dir.is_dir():
+        for sub in sorted(atlas_dir.iterdir()):
+            if sub.is_dir() and (sub / "manifest.json").exists():
+                out.append(sub.name)
+    return {"atlases": out, "_note": "scanned from disk; no _index.json"}
+
+
 # =============================================================================
 # /file and /compute — turn 145 merge from atlas_server.py
 # =============================================================================

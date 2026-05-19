@@ -19,6 +19,13 @@
 <body>
 
 <header id="shell-header">
+  <!-- 2026-05-19: atlas switcher promoted to top-left of the shell
+       header (was inside #topbar). atlas_router populates this host
+       at registration time; if only one atlas is registered the host
+       stays empty (no switcher dropdown). The "ATLAS:" label is
+       intentionally absent — the dropdown's current value already
+       names the atlas. -->
+  <div id="atlas-switcher-host"></div>
   <!-- Chromosome (and any other) scope pickers live at the top of the
        header per Quentin's request. The router renders pickers into
        this <nav id="scopebar"> at navigate time. -->

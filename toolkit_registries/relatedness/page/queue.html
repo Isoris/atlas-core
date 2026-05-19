@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Queue — proposed action_manifests waiting for a runner</title>
+<style>
+  :root {
+    --fg: #1a202c; --muted: #6c727f; --bg: #f4f6f9; --bg-card: #ffffff;
+    --border: #d8dce3; --accent: #2d6cb6;
+    --green: #2f855a; --amber: #b87a14; --red: #b13030;
+    --st-queued-bg: #e9eef7; --st-queued-fg: #2d6cb6;
+    --st-claimed-bg:#fdecd2; --st-claimed-fg:#b87a14;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
+  body { font: 13.5px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  a { color: var(--accent); text-decoration: none; }
+
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  .wrap { padding: 14px 22px 40px; max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+  .lede { color: var(--muted); margin: 0 0 12px; font-size: 12.5px; max-width: 1080px; }
+
+  .toolbar {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    margin: 6px 0 14px; padding: 9px 12px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 6px;
+  }
+  .toolbar input, .toolbar select {
+    font: inherit; padding: 5px 9px; border: 1px solid var(--border);
+    border-radius: 4px; background: white;
+  }
+  .btn {
+    padding: 6px 12px; font-size: 12.5px; font-weight: 500; cursor: pointer;
+    border-radius: 4px; border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--fg);
+  }
+  .btn:hover { background: #f0f2f5; }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-danger  { background: white; color: var(--red); border-color: var(--red); }
+  .badge {
+    display: inline-block; padding: 1px 7px; border-radius: 3px;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .badge.queued  { background: var(--st-queued-bg);  color: var(--st-queued-fg); }
+  .badge.claimed { background: var(--st-claimed-bg); color: var(--st-claimed-fg); }
+  .badge.empty   { background: #eaecf0; color: var(--muted); }
+
+  .summary {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 14px; margin-bottom: 14px; font-size: 12.5px;
+    display: flex; gap: 18px; flex-wrap: wrap;
+  }
+  .summary .k { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .summary .v { font-weight: 600; font-size: 14px; }
+  .summary code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
+    background: #f4f6f9; padding: 1px 6px; border-radius: 3px;
+  }
+
+  .qcard {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 14px; margin-bottom: 10px;
+    border-left: 4px solid var(--st-queued-fg);
+  }
+  .qcard.claimed { border-left-color: var(--st-claimed-fg); }
+  .qcard .head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .qcard .head .id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; font-weight: 600;
+  }
+  .qcard .head .type {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: #f4f6f9; color: var(--fg); padding: 1px 7px; border-radius: 3px;
+    font-size: 11.5px;
+  }
+  .qcard .head .right { margin-left: auto; display: flex; gap: 6px; }
+  .qcard .meta {
+    display: grid; grid-template-columns: 110px 1fr; gap: 3px 12px;
+    font-size: 12px; margin-top: 8px;
+  }
+  .qcard .meta dt { color: var(--muted); }
+  .qcard .meta dd {
+    margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    word-break: break-all;
+  }
+  .qcard details { margin-top: 8px; }
+  .qcard summary { cursor: pointer; color: var(--muted); font-size: 11.5px; }
+  .qcard pre {
+    margin-top: 6px; padding: 9px 12px; background: #f7f8fa;
+    border: 1px solid var(--border); border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px; max-height: 380px; overflow: auto;
+  }
+  .qcard .dispatch-row {
+    margin-top: 8px; padding: 6px 10px; background: #f0f4fa; border-radius: 4px;
+    color: var(--muted); font-size: 11.5px;
+  }
+  .qcard .dispatch-row code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  .empty {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 32px 18px; text-align: center; color: var(--muted); font-size: 13px;
+  }
+  .empty code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;
+                background: #f4f6f9; padding: 1px 6px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html"><span class="num">1.</span> Conversation</a>
+  <a href="action.html"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html"><span class="num">4.</span> Catalogue</a>
+  <a href="layers.html"><span class="num">5.</span> Layers</a>
+  <a href="candidate_review.html"><span class="num">6.</span> Candidate review</a>
+  <a href="graph_builder.html"><span class="num">7.</span> Graph builder</a>
+  <a href="readiness.html"><span class="num">8.</span> Readiness</a>
+  <a href="layer_connector.html"><span class="num">9.</span> Layer Connector</a>
+  <a href="workspace_health.html"><span class="num">10.</span> Workspace Health</a>
+  <a href="queue.html" class="current"><span class="num">11.</span> Queue</a>
+  <span class="tag">Atlas-core — page 11</span>
+</nav>
+
+<div class="wrap">
+  <h1>Queue — proposed action_manifests waiting for a runner</h1>
+  <p class="lede">
+    Lists every manifest currently sitting in <code>02_queue/</code>, as
+    produced by <code>lib/dispatcher.py</code> on <code>--commit</code>.
+    The dispatcher never runs anything; this page never runs anything.
+    It's a queue viewer + a "I'll claim this one" annotation. Use the CLI
+    to enqueue or empty:
+    <br>
+    <code>python3 -m lib.dispatcher --question &lt;qid&gt; [--scope] --commit</code>
+    &nbsp;·&nbsp;
+    <code>python3 -m lib.dispatcher --clear --yes</code>
+  </p>
+
+  <div class="toolbar">
+    <label>filter type
+      <input type="text" id="filter-type" placeholder="substring…" size="22">
+    </label>
+    <label>filter question
+      <input type="text" id="filter-q" placeholder="substring…" size="22">
+    </label>
+    <button class="btn" id="btn-refresh">Refresh</button>
+    <button class="btn btn-danger" id="btn-clear-claims">Clear local claims</button>
+    <span style="margin-left:auto; color: var(--muted); font-size: 11.5px" id="meta-line"></span>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div id="cards"></div>
+</div>
+
+<script>
+const LS_KEY = "atlas_queue_claims_v1";
+
+const state = {
+  index: null,
+  filterType: "",
+  filterQ:    "",
+  claims:     loadClaims(),
+};
+
+function loadClaims() {
+  try {
+    const o = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    return (typeof o === "object" && o !== null) ? o : {};
+  } catch { return {}; }
+}
+function saveClaims() { localStorage.setItem(LS_KEY, JSON.stringify(state.claims)); }
+
+async function loadIndex() {
+  const meta = document.getElementById("meta-line");
+  try {
+    const r = await fetch("../02_queue/index.json", { cache: "no-store" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    state.index = await r.json();
+    meta.textContent = `index rewritten ${state.index.rewritten_at || "?"} · ${state.index.n || 0} entries`;
+  } catch (e) {
+    state.index = null;
+    meta.textContent = `no 02_queue/index.json (${e.message})`;
+  }
+}
+
+function rerender() {
+  const cards = document.getElementById("cards");
+  const summary = document.getElementById("summary");
+  if (!state.index || !state.index.entries) {
+    summary.innerHTML = `<div><span class="k">Status</span><div class="v">no queue index</div></div>`;
+    cards.innerHTML = `<div class="empty">
+      Run <code>python3 -m lib.dispatcher --question &lt;qid&gt; --commit</code> from
+      <code>toolkit_registries/relatedness/</code> to populate <code>02_queue/</code>,
+      then click Refresh.
+    </div>`;
+    return;
+  }
+  const entries = state.index.entries.filter(e =>
+    (!state.filterType || (e.type || "").toLowerCase().includes(state.filterType.toLowerCase())) &&
+    (!state.filterQ    || ((e._dispatch || {}).question_id || "").toLowerCase().includes(state.filterQ.toLowerCase()))
+  );
+  const nClaimed = entries.filter(e => state.claims[e.action_id]).length;
+  summary.innerHTML = `
+    <div><span class="k">Queued</span><div class="v">${state.index.n || 0}</div></div>
+    <div><span class="k">Showing</span><div class="v">${entries.length}</div></div>
+    <div><span class="k">Claimed (local)</span><div class="v">${nClaimed}</div></div>
+    <div><span class="k">Queue dir</span><div class="v"><code>${state.index.queue_dir || "?"}</code></div></div>
+    <div><span class="k">Last rewritten</span><div class="v"><code>${(state.index.rewritten_at || "?").slice(0, 19) + "Z"}</code></div></div>
+  `;
+  if (!entries.length) {
+    cards.innerHTML = `<div class="empty">queue is empty (or no entries match the filter)</div>`;
+    return;
+  }
+  cards.innerHTML = entries.map(e => {
+    const claimed = !!state.claims[e.action_id];
+    const out = (e.expected_outputs || []).map(o => `<code>${o.layer_type}</code>`).join(", ") || "—";
+    const d = e._dispatch || {};
+    return `
+      <div class="qcard ${claimed ? "claimed" : ""}" data-aid="${e.action_id}">
+        <div class="head">
+          <span class="badge ${claimed ? "claimed" : "queued"}">${claimed ? "claimed" : "queued"}</span>
+          <span class="id">${e.action_id}</span>
+          <span class="type">${e.type}</span>
+          <span class="right">
+            <button class="btn" data-act="claim">${claimed ? "Unclaim" : "Claim"}</button>
+            <button class="btn" data-act="copy-cmd">Copy run command</button>
+          </span>
+        </div>
+        <dl class="meta">
+          <dt>dataset_id</dt><dd>${e.dataset_id || "—"}</dd>
+          <dt>runner</dt><dd>${e.runner || "—"}</dd>
+          <dt>submitted_by</dt><dd>${e.submitted_by || "—"}</dd>
+          <dt>submitted_at</dt><dd>${e.submitted_at || "—"}</dd>
+          <dt>produces</dt><dd>${out}</dd>
+        </dl>
+        ${(d.question_id || d.analysis_id) ? `
+          <div class="dispatch-row">
+            dispatched for question <code>${d.question_id || "?"}</code>
+            via analysis <code>${d.analysis_id || "?"}</code>
+            ${d.reason ? `· ${d.reason}` : ""}
+          </div>` : ""}
+        <details>
+          <summary>raw manifest</summary>
+          <pre>${escapeJSON(e)}</pre>
+        </details>
+      </div>
+    `;
+  }).join("");
+  for (const card of cards.querySelectorAll(".qcard")) {
+    const aid = card.dataset.aid;
+    card.querySelector('[data-act="claim"]').addEventListener("click", () => {
+      if (state.claims[aid]) delete state.claims[aid];
+      else state.claims[aid] = new Date().toISOString();
+      saveClaims(); rerender();
+    });
+    card.querySelector('[data-act="copy-cmd"]').addEventListener("click", () => {
+      const dir = (state.index && state.index.queue_dir) || "02_queue";
+      const cmd = `# run manifest ${aid}\ncat ${dir}/${aid}.json | jq .`;
+      navigator.clipboard?.writeText(cmd);
+      const b = card.querySelector('[data-act="copy-cmd"]');
+      const orig = b.textContent; b.textContent = "Copied ✓";
+      setTimeout(() => { b.textContent = orig; }, 1200);
+    });
+  }
+}
+
+function escapeJSON(obj) {
+  return JSON.stringify(obj, null, 2)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+(async () => {
+  document.getElementById("filter-type").addEventListener("input", e => { state.filterType = e.target.value; rerender(); });
+  document.getElementById("filter-q").addEventListener("input",    e => { state.filterQ    = e.target.value; rerender(); });
+  document.getElementById("btn-refresh").addEventListener("click", async () => { await loadIndex(); rerender(); });
+  document.getElementById("btn-clear-claims").addEventListener("click", () => {
+    if (!Object.keys(state.claims).length) return;
+    if (!confirm(`Clear ${Object.keys(state.claims).length} local claim(s)?`)) return;
+    state.claims = {}; saveClaims(); rerender();
+  });
+  await loadIndex();
+  rerender();
+})();
+</script>
+<script defer src="doc.js"></script>
+<script defer src="search.js"></script>
+<script defer src="scope.js"></script>
+</body>
+</html>

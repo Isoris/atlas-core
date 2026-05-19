@@ -124,11 +124,18 @@ prints exactly what it WOULD queue — useful for review meetings.
 ```
 02_queue/
 ├── act_<ts_ms>_<analysis>_<3char>.json     one per proposed action
+├── index.json                              maintained on every commit + clear (browser-readable)
 └── …
 ```
 
 `act_id` convention: `act_<unix_ms>_<analysis_id[:12]>_<3-char>`. Stable,
 sortable by time, runner-friendly.
+
+`index.json` shape (`queue_index_v1`): `{schema_version, queue_dir,
+rewritten_at, n, entries[]}` where each entry mirrors the key fields of
+the per-manifest JSON (action_id, type, dataset_id, runner,
+submitted_at/by, expected_outputs[], _dispatch{}, file). The browser
+cannot list a directory; this index is what page 11 (Queue) reads.
 
 ---
 
@@ -136,10 +143,13 @@ sortable by time, runner-friendly.
 
 - **No real runner.** Lands when `POST /api/actions` (PR #3) is wired to
   poll `02_queue/`, or a shell loop is acceptable.
-- **No queue UI.** Today the dispatcher CLI lists queued manifests.
-  A page (probably page 11 — "Queue") will visualise + claim them.
+- **Queue UI shipped (page 11).** Reads `02_queue/index.json`; shows
+  every queued manifest with summary + filters + collapsible raw view;
+  supports a local "claim" annotation (localStorage) so reviewers can
+  divvy up work. Does not run anything.
 - **No retry / backoff / status.** A future v1 will track per-manifest
-  state (queued → running → succeeded / failed).  v0 is fire-and-forget.
+  state (queued → running → succeeded / failed) via `runs.jsonl`.
+  v0 is fire-and-forget.
 
 ---
 

@@ -69,7 +69,8 @@ function wire(el, evt, fn) {
   _wired.push(() => el.removeEventListener(evt, fn));
 }
 
-function esc(s) {
+// Exported below (named) for the smoke test; kept as locals here.
+export function esc(s) {
   return String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -77,7 +78,7 @@ function esc(s) {
 
 // ===== TSV loader (same shape as catalogue.js) =========================== //
 
-function parseTSV(text) {
+export function parseTSV(text) {
   const lines = text.split(/\r?\n/).filter(l => l.length > 0);
   if (lines.length === 0) return { header: [], rows: [] };
   const header = lines[0].split('\t');
@@ -105,7 +106,7 @@ async function fetchTsv(path) {
 // JSONL: one JSON object per line. Empty / whitespace lines skipped.
 // Malformed lines surface as { _error, _line, _raw } so the renderer can
 // flag them without aborting the whole file.
-function parseJSONL(text) {
+export function parseJSONL(text) {
   const out = [];
   const lines = text.split(/\r?\n/);
   lines.forEach((raw, i) => {
@@ -293,7 +294,7 @@ function renderRegistriesTree(tree, _detail, filter) {
   tree.innerHTML = parts.join('') || '<div class="inv-empty">No matches.</div>';
 }
 
-function countRegistryEntries(name, data) {
+export function countRegistryEntries(name, data) {
   // Best-effort: most atlas registries have a top-level object like
   // { pages: { ... } } or { layers: { ... } }. Show entry count.
   if (!data || typeof data !== 'object') return '(empty)';

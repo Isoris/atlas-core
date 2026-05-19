@@ -32,12 +32,17 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
    zoomed out. min-height:0 lets the flex item shrink so inner grids can
    resolve their fractions without overflowing. */
 main#app-root { flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden; }
-/* z-index above #topbar (100) so the session/mode/data folder popovers
-   and the atlas-switcher dropdown render IN FRONT of the topbar, not
-   tucked behind it. Position relative establishes a stacking context. */
+/* 2026-05-19: bumped from z-index:200 to 9999. The earlier value cleared
+   #topbar (z=100) but page-level sticky/fixed banners (e.g. per-page
+   panel header strips that use position:sticky with their own
+   z-indices) create independent stacking contexts that can paint over
+   a z-index:200 header. The folder dropdown popovers (.header-folder-panel,
+   z=9999 inside this stacking context) need the header itself to sit at
+   the very top of the page's compositing order so the dropdowns render
+   over EVERYTHING. */
 header { padding: 3px 14px; border-bottom: 1px solid var(--rule);
          display: flex; align-items: center; gap: 8px; min-height: 30px; height: 30px;
-         position: relative; z-index: 200; }
+         position: relative; z-index: 9999; }
 /* Title + meta are no longer rendered (Quentin's request — top header
    shows scope + tool clusters only). Keep the dead rules as harmless
    no-ops so anything else that ever uses these classes still styles. */
@@ -211,7 +216,15 @@ header .header-folder-panel {
   background: var(--panel); border: 1px solid var(--rule);
   border-radius: 3px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.45);
-  padding: 4px; z-index: 50;
+  /* 2026-05-19: was z-index 50 inside header's z-index:200 stacking
+     context — should have rendered above page content, but per-page
+     panel banners (e.g. local_pca_dosage's #pcaPanel header strip,
+     nested_inversion_detector's title bar) use position:sticky /
+     position:fixed which create their own stacking contexts that escape
+     the parent's z-index ordering and end up painted over the dropdown.
+     Bump to z-index 9999 so the folder menus always paint on top.
+     Background is solid var(--panel); no transparency. */
+  padding: 4px; z-index: 9999;
   min-width: 170px;
   flex-direction: column; gap: 2px;
 }

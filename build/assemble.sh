@@ -54,9 +54,24 @@ PARENT="$(cd "$ATLAS_CORE/.." && pwd)"
 WORKSPACE="$PARENT/atlas-workspace"
 
 # 1. Clean ----------------------------------------------------------------
-echo "==> cleaning $WORKSPACE/"
-rm -rf "$WORKSPACE"
-mkdir -p "$WORKSPACE/atlases"
+# 2026-05-20: was `rm -rf $WORKSPACE && mkdir -p ...` which broke any
+# running dev server's directory handle (the inode of $WORKSPACE changes
+# on wipe+recreate, so Starlette's StaticFiles loses its mount target
+# until restart). Quentin's report: a fresh assemble produced 404s on
+# every page fragment until the user restarted start.sh.
+# New strategy: keep $WORKSPACE intact; only wipe the inside (atlases/
+# and the top-level files we're about to overwrite). The atlas
+# subdirectories are individually wiped in step 3 so stale files from
+# removed atlases don't linger. Files that the tar in step 2 overwrites
+# are simply overwritten; files removed upstream may linger in workspace
+# (acceptable trade-off vs. breaking the running server).
+if [ ! -d "$WORKSPACE" ]; then
+  echo "==> creating $WORKSPACE/"
+  mkdir -p "$WORKSPACE/atlases"
+else
+  echo "==> refreshing $WORKSPACE/ in place (server-friendly)"
+  mkdir -p "$WORKSPACE/atlases"
+fi
 
 # 2. Copy atlas-core contents into workspace root ------------------------
 echo "==> copying atlas_core: $ATLAS_CORE"
@@ -104,6 +119,10 @@ for key in "${kv_keys[@]}"; do
     aid="$(basename "$sub")"
     [ -f "$sub/manifest.json" ] || continue
     echo "==> copying atlas $aid: $sub"
+    # 2026-05-20: wipe just THIS atlas's destination before copying so
+    # stale files from a renamed/removed page don't linger. Keeps the
+    # workspace-root inode stable (see step 1 comment).
+    rm -rf "$WORKSPACE/atlases/$aid"
     cp -r "$sub" "$WORKSPACE/atlases/"
     atlas_ids+=("$aid")
   done

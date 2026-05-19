@@ -23,6 +23,9 @@ python3 -m unittest scripts.test_atlas_action 2>&1 | tail -8
 echo '--- atlas-core JS layer_api ---'
 node tests/test_layer_api.js 2>&1 | tail -2
 
+echo '--- atlas-core inventory page (pure helpers) ---'
+node atlases/core/pages/test_inventory.js 2>&1 | tail -2
+
 for atlas in inversion-atlas diversity-atlas population-atlas genome-atlas relatedness-atlas; do
   echo "--- $atlas ---"
   cd /mnt/c/Users/quent/Desktop/"$atlas"

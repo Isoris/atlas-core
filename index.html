@@ -246,10 +246,31 @@ import { attachShellChrome } from './core/shell_chrome.js';
 async function loadAtlasConfigs(atlas_id, manifest) {
   const reg = manifest.registries || {};
   const out = {};
+  // 2026-05-19: was strict — any missing registry threw and dropped the
+  // whole atlas from the shell. Symptom for the user: a single transient
+  // assemble.sh race (e.g. the dev server caching a 404 from before a
+  // registry was emitted) silently killed the entire meiosis atlas. Now
+  // we substitute an empty-shell registry on missing/malformed files +
+  // log a warning. The atlas still boots; pages that read from the
+  // missing registry render their "no data" fallback instead of being
+  // unreachable. Atlas-fatal errors (e.g. missing manifest.json) still
+  // throw — those are handled upstream in discover().
   for (const [name, path] of Object.entries(reg)) {
-    const resp = await fetch(path);
-    if (!resp.ok) throw new Error(`atlas '${atlas_id}' missing config: ${path}`);
-    out[name] = await resp.json();
+    try {
+      const resp = await fetch(path);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      out[name] = await resp.json();
+    } catch (err) {
+      console.warn(
+        `atlas '${atlas_id}': missing/unreadable registry '${name}' at ${path} ` +
+        `(${err.message}). Substituting empty shell so the atlas still boots; ` +
+        `pages reading this registry will render their no-data fallback.`
+      );
+      // Each registry doc nests its content under a key matching its name
+      // (e.g. layers.registry.json → { layers: {...} }). Provide that
+      // shape so downstream `configs.<name>.<name>` reads stay safe.
+      out[name] = { [name]: {} };
+    }
   }
   return out;
 }

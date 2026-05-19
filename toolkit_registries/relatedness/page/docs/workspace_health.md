@@ -45,13 +45,15 @@ Hit `Cmd/Ctrl+K` from any page to open the universal search modal. Type any prod
 
 ## Sticky scope ribbon (every page)
 
-A thin ribbon under the top nav shows the current `sample_set` / `interval_set` / `candidate_id` and persists them via `localStorage`. Edit any field → Enter or blur saves. Pages 6 / 8 / 9 / 10 listen for changes (`scope-changed` event) and re-render. Two helpers for any other page:
+A thin ribbon under the top nav shows the current **atlas / sample_set / interval_set / candidate_id** and persists them via `localStorage`. The atlas selector is a dropdown populated live from `atlases.jsonl` (with each atlas's icon + label); picking one tints the small dot next to the dropdown in the atlas's `color`. Edit any field → Enter or blur saves. Pages 6 / 8 / 9 / 10 listen for changes (`scope-changed` event) and re-render. Helpers for any page:
 
 ```
-window.getScope()             → { sample_set, interval_set, candidate_id }
+window.getScope()             → { atlas, sample_set, interval_set, candidate_id }
 window.setScope(partial)      → merge + persist + dispatch event
 window.onScopeChange(fn)      → subscribe
 ```
+
+`scope.js` also injects a small CSS override that makes the page-tab nav span full width (each tab `flex: 1`, the trailing "atlas-core / page N" tag hidden) — clearer at a glance, no compression for wider nav items.
 
 ## Per-atlas color stripes
 

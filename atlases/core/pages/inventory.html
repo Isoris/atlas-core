@@ -1,0 +1,35 @@
+<!-- atlases/core/pages/inventory.html
+     Inventory page — one place to see everything loaded right now.
+     Four sources: envelopes (action pipeline), per-atlas manifest pages,
+     per-atlas registries (5 JSON files), toolkit_registries TSVs. -->
+<div class="core-page core-page-inventory">
+
+  <header>
+    <h1>Inventory — what's loaded</h1>
+    <div class="sub">
+      Cross-atlas view: live envelopes, manifest pages, per-atlas registries, toolkit TSVs.
+      Click any row to inspect.
+    </div>
+  </header>
+
+  <div class="inv-tabs" id="inv-tabs">
+    <button class="inv-tab active" data-tab="envelopes" type="button">Envelopes</button>
+    <button class="inv-tab"        data-tab="pages"     type="button">Atlas pages</button>
+    <button class="inv-tab"        data-tab="registries" type="button">Atlas registries</button>
+    <button class="inv-tab"        data-tab="toolkit"   type="button">Toolkit TSVs</button>
+  </div>
+
+  <div class="inv-body">
+    <aside class="inv-left">
+      <div class="inv-search">
+        <input type="search" id="inv-filter" placeholder="filter…" autocomplete="off">
+      </div>
+      <div class="inv-tree" id="inv-tree"><div class="inv-empty">loading…</div></div>
+    </aside>
+
+    <main class="inv-right">
+      <div class="inv-detail" id="inv-detail"><div class="inv-empty">Select a row on the left.</div></div>
+    </main>
+  </div>
+
+</div>

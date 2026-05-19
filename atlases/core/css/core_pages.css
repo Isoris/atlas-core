@@ -515,3 +515,122 @@
 }
 .core-page-catalogue .card .lineage .arrow { color: var(--ok); margin: 0 6px; }
 .core-page-catalogue .card .lineage code { font-size: 11.5px; }
+
+/* ----- 7. Inventory page --------------------------------------------- */
+/* Inventory uses inner scroll panels (left tree + right detail), so the
+ * page wrapper must NOT itself scroll — override .core-page's overflow-y:auto. */
+.core-page-inventory {
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.core-page-inventory .inv-tabs {
+  display: flex; gap: 4px;
+  padding: 10px 24px 0;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+.core-page-inventory .inv-tab {
+  border: 1px solid var(--border); border-bottom: none;
+  background: transparent; color: var(--muted);
+  font: inherit; padding: 6px 12px;
+  border-top-left-radius: 4px; border-top-right-radius: 4px;
+  cursor: pointer;
+}
+.core-page-inventory .inv-tab.active {
+  background: var(--bg); color: var(--fg);
+  border-color: var(--border);
+  margin-bottom: -1px;
+  position: relative; z-index: 1;
+}
+.core-page-inventory .inv-body {
+  display: grid; grid-template-columns: minmax(280px, 32%) 1fr;
+  flex: 1; min-height: 0;
+}
+.core-page-inventory .inv-left {
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  min-width: 0;
+}
+.core-page-inventory .inv-search { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.core-page-inventory .inv-search input {
+  width: 100%; box-sizing: border-box;
+  padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
+  font: inherit;
+}
+.core-page-inventory .inv-tree {
+  flex: 1; overflow-y: auto; padding: 4px 0;
+}
+.core-page-inventory .inv-group { margin: 6px 0; }
+.core-page-inventory .inv-group-h {
+  padding: 4px 12px; font-size: 11.5px;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+  background: var(--bg);
+}
+.core-page-inventory .inv-n { color: var(--muted); font-weight: normal; text-transform: none; letter-spacing: 0; }
+.core-page-inventory .inv-row {
+  padding: 5px 12px; cursor: pointer;
+  border-left: 2px solid transparent;
+}
+.core-page-inventory .inv-row:hover { background: #eef3fa; }
+.core-page-inventory .inv-row:focus { outline: none; background: #e2ecf7; border-left-color: var(--accent); }
+.core-page-inventory .inv-row-1 { font-size: 13px; color: var(--fg); }
+.core-page-inventory .inv-row-2 { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.core-page-inventory .inv-empty { padding: 20px 16px; color: var(--muted); font-size: 12.5px; }
+.core-page-inventory .inv-warn { color: var(--warn); }
+.core-page-inventory .inv-right {
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+}
+.core-page-inventory .inv-detail {
+  flex: 1; overflow: auto; padding: 16px 20px;
+}
+.core-page-inventory .inv-det-h {
+  font-weight: 600; font-size: 13.5px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px; margin-bottom: 10px;
+}
+.core-page-inventory .inv-det-sub { color: var(--muted); font-weight: normal; font-size: 11.5px; margin-left: 6px; }
+.core-page-inventory .inv-json {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px; line-height: 1.45;
+  white-space: pre-wrap; word-break: break-word;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+  padding: 10px 12px; margin: 0;
+}
+.core-page-inventory .inv-tbl-wrap { overflow: auto; border: 1px solid var(--border); border-radius: 4px; }
+.core-page-inventory .inv-tbl { border-collapse: collapse; width: 100%; font-size: 11.5px; }
+.core-page-inventory .inv-tbl th, .core-page-inventory .inv-tbl td {
+  text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.core-page-inventory .inv-tbl thead th { background: var(--bg); position: sticky; top: 0; }
+.core-page-inventory .inv-trunc { color: var(--muted); font-size: 11.5px; padding: 6px 4px 0; }
+
+/* Inventory — JSONL record cards (collapsible <details>) */
+.core-page-inventory .inv-rec {
+  border: 1px solid var(--border); border-radius: 4px;
+  background: var(--bg-card);
+  margin: 6px 0; padding: 0;
+}
+.core-page-inventory .inv-rec > summary {
+  cursor: pointer; padding: 6px 10px;
+  font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  list-style: none;
+}
+.core-page-inventory .inv-rec > summary::-webkit-details-marker { display: none; }
+.core-page-inventory .inv-rec > summary::before {
+  content: '▸'; display: inline-block;
+  margin-right: 6px; color: var(--muted);
+  transition: transform 0.1s;
+}
+.core-page-inventory .inv-rec[open] > summary::before { transform: rotate(90deg); }
+.core-page-inventory .inv-rec > summary:hover { background: #eef3fa; }
+.core-page-inventory .inv-rec > .inv-json {
+  border: none; border-top: 1px solid var(--border);
+  border-radius: 0 0 4px 4px; background: var(--bg);
+}
+.core-page-inventory .inv-rec-lab {
+  color: var(--muted); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin-left: 8px;
+}
+.core-page-inventory .inv-rec-err > summary { color: var(--fail); }

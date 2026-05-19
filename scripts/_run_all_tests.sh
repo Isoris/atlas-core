@@ -48,7 +48,7 @@ node atlases/genome/pages/assembly/test_page1_chips.js 2>&1 | tail -2
 
 echo '--- diversity-atlas per_sample/page1 (envelope-provenance badge) ---'
 cd /mnt/c/Users/quent/Desktop/diversity-atlas
-node atlases/diversity/pages/per_sample/test_page1_provenance.js 2>&1 | tail -2
+node atlases/diversity/pages/per_sample/test_samples_provenance.js 2>&1 | tail -2
 
 echo '--- population-atlas structure/page3 (multi-type panel-slot status) ---'
 cd /mnt/c/Users/quent/Desktop/population-atlas

@@ -36,6 +36,14 @@
       "fragment": "atlases/core/pages/catalogue.html",
       "module": "atlases/core/pages/catalogue.js",
       "tooltip": "Modules & analyses catalogue. Two tabs: biomod modules (one card per module, status-coloured) and analysis modes (one card per analysis × mode). Click anywhere a registry id is shown to hover-preview the underlying TSV row."
+    },
+    {
+      "id": "inventory",
+      "label": "5. Inventory",
+      "stage": "dashboard",
+      "fragment": "atlases/core/pages/inventory.html",
+      "module": "atlases/core/pages/inventory.js",
+      "tooltip": "Cross-atlas \"what's loaded right now\". Four tabs: live envelopes (GET /api/layers), per-atlas manifest pages, per-atlas registries (5 JSON files each), toolkit_registries TSVs. Click any row to inspect its JSON / TSV payload."
     }
   ],
   "registries": {

@@ -97,6 +97,15 @@ export class AtlasRouter {
     // Update state, fire page_mount event for prewarm scheduler
     this.state.shared.currentPage = { atlas_id, page_id };
     this.state.emit('shell.page_mount', { atlas_id, page_id });
+    // 2026-05-20: also dispatch a DOM CustomEvent so shell-side listeners
+    // that aren't wired through atlas_state (e.g. the JS-scripts badge
+    // refresh in shell_chrome.js) can react. Both signals carry the
+    // same payload.
+    try {
+      document.dispatchEvent(new CustomEvent('shell.page_mount', {
+        detail: { atlas_id, page_id },
+      }));
+    } catch (_) { /* non-DOM env */ }
     // 2026-05-19: write the new currentPage to localStorage so a browser
     // close/reopen lands on the same tab. Best-effort, never blocks nav.
     try { this.state.savePersisted(); } catch (_) {}
@@ -347,6 +356,41 @@ export class AtlasRouter {
             : (this.state[atlas_id] || {})[picker.slot];
           if (stateVal && chroms.includes(String(stateVal))) {
             sel.value = String(stateVal);
+          } else if (chroms.length > 0) {
+            // 2026-05-20: cold-boot autoload. Quentin: "start to load the
+            // first JSON item in chromosome list if nothing is in cache."
+            // When the user lands without a persisted activeChrom AND
+            // without a master_config default AND no URL hash override,
+            // auto-pick the first discovered chrom + fire the convenience
+            // setter so the prewarm scheduler + page remount kick in.
+            // Only fires once per picker per session.
+            const firstChrom = chroms[0];
+            sel.value = firstChrom;
+            try {
+              if (isShared && picker.slot === 'activeChrom'
+                  && typeof this.state.setActiveChrom === 'function') {
+                this.state.setActiveChrom(firstChrom);
+              } else if (isShared) {
+                this.state.shared[picker.slot] = firstChrom;
+                this.state.emit(`shared.${picker.slot}.changed`,
+                  { newValue: firstChrom, oldValue: null });
+              } else {
+                const bucket = this.state[atlas_id] || (this.state[atlas_id] = {});
+                bucket[picker.slot] = firstChrom;
+                this.state.emit(`${atlas_id}.${picker.slot}.changed`,
+                  { newValue: firstChrom, oldValue: null });
+              }
+              try { this.state.savePersisted(); } catch (_) {}
+              // Re-mount the current page so it sees the seeded scope.
+              const cur = this.state.shared.currentPage;
+              if (cur && cur.atlas_id && cur.page_id) {
+                this.navigate(cur.atlas_id, cur.page_id).catch(err => {
+                  console.error('autoload navigate failed:', err);
+                });
+              }
+            } catch (e) {
+              console.warn(`autoload first chrom for '${picker.slot}' failed:`, e);
+            }
           }
         }
       }

@@ -76,6 +76,7 @@ import gzip
 import io
 import logging
 import math
+import os
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -92,7 +93,13 @@ log = logging.getLogger(__name__)
 
 DEFAULT_MAX_SITES = 1000
 DEFAULT_HARD_CAP = 20000
-DEFAULT_MAX_REGION_BP = 50_000_000
+# 2026-05-19: was 50_000_000 — barely larger than C. gariepinus LG01
+# (51.1 Mb) so whole-chromosome dosage requests 400'd. Bumped to 300 Mb
+# to cover any realistic teleost chromosome. Override with env var
+# ATLAS_DOSAGE_MAX_REGION_BP for tight-budget deployments.
+DEFAULT_MAX_REGION_BP = int(
+    os.environ.get("ATLAS_DOSAGE_MAX_REGION_BP", str(300_000_000))
+)
 
 
 # =============================================================================
@@ -468,15 +475,21 @@ def handle_dosage_chunk(req: DosageChunkReq, *,
         downsampled = False
         warning = None
     elif req.mode == "raw":
-        # Raw cap policy: 400 with structured error, no auto-switch.
-        raise HTTPException(status_code=400, detail={
-            "error": "raw_cap_exceeded",
-            "n_sites_total": n_total,
-            "max_sites": req.cap,
-            "suggestion": ("Use mode=even or raise cap (HARD_CAP={}). "
-                           "Or use the standalone viewer for variance / "
-                           "hybrid / aggregate modes.").format(DEFAULT_HARD_CAP),
-        })
+        # 2026-05-19: was 400 with raw_cap_exceeded — but the inversion
+        # atlas's installDosageChunkFetcher builds URLs from the precomp
+        # JSON's dosage_chunks template, which often omits an explicit
+        # mode= param (so it defaults to "raw"). At chromosome scale that
+        # always blew up. Auto-fall-back to even-mode downsampling so the
+        # caller gets a usable response (at most `cap` sites uniformly
+        # spread across the bp range) instead of an error. The warning
+        # field on the response makes the auto-switch visible.
+        sel_indices = _select_even(positions, req.cap)
+        downsampled = True
+        warning = ("raw_cap_exceeded auto-switched to mode=even: "
+                   "{} positionally-uniform sites picked from {} total "
+                   "(cap={}). Pass mode=even explicitly to suppress this "
+                   "warning, or raise cap up to HARD_CAP={}.").format(
+                       len(sel_indices), n_total, req.cap, DEFAULT_HARD_CAP)
     else:  # mode == "even"
         sel_indices = _select_even(positions, req.cap)
         downsampled = True

@@ -233,7 +233,17 @@
       "PowerShell(wsl -d Ubuntu-24.04 -e bash -c \"cd /mnt/c/Users/quent/Desktop && bash atlas-core/build/assemble.sh 2>&1 | tail -8\")",
       "Bash(bash \"c:\\\\Users\\\\quent\\\\Desktop\\\\atlas-core\\\\build\\\\assemble.sh\")",
       "Bash(ls \"C:\\\\Users\\\\quent\\\\.claude\\\\projects\\\\c--Users-quent-Desktop-atlas-core\\\\memory\\\\\" 2>&1 | head -10)",
-      "Read(//c/Users/quent/.claude/projects/c--Users-quent-Desktop-atlas-core/**)"
+      "Read(//c/Users/quent/.claude/projects/c--Users-quent-Desktop-atlas-core/**)",
+      "Bash(grep -nE \"import.*page[0-9]|from.*page[0-9]|require.*page[0-9]|from\\\\s+['\\\\\"]\\(\\\\\\\\.\\\\\\\\./\\)*.*page\" atlases/diversity/pages/per_sample/test_page1_provenance.js)",
+      "Bash(grep -nE \"'\\\\\\\\./page|\\\\\"./page|querySelector.*page\" atlases/diversity/pages/*/page*.js)",
+      "Bash(wsl bash *)",
+      "PowerShell(wsl bash /mnt/c/Users/quent/Desktop/atlas-core/build/assemble.sh 2>&1)",
+      "Bash(cd \"c:/Users/quent/Desktop/diversity-atlas\" && sed -i 's# \\(renamed -> id=\"\\\\\\([^\"]*\\\\\\)\"\\) \\(renamed -> id=\"\\\\1\"\\)# \\(renamed -> id=\"\\\\1\"\\)#g' atlases/diversity/pages/*/*.js && grep -n \"Legacy DOM\" atlases/diversity/pages/*/*.js | head)",
+      "PowerShell(wsl bash /mnt/c/Users/quent/Desktop/atlas-core/scripts/_run_all_tests.sh 2>&1)",
+      "Bash(node --check atlases/inversion/pages/discovery/local_pca_dosage/panel_resize.js)",
+      "PowerShell(wsl bash -c \"cd /mnt/c/Users/quent/Desktop/diversity-atlas && node atlases/diversity/pages/per_sample/test_per_sample_page1.js 2>&1\")",
+      "Bash(python3 -c \"import sys,json; r=json.loads\\(sys.stdin.read\\(\\)\\); print\\(list\\(r.keys\\(\\)\\)[:10]\\)\")",
+      "PowerShell(wsl bash -c \"rm -rf /mnt/c/Users/quent/Desktop/atlas-workspace; sleep 1; ls /mnt/c/Users/quent/Desktop/atlas-workspace 2>&1 | head -3\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",
@@ -241,7 +251,8 @@
       "C:\\Users\\quent\\Desktop\\diversity-atlas\\atlases\\diversity\\pages",
       "c:\\Users\\quent\\Desktop\\genome-atlas",
       "C:\\Users\\quent\\Desktop\\relatedness-atlas\\atlases\\relatedness\\shared",
-      "C:\\Users\\quent\\Desktop\\meiosis-atlas\\atlases\\meiosis\\css"
+      "C:\\Users\\quent\\Desktop\\meiosis-atlas\\atlases\\meiosis\\css",
+      "C:\\Users\\quent\\Desktop\\diversity-atlas\\atlases\\diversity\\pages\\*"
     ]
   }
 }

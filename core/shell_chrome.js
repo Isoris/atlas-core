@@ -129,6 +129,25 @@ function _wireFolderButtons() {
       // Synthesize a click on the page-owned button. Use dispatchEvent
       // instead of .click() so any framework-bound listeners still fire.
       target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      // 2026-05-20: mirror the page button's new label/title back onto
+      // the header button so its text reflects the new state instead of
+      // staying stuck on the initial "📐 compact". Defer one frame so the
+      // page handler has run + mutated its own button's text before we
+      // copy it. Quentin's report: clicking the header "compact" button
+      // changes the layout but the button label never updates.
+      requestAnimationFrame(() => {
+        try {
+          if (target.textContent && target.textContent !== btn.textContent) {
+            btn.textContent = target.textContent;
+          }
+          if (target.title && target.title !== btn.title) {
+            btn.title = target.title;
+          }
+          if (target.dataset && target.dataset.mode && btn.dataset) {
+            btn.dataset.mode = target.dataset.mode;
+          }
+        } catch (_) { /* never fail the click on a label-mirror */ }
+      });
     }
     document.dispatchEvent(new CustomEvent('shell.chrome.cmd', {
       detail: { cmd, sourceButton: btn },
@@ -256,6 +275,22 @@ function _wireJsScriptsBadge() {
     badge.classList.toggle('v2', total > 0);
   };
   refresh();
+  // 2026-05-20: re-count after every page mount. The router fires a
+  // `shell.page_mount` CustomEvent on `document` (see atlas_router.js
+  // navigate(): `state.emit('shell.page_mount', ...)` plus a DOM-level
+  // mirror below). Without this listener the badge stayed stuck on
+  // "JS · 0 scripts" until the user clicked it — Quentin reported
+  // "JS buttons still shows 0 scripts loaded (sometimes but not always)".
+  document.addEventListener('shell.page_mount', () => {
+    // rAF so the page's import() has resolved + the registry push has
+    // landed before we recount. Re-count on a second rAF too for the
+    // rare case where the page module pushes additional entries from
+    // its mount() body (defensive belt-and-suspenders).
+    requestAnimationFrame(() => {
+      refresh();
+      requestAnimationFrame(refresh);
+    });
+  });
   // Re-count on each click (modules load lazily after page mounts).
   badge.addEventListener('click', () => {
     refresh();

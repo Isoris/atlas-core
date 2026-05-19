@@ -142,6 +142,14 @@ import { attachShellChrome } from './core/shell_chrome.js';
     });
 
     const state = new AtlasState({ serverBaseUrl: SERVER_BASE_URL });
+    // 2026-05-19: rehydrate persisted shared state (activeChrom, currentPage)
+    // BEFORE seeding from master_config so a returning user's last selection
+    // wins over the static config default. Per-atlas slots are also loaded
+    // here, but atlas-specific persist keys aren't registered until the
+    // atlas configs are loaded below — so this call only rehydrates `shared`
+    // and stashes `_pendingCurrentPage` for the router's cold-boot fallback.
+    try { state.loadPersisted(); } catch (e) { console.warn('loadPersisted:', e); }
+
     const registry = new Registry({
       atlasState: state,
       serverBaseUrl: SERVER_BASE_URL,
@@ -154,10 +162,13 @@ import { attachShellChrome } from './core/shell_chrome.js';
     if (masterConfig && Array.isArray(masterConfig.species)) {
       const active = masterConfig.species.find(s => s && s.active === true);
       const firstId = active ? active.id : masterConfig.species[0]?.id;
-      if (firstId) state.shared.activeSpecies = firstId;
+      if (firstId && !state.shared.activeSpecies) state.shared.activeSpecies = firstId;
     }
     // Seed activeChrom from master_config.atlas.active_chrom (if set).
-    if (masterConfig && masterConfig.atlas && masterConfig.atlas.active_chrom) {
+    // Only seeds when nothing was rehydrated from localStorage — otherwise
+    // the persisted chrom would be clobbered by the static default.
+    if (masterConfig && masterConfig.atlas && masterConfig.atlas.active_chrom
+        && !state.shared.activeChrom) {
       state.shared.activeChrom = masterConfig.atlas.active_chrom;
     }
 

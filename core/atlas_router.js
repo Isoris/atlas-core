@@ -97,6 +97,9 @@ export class AtlasRouter {
     // Update state, fire page_mount event for prewarm scheduler
     this.state.shared.currentPage = { atlas_id, page_id };
     this.state.emit('shell.page_mount', { atlas_id, page_id });
+    // 2026-05-19: write the new currentPage to localStorage so a browser
+    // close/reopen lands on the same tab. Best-effort, never blocks nav.
+    try { this.state.savePersisted(); } catch (_) {}
 
     // Mount
     await module.mount(root, this.state, this.registry);
@@ -123,11 +126,39 @@ export class AtlasRouter {
 
     let atlas_id, page_id;
     if (parts.length === 0) {
-      // Default: first atlas, first page
-      const firstAtlas = [...this.manifests.keys()][0];
-      if (!firstAtlas) return;
-      atlas_id = firstAtlas;
-      page_id = this.manifests.get(firstAtlas).pages[0]?.id;
+      // 2026-05-19: cold-boot fallback ordering —
+      //   1. persisted last page (state.shared._pendingCurrentPage, set
+      //      by atlas_state.loadPersisted from localStorage) — only used
+      //      if that atlas is still registered AND that page id still
+      //      exists in its manifest. Stale entries fall through silently.
+      //   2. first atlas, first page.
+      const pending = this.state.shared && this.state.shared._pendingCurrentPage;
+      if (pending && this.manifests.has(pending.atlas_id)) {
+        const mf = this.manifests.get(pending.atlas_id);
+        if (mf && Array.isArray(mf.pages)
+            && mf.pages.some(p => p && p.id === pending.page_id)) {
+          atlas_id = pending.atlas_id;
+          page_id  = pending.page_id;
+        }
+      }
+      // Clear the pending pointer so a subsequent hashchange (e.g. user
+      // clicking a tab) doesn't keep snapping back to it.
+      if (this.state.shared) delete this.state.shared._pendingCurrentPage;
+      if (!atlas_id) {
+        const firstAtlas = [...this.manifests.keys()][0];
+        if (!firstAtlas) return;
+        atlas_id = firstAtlas;
+        page_id = this.manifests.get(firstAtlas).pages[0]?.id;
+      }
+      // Reflect the resolved page in the URL so a subsequent reload (and
+      // bookmarks / shared links) keep working without depending on
+      // localStorage.
+      try {
+        const newHash = `#/${atlas_id}/${page_id}`;
+        if (window.location.hash !== newHash) {
+          history.replaceState(null, '', newHash);
+        }
+      } catch (_) {}
     } else if (parts.length === 1) {
       // Backward-compat: if exactly one atlas loaded and someone hashed
       // #/page1, treat parts[0] as page id of that atlas.
@@ -346,6 +377,9 @@ export class AtlasRouter {
       bucket[slot] = value;
       this.state.emit(`${atlas_id}.${slot}.changed`, { newValue: value, oldValue: old });
     }
+    // 2026-05-19: persist the new scope (activeChrom / activeCandidate / …)
+    // so close+reopen lands the user back on the same chromosome.
+    try { this.state.savePersisted(); } catch (_) {}
     // Re-mount the current page so it sees the new scope. This matches
     // the scrubber/zone UX of the legacy app: changing chromosome
     // rebuilds the view.

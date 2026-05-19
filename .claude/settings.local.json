@@ -230,7 +230,10 @@
       "PowerShell(\"copied; verify:\")",
       "PowerShell(wsl -d Ubuntu-24.04 -e bash -c \"cd /mnt/c/Users/quent/Desktop && bash atlas-core/build/assemble.sh 2>&1 | tail -15\")",
       "PowerShell(wsl -d Ubuntu-24.04 -e bash -c \"cd /mnt/c/Users/quent/Desktop && bash atlas-core/build/assemble.sh 2>&1 | tail -10\")",
-      "PowerShell(wsl -d Ubuntu-24.04 -e bash -c \"cd /mnt/c/Users/quent/Desktop && bash atlas-core/build/assemble.sh 2>&1 | tail -8\")"
+      "PowerShell(wsl -d Ubuntu-24.04 -e bash -c \"cd /mnt/c/Users/quent/Desktop && bash atlas-core/build/assemble.sh 2>&1 | tail -8\")",
+      "Bash(bash \"c:\\\\Users\\\\quent\\\\Desktop\\\\atlas-core\\\\build\\\\assemble.sh\")",
+      "Bash(ls \"C:\\\\Users\\\\quent\\\\.claude\\\\projects\\\\c--Users-quent-Desktop-atlas-core\\\\memory\\\\\" 2>&1 | head -10)",
+      "Read(//c/Users/quent/.claude/projects/c--Users-quent-Desktop-atlas-core/**)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

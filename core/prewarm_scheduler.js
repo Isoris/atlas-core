@@ -110,6 +110,13 @@ export class PrewarmScheduler {
 
     for (const layerKey of pageEntry.preloads) {
       if (ctrl.signal.aborted) return;
+      // 2026-05-19: skip layers explicitly marked `disabled: true` in the
+      // registry. These are layers whose pipeline output isn't on disk yet
+      // — preloading them just spams the console with HTTP 404s every time
+      // the user picks a chromosome. Flip `disabled` off in the layers
+      // registry when the pipeline starts emitting the file.
+      const layerEntry = atlas.layers && atlas.layers[layerKey];
+      if (layerEntry && layerEntry.disabled === true) continue;
       try {
         await this.registry.resolve(layerKey, args);
       } catch (e) {
@@ -139,6 +146,9 @@ export class PrewarmScheduler {
         if (name.startsWith('_')) continue;
         if (typeof entry !== 'object' || entry === null) continue;
         if (entry.preload_on !== eventName) continue;
+        // 2026-05-19: skip layers marked `disabled: true` so we don't
+        // generate 404 traffic for files the pipeline hasn't produced yet.
+        if (entry.disabled === true) continue;
         tasks.push(this._preloadLayer(name, entry, args, atlas_id, ctrl));
       }
     }

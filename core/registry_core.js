@@ -67,6 +67,23 @@ export class Registry {
     }
 
     const { entry } = lookup;
+    // 2026-05-19: short-circuit disabled layers. The flag exists to mark
+    // layers whose pipeline output isn't on disk yet — we return null
+    // instead of hitting the network so the console isn't drowned in 404s.
+    // The first time a disabled layer is asked for, log a single debug
+    // line so it's still discoverable. Pages that handle null results
+    // gracefully (e.g. lazy preloads) keep working; the rest see the
+    // null and render their "not loaded" stub.
+    if (entry && entry.disabled === true) {
+      if (!this._disabledNotified) this._disabledNotified = new Set();
+      if (!this._disabledNotified.has(key)) {
+        this._disabledNotified.add(key);
+        if (typeof console.debug === 'function') {
+          console.debug(`Registry.resolve: layer '${key}' is disabled — returning null (see registry entry's _disabled_reason).`);
+        }
+      }
+      return null;
+    }
     const cacheKey = this._buildCacheKey(key, entry, args);
     const tier = entry.cache_tier || entry.tier;
 

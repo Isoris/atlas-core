@@ -142,6 +142,16 @@ export class AtlasState {
     if (this.shared.activeCandidate && this.shared.activeCandidate.id) {
       out.shared.activeCandidateId = this.shared.activeCandidate.id;
     }
+    // 2026-05-19: persist the last visited page so close/reopen lands on
+    // the same atlas + tab the user was on. The router writes
+    // `shared.currentPage = { atlas_id, page_id }` after every navigate().
+    if (this.shared.currentPage && this.shared.currentPage.atlas_id
+        && this.shared.currentPage.page_id) {
+      out.shared.currentPage = {
+        atlas_id: this.shared.currentPage.atlas_id,
+        page_id:  this.shared.currentPage.page_id,
+      };
+    }
     // Per-atlas persisted slots.
     if (this._persistKeys) {
       for (const [atlas_id, keys] of this._persistKeys) {
@@ -175,6 +185,18 @@ export class AtlasState {
       // Note: activeCandidate is rehydrated by the caller using the id, since
       // the full candidate object lives in registry-resolved data.
       if (parsed.shared.activeCandidateId) this.shared._pendingCandidateId = parsed.shared.activeCandidateId;
+      // 2026-05-19: stash the persisted currentPage under _pendingCurrentPage
+      // so the router can use it as the hash fallback at boot time. Not
+      // written into shared.currentPage directly because the router treats
+      // that as live navigation state.
+      if (parsed.shared.currentPage
+          && parsed.shared.currentPage.atlas_id
+          && parsed.shared.currentPage.page_id) {
+        this.shared._pendingCurrentPage = {
+          atlas_id: parsed.shared.currentPage.atlas_id,
+          page_id:  parsed.shared.currentPage.page_id,
+        };
+      }
     }
     for (const k of Object.keys(parsed)) {
       if (k === 'shared') continue;

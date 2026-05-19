@@ -38,7 +38,7 @@ ALL_COLS = [
     "engine", "endpoint", "default_runner",
     "status", "requires", "intended_use", "definition_path",
 ]
-ALLOWED_STATUS = {"active", "experimental", "deprecated"}
+ALLOWED_STATUS = {"active", "experimental", "deprecated", "stub"}
 
 
 def _find_root(start: pathlib.Path) -> pathlib.Path:

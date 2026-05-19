@@ -26,6 +26,10 @@ node tests/test_layer_api.js 2>&1 | tail -2
 echo '--- atlas-core inventory page (pure helpers) ---'
 node atlases/core/pages/test_inventory.js 2>&1 | tail -2
 
+echo '--- meiosis-atlas adapter (staging + normalize) ---'
+( cd /mnt/c/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries && python3 test_adapter_smoke.py 2>&1 | tail -2 )
+cd /mnt/c/Users/quent/Desktop/atlas-core
+
 for atlas in inversion-atlas diversity-atlas population-atlas genome-atlas relatedness-atlas; do
   echo "--- $atlas ---"
   cd /mnt/c/Users/quent/Desktop/"$atlas"

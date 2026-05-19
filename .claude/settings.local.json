@@ -273,7 +273,19 @@
       "Read(//mnt/e/**)",
       "Read(//e/results_diversity/**)",
       "Bash(sed 's/.*\\\\.//')",
-      "Bash(mkdir -p 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/runners' 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/extractors' 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/schemas/schema_in' 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/schemas/schema_out' && echo done)"
+      "Bash(mkdir -p 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/runners' 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/extractors' 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/schemas/schema_in' 'C:/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries/schemas/schema_out' && echo done)",
+      "Bash(grep -n \"^#overview\\\\b\\\\|^/\\\\\\\\* overview\\\\\\\\|^\\\\\\\\.ov-\" \"C:/Users/quent/Desktop/inversion-atlas/atlases/inversion/css/inversion.css\")",
+      "PowerShell(wsl bash -c \"cd /mnt/c/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries && python3 test_adapter_smoke.py 2>&1\")",
+      "Bash(python \"C:/Users/quent/Desktop/atlas-core/_tmp_fix_popstats_registry.py\")",
+      "Bash(sed -i 's|\"schema\":         \"schemas/samples_genomewide_het_v1.schema.json\"|\"schema\":         \"../schemas/samples_genomewide_het_v1.schema.json\"|g' atlases/diversity/registries/data/layers.registry.json)",
+      "Bash(sed -i 's|\"schema\":         \"schemas/sample_sfs_v1.schema.json\"|\"schema\":         \"../schemas/sample_sfs_v1.schema.json\"|g' atlases/diversity/registries/data/layers.registry.json)",
+      "Bash(sed -i 's|\"schema\":         \"schemas/tsv_table_v1.schema.json\"|\"schema\":         \"../schemas/tsv_table_v1.schema.json\"|g' atlases/diversity/registries/data/layers.registry.json)",
+      "Bash(sed -i 's|\"schema\":         \"schemas/ancestry_het_kruskal_v1.schema.json\"|\"schema\":         \"../schemas/ancestry_het_kruskal_v1.schema.json\"|g' atlases/diversity/registries/data/layers.registry.json)",
+      "Bash(sed -i 's|\"schema\":         \"schemas/theta_pi_pestpg_v1.schema.json\"|\"schema\":         \"../schemas/theta_pi_pestpg_v1.schema.json\"|g' atlases/diversity/registries/data/layers.registry.json)",
+      "Bash(python -c \"import json; json.load\\(open\\('atlases/diversity/registries/data/layers.registry.json'\\)\\); print\\('VALID JSON'\\)\")",
+      "Bash(mkdir -p 'C:/Users/quent/Desktop/meiosis-atlas/specs_done' 'C:/Users/quent/Desktop/meiosis-atlas/specs_todo' && echo done)",
+      "Bash(grep -n \"cand-nav-inline\\\\|\\\\\\\\.cnav-\" \"C:/Users/quent/Desktop/inversion-atlas/atlases/inversion/css/inversion.css\")",
+      "Bash(grep -nA 5 \"_bootstrap_external_root_mounts\\\\|def _bootstrap_external\" server/atlas_server.py)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",
@@ -283,7 +295,8 @@
       "C:\\Users\\quent\\Desktop\\relatedness-atlas\\atlases\\relatedness\\shared",
       "C:\\Users\\quent\\Desktop\\meiosis-atlas\\atlases\\meiosis\\css",
       "C:\\Users\\quent\\Desktop\\diversity-atlas\\atlases\\diversity\\pages\\*",
-      "C:\\Users\\quent\\Desktop\\meiosis-atlas\\atlases\\meiosis\\registries"
+      "C:\\Users\\quent\\Desktop\\meiosis-atlas\\atlases\\meiosis\\registries",
+      "C:\\Users\\quent\\Desktop\\meiosis-atlas"
     ]
   }
 }

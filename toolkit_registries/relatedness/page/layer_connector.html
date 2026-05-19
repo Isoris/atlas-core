@@ -1171,8 +1171,25 @@ function rerender() {
       }
     });
   }
-  // initial render
+  // initial render — honor ?focus=<id> deep link from search.js when present
   state.selected = { kind: "question", id: "meiosis_interchromosomal_effects" };
+  try {
+    const f = (window.readFocusParam && window.readFocusParam()) || null;
+    if (f) {
+      if (f.kind === "question" && DB.questions[f.id]) {
+        state.selected = { kind: "question", id: f.id };
+      } else if (f.kind === "atlas") {
+        // pick the atlas's lead_question if present
+        const a = (DB.atlases || []).find(x => x.atlas_id === f.id);
+        if (a && a.lead_question_id && DB.questions[a.lead_question_id]) {
+          state.selected = { kind: "question", id: a.lead_question_id };
+        }
+      } else if (f.kind === "product" && DB.products[f.id]) {
+        // can't pre-select a product as the central card, so open the drawer instead
+        setTimeout(() => { try { openDrawer(f.id, "product"); } catch {} }, 100);
+      }
+    }
+  } catch {}
   rerender();
 })();
 
@@ -1181,5 +1198,6 @@ window.enterConnectMode = enterConnectMode;
 window.exportWiring = exportWiring;
 </script>
 <script defer src="doc.js"></script>
+<script defer src="search.js"></script>
 </body>
 </html>

@@ -38,3 +38,7 @@ Click a row → opens the relevant detail page (readiness for products / questio
 - Want to change the ranking weights? Edit `downstreamFanout()` in this page's inline script
 
 This is **read-only**. Per `MANAGER_SPEC.md`: status is recomputed live on every load.
+
+## Universal search (every page)
+
+Hit `Cmd/Ctrl+K` from any page to open the universal search modal. Type any product / question / layer / atlas / estimand / hook id — Enter jumps to the right page with the item pre-selected (or flashed). The "🔎 Search" floating button does the same.

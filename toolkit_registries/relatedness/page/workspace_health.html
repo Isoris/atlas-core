@@ -516,8 +516,23 @@ function renderEstimability() {
   renderBottlenecks();
   renderQuestions();
   renderEstimability();
+  // ?focus=<id> deep link from search.js — flash the matching row.
+  try {
+    const f = (window.readFocusParam && window.readFocusParam()) || null;
+    if (f && window.flashFocus) {
+      setTimeout(() => {
+        const sels = [".row-item", ".atlas-card"];
+        for (const sel of sels) {
+          for (const el of document.querySelectorAll(sel)) {
+            if (el.textContent.includes(f.id)) { window.flashFocus(el); return; }
+          }
+        }
+      }, 200);
+    }
+  } catch {}
 })();
 </script>
 <script defer src="doc.js"></script>
+<script defer src="search.js"></script>
 </body>
 </html>

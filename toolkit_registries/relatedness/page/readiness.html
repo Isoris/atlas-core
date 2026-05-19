@@ -704,9 +704,27 @@ function openQuestionDetail(qid) { state.detail = { kind: "question", id: qid };
   document.getElementById("filter-product").addEventListener("input", e => { state.filterProd = e.target.value; renderProducts(); });
   document.getElementById("filter-status").addEventListener("change", e => { state.filterStatus = e.target.value; renderProducts(); });
   document.getElementById("btn-clear-scope").addEventListener("click", () => { state.scope.clear(); saveScope(); rerender(); });
+  // ?focus=<id>&kind=<kind> deep link (from search.js)
+  try {
+    const f = (window.readFocusParam && window.readFocusParam()) || null;
+    if (f) {
+      if (f.kind === "product" || DB.products[f.id]) {
+        state.scope.add(f.id);
+        state.detail = { kind: "product", id: f.id };
+      } else if (f.kind === "question" || DB.questions[f.id]) {
+        state.detail = { kind: "question", id: f.id };
+      }
+    }
+  } catch {}
   rerender();
+  // Flash the focused element after first render (best-effort)
+  try {
+    const f = (window.readFocusParam && window.readFocusParam()) || null;
+    if (f && window.flashFocus) setTimeout(() => window.flashFocus(`[data-id="${(window.CSS&&CSS.escape)?CSS.escape(f.id):f.id}"], [data-pid="${f.id}"]`), 200);
+  } catch {}
 })();
 </script>
 <script defer src="doc.js"></script>
+<script defer src="search.js"></script>
 </body>
 </html>

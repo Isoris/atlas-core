@@ -92,12 +92,37 @@ export class Registry {
   }
 
   async _fetchAndCache(key, lookup, args, cacheKey, tier) {
-    const { atlas_id, entry } = lookup;
-    const value = await this._fetchFromSource(entry, args, atlas_id);
-    if (tier === 'hot' || tier === 'warm') {
-      this.cache.set(tier, cacheKey, value);
-    }
-    return value;
+    // 2026-05-19 — In-flight Promise dedup. Two callers that resolve()
+    // the same key in the same tick (e.g. the prewarm scheduler firing
+    // on chrom_change AND local_pca_dosage.mount() resolving its layers,
+    // both running before the first fetch settles) used to BOTH miss
+    // the cache and BOTH start HTTP fetches. The atlas JSONs are large
+    // (~14 MB each); a 2× duplicate fetch on every chrom change was the
+    // main cause of the "switching modes is slow" complaint.
+    //
+    // Fix: keep a Map<cacheKey, Promise>. While a fetch is in flight,
+    // subsequent resolve() calls attach to that same Promise instead of
+    // starting their own. Map entry is cleared in `finally` so a failed
+    // fetch doesn't permanently poison the cache slot (retries restart).
+    if (!this._inflightFetches) this._inflightFetches = new Map();
+    const inflight = this._inflightFetches.get(cacheKey);
+    if (inflight) return inflight;
+
+    const promise = (async () => {
+      try {
+        const { atlas_id, entry } = lookup;
+        const value = await this._fetchFromSource(entry, args, atlas_id);
+        if (tier === 'hot' || tier === 'warm') {
+          this.cache.set(tier, cacheKey, value);
+        }
+        return value;
+      } finally {
+        this._inflightFetches.delete(cacheKey);
+      }
+    })();
+
+    this._inflightFetches.set(cacheKey, promise);
+    return promise;
   }
 
   set(key, value, args = {}) {

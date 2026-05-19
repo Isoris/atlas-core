@@ -158,6 +158,7 @@
   <a href="graph_builder.html"><span class="num">7.</span> Graph builder</a>
   <a href="readiness.html"><span class="num">8.</span> Readiness</a>
   <a href="layer_connector.html"><span class="num">9.</span> Layer Connector</a>
+  <a href="workspace_health.html"><span class="num">10.</span> Workspace Health</a>
   <span class="tag">atlas-core / page 6 — composition demo</span>
 </nav>
 
@@ -446,11 +447,14 @@ async function renderPanels(plan) {
 }
 
 function currentScope() {
-  return {
+  const s = {
     sample_set:   document.getElementById("sample-set").value.trim() || null,
     interval_set: document.getElementById("interval-set").value.trim() || null,
     candidate_id: document.getElementById("candidate-select").value || null,
   };
+  // mirror to global scope ribbon (scope.js) when available
+  try { if (window.setScope) window.setScope(s); } catch {}
+  return s;
 }
 async function recompose() {
   const plan = composeHook("candidate_review_hook", currentScope());
@@ -480,13 +484,38 @@ function syncIntervalSet() {
 (async () => {
   await loadDB();
   fillCandidateSelect();
+  // pre-fill from global scope ribbon (scope.js) when present + non-empty
+  try {
+    const g = (window.getScope && window.getScope()) || null;
+    if (g) {
+      if (g.sample_set)   document.getElementById("sample-set").value   = g.sample_set;
+      if (g.interval_set) document.getElementById("interval-set").value = g.interval_set;
+      if (g.candidate_id) {
+        const sel = document.getElementById("candidate-select");
+        if ([...sel.options].some(o => o.value === g.candidate_id)) sel.value = g.candidate_id;
+      }
+    }
+  } catch {}
   document.getElementById("btn-recompose").addEventListener("click", recompose);
   document.getElementById("show-hidden").addEventListener("change", recompose);
   document.getElementById("sample-set").addEventListener("change", recompose);
   document.getElementById("interval-set").addEventListener("change", recompose);
+  // react to global scope changes from the ribbon
+  try {
+    window.onScopeChange && window.onScopeChange(g => {
+      if (g.sample_set   && document.getElementById("sample-set").value   !== g.sample_set)   document.getElementById("sample-set").value   = g.sample_set;
+      if (g.interval_set && document.getElementById("interval-set").value !== g.interval_set) document.getElementById("interval-set").value = g.interval_set;
+      const sel = document.getElementById("candidate-select");
+      if (g.candidate_id && sel.value !== g.candidate_id && [...sel.options].some(o => o.value === g.candidate_id)) sel.value = g.candidate_id;
+      recompose();
+    });
+  } catch {}
   // initial render (after candidate select settles)
   setTimeout(recompose, 50);
 })();
 </script>
+<script defer src="doc.js"></script>
+<script defer src="search.js"></script>
+<script defer src="scope.js"></script>
 </body>
 </html>

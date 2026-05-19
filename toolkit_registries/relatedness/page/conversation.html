@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Conversation — refine analysis with the LLM</title>
+<title>Conversation — research question → registry matches</title>
 <style>
   :root {
-    --fg: #1a1a1a;
-    --muted: #6c727f;
-    --bg: #fafafa;
-    --bg-card: #fff;
-    --border: #d8dce3;
-    --accent: #2b6cb0;
-    --warn: #b7791f;
+    --fg: #1a1a1a; --muted: #6c727f; --bg: #fafafa; --bg-card: #fff;
+    --border: #d8dce3; --accent: #2b6cb0; --warn: #b7791f;
+    --green: #2f855a; --amber: #b87a14; --red: #b13030;
+    --st-ready-bg: #def0e0;  --st-ready-fg: #2f855a;
+    --st-partial-bg: #fdecd2; --st-partial-fg: #b87a14;
+    --st-missing-bg: #f8e6e6; --st-missing-fg: #b13030;
+    --st-validated-bg: #e9eef7; --st-validated-fg: #2d6cb6;
+    --st-deprecated-bg: #eaecf0; --st-deprecated-fg: #6c727f;
   }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
                font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -25,29 +26,86 @@
   .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
 
   header { padding: 16px 24px 10px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
-  h1 { margin: 0; font-size: 16px; font-weight: 600; }
-  .sub { color: var(--muted); margin-top: 3px; font-size: 12.5px; }
+  h1 { margin: 0; font-size: 17px; font-weight: 600; }
+  .sub { color: var(--muted); margin-top: 3px; font-size: 12.5px; max-width: 880px; }
 
-  section { padding: 22px 24px; max-width: 880px; }
-  h2 { font-size: 14px; font-weight: 600; margin: 26px 0 8px; }
-  p  { margin: 0 0 10px; }
-  ol { padding-left: 22px; }
-  li { margin-bottom: 6px; }
-  code, .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
-  .banner {
-    margin: 0 0 18px; padding: 12px 16px; background: #fffbeb; border: 1px solid #f6e05e;
-    border-radius: 6px; color: #744210; font-size: 13px;
+  section { padding: 18px 24px; max-width: 1100px; }
+
+  .ask {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); margin-bottom: 18px;
   }
-  .banner strong { color: #5c3408; }
-  .card {
-    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
-    padding: 14px 18px; margin-bottom: 14px;
+  .ask label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .ask textarea {
+    width: 100%; box-sizing: border-box; min-height: 90px;
+    margin-top: 6px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px;
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--fg); resize: vertical; outline: none;
   }
-  .stage { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
-  .stage .num { color: var(--muted); font-weight: 600; font-size: 12px; min-width: 22px; }
-  .stage .name { font-weight: 600; font-size: 13.5px; }
-  .stage .out  { color: var(--muted); font-size: 12px; }
-  .footer { padding: 12px 24px; color: var(--muted); font-size: 11.5px; border-top: 1px solid var(--border); }
+  .ask textarea:focus { border-color: var(--accent); }
+  .ask .row { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  .ask .row .ex {
+    font-size: 12px; color: var(--muted); cursor: pointer;
+    border: 1px solid var(--border); padding: 3px 9px; border-radius: 14px;
+    background: white;
+  }
+  .ask .row .ex:hover { color: var(--accent); border-color: var(--accent); }
+  .btn {
+    padding: 7px 13px; font-size: 13px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 4px; background: var(--bg-card);
+  }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-primary:hover { background: #225a96; }
+
+  .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 900px) { .panes { grid-template-columns: 1fr; } }
+
+  .pane {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+  }
+  .pane .h {
+    padding: 9px 13px; background: #f7f8fa; border-bottom: 1px solid var(--border);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--muted);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .pane .b { padding: 6px 0; }
+  .row-item {
+    padding: 8px 13px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: flex-start;
+    gap: 8px; cursor: pointer; font-size: 12.5px;
+  }
+  .row-item:last-child { border-bottom: none; }
+  .row-item:hover { background: #f7f8fa; }
+  .row-item .score {
+    min-width: 28px; padding: 1px 5px; border-radius: 3px;
+    background: #eef0f4; color: var(--muted); font-size: 11px; font-weight: 700;
+    text-align: center; flex: 0 0 auto;
+  }
+  .row-item .score.hi { background: #def0e0; color: var(--green); }
+  .row-item .body { flex: 1; min-width: 0; }
+  .row-item .id   { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; font-size: 12px; }
+  .row-item .lbl  { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+  .row-item .matches { color: var(--accent); font-size: 10.5px; margin-top: 3px; }
+  .row-item .pill {
+    display: inline-block; padding: 1px 7px; border-radius: 3px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.04em; flex: 0 0 auto;
+  }
+  .pill.ready,   .pill.ready_to_run, .pill.fully_estimable { background: var(--st-ready-bg);     color: var(--st-ready-fg); }
+  .pill.validated, .pill.partially_estimable               { background: var(--st-validated-bg); color: var(--st-validated-fg); }
+  .pill.partial, .pill.needs_extra_data                    { background: var(--st-partial-bg);   color: var(--st-partial-fg); }
+  .pill.missing, .pill.blocked, .pill.not_estimable        { background: var(--st-missing-bg);   color: var(--st-missing-fg); }
+  .pill.unknown, .pill.stub, .pill.deprecated              { background: var(--st-deprecated-bg);color: var(--st-deprecated-fg); }
+  .pill.kind {
+    background: white; color: var(--muted); border: 1px solid var(--border); margin-right: 6px;
+  }
+
+  .empty { padding: 18px; color: var(--muted); font-style: italic; font-size: 12.5px; }
+
+  .footnote {
+    margin-top: 14px; color: var(--muted); font-size: 12px; max-width: 900px;
+  }
+  .footnote code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
+                   background: #f1f5f9; padding: 1px 5px; border-radius: 3px; }
 </style>
 </head>
 <body>
@@ -62,86 +120,202 @@
   <a href="graph_builder.html"><span class="num">7.</span> Graph builder</a>
   <a href="readiness.html"><span class="num">8.</span> Readiness</a>
   <a href="layer_connector.html"><span class="num">9.</span> Layer Connector</a>
-  <span class="tag">atlas-core dashboard</span>
+  <a href="workspace_health.html"><span class="num">10.</span> Workspace Health</a>
+  <span class="tag">atlas-core / page 1</span>
 </nav>
 
 <header>
-  <h1>Conversation — refine analysis with the LLM</h1>
-  <div class="sub">Free-text request → cleaned decomposition → controlled vocabulary → registry contracts → action plan.</div>
+  <h1>Conversation — research question → registry matches</h1>
+  <div class="sub">
+    Type a research question. The page tokenises it and matches against every registered
+    <strong>product</strong>, <strong>question</strong>, <strong>atlas</strong>, and
+    <strong>estimand</strong> — token-by-token, no LLM. Click a match to jump to its detail.
+    This is Phase B (deterministic vocabulary mapping) of the LLM funnel spec, runnable today.
+  </div>
 </header>
 
 <section>
+  <div class="ask">
+    <label>your research question</label>
+    <textarea id="q" placeholder="e.g. Do inversions on LG01 and LG28 co-segregate? Test for joint genotype distortion."></textarea>
+    <div class="row">
+      <button class="btn btn-primary" id="btn-match">Match against registry</button>
+      <span style="color: var(--muted); font-size: 11.5px">or pick an example:</span>
+      <span class="ex" data-ex="Test whether two inversions on LG01 and LG28 show joint genotype distortion">LG01 × LG28 pair distortion</span>
+      <span class="ex" data-ex="Do inversion karyotypes affect meiosis on other chromosomes?">interchromosomal meiosis effects</span>
+      <span class="ex" data-ex="Compare Mendelian error rate inside the LG28 candidate by karyotype group">mendelian QC by karyotype</span>
+      <span class="ex" data-ex="Estimate FST and dxy between karyotype groups in the LG28 inversion">popstats between karyotypes</span>
+    </div>
+  </div>
 
-<div class="banner">
-  <strong>Status: deferred.</strong> The LLM-driven request resolver is designed but not wired today.
-  Use <a href="action.html">page 2 (Action)</a> to compose runs by hand against the existing
-  registry. When the LLM funnel is built, its output will land on this page and feed directly into
-  page 2.
-</div>
+  <div class="panes">
+    <div class="pane">
+      <div class="h"><span>Matching questions</span><span id="qc"></span></div>
+      <div class="b" id="q-list"><div class="empty">type something above and click Match (or pick an example)</div></div>
+    </div>
+    <div class="pane">
+      <div class="h"><span>Matching products (biological objects)</span><span id="pc"></span></div>
+      <div class="b" id="p-list"><div class="empty">—</div></div>
+    </div>
+    <div class="pane">
+      <div class="h"><span>Matching atlases</span><span id="ac"></span></div>
+      <div class="b" id="a-list"><div class="empty">—</div></div>
+    </div>
+    <div class="pane">
+      <div class="h"><span>Matching estimands</span><span id="ec"></span></div>
+      <div class="b" id="e-list"><div class="empty">—</div></div>
+    </div>
+  </div>
 
-<h2>What this page will be</h2>
-
-<p>A staged resolver that funnels a vague human request into a concrete action plan, without
-asking one big LLM to do everything in one shot. Per the design discussion:</p>
-
-<div class="card">
-  <div class="stage"><span class="num">1.</span> <span class="name">Cleanup &amp; decomposition</span>
-    <span class="out">→ goal, targets, exclusions, vague terms</span></div>
-  <p>"Find Mendelian inversions on chr12 but not from old families."<br>
-  → Restated as: <em>goal</em>=identify inversions with Mendelian-compatible inheritance;
-  <em>target</em>=chromosome 12; <em>exclusion</em>=old families.</p>
-</div>
-
-<div class="card">
-  <div class="stage"><span class="num">2.</span> <span class="name">Domain selection</span>
-    <span class="out">→ which keyword banks to load</span></div>
-  <p>Picks high-level domains from a controlled menu (genetics, relatedness, inheritance,
-  structural_variation, population_history, …). Loads only those domains' keyword banks for the
-  next stage — prevents the LLM from searching the whole vocabulary.</p>
-</div>
-
-<div class="card">
-  <div class="stage"><span class="num">3.</span> <span class="name">Keyword mapping</span>
-    <span class="out">→ controlled vocabulary terms</span></div>
-  <p>Maps human words onto registry concepts: "mendelian" →
-  <code>analysis_id=mendelian</code>; "old families" →
-  <code>set_filter=old_family_population_history_v1</code>; "chromosome 12" →
-  <code>interval_set_id pattern</code>.</p>
-</div>
-
-<div class="card">
-  <div class="stage"><span class="num">4.</span> <span class="name">Contract resolution</span>
-    <span class="out">→ action plan or missing/spawnable list</span></div>
-  <p>Resolves the mapped vocabulary against the actual registries on disk. Outputs:
-  required sets, required results, what's missing, what can be spawned, the recommended
-  ordered chain of action manifests. The page-2 dashboard then visualizes the readiness ladder.</p>
-</div>
-
-<h2>Why staged (not one-shot)</h2>
-
-<p>Each stage has a single job. The LLM doesn't jump from vague words to files. Stage outputs
-are inspectable, editable, and stable across sessions — so you can replay or tweak any stage
-without redoing the rest. The contract resolver is deterministic; only stages 1–3 are LLM
-calls.</p>
-
-<h2>Today, do this instead</h2>
-
-<ol>
-  <li>Use <a href="action.html">page 2 (Action)</a> to pick a target analysis + scope. The dashboard
-  walks the chain backward via <code>analysis_modes.tsv</code> and tells you what's
-  <code>RESULT_READY</code> (reuse), <code>RUN_READY</code>, <code>MISSING</code>, or
-  <code>BLOCKED</code>.</li>
-  <li>Use <a href="index.html">page 3 (Registries)</a> to see existing chains and which orphan
-  results are ready to feed downstream analyses.</li>
-  <li>Use <code>scripts/resolve.py</code> from the CLI for the same logic without the browser.</li>
-</ol>
-
+  <p class="footnote">
+    <strong>How matching works:</strong> the text is tokenised (lowercase, length ≥ 3, common stop-words stripped).
+    Each registered item is scored by how many tokens appear in its id / label / description / tags / valid_for.
+    No LLM. No remote calls. When the LLM funnel (PR #7) lands, this same page will receive a richer staged
+    output but the deterministic core stays as the fallback.
+  </p>
 </section>
 
-<div class="footer">
-  When this page is wired, it produces the same contract output that page 2 already understands.
-  No re-typing.
-</div>
+<script>
+function parseJSONL(text) { return text.split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse); }
+const STOP = new Set([
+  "the","and","for","with","that","this","from","into","onto","of","on","in","to","at","by","as",
+  "is","are","was","were","be","been","being","do","does","did","done","an","a","or","but","not",
+  "if","then","than","when","while","whether","what","which","how","why","do","we","can","could",
+  "would","should","may","might","one","two","three","four","five","each","other","only","also",
+  "very","more","most","some","any","all","both","such","etc","over","under","across","between",
+  "show","using","via","like","question","analysis","analyses","analyse","analyze",
+]);
+function tokens(s) {
+  return [...new Set((s || "").toLowerCase()
+    .replace(/[_\.\-]/g, " ")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .split(/\s+/)
+    .filter(t => t.length >= 3 && !STOP.has(t)))];
+}
 
+const DB = {};
+async function loadDB() {
+  async function jsonl(p) { try { return parseJSONL(await (await fetch(p, { cache: "no-store" })).text()); } catch { return []; } }
+  const base = "../01_registry/";
+  const [products, questions, atlases, estimands] = await Promise.all([
+    jsonl(base + "products.jsonl"),
+    jsonl(base + "questions.jsonl"),
+    jsonl(base + "atlases.jsonl"),
+    jsonl(base + "estimands.jsonl"),
+  ]);
+  DB.products  = products;
+  DB.questions = questions;
+  DB.atlases   = atlases;
+  DB.estimands = estimands;
+}
+
+function score(item, qTokens, fields) {
+  // Field weights: id 4, label 3, description 1, tags / valid_for 2, role 1.
+  let total = 0;
+  const matched = new Set();
+  for (const [field, weight] of fields) {
+    let v = item[field] || "";
+    if (Array.isArray(v)) v = v.join(" ");
+    const text = (typeof v === "string" ? v : JSON.stringify(v)).toLowerCase();
+    for (const tok of qTokens) {
+      if (text.includes(tok)) { total += weight; matched.add(tok); }
+    }
+  }
+  return { score: total, matched: [...matched] };
+}
+
+function rankQuestions(qToks) {
+  return DB.questions.map(q => {
+    const { score: s, matched } = score(q, qToks, [
+      ["question_id", 4], ["label", 3], ["description", 1], ["tags", 2],
+    ]);
+    return { item: q, score: s, matched };
+  }).filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 8);
+}
+function rankProducts(qToks) {
+  return DB.products
+    .filter(p => p.kind === "biological_object")
+    .map(p => {
+      const { score: s, matched } = score(p, qToks, [
+        ["product_id", 4], ["label", 3], ["description", 1], ["valid_for", 2], ["atlas", 2],
+      ]);
+      return { item: p, score: s, matched };
+    }).filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 10);
+}
+function rankAtlases(qToks) {
+  return DB.atlases.map(a => {
+    const { score: s, matched } = score(a, qToks, [
+      ["atlas_id", 4], ["label", 3], ["description", 1],
+    ]);
+    return { item: a, score: s, matched };
+  }).filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
+}
+function rankEstimands(qToks) {
+  return DB.estimands.map(e => {
+    const { score: s, matched } = score(e, qToks, [
+      ["estimand_id", 4], ["label", 3], ["description", 1], ["tags", 2],
+    ]);
+    return { item: e, score: s, matched };
+  }).filter(r => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 8);
+}
+
+function row(id, kind, label, score, matched, href) {
+  return `<div class="row-item" onclick="location.href='${href}'">
+    <span class="score ${score >= 5 ? "hi" : ""}">${score}</span>
+    <div class="body">
+      <div><span class="pill kind">${kind}</span><span class="id">${id}</span></div>
+      ${label ? `<div class="lbl">${label}</div>` : ""}
+      ${matched.length ? `<div class="matches">matched: ${matched.join(", ")}</div>` : ""}
+    </div>
+  </div>`;
+}
+function empty() { return '<div class="empty">no matches</div>'; }
+
+function render(qToks) {
+  if (!qToks.length) {
+    for (const id of ["q-list","p-list","a-list","e-list"]) document.getElementById(id).innerHTML = '<div class="empty">type something above</div>';
+    for (const id of ["qc","pc","ac","ec"]) document.getElementById(id).textContent = "";
+    return;
+  }
+  const qq = rankQuestions(qToks);
+  const pp = rankProducts(qToks);
+  const aa = rankAtlases(qToks);
+  const ee = rankEstimands(qToks);
+  document.getElementById("qc").textContent = `(${qq.length})`;
+  document.getElementById("pc").textContent = `(${pp.length})`;
+  document.getElementById("ac").textContent = `(${aa.length})`;
+  document.getElementById("ec").textContent = `(${ee.length})`;
+  document.getElementById("q-list").innerHTML = qq.length
+    ? qq.map(r => row(r.item.question_id, "question", r.item.label || "", r.score, r.matched,
+        `readiness.html?focus=${encodeURIComponent(r.item.question_id)}&kind=question`)).join("")
+    : empty();
+  document.getElementById("p-list").innerHTML = pp.length
+    ? pp.map(r => row(r.item.product_id, "product", r.item.label || "", r.score, r.matched,
+        `readiness.html?focus=${encodeURIComponent(r.item.product_id)}&kind=product`)).join("")
+    : empty();
+  document.getElementById("a-list").innerHTML = aa.length
+    ? aa.map(r => row(r.item.atlas_id, "atlas", r.item.label || "", r.score, r.matched,
+        `workspace_health.html?focus=${encodeURIComponent(r.item.atlas_id)}&kind=atlas`)).join("")
+    : empty();
+  document.getElementById("e-list").innerHTML = ee.length
+    ? ee.map(r => row(r.item.estimand_id, "estimand", r.item.label || "", r.score, r.matched,
+        `readiness.html?focus=${encodeURIComponent(r.item.question_id)}&kind=question`)).join("")
+    : empty();
+}
+
+(async () => {
+  await loadDB();
+  const ta = document.getElementById("q");
+  const go = () => render(tokens(ta.value));
+  document.getElementById("btn-match").addEventListener("click", go);
+  ta.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") go(); });
+  for (const ex of document.querySelectorAll(".ex")) {
+    ex.addEventListener("click", () => { ta.value = ex.dataset.ex; go(); });
+  }
+})();
+</script>
+<script defer src="doc.js"></script>
+<script defer src="search.js"></script>
+<script defer src="scope.js"></script>
 </body>
 </html>

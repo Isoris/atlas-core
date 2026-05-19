@@ -200,6 +200,7 @@
   <a href="graph_builder.html"><span class="num">7.</span> Graph builder</a>
   <a href="readiness.html" class="current"><span class="num">8.</span> Readiness</a>
   <a href="layer_connector.html"><span class="num">9.</span> Layer Connector</a>
+  <a href="workspace_health.html"><span class="num">10.</span> Workspace Health</a>
   <span class="tag">atlas-core / page 8 — Manager (products + questions)</span>
 </nav>
 
@@ -474,9 +475,11 @@ function renderProducts() {
   const ids = Object.keys(DB.products).sort();
   const f = state.filterProd.toLowerCase();
   const fs = state.filterStatus;
+  const scopeAtlas = (window.getScope && window.getScope().atlas) || "";
   let nReady = 0, nMissing = 0, total = 0;
   for (const pid of ids) {
     if (DB.products[pid].kind !== "biological_object") continue; // only track biological_object per spec §1
+    if (scopeAtlas && DB.products[pid].atlas !== scopeAtlas) continue;   // atlas filter from scope ribbon (PR #23)
     total++;
     if (f && !pid.toLowerCase().includes(f) && !(DB.products[pid].label || "").toLowerCase().includes(f)) continue;
     const rec = checkProductStatus(pid);
@@ -703,8 +706,31 @@ function openQuestionDetail(qid) { state.detail = { kind: "question", id: qid };
   document.getElementById("filter-product").addEventListener("input", e => { state.filterProd = e.target.value; renderProducts(); });
   document.getElementById("filter-status").addEventListener("change", e => { state.filterStatus = e.target.value; renderProducts(); });
   document.getElementById("btn-clear-scope").addEventListener("click", () => { state.scope.clear(); saveScope(); rerender(); });
+  // ?focus=<id>&kind=<kind> deep link (from search.js)
+  try {
+    const f = (window.readFocusParam && window.readFocusParam()) || null;
+    if (f) {
+      if (f.kind === "product" || DB.products[f.id]) {
+        state.scope.add(f.id);
+        state.detail = { kind: "product", id: f.id };
+      } else if (f.kind === "question" || DB.questions[f.id]) {
+        state.detail = { kind: "question", id: f.id };
+      }
+    }
+  } catch {}
+  // re-render when the global scope ribbon (scope.atlas) changes
+  try { window.onScopeChange && window.onScopeChange(() => rerender()); } catch {}
   rerender();
+  // Flash the focused element after first render (best-effort)
+  try {
+    const f = (window.readFocusParam && window.readFocusParam()) || null;
+    if (f && window.flashFocus) setTimeout(() => window.flashFocus(`[data-id="${(window.CSS&&CSS.escape)?CSS.escape(f.id):f.id}"], [data-pid="${f.id}"]`), 200);
+  } catch {}
 })();
 </script>
+<script defer src="doc.js"></script>
+<script defer src="search.js"></script>
+<script defer src="scope.js"></script>
+<script defer src="atlas-colors.js"></script>
 </body>
 </html>

@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Workspace Health — bottlenecks, atlases, next actions</title>
+<style>
+  :root {
+    --fg: #1a202c; --muted: #6c727f; --bg: #f4f6f9; --bg-card: #ffffff;
+    --border: #d8dce3; --accent: #2d6cb6;
+    --green: #2f855a; --amber: #b87a14; --red: #b13030; --slate: #44505d;
+    --st-ready-bg: #def0e0;     --st-ready-fg: #2f855a;
+    --st-validated-bg: #e9eef7; --st-validated-fg: #2d6cb6;
+    --st-partial-bg: #fdecd2;   --st-partial-fg: #b87a14;
+    --st-missing-bg: #f8e6e6;   --st-missing-fg: #b13030;
+    --st-deprecated-bg: #eaecf0;--st-deprecated-fg: #6c727f;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
+  body { font: 13.5px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  a { color: var(--accent); text-decoration: none; }
+
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  .wrap { padding: 14px 22px 40px; max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 19px; margin: 0 0 4px; font-weight: 600; }
+  .lede { color: var(--muted); margin: 0 0 14px; font-size: 12.5px; max-width: 1100px; }
+
+  /* ----- KPI strip ----- */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .kpi {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; border-left: 4px solid var(--accent);
+  }
+  .kpi .v { font-size: 22px; font-weight: 700; line-height: 1; }
+  .kpi .l { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; font-weight: 600; }
+  .kpi .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .kpi.green  { border-left-color: var(--green); }
+  .kpi.amber  { border-left-color: var(--amber); }
+  .kpi.red    { border-left-color: var(--red); }
+  .kpi.slate  { border-left-color: var(--slate); }
+
+  /* ----- atlas cards grid ----- */
+  h2.section { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; margin: 18px 0 8px; }
+  .atlas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; }
+  .atlas-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .atlas-card .head { display: flex; align-items: center; gap: 8px; }
+  .atlas-card .ic { font-size: 18px; }
+  .atlas-card .name { font-weight: 600; flex: 1; }
+  .atlas-card .desc { color: var(--muted); font-size: 11.5px; }
+  .atlas-card .row { display: flex; gap: 8px; align-items: center; font-size: 12px; }
+  .atlas-card .row .label { color: var(--muted); min-width: 88px; }
+  .atlas-card .row .v { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .pill {
+    display: inline-block; padding: 1px 7px; border-radius: 3px;
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .pill.ready,     .pill.fully_estimable, .pill.ready_to_run { background: var(--st-ready-bg); color: var(--st-ready-fg); }
+  .pill.validated, .pill.available { background: var(--st-validated-bg); color: var(--st-validated-fg); }
+  .pill.partial,   .pill.partially_estimable { background: var(--st-partial-bg); color: var(--st-partial-fg); }
+  .pill.missing,   .pill.blocked,   .pill.not_estimable, .pill.limited { background: var(--st-missing-bg); color: var(--st-missing-fg); }
+  .pill.needs_extra_data { background: var(--st-partial-bg); color: var(--st-partial-fg); }
+  .pill.unknown, .pill.deprecated, .pill.inactive, .pill.stub { background: var(--st-deprecated-bg); color: var(--st-deprecated-fg); }
+  .mini-bar { height: 5px; background: #e7eaee; border-radius: 3px; overflow: hidden; display: flex; }
+  .mini-bar > div { height: 100%; }
+  .mini-bar > .ready    { background: var(--green); }
+  .mini-bar > .partial  { background: var(--amber); }
+  .mini-bar > .missing  { background: var(--red); }
+
+  /* ----- bottleneck + question + estimability tables ----- */
+  .panes { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 12px; margin-top: 6px; }
+  .pane { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .pane > .head {
+    padding: 9px 13px; background: #f7f8fa; border-bottom: 1px solid var(--border);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--muted);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .pane > .body { padding: 0; }
+  .row-item {
+    padding: 8px 13px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px; font-size: 12.5px;
+    cursor: pointer;
+  }
+  .row-item:last-child { border-bottom: none; }
+  .row-item:hover { background: #f7f8fa; }
+  .row-item .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; flex: 1; word-break: break-all; }
+  .row-item .meta { color: var(--muted); font-size: 11px; }
+  .row-item .rank {
+    display: inline-block; min-width: 22px; padding: 2px 6px; border-radius: 3px;
+    background: #eef0f4; color: var(--muted); font-size: 11px; font-weight: 700; text-align: center;
+  }
+  .row-item .dep-count {
+    color: var(--accent); font-weight: 600; font-size: 11.5px;
+  }
+  .empty-row { padding: 14px 16px; color: var(--muted); font-size: 12px; font-style: italic; }
+
+  /* ----- progress bar ----- */
+  .progress { height: 6px; background: #e7eaee; border-radius: 3px; overflow: hidden; flex: 1; }
+  .progress .bar { height: 100%; background: var(--accent); }
+
+  /* ----- legend ----- */
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html"><span class="num">1.</span> Conversation</a>
+  <a href="action.html"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html"><span class="num">4.</span> Catalogue</a>
+  <a href="layers.html"><span class="num">5.</span> Layers</a>
+  <a href="candidate_review.html"><span class="num">6.</span> Candidate review</a>
+  <a href="graph_builder.html"><span class="num">7.</span> Graph builder</a>
+  <a href="readiness.html"><span class="num">8.</span> Readiness</a>
+  <a href="layer_connector.html"><span class="num">9.</span> Layer Connector</a>
+  <a href="workspace_health.html" class="current"><span class="num">10.</span> Workspace Health</a>
+  <span class="tag">Atlas-core — page 10</span>
+</nav>
+
+<div class="wrap">
+  <h1>Workspace Health</h1>
+  <p class="lede">
+    One-glance overview of every registered atlas. Surfaces the
+    <strong>bottlenecks</strong> — missing biological objects that block the
+    most downstream products, questions, and estimands — and a workspace-wide
+    readiness ladder. Per <code>MANAGER_SPEC.md</code>, status is recomputed
+    live; nothing here runs anything.
+  </p>
+
+  <!-- KPIs -->
+  <div class="kpi-row" id="kpi-row"></div>
+
+  <!-- Atlases -->
+  <h2 class="section">Atlases</h2>
+  <div class="atlas-grid" id="atlas-grid"></div>
+
+  <!-- Bottlenecks + Questions + Estimability -->
+  <h2 class="section">Where to look next</h2>
+  <div class="panes">
+    <section class="pane">
+      <div class="head"><span>Top bottlenecks (most-depended-on missing)</span><span id="bn-n"></span></div>
+      <div class="body" id="bn-body"></div>
+    </section>
+    <section class="pane">
+      <div class="head"><span>Questions closest to ready</span><span id="qr-n"></span></div>
+      <div class="body" id="qr-body"></div>
+    </section>
+    <section class="pane">
+      <div class="head"><span>Estimability across questions</span><span id="est-n"></span></div>
+      <div class="body" id="est-body"></div>
+    </section>
+  </div>
+
+  <div class="legend">
+    <span class="pill ready">ready</span>
+    <span class="pill validated">validated</span>
+    <span class="pill partial">partial</span>
+    <span class="pill missing">missing / blocked</span>
+    <span class="pill needs_extra_data">needs extra data</span>
+    <span class="pill stub">stub / no products yet</span>
+  </div>
+</div>
+
+<script>
+function parseJSONL(text) { return text.split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse); }
+function csv(s) { if (Array.isArray(s)) return s.filter(Boolean); return (s || "").split(",").map(x => x.trim()).filter(Boolean); }
+
+const DB = {};
+
+async function loadDB() {
+  async function jsonl(p) { try { return parseJSONL(await (await fetch(p)).text()); } catch { return []; } }
+  const [products, questions, layers, analyses, results, estimands, attrs, atlases] = await Promise.all([
+    jsonl("../01_registry/products.jsonl"),
+    jsonl("../01_registry/questions.jsonl"),
+    jsonl("../01_registry/layer_registry.jsonl"),
+    jsonl("../01_registry/analysis_registry.jsonl"),
+    jsonl("../01_registry/analysis_results.jsonl"),
+    jsonl("../01_registry/estimands.jsonl"),
+    jsonl("../01_registry/sample_attributes.jsonl"),
+    jsonl("../01_registry/atlases.jsonl"),
+  ]);
+  DB.products  = Object.fromEntries(products.map(p => [p.product_id, p]));
+  DB.questions = Object.fromEntries(questions.map(q => [q.question_id, q]));
+  DB.layers    = Object.fromEntries(layers.map(l => [l.layer_id, l]));
+  DB.analyses  = Object.fromEntries(analyses.map(a => [a.analysis_id, a]));
+  DB.results   = results;
+  DB.estimands = Object.fromEntries(estimands.map(e => [e.estimand_id, e]));
+  DB.attributes= Object.fromEntries(attrs.map(a => [a.attribute, a]));
+  DB.atlases   = atlases;
+
+  // probe file-kind default_paths
+  const probes = Object.values(DB.layers)
+    .filter(l => l.source_kind === "file" && (l.default_path || "").trim())
+    .map(l => fetch("../" + l.default_path, { method: "HEAD" })
+      .then(r => [l.layer_id, r.ok]).catch(() => [l.layer_id, false]));
+  DB.file_present = Object.fromEntries(await Promise.all(probes));
+}
+
+// ----- Status Manager port (mirror of lib/manager.py) -----
+function resolveLayerQuick(layerId) {
+  const l = DB.layers[layerId];
+  if (!l) return { state: "UNKNOWN_CONTRACT" };
+  if (l.source_kind === "file") {
+    if ((l.default_path || "").trim()) {
+      return DB.file_present[layerId] === true ? { state: "RESOLVED" } : { state: "KNOWN_MISSING" };
+    }
+    return { state: "KNOWN_MISSING" };
+  }
+  if (l.source_kind === "analysis_result") {
+    const producers = Object.values(DB.analyses).filter(a => csv(a.produces).includes(layerId)).map(a => a.analysis_id);
+    if (!producers.length) return { state: "UNKNOWN_CONTRACT" };
+    const r = DB.results.find(r => producers.includes(r.analysis_type) && r.status === "active");
+    return r ? { state: "COMPLETE" } : { state: "KNOWN_MISSING" };
+  }
+  return { state: "UNKNOWN_CONTRACT" };
+}
+function checkProductStatus(pid, seen = new Set()) {
+  if (seen.has(pid)) return { status: "blocked", reason: "cycle" };
+  seen = new Set([...seen, pid]);
+  const p = DB.products[pid];
+  if (!p) return { status: "missing" };
+  if (p.partial_coverage && p.partial_coverage.covered !== undefined) {
+    return { status: "partial" };
+  }
+  const lstates = (p.backed_by_layers || []).map(resolveLayerQuick);
+  const ls = new Set(lstates.map(s => s.state));
+  let status;
+  if (!lstates.length)                                       status = "missing";
+  else if (ls.has("UNKNOWN_CONTRACT"))                       status = "missing";
+  else if (ls.has("FAILED"))                                 status = "blocked";
+  else if (ls.has("BLOCKED_BY_INPUT") || ls.has("KNOWN_MISSING")) status = "missing";
+  else if ([...ls].every(s => s === "RESOLVED" || s === "COMPLETE")) status = "available";
+  else status = "missing";
+  const conf = p.confidence || "unreviewed";
+  if (status === "available") {
+    if (conf === "review_passed") status = "ready";
+    else if (conf === "preliminary") status = "validated";
+    else if (conf === "rejected") status = "blocked";
+  }
+  for (const d of (p.depends_on || [])) {
+    const r = checkProductStatus(d, seen);
+    if (["missing", "blocked", "deprecated"].includes(r.status)) { status = "blocked"; break; }
+  }
+  return { status };
+}
+function checkQuestion(qid) {
+  const q = DB.questions[qid];
+  if (!q) return { status: "unknown", per: [] };
+  const per = (q.requires || []).map(r => ({ ...r, ...checkProductStatus(r.product_id) }));
+  const req = per.filter(r => r.required !== false);
+  const set = new Set(req.map(r => r.status));
+  let agg = "partial";
+  if (set.size === 1 && set.has("ready")) agg = "ready_to_run";
+  else if (set.has("missing") || set.has("blocked")) {
+    agg = (set.has("ready") || set.has("validated") || set.has("available") || set.has("partial")) ? "partial" : "blocked";
+  } else if (set.has("partial")) agg = "partial";
+  return { question_id: qid, status: agg, label: q.label, per_required: per, total: req.length,
+           n_ready: req.filter(r => ["ready","validated","available"].includes(r.status)).length,
+           n_partial: req.filter(r => r.status === "partial").length,
+           n_missing: req.filter(r => ["missing","blocked"].includes(r.status)).length };
+}
+
+// ----- Estimability Manager port (lib/estimability.py) -----
+const ATTR_MET = new Set(["known", "covered"]);
+function resolvePrecondition(pre) {
+  if (pre.kind === "product") {
+    const r = checkProductStatus(pre.product_id);
+    return { met: ["ready","validated","available"].includes(r.status),
+             reason_kind: ["missing","blocked"].includes(r.status) ? "registry_resolvable" : "ok" };
+  }
+  if (pre.kind === "layer") {
+    const l = resolveLayerQuick(pre.layer_id);
+    return { met: ["RESOLVED","COMPLETE"].includes(l.state), reason_kind: "registry_resolvable" };
+  }
+  if (pre.kind === "sample_attribute") {
+    const row = DB.attributes[pre.attribute];
+    if (!row || !ATTR_MET.has(row.status)) return { met: false, reason_kind: "structurally_missing" };
+    return { met: true, reason_kind: "ok" };
+  }
+  return { met: false, reason_kind: "schema_error" };
+}
+function checkEstimand(eid) {
+  const e = DB.estimands[eid]; if (!e) return { status: "not_estimable" };
+  const met = [], missing = [], soft = [];
+  for (const pre of (e.preconditions || [])) {
+    const r = resolvePrecondition(pre);
+    if (r.met) met.push({ pre, ...r });
+    else if (pre.required !== false) missing.push({ pre, ...r });
+    else soft.push({ pre, ...r });
+  }
+  if (!missing.length && !soft.length)     return { status: "estimable" };
+  if (!missing.length && soft.length)      return { status: "partially_estimable" };
+  if (missing.some(m => m.pre.kind === "sample_attribute" && m.reason_kind === "structurally_missing"))
+                                            return { status: "needs_extra_data" };
+  return { status: "not_estimable" };
+}
+function checkQuestionEstimability(qid) {
+  const ids = Object.values(DB.estimands).filter(e => e.question_id === qid).map(e => e.estimand_id);
+  if (!ids.length) return { status: "unknown", n: 0 };
+  const per = ids.map(eid => checkEstimand(eid).status);
+  const s = new Set(per);
+  let agg = "limited";
+  if (s.size === 1 && s.has("estimable")) agg = "fully_estimable";
+  else if ([...s].every(x => x === "estimable" || x === "partially_estimable")) agg = "partially_estimable";
+  else if (s.has("needs_extra_data")) agg = "needs_extra_data";
+  return { status: agg, n: ids.length, per };
+}
+
+// ----- the actual bottleneck analysis -----
+function downstreamFanout(productId) {
+  // Number of things that depend on this product:
+  // - products with depends_on containing productId
+  // - questions with requires.product_id === productId
+  // - estimands with preconditions containing this product
+  let n = 0;
+  for (const p of Object.values(DB.products)) {
+    if ((p.depends_on || []).includes(productId)) n++;
+  }
+  for (const q of Object.values(DB.questions)) {
+    if ((q.requires || []).some(r => r.product_id === productId)) n++;
+  }
+  for (const e of Object.values(DB.estimands)) {
+    if ((e.preconditions || []).some(pr => pr.kind === "product" && pr.product_id === productId)) n++;
+  }
+  return n;
+}
+
+function rollupAtlas(aid) {
+  const a = DB.atlases.find(x => x.atlas_id === aid) || {};
+  const owned = Object.values(DB.products).filter(p => p.atlas === aid && p.kind === "biological_object");
+  let nReady = 0, nPartial = 0, nMissing = 0;
+  for (const p of owned) {
+    const s = checkProductStatus(p.product_id).status;
+    if (["ready","validated","available"].includes(s)) nReady++;
+    else if (s === "partial") nPartial++;
+    else nMissing++;
+  }
+  let st = "inactive";
+  if (a.status === "stub" || !owned.length) st = "stub";
+  else if (nMissing && !nReady) st = "missing";
+  else if (nMissing || nPartial) st = "partial";
+  else st = "ready";
+  return { atlas: a, nReady, nPartial, nMissing, nProducts: owned.length, status: st };
+}
+
+// ----- rendering -----
+function renderKPI() {
+  const host = document.getElementById("kpi-row");
+  const products = Object.values(DB.products).filter(p => p.kind === "biological_object");
+  const productStatuses = products.map(p => checkProductStatus(p.product_id).status);
+  const nReady   = productStatuses.filter(s => ["ready","validated","available"].includes(s)).length;
+  const nPartial = productStatuses.filter(s => s === "partial").length;
+  const nMissing = productStatuses.filter(s => ["missing","blocked"].includes(s)).length;
+  const qStatuses = Object.keys(DB.questions).map(qid => checkQuestion(qid).status);
+  const nReadyQ = qStatuses.filter(s => s === "ready_to_run").length;
+  const nPartialQ = qStatuses.filter(s => s === "partial").length;
+  const nBlockedQ = qStatuses.filter(s => s === "blocked").length;
+  const eStatuses = Object.keys(DB.questions).map(qid => checkQuestionEstimability(qid).status);
+  const nNeedsExtra = eStatuses.filter(s => s === "needs_extra_data").length;
+  const nLimited    = eStatuses.filter(s => s === "limited").length;
+
+  host.innerHTML = `
+    <div class="kpi green">
+      <div class="v">${products.length}</div>
+      <div class="l">Biological objects</div>
+      <div class="sub">${nReady} ready · ${nPartial} partial · ${nMissing} missing</div>
+    </div>
+    <div class="kpi slate">
+      <div class="v">${Object.keys(DB.questions).length}</div>
+      <div class="l">Research questions</div>
+      <div class="sub">${nReadyQ} ready · ${nPartialQ} partial · ${nBlockedQ} blocked</div>
+    </div>
+    <div class="kpi amber">
+      <div class="v">${Object.keys(DB.estimands).length}</div>
+      <div class="l">Declared estimands</div>
+      <div class="sub">${nNeedsExtra} needs metadata · ${nLimited} limited</div>
+    </div>
+    <div class="kpi slate">
+      <div class="v">${DB.atlases.length}</div>
+      <div class="l">Registered atlases</div>
+      <div class="sub">${DB.atlases.filter(a => a.status === "experimental" || a.status === "active").length} active / experimental</div>
+    </div>
+    <div class="kpi red">
+      <div class="v">${nMissing}</div>
+      <div class="l">Bottleneck products</div>
+      <div class="sub">${nReady ? Math.round(100 * nReady / products.length) + "% of products ready" : "no ready products yet"}</div>
+    </div>
+  `;
+}
+
+function renderAtlases() {
+  const host = document.getElementById("atlas-grid");
+  const cards = [];
+  const scopeAtlas = (window.getScope && window.getScope().atlas) || "";
+  for (const a of DB.atlases) {
+    if (a.atlas_id === "atlas_core") continue;
+    if (scopeAtlas && a.atlas_id !== scopeAtlas) continue;
+    const ru = rollupAtlas(a.atlas_id);
+    const q = a.lead_question_id && DB.questions[a.lead_question_id]
+      ? checkQuestion(a.lead_question_id) : null;
+    const total = Math.max(1, ru.nProducts);
+    const wR = (ru.nReady / total) * 100;
+    const wP = (ru.nPartial / total) * 100;
+    const wM = (ru.nMissing / total) * 100;
+    cards.push(`
+      <div class="atlas-card" onclick="location.href='layer_connector.html'">
+        <div class="head">
+          <span class="ic">${a.icon || ""}</span>
+          <span class="name">${a.label}</span>
+          <span class="pill ${ru.status === "ready" ? "ready" : ru.status === "partial" ? "partial" : ru.status === "missing" ? "missing" : "stub"}">${ru.status === "stub" ? "no products yet" : ru.status}</span>
+        </div>
+        <div class="desc">${a.description || ""}</div>
+        <div class="row">
+          <span class="label">Products</span>
+          <span class="v">${ru.nProducts || 0}</span>
+          ${ru.nProducts ? `<div class="mini-bar"><div class="ready" style="width:${wR}%"></div><div class="partial" style="width:${wP}%"></div><div class="missing" style="width:${wM}%"></div></div>` : ""}
+        </div>
+        ${q ? `
+        <div class="row">
+          <span class="label">Lead question</span>
+          <span class="pill ${q.status === "ready_to_run" ? "ready" : q.status}">${q.status.replace(/_/g, " ")}</span>
+          <span class="v" style="font-size: 11px; color: var(--muted)">${a.lead_question_id}</span>
+        </div>` : (a.status !== "stub" ? `<div class="row"><span class="label" style="font-size: 11px; color: var(--muted); font-style: italic">no lead question declared</span></div>` : "")}
+        ${(a.depends_on_atlases || []).length ? `<div class="row"><span class="label">Depends on</span><span class="v" style="font-size: 11px">${a.depends_on_atlases.join(", ")}</span></div>` : ""}
+      </div>
+    `);
+  }
+  host.innerHTML = cards.join("");
+}
+
+function renderBottlenecks() {
+  // Rank missing products by downstream fan-out.
+  const rows = [];
+  const scopeAtlas = (window.getScope && window.getScope().atlas) || "";
+  for (const p of Object.values(DB.products)) {
+    if (p.kind !== "biological_object") continue;
+    if (scopeAtlas && p.atlas !== scopeAtlas) continue;
+    const s = checkProductStatus(p.product_id).status;
+    if (!["missing", "blocked", "partial"].includes(s)) continue;
+    rows.push({
+      product_id: p.product_id,
+      label: p.label || "",
+      status: s,
+      atlas: p.atlas || "",
+      fanout: downstreamFanout(p.product_id),
+      hasProducer: !!(p.produced_by?.analysis_id),
+    });
+  }
+  rows.sort((a, b) => b.fanout - a.fanout);
+  document.getElementById("bn-n").textContent = `(${rows.length})`;
+  const host = document.getElementById("bn-body");
+  if (!rows.length) { host.innerHTML = '<div class="empty-row">no bottlenecks — every product resolves</div>'; return; }
+  host.innerHTML = rows.slice(0, 10).map((r, i) => `
+    <div class="row-item" onclick="location.href='readiness.html'">
+      <span class="rank">#${i + 1}</span>
+      <span class="pill ${r.status}">${r.status}</span>
+      <span class="id">${r.product_id}</span>
+      <span class="meta">${r.atlas || ""}</span>
+      <span class="dep-count" title="downstream items waiting on this">${r.fanout} downstream</span>
+    </div>
+  `).join("");
+}
+
+function renderQuestions() {
+  // Rank questions by closeness-to-ready (% ready).
+  const rows = [];
+  const scopeAtlas = (window.getScope && window.getScope().atlas) || "";
+  // A question "belongs" to an atlas when at least one of its required
+  // products is owned by that atlas, OR when its lead_question_id matches
+  // an atlas in atlases.jsonl.
+  const questionInAtlas = (qid) => {
+    if (!scopeAtlas) return true;
+    const q = DB.questions[qid];
+    for (const r of (q.requires || [])) {
+      const p = DB.products[r.product_id];
+      if (p && p.atlas === scopeAtlas) return true;
+    }
+    const owner = (DB.atlases || []).find(a => a.lead_question_id === qid);
+    return owner && owner.atlas_id === scopeAtlas;
+  };
+  for (const qid of Object.keys(DB.questions)) {
+    if (!questionInAtlas(qid)) continue;
+    const r = checkQuestion(qid);
+    const pct = r.total ? Math.round(100 * r.n_ready / r.total) : 0;
+    rows.push({ qid, label: r.label, status: r.status, pct,
+                n_ready: r.n_ready, n_partial: r.n_partial, n_missing: r.n_missing, total: r.total });
+  }
+  rows.sort((a, b) => b.pct - a.pct);
+  document.getElementById("qr-n").textContent = `(${rows.length})`;
+  const host = document.getElementById("qr-body");
+  host.innerHTML = rows.map(r => `
+    <div class="row-item" onclick="location.href='readiness.html'">
+      <span class="pill ${r.status === "ready_to_run" ? "ready" : r.status}">${r.status.replace(/_/g, " ")}</span>
+      <span class="id" style="flex: 0 0 auto; min-width: 0">${r.qid}</span>
+      <div class="progress" title="${r.n_ready}/${r.total} required products ready"><div class="bar" style="width: ${r.pct}%"></div></div>
+      <span class="meta">${r.pct}% (${r.n_ready}/${r.total})</span>
+    </div>
+  `).join("");
+}
+
+function renderEstimability() {
+  const rows = [];
+  const scopeAtlas = (window.getScope && window.getScope().atlas) || "";
+  const questionInAtlas = (qid) => {
+    if (!scopeAtlas) return true;
+    const q = DB.questions[qid];
+    for (const r of (q.requires || [])) {
+      const p = DB.products[r.product_id];
+      if (p && p.atlas === scopeAtlas) return true;
+    }
+    const owner = (DB.atlases || []).find(a => a.lead_question_id === qid);
+    return owner && owner.atlas_id === scopeAtlas;
+  };
+  for (const qid of Object.keys(DB.questions)) {
+    if (!questionInAtlas(qid)) continue;
+    const e = checkQuestionEstimability(qid);
+    rows.push({ qid, status: e.status, n: e.n });
+  }
+  // Sort: full first, then partial, then needs_extra_data, then limited, then unknown
+  const order = { fully_estimable: 0, partially_estimable: 1, needs_extra_data: 2, limited: 3, unknown: 4 };
+  rows.sort((a, b) => (order[a.status] ?? 99) - (order[b.status] ?? 99));
+  document.getElementById("est-n").textContent = `(${rows.filter(r => r.n > 0).length} with estimands)`;
+  const host = document.getElementById("est-body");
+  const populated = rows.filter(r => r.n > 0);
+  if (!populated.length) { host.innerHTML = '<div class="empty-row">no estimands declared yet</div>'; return; }
+  host.innerHTML = populated.map(r => `
+    <div class="row-item" onclick="location.href='readiness.html'">
+      <span class="pill ${r.status}">${r.status.replace(/_/g, " ")}</span>
+      <span class="id">${r.qid}</span>
+      <span class="meta">${r.n} estimand${r.n === 1 ? "" : "s"}</span>
+    </div>
+  `).join("");
+}
+
+(async () => {
+  await loadDB();
+  function renderAll() {
+    renderKPI();
+    renderAtlases();
+    renderBottlenecks();
+    renderQuestions();
+    renderEstimability();
+  }
+  renderAll();
+  // re-render when the global scope ribbon (scope.atlas) changes
+  try { window.onScopeChange && window.onScopeChange(() => renderAll()); } catch {}
+  // ?focus=<id> deep link from search.js — flash the matching row.
+  try {
+    const f = (window.readFocusParam && window.readFocusParam()) || null;
+    if (f && window.flashFocus) {
+      setTimeout(() => {
+        const sels = [".row-item", ".atlas-card"];
+        for (const sel of sels) {
+          for (const el of document.querySelectorAll(sel)) {
+            if (el.textContent.includes(f.id)) { window.flashFocus(el); return; }
+          }
+        }
+      }, 200);
+    }
+  } catch {}
+})();
+</script>
+<script defer src="doc.js"></script>
+<script defer src="search.js"></script>
+<script defer src="scope.js"></script>
+<script defer src="atlas-colors.js"></script>
+</body>
+</html>

@@ -318,7 +318,40 @@
       "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/haplotype_regimes.js\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/pages/discovery/haplotype_regimes.js\" && echo \"OK — haplotype_regimes.js mirrored\")",
       "Bash(node atlases/meiosis/pages/hub/test_crossovers_envelope.js)",
       "Bash(ATLAS_MASTER_CONFIG=/c/Users/quent/Desktop/atlas-core/master_config.yaml python atlases/diversity/registries/tests/test_harvest_roundtrip.py)",
-      "Bash(git -C \"C:/Users/quent/Desktop/meiosis-atlas\" mv specs_todo/SPEC_crossovers_page.md specs_done/SPEC_crossovers_page.md)"
+      "Bash(git -C \"C:/Users/quent/Desktop/meiosis-atlas\" mv specs_todo/SPEC_crossovers_page.md specs_done/SPEC_crossovers_page.md)",
+      "Bash(awk 'NR>=80 && NR<=200' C:/Users/quent/Desktop/meiosis-atlas/specs_todo/SPEC_interchromosomal_page.md)",
+      "PowerShell(wsl bash -c \"cd /mnt/c/Users/quent/Desktop/meiosis-atlas && node atlases/meiosis/pages/hub/test_crossovers_envelope.js 2>&1 | tail -5\")",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/candidate_focus/_html_builders.js\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/pages/discovery/candidate_focus/_html_builders.js\" && \\\\ *)",
+      "Bash(grep -c '<' __TRACKED_VAR__.html)",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/catalogue/catalogue/catalogue.js\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/pages/catalogue/catalogue/catalogue.js\" && echo \"OK — catalogue.js mirrored\")",
+      "Bash(grep -n \"^#confirmed_carousel\\\\|^#marker_panels\\\\|^#annotation_cockpit\\\\|/\\\\\\\\* ===== .*catalogue\" \"C:/Users/quent/Desktop/inversion-atlas/atlases/inversion/css/inversion.css\")",
+      "Bash(grep -oE \"\\(#[0-9a-fA-F]{3,6}|rgb\\\\\\([^\\)]*\\\\\\)|background:\\\\s*#[0-9a-fA-F]+|color:\\\\s*#[0-9a-fA-F]+\\)\" \"C:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/window_summary_table.html\")",
+      "Bash(grep -E \"#[0-9a-fA-F]{3,8}|rgb\\\\\\(|rgba\\\\\\(\" \"C:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/window_summary_table.html\")",
+      "Bash(grep -nE \"#[0-9a-fA-F]{3,6}\" \"C:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/negative_regions.html\")",
+      "Bash(grep -cE style= __TRACKED_VAR__.html)",
+      "Bash(python3 -c \"import sys, json; d = json.load\\(sys.stdin\\); print\\('actions:', list\\(d['actions'].keys\\(\\)\\)\\)\")",
+      "Bash(python3 -c \"import sys, json; d = json.load\\(sys.stdin\\); print\\('extractor layer_types:', sorted\\(set\\(e['layer_type'] for e in d['extractors']\\)\\)\\)\")",
+      "Bash(grep -c style= __TRACKED_VAR__.html)",
+      "Bash(grep -cE 'background:\\\\s*#[0-9a-fA-F]+|color:\\\\s*#[0-9a-fA-F]+|border.*:\\\\s*[^;]*#[0-9a-fA-F]' __TRACKED_VAR__.html)",
+      "Bash(grep -nE '#[0-9a-fA-F]{3,8}\\\\b' __TRACKED_VAR__.html)",
+      "PowerShell(wsl bash -c \"cd /mnt/c/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries && python3 test_adapter_smoke.py 2>&1 | tail -8\")",
+      "Bash(grep -cE \"#[0-9a-fA-F]{3,8}\" \"C:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/review/marker_readiness.html\")",
+      "Bash(grep -cE \"#[0-9a-fA-F]{3,8}\" \"C:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/catalogue/marker_readiness.html\")",
+      "Bash(grep -nE \"#[0-9a-fA-F]{3,8}\" \"C:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/catalogue/marker_readiness.html\")",
+      "PowerShell(wsl bash -c \"cd /mnt/c/Users/quent/Desktop/meiosis-atlas && node atlases/meiosis/pages/hub/test_interchromosomal_envelope.js 2>&1 | tail -15\")",
+      "PowerShell(wsl bash -c \"cd /mnt/c/Users/quent/Desktop/meiosis-atlas && node atlases/meiosis/pages/hub/test_interchromosomal_envelope.js 2>&1 | Select-String 'FAIL' -Context 0,2\")",
+      "PowerShell(wsl bash -c \"cd /mnt/c/Users/quent/Desktop/meiosis-atlas && node atlases/meiosis/pages/hub/test_interchromosomal_envelope.js 2>&1 | grep -B1 -A3 FAIL\")",
+      "Bash(node atlases/meiosis/pages/hub/test_interchromosomal_envelope.js)",
+      "Read(//e/results_population//**)",
+      "Read(//e/results_population/**)",
+      "Bash(chmod +x \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/STEP_C01_emit_atlas_payloads.sh\" \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_texture_metrics.py\" \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_roh_gene_overlap.py\" \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_divergence_network.py\" \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_functional_burden.py\")",
+      "Bash(cp \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/catalogue/catalogue.html\" \"c:/Users/quent/Desktop/atlas-workspace/atlases/inversion/pages/catalogue/catalogue.html\" && \\\\ *)",
+      "PowerShell($count = wsl bash /mnt/c/Users/quent/Desktop/atlas-core/scripts/_run_all_tests.sh 2>&1 | Select-String \"ALL OK\" | Measure-Object ; Write-Host \"umbrella ALL OK: $\\($count.Count\\)\" ; \\(Get-Content 'C:/Users/quent/Desktop/meiosis-atlas/specs_done/SPEC_interchromosomal_page.md'\\).Count)",
+      "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_texture_metrics.py\" --out /tmp/test_texture.json)",
+      "Read(//tmp/**)",
+      "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_divergence_network.py\" --out /tmp/test_div.json)",
+      "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_functional_burden.py\" --out /tmp/test_b.json)",
+      "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_roh_gene_overlap.py\" --out /tmp/test_roh.json)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",
@@ -334,7 +367,10 @@
       "C:\\Users\\quent\\Desktop\\diversity-atlas",
       "c:\\Users\\quent\\Desktop\\atlas-workspace\\specs_todo",
       "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\pages\\discovery\\pca_comparator",
-      "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\pages\\discovery"
+      "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\pages\\discovery",
+      "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\css",
+      "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\pages\\catalogue\\catalogue",
+      "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\pages\\catalogue"
     ]
   }
 }

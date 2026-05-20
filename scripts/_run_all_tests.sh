@@ -31,6 +31,12 @@ echo '--- meiosis-atlas adapter (staging + normalize) ---'
 
 echo '--- meiosis-atlas nco page (envelope-aware) ---'
 ( cd /mnt/c/Users/quent/Desktop/meiosis-atlas && node atlases/meiosis/pages/hub/test_nco_envelope.js 2>&1 | tail -2 )
+
+echo '--- meiosis-atlas crossovers page (envelope-aware) ---'
+( cd /mnt/c/Users/quent/Desktop/meiosis-atlas && node atlases/meiosis/pages/hub/test_crossovers_envelope.js 2>&1 | tail -2 )
+
+echo '--- meiosis-atlas interchromosomal page (HEADLINE) ---'
+( cd /mnt/c/Users/quent/Desktop/meiosis-atlas && node atlases/meiosis/pages/hub/test_interchromosomal_envelope.js 2>&1 | tail -2 )
 cd /mnt/c/Users/quent/Desktop/atlas-core
 
 for atlas in inversion-atlas diversity-atlas population-atlas genome-atlas relatedness-atlas; do

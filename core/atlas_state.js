@@ -48,7 +48,17 @@ const SHARED_DEFAULTS = {
   activeCohort: null,
   sampleIds: null,
   serverBaseUrl: null,
-  currentPage: null
+  currentPage: null,
+  // 2026-05-20: shared sample-grouping slot, used by popstats live-server
+  // calls (POST /api/popstats/groupwise) + any other page that wants to
+  // run per-group analyses. Shape:
+  //   { 'H1/H1': ['CGA_001', ...], 'H1/H2': [...], 'H2/H2': [...] }
+  // Producer: whichever page derived the partition from a promoted
+  // candidate's locked labels (promotion paths: catalogue, haplotype
+  // regimes, local_pca_dosage K-means lock). Consumer-agnostic — any
+  // page that wants per-group analyses reads this slot and any page that
+  // computes a partition pushes via setActiveGroups().
+  activeGroups: null,
 };
 
 export class AtlasState {
@@ -128,6 +138,13 @@ export class AtlasState {
     if (old === cand) return;
     this.shared.activeCandidate = cand;
     this.emit('shared.activeCandidate.changed', { newValue: cand, oldValue: old });
+  }
+
+  setActiveGroups(groups) {
+    const old = this.shared.activeGroups;
+    if (old === groups) return;
+    this.shared.activeGroups = groups;
+    this.emit('shared.activeGroups.changed', { newValue: groups, oldValue: old });
   }
 
   // ------------------------------------------------------------------

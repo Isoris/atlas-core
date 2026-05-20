@@ -30,6 +30,21 @@ export function attachShellChrome(opts = {}) {
   _wireServerPing(opts.serverUrl || window.ATLAS_SERVER_URL || 'http://127.0.0.1:8000');
   _wireSchemaBadge();
   _wireJsScriptsBadge();
+  _wireModeBTally();
+}
+
+// Mount the workspace-wide Mode-B tally chip into #modeBTallyHost. The
+// chip subscribes to the 'mode_b_badge_render' CustomEvent every per-page
+// badge dispatches and shows a single-line count ('● 8  ⚠ 1  ○ 5')
+// across all loaded atlases. Hidden until at least one badge reports.
+function _wireModeBTally() {
+  const host = document.getElementById('modeBTallyHost');
+  if (!host) return;
+  // Lazy import keeps the shell_chrome bundle thin if the tally is ever
+  // disabled — dynamic import returns immediately, mount on resolve.
+  import('./mode_b_tally.js')
+    .then((m) => { try { m.mountModeBTally(host); } catch (_) {} })
+    .catch(() => {});
 }
 
 // Forward header gear clicks to the active page's sidebar.

@@ -1,0 +1,69 @@
+/* =============================================================================
+   atlas-core/css/badges.css
+   =============================================================================
+   .data-source-badge — a small inline badge surfaced above page content to
+   report the state of a data-provenance probe (Mode B helper, envelope-audit
+   sidecar, etc.). The same baseline style is used by 16+ slots across 4
+   atlases (diversity, inversion, meiosis, relatedness); promoting the rule
+   set here eliminates the per-slot inline `style="..."` block.
+
+   Modifier classes:
+     .live   — probe resolved cleanly + comparator passes (badge text starts ●)
+     .demo   — probe failed / drifted / data pending (badge text starts ⚠ or ○)
+
+   Page HTML now declares only:
+     <div id="..." class="data-source-badge"></div>
+   The probe writes textContent + toggles class between .live / .demo at mount.
+   Per-page overrides (e.g. wider margins on inversion-atlas's chrome-padded
+   pages) can still be applied via in-card inline `style`.
+
+   Tokens consumed: --ink-dim, --panel-2, --rule. Defined in tokens.css across
+   all three theme variants (dark, light, daylight); see that file for fallback
+   semantics when a theme is missing.
+   ============================================================================= */
+
+.data-source-badge {
+  font-size: 12px;
+  color: var(--ink-dim);
+  margin: 4px 0 8px;
+  padding: 4px 8px;
+  background: var(--panel-2);
+  border-left: 3px solid var(--rule);
+  border-radius: 2px;
+  line-height: 1.4;
+  min-height: 1em;
+}
+
+/* When a probe initially has nothing to say (no candidate selected, no
+   probe scheduled yet), pages add `display: none` inline or via a script
+   call. The default is to render so a missing badge isn't silently lost. */
+
+/* ---- workspace-wide Mode-B tally chip ----
+   Mounted in the top chrome by core/mode_b_tally.js; subscribes to the
+   `mode_b_badge_render` CustomEvent and reports a single-line count
+   across all loaded atlases.
+
+   States are rendered as Unicode glyphs (● / ⚠ / ○) so the chip stays
+   font-stack independent. Zero-count states are dimmed via opacity so
+   the chip stays visually compact when only one outcome class is
+   non-empty. */
+.mode-b-tally {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 11px;
+  color: var(--ink-dim);
+  padding: 2px 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  user-select: none;
+  cursor: default;
+}
+.mode-b-tally .label { color: var(--ink-dim); font-weight: 500; }
+.mode-b-tally .count { display: inline-flex; align-items: center; gap: 2px; }
+.mode-b-tally .count.zero { opacity: 0.35; }
+.mode-b-tally .glyph-live { color: #3cc08a; }   /* match the green from pca_comparator concord */
+.mode-b-tally .glyph-drift { color: #f5a524; }
+.mode-b-tally .glyph-stub { color: var(--ink-dimmer, #6a7280); }

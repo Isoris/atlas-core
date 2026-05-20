@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="css/tokens.css" />
 <link rel="stylesheet" href="css/base.css" />
 <link rel="stylesheet" href="css/shell.css" />
+<link rel="stylesheet" href="css/badges.css" />
 </head>
 <body>
 
@@ -39,6 +40,11 @@
           aria-label="Toggle parameters sidebar">⚙</button>
   <span id="schemaBadge" style="display: none;"></span>
   <span id="jsScriptsBadge" title="Loaded JavaScript modules registered as window globals.">JS · 0 scripts</span>
+  <!-- Workspace-wide Mode-B tally — mounted by core/mode_b_tally.js,
+       subscribes to the 'mode_b_badge_render' CustomEvent that every
+       per-page Mode-B badge dispatches. Stays hidden until at least
+       one badge reports state. -->
+  <span id="modeBTallyHost" class="shell-chip-host"></span>
 
   <!-- Flex spacer pushes the right-side cluster to the right edge -->
   <div style="flex: 1;"></div>

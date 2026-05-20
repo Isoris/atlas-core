@@ -351,7 +351,14 @@
       "Read(//tmp/**)",
       "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_divergence_network.py\" --out /tmp/test_div.json)",
       "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_functional_burden.py\" --out /tmp/test_b.json)",
-      "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_roh_gene_overlap.py\" --out /tmp/test_roh.json)"
+      "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_roh_gene_overlap.py\" --out /tmp/test_roh.json)",
+      "Bash(python3 -m pip install --quiet jsonschema)",
+      "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_texture_metrics.py\" --out C:/Users/quent/AppData/Local/Temp/test_texture.json)",
+      "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_divergence_network.py\" --out C:/Users/quent/AppData/Local/Temp/test_div.json)",
+      "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_functional_burden.py\" --out C:/Users/quent/AppData/Local/Temp/test_b.json)",
+      "Bash(python3 \"c:/Users/quent/Desktop/catfish-diversity-analysis/06_atlas_adapters/adapt_roh_gene_overlap.py\" --out C:/Users/quent/AppData/Local/Temp/test_roh.json)",
+      "PowerShell($count = wsl bash /mnt/c/Users/quent/Desktop/atlas-core/scripts/_run_all_tests.sh 2>&1 | Select-String \"ALL OK\" | Measure-Object ; Write-Host \"umbrella ALL OK: $\\($count.Count\\)\" ; \\(Get-Content 'C:/Users/quent/Desktop/meiosis-atlas/specs_done/SPEC_crossovers_page.md'\\).Count)",
+      "PowerShell($count = wsl bash /mnt/c/Users/quent/Desktop/atlas-core/scripts/_run_all_tests.sh 2>&1 | Select-String \"ALL OK\" | Measure-Object ; Write-Host \"umbrella ALL OK: $\\($count.Count\\)\" ; Write-Host \"SPECs \\(lines\\):\" ; foreach \\($f in 'interchromosomal','crossovers','nco'\\) { Write-Host \"  SPEC_$f`_page.md = $\\(\\(Get-Content \"C:/Users/quent/Desktop/meiosis-atlas/specs_done/SPEC_$f`_page.md\"\\).Count\\)\" })"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

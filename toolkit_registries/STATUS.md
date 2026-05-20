@@ -306,7 +306,7 @@ BROWSER PAGE
   │   relatedness/compat     — badge tied to close-kin UI
   │   genome/page1           — activate 8 scaffold chips
   │   diversity/per_sample   — provenance line with bytes
-  │   population/page3       — 6 panel-slots × 3 layer types
+  │   population/page_families_clusters       — 6 panel-slots × 3 layer types
   │   inversion/page_overview — workspace-wide inventory table
 ```
 

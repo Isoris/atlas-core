@@ -23,6 +23,12 @@ python3 -m unittest scripts.test_atlas_action 2>&1 | tail -8
 echo '--- atlas-core JS layer_api ---'
 node tests/test_layer_api.js 2>&1 | tail -2
 
+echo '--- atlas-core JS registry.getLayerEntry ---'
+node tests/test_registry_get_layer_entry.js 2>&1 | tail -2
+
+echo '--- atlas-core JS mode_b_badge probe ---'
+node tests/test_mode_b_badge.js 2>&1 | tail -2
+
 echo '--- atlas-core inventory page (pure helpers) ---'
 node atlases/core/pages/test_inventory.js 2>&1 | tail -2
 
@@ -66,9 +72,9 @@ echo '--- diversity-atlas per_sample/page1 (envelope-provenance badge) ---'
 cd /mnt/c/Users/quent/Desktop/diversity-atlas
 node atlases/diversity/pages/per_sample/test_samples_provenance.js 2>&1 | tail -2
 
-echo '--- population-atlas structure/page3 (multi-type panel-slot status) ---'
+echo '--- population-atlas structure/page_families_clusters (multi-type panel-slot status) ---'
 cd /mnt/c/Users/quent/Desktop/population-atlas
-node atlases/population/pages/structure/test_page3_envelope_status.js 2>&1 | tail -2
+node atlases/population/pages/structure/test_page_families_clusters_envelope_status.js 2>&1 | tail -2
 
 echo '--- inversion-atlas page_overview (workspace-wide envelope inventory) ---'
 cd /mnt/c/Users/quent/Desktop/inversion-atlas

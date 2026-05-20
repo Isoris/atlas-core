@@ -404,6 +404,17 @@ export class Registry {
   }
 
   /**
+   * Public read of a layer/op's registry entry without resolving it. Returns
+   * null when the key is unknown. Lets callers (probeModeB, prewarm
+   * scheduler) inspect flags like `disabled: true` or `tier` before
+   * deciding whether to fire a fetch.
+   */
+  getLayerEntry(key) {
+    const hit = this._lookup(key);
+    return hit ? hit.entry : null;
+  }
+
+  /**
    * Build a cache key from the entry's cache_key template plus args
    * plus state slots. Falls back to "<key>:<argsJSON>" if no template.
    *

@@ -55,6 +55,23 @@ export async function probeModeB(registry, layerKey, args, opts) {
   if (!registry || typeof registry.resolve !== 'function') {
     return { ok: false, reason: 'registry-not-injected' };
   }
+  // 2026-05-20: short-circuit when the layer is flagged `disabled: true` in
+  // its registry entry. The flag is the canonical "contract-only — upstream
+  // pipeline hasn't shipped yet" signal. Without this, probeModeB fires a
+  // fetch that we KNOW will 404, just to land at the same "data pending"
+  // badge. Skipping the fetch silences the server-log noise + the browser
+  // console error.
+  if (typeof registry.getLayerEntry === 'function') {
+    const entry = registry.getLayerEntry(layerKey);
+    if (entry && entry.disabled === true) {
+      return {
+        ok:      false,
+        reason:  'layer-disabled',
+        payload: null,
+        disabled_reason: entry._disabled_reason || null,
+      };
+    }
+  }
   const extractRows = (opts && opts.extractRows) || _defaultExtractRows;
   try {
     const payload = await Promise.resolve(registry.resolve(layerKey, args || {}));
@@ -112,19 +129,25 @@ export function renderModeBBadge(slotId, probeResult, opts) {
       'registry-not-injected': 'shell did not inject the registry — running standalone?',
       'empty-result':          'layer resolved but rows[] is empty — check the source.',
       'stub-payload':          'payload resolved but is a stub (upstream pipeline has not shipped yet).',
+      'layer-disabled':        (probeResult && probeResult.disabled_reason)
+                                 || 'layer flagged `disabled: true` in registry — upstream pipeline has not shipped yet.',
       'resolve-threw':         (probeResult && probeResult.error) || 'fetch / parse error',
       'unknown':               'no probe result',
     }[reason] || reason;
+    // Treat both stub-payload (resolved but empty) AND layer-disabled
+    // (skipped the fetch by design) as user-facing "data pending" — both
+    // are "the file is coming later" states, not errors.
+    const isPending = (reason === 'stub-payload' || reason === 'layer-disabled');
     slot.textContent = `○  Mode B (${label}${ctxStr}) ` +
-                       (reason === 'stub-payload' ? 'data pending' : 'unavailable') +
+                       (isPending ? 'data pending' : 'unavailable') +
                        ` — ${hint}`;
     slot.title = `registry.resolve("${(opts && opts.layerKey) || '?'}") ` +
-                 (reason === 'stub-payload' ? 'returned a stub payload' : 'failed') +
+                 (reason === 'stub-payload' ? 'returned a stub payload'
+                   : reason === 'layer-disabled' ? 'skipped — layer flagged disabled'
+                   : 'failed') +
                  '; page rendering unaffected.' +
                  carveTip;
-    _emitBadgeEvent(slotId, opts,
-      reason === 'stub-payload' ? 'stub' : 'missing',
-      probeResult);
+    _emitBadgeEvent(slotId, opts, isPending ? 'stub' : 'missing', probeResult);
     return;
   }
 

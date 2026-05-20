@@ -387,7 +387,18 @@
       "Bash(mv health/page9 health/page_hatchery_health)",
       "Bash(mv structure/page3.js   structure/page_families_clusters.js)",
       "Bash(grep -E \"^//\")",
-      "Bash(grep -rE \"from ['\\\\\"]\\(\\\\.\\\\.|\\\\.|\\\\.\\\\.\\\\\\\\\\\\\\\\\\)/pages/\" atlases/inversion/pages)"
+      "Bash(grep -rE \"from ['\\\\\"]\\(\\\\.\\\\.|\\\\.|\\\\.\\\\.\\\\\\\\\\\\\\\\\\)/pages/\" atlases/inversion/pages)",
+      "PowerShell(wsl bash -c \"cd /mnt/c/Users/quent/Desktop/atlas-core && python3 -c 'import server.test_actions_endpoint' 2>&1 | head -10\")",
+      "Bash(grep -v \"//.*from\")",
+      "PowerShell(wsl bash -lc \"python3 -c 'import fastapi; print\\(fastapi.__version__\\)' 2>&1\")",
+      "PowerShell(wsl bash -lc \"which python3 && python3 -c 'import fastapi' 2>&1\" 2>&1)",
+      "PowerShell(wsl bash -lc \"cd /mnt/c/Users/quent/Desktop/atlas-core && python3 -m unittest server.test_diversity_endpoint -v 2>&1 | tail -20\")",
+      "PowerShell(wsl bash -lc \"cd /mnt/c/Users/quent/Desktop/atlas-core && python3 -m unittest server.test_diversity_endpoint -v 2>&1 | tail -15\")",
+      "PowerShell(wsl bash -lc \"cd /mnt/c/Users/quent/Desktop/atlas-core && python3 -m unittest server.test_diversity_endpoint -v 2>&1 | tail -10\" ; Write-Host \"\" ; Write-Host \"--- Full umbrella ---\" ; $count = wsl bash -lc \"cd /mnt/c/Users/quent/Desktop/atlas-core && bash scripts/_run_all_tests.sh 2>&1\" | Select-String \"ALL OK\" | Measure-Object ; Write-Host \"umbrella ALL OK: $\\($count.Count\\)\")",
+      "Bash(grep -n \"^//.*\\([^\\)]*$\\\\|^//.*\\)\" C:/Users/quent/Desktop/atlas-core/core/mode_b_tally.js)",
+      "Bash(grep -nC1 \"_drawWinNavLane\" \"c:/Users/quent/Desktop/inversion-atlas/legacy/Inversion_atlas.html\")",
+      "PowerShell(wsl bash /mnt/c/Users/quent/Desktop/atlas-core/build/assemble.sh 2>&1 | Select-Object -Last 2 ; $count = wsl bash -lc \"cd /mnt/c/Users/quent/Desktop/atlas-core && bash scripts/_run_all_tests.sh 2>&1\" | Select-String \"ALL OK\" | Measure-Object ; Write-Host \"umbrella ALL OK: $\\($count.Count\\)\")",
+      "Bash(xargs -I {} basename {})"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

@@ -122,6 +122,38 @@ export function renderModeBBadge(slotId, probeResult, opts) {
   const ctxStr = (opts && opts.context) ? ` · ${opts.context}` : '';
   const carveTip = _carveTooltip(opts && opts.provenance);
 
+  // Cache the result so the expanded card can be re-rendered from a
+  // click without re-running the probe. Stored per slot; overwrites
+  // on every re-render so the card always reflects the latest fetch.
+  _lastProbe.set(slotId, { probeResult, opts, ts: Date.now() });
+
+  // Idempotently wire the click handler the first time we render into
+  // this slot. The handler stays attached even when textContent is
+  // replaced on re-renders; we mark a flag on the element so we don't
+  // double-bind. Cursor + role hint so the click affordance is visible.
+  if (!slot.dataset.modeBClickable) {
+    slot.dataset.modeBClickable = '1';
+    slot.setAttribute('role', 'button');
+    slot.setAttribute('tabindex', '0');
+    slot.setAttribute('aria-haspopup', 'true');
+    slot.setAttribute('aria-expanded', 'false');
+    slot.style.cursor = 'pointer';
+    slot.addEventListener('click', (e) => {
+      // Don't toggle when the click landed on an interactive child
+      // (e.g. a future inline link in the badge text).
+      if (e.target && e.target !== slot && e.target.tagName === 'A') return;
+      _toggleCard(slot, slotId);
+    });
+    slot.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        _toggleCard(slot, slotId);
+      } else if (e.key === 'Escape') {
+        _closeCard(slot);
+      }
+    });
+  }
+
   if (!probeResult || !probeResult.ok) {
     slot.className = 'data-source-badge demo';
     const reason = (probeResult && probeResult.reason) || 'unknown';
@@ -203,6 +235,201 @@ function _emitBadgeEvent(slotId, opts, state, probeResult) {
     // Older browsers without composed-event support — silent; the tally
     // chip is best-effort UX, not a correctness primitive.
   }
+}
+
+// ---------------------------------------------------------------------------
+// Per-slot last-probe state — used by the click-to-expand card. Keyed by
+// slotId so re-renders update in place. Not exported; only the card
+// renderer below reads it.
+// ---------------------------------------------------------------------------
+const _lastProbe = new Map();  // slotId -> { probeResult, opts, ts }
+
+/**
+ * Toggle the expanded card below `slot`. The card is a sibling div
+ * appended right after the badge; created lazily on first toggle. Re-
+ * renders content from `_lastProbe[slotId]` so it always reflects the
+ * latest probe state without re-running the fetch.
+ */
+function _toggleCard(slot, slotId) {
+  const existing = slot.nextElementSibling;
+  if (existing && existing.classList && existing.classList.contains('mode-b-card') &&
+      existing.dataset.forSlot === slotId) {
+    // Toggle: hide if visible, show + refresh if hidden.
+    if (existing.style.display === 'none') {
+      _renderCard(existing, slotId);
+      existing.style.display = 'block';
+      slot.setAttribute('aria-expanded', 'true');
+    } else {
+      existing.style.display = 'none';
+      slot.setAttribute('aria-expanded', 'false');
+    }
+    return;
+  }
+  // First open — create + insert.
+  const card = document.createElement('div');
+  card.className = 'mode-b-card';
+  card.dataset.forSlot = slotId;
+  _renderCard(card, slotId);
+  slot.parentNode.insertBefore(card, slot.nextSibling);
+  slot.setAttribute('aria-expanded', 'true');
+}
+
+function _closeCard(slot) {
+  const existing = slot.nextElementSibling;
+  if (existing && existing.classList && existing.classList.contains('mode-b-card')) {
+    existing.style.display = 'none';
+    slot.setAttribute('aria-expanded', 'false');
+  }
+}
+
+/**
+ * Render the card body. Reads the latest probe from `_lastProbe[slotId]`.
+ * Shape:
+ *   ┌ header — layer key (large) · context · close (×)
+ *   │ summary — comparator output OR failure reason
+ *   │ metadata — n rows, columns, carve fingerprint
+ *   │ payload preview — first 5 rows as a small grid (when present)
+ *   └ footer — link to the SPEC
+ */
+function _renderCard(card, slotId) {
+  const entry = _lastProbe.get(slotId);
+  if (!entry) {
+    card.innerHTML =
+      '<div class="mode-b-card-body"><em>No probe data captured yet — ' +
+      'refresh the page.</em></div>';
+    return;
+  }
+  const { probeResult, opts } = entry;
+  const label = (opts && opts.label) || 'pipeline';
+  const layerKey = (opts && opts.layerKey) || '(unknown layer)';
+  const ctxStr = (opts && opts.context) ? ` · ${opts.context}` : '';
+
+  const parts = [];
+  parts.push('<div class="mode-b-card-header">');
+  parts.push(`<div class="mode-b-card-title"><code>${_escapeHtml(layerKey)}</code>` +
+             `<span class="mode-b-card-ctx">${_escapeHtml(label + ctxStr)}</span></div>`);
+  parts.push('<button class="mode-b-card-close" type="button" aria-label="Close card">×</button>');
+  parts.push('</div>');
+
+  parts.push('<div class="mode-b-card-body">');
+
+  // ----- State + summary line -----
+  if (!probeResult || !probeResult.ok) {
+    const reason = (probeResult && probeResult.reason) || 'unknown';
+    const glyph =
+      reason === 'stub-payload' || reason === 'layer-disabled' ? '○' : '○';
+    parts.push(`<div class="mode-b-card-state demo">${glyph} ${_escapeHtml(_reasonLabel(reason))}</div>`);
+    if (probeResult && probeResult.error) {
+      parts.push(`<div class="mode-b-card-error"><strong>Error:</strong> <code>${_escapeHtml(probeResult.error)}</code></div>`);
+    }
+    if (probeResult && probeResult.disabled_reason) {
+      parts.push(`<div class="mode-b-card-error">${_escapeHtml(probeResult.disabled_reason)}</div>`);
+    }
+  } else {
+    // Run the comparator again to get pass/summary (cheap; same logic
+    // renderModeBBadge already used). Defaults to a generic summary.
+    let pass = true, summary = `${probeResult.n} rows resolved`;
+    if (opts && typeof opts.compare === 'function') {
+      try {
+        const cmp = opts.compare(probeResult) || {};
+        pass = cmp.pass !== false;
+        summary = cmp.summary || summary;
+      } catch (_) { /* keep defaults */ }
+    }
+    const glyph = pass ? '●' : '⚠';
+    parts.push(`<div class="mode-b-card-state ${pass ? 'live' : 'demo'}">${glyph} ${_escapeHtml(summary)}</div>`);
+  }
+
+  // ----- Metadata grid -----
+  if (probeResult && probeResult.ok) {
+    parts.push('<div class="mode-b-card-meta">');
+    parts.push(`<div class="meta-row"><span class="k">rows</span><span class="v"><code>${probeResult.n}</code></span></div>`);
+    parts.push(`<div class="meta-row"><span class="k">columns</span><span class="v"><code>${_escapeHtml((probeResult.sample_keys || []).join(', ') || '(none)')}</code></span></div>`);
+    if (opts && opts.provenance) {
+      const p = opts.provenance;
+      if (p.data_version) {
+        parts.push(`<div class="meta-row"><span class="k">vs carve</span><span class="v"><code>${_escapeHtml(p.data_version)}</code></span></div>`);
+      }
+      if (p.content_sha256) {
+        parts.push(`<div class="meta-row"><span class="k">carve sha</span><span class="v"><code>${_escapeHtml(p.content_sha256)}</code></span></div>`);
+      }
+    }
+    parts.push('</div>');
+
+    // ----- Payload preview (first 5 rows) -----
+    if (Array.isArray(probeResult.rows) && probeResult.rows.length > 0) {
+      const preview = probeResult.rows.slice(0, 5);
+      const cols = probeResult.sample_keys || Object.keys(preview[0] || {});
+      const visibleCols = cols.slice(0, 6);   // cap horizontal density
+      parts.push('<div class="mode-b-card-preview">');
+      parts.push(`<div class="preview-title">first ${preview.length} of ${probeResult.n} rows` +
+                 (visibleCols.length < cols.length ? ` · first ${visibleCols.length} of ${cols.length} cols` : '') +
+                 '</div>');
+      parts.push('<table class="preview-table"><thead><tr>');
+      for (const c of visibleCols) parts.push(`<th>${_escapeHtml(c)}</th>`);
+      parts.push('</tr></thead><tbody>');
+      for (const row of preview) {
+        parts.push('<tr>');
+        for (const c of visibleCols) {
+          const v = row[c];
+          const cell = v == null ? '<span class="null">—</span>'
+                     : typeof v === 'number' ? _fmtNumber(v)
+                     : _escapeHtml(String(v).slice(0, 60));
+          parts.push(`<td>${cell}</td>`);
+        }
+        parts.push('</tr>');
+      }
+      parts.push('</tbody></table>');
+      parts.push('</div>');
+    }
+  }
+
+  parts.push('</div>');   // card-body
+
+  parts.push('<div class="mode-b-card-footer">');
+  parts.push('See <code>core/mode_b_badge.js</code> · <code>docs/SPEC_mode_b_pattern.md</code>');
+  parts.push('</div>');
+
+  card.innerHTML = parts.join('');
+
+  // Wire close button
+  const closeBtn = card.querySelector('.mode-b-card-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      card.style.display = 'none';
+      const slot = document.getElementById(slotId);
+      if (slot) slot.setAttribute('aria-expanded', 'false');
+    });
+  }
+}
+
+function _reasonLabel(reason) {
+  return {
+    'registry-not-injected': 'registry not injected — running standalone?',
+    'empty-result':          'layer resolved but rows[] is empty',
+    'stub-payload':          'payload resolved but is a stub (data pending)',
+    'layer-disabled':        'layer flagged disabled in registry',
+    'resolve-threw':         'registry.resolve threw an error',
+    'unknown':               'no probe result',
+  }[reason] || reason;
+}
+
+function _fmtNumber(v) {
+  if (!Number.isFinite(v)) return '<span class="null">—</span>';
+  const abs = Math.abs(v);
+  // Compact-scientific for very small/large, plain otherwise
+  if (abs !== 0 && (abs < 1e-3 || abs >= 1e7)) return `<code>${v.toExponential(3)}</code>`;
+  if (Number.isInteger(v)) return `<code>${v.toString()}</code>`;
+  return `<code>${v.toFixed(4)}</code>`;
+}
+
+function _escapeHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 /** Build the trailing "vs carve …" line for a badge tooltip. Empty when

@@ -254,6 +254,25 @@ function _wireSchemaBadge() {
       body: _schemaModalBody(layers),
     });
   });
+  // 2026-05-20: clear the schema badge state on cross-atlas navigation.
+  // local_pca_dosage (inversion atlas) writes window.__atlasSchemaLayers
+  // once on mount and never clears it. If the user navigates to another
+  // atlas — e.g. relatedness — the badge keeps showing the inversion
+  // atlas's precomp fields (cusum_theta / dosage_chunks / envelopes / …)
+  // as if they belonged to relatedness. Clear on every atlas transition;
+  // the next page mount in the new atlas can write its own layers.
+  let _lastAtlasId = null;
+  document.addEventListener('shell.page_mount', (e) => {
+    const d = (e && e.detail) || {};
+    if (d.atlas_id && d.atlas_id !== _lastAtlasId) {
+      _lastAtlasId = d.atlas_id;
+      window.__atlasSchemaLayers = null;
+      badge.textContent = '';
+      badge.style.display = 'none';
+      badge.className = '';
+      badge.title = '';
+    }
+  });
 }
 
 function _schemaModalBody(layers) {

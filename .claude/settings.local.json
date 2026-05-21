@@ -420,7 +420,8 @@
       "Bash(mkdir _pop_smoke)",
       "Bash(python3 \"c:/Users/quent/Desktop/atlas-core/build/index_specs.py\" population \"c:/Users/quent/Desktop/population-atlas\" _pop_smoke)",
       "Bash(python3 -c \"import json; d=json.load\\(open\\('_pop_smoke/specs_index.json'\\)\\); print\\('done:', len\\(d['done']\\), 'todo:', len\\(d['todo']\\)\\)\")",
-      "Bash(rm -rf /tmp/_spec_smoke /tmp/_core_smoke /tmp/_div_smoke /tmp/_gen_smoke /tmp/_pop_smoke 2>&1)"
+      "Bash(rm -rf /tmp/_spec_smoke /tmp/_core_smoke /tmp/_div_smoke /tmp/_gen_smoke /tmp/_pop_smoke 2>&1)",
+      "Bash(git -C \"C:/Users/quent/Desktop/hetseg_pkg\" init -b main)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

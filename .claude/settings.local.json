@@ -398,7 +398,29 @@
       "Bash(grep -n \"^//.*\\([^\\)]*$\\\\|^//.*\\)\" C:/Users/quent/Desktop/atlas-core/core/mode_b_tally.js)",
       "Bash(grep -nC1 \"_drawWinNavLane\" \"c:/Users/quent/Desktop/inversion-atlas/legacy/Inversion_atlas.html\")",
       "PowerShell(wsl bash /mnt/c/Users/quent/Desktop/atlas-core/build/assemble.sh 2>&1 | Select-Object -Last 2 ; $count = wsl bash -lc \"cd /mnt/c/Users/quent/Desktop/atlas-core && bash scripts/_run_all_tests.sh 2>&1\" | Select-String \"ALL OK\" | Measure-Object ; Write-Host \"umbrella ALL OK: $\\($count.Count\\)\")",
-      "Bash(xargs -I {} basename {})"
+      "Bash(xargs -I {} basename {})",
+      "Bash(grep -rn \"return; }\\\\|return;\\\\s*}$\\\\|forever.stub\\\\|stub\\\\|no.op\\\\|haven.t been ported\\\\|placeholder\\\\|TODO\" \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/local_pca_dosage/\" --include=\"*.js\")",
+      "Bash([ -d \"c:/Users/quent/Desktop/$d/specs_done\" ])",
+      "Bash(rm -rf _spec_smoke)",
+      "Bash(mkdir _spec_smoke)",
+      "Bash(python3 \"c:/Users/quent/Desktop/atlas-core/build/index_specs.py\" inversion \"c:/Users/quent/Desktop/inversion-atlas\" _spec_smoke)",
+      "Bash(rm -rf _core_smoke)",
+      "Bash(mkdir _core_smoke)",
+      "Bash(python3 \"c:/Users/quent/Desktop/atlas-core/build/index_specs.py\" core \"c:/Users/quent/Desktop/atlas-core\" _core_smoke)",
+      "Bash(cp \"c:/Users/quent/Desktop/atlas-core/css/base.css\" \"c:/Users/quent/Desktop/atlas-workspace/css/base.css\" && echo \"OK — base.css mirrored\")",
+      "Bash(rm -rf _div_smoke)",
+      "Bash(mkdir _div_smoke)",
+      "Bash(python3 \"c:/Users/quent/Desktop/atlas-core/build/index_specs.py\" diversity \"c:/Users/quent/Desktop/diversity-atlas\" _div_smoke)",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('_div_smoke/specs_index.json'\\)\\); print\\('done:', len\\(d['done']\\), 'todo:', len\\(d['todo']\\), 'aggregate:', d['has_aggregate']\\)\")",
+      "Bash(rm -rf _gen_smoke)",
+      "Bash(mkdir _gen_smoke)",
+      "Bash(python3 \"c:/Users/quent/Desktop/atlas-core/build/index_specs.py\" genome \"c:/Users/quent/Desktop/genome-atlas\" _gen_smoke)",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('_gen_smoke/specs_index.json'\\)\\); print\\(d\\)\")",
+      "Bash(rm -rf _pop_smoke)",
+      "Bash(mkdir _pop_smoke)",
+      "Bash(python3 \"c:/Users/quent/Desktop/atlas-core/build/index_specs.py\" population \"c:/Users/quent/Desktop/population-atlas\" _pop_smoke)",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('_pop_smoke/specs_index.json'\\)\\); print\\('done:', len\\(d['done']\\), 'todo:', len\\(d['todo']\\)\\)\")",
+      "Bash(rm -rf /tmp/_spec_smoke /tmp/_core_smoke /tmp/_div_smoke /tmp/_gen_smoke /tmp/_pop_smoke 2>&1)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",
@@ -417,7 +439,9 @@
       "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\pages\\discovery",
       "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\css",
       "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\pages\\catalogue\\catalogue",
-      "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\pages\\catalogue"
+      "c:\\Users\\quent\\Desktop\\atlas-workspace\\atlases\\inversion\\pages\\catalogue",
+      "c:\\Users\\quent\\Desktop\\atlas-workspace\\css",
+      "\\tmp"
     ]
   }
 }

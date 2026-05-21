@@ -712,3 +712,150 @@
   padding: 8px 12px; border-top: 1px solid var(--border);
   background: var(--bg);
 }
+
+/* ----- 8. SPECs page -------------------------------------------------- */
+/* Structure mirrors Inventory: tabs (one per atlas) + left tree + right
+ * markdown detail. Tabs include a right-aligned All/Done/To-do filter. */
+.core-page-specs {
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.core-page-specs .spc-tabs {
+  display: flex; gap: 4px; align-items: flex-end;
+  padding: 10px 24px 0;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+.core-page-specs .spc-tab {
+  border: 1px solid var(--border); border-bottom: none;
+  background: transparent; color: var(--muted);
+  font: inherit; padding: 6px 12px;
+  border-top-left-radius: 4px; border-top-right-radius: 4px;
+  cursor: pointer;
+}
+.core-page-specs .spc-tab.active {
+  background: var(--bg); color: var(--fg);
+  border-color: var(--border);
+  margin-bottom: -1px;
+  position: relative; z-index: 1;
+}
+.core-page-specs .spc-mode {
+  margin-left: auto; display: flex; gap: 2px;
+  align-self: center; padding-bottom: 4px;
+}
+.core-page-specs .spc-mode-btn {
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font: inherit; font-size: 11.5px;
+  padding: 3px 10px; border-radius: 3px; cursor: pointer;
+}
+.core-page-specs .spc-mode-btn.active {
+  background: var(--accent); color: white; border-color: var(--accent);
+}
+
+.core-page-specs .spc-body {
+  display: grid; grid-template-columns: minmax(300px, 34%) 1fr;
+  flex: 1; min-height: 0;
+}
+.core-page-specs .spc-left {
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  min-width: 0;
+}
+.core-page-specs .spc-search { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.core-page-specs .spc-search input {
+  width: 100%; box-sizing: border-box;
+  padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
+  font: inherit;
+}
+.core-page-specs .spc-tree { flex: 1; overflow-y: auto; padding: 4px 0; }
+
+.core-page-specs .spc-group { margin: 6px 0; }
+.core-page-specs .spc-group-h {
+  padding: 6px 12px 4px; font-size: 11.5px;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+  background: var(--bg);
+  display: flex; align-items: center; gap: 6px;
+}
+.core-page-specs .spc-n { color: var(--muted); font-weight: normal; text-transform: none; letter-spacing: 0; }
+.core-page-specs .spc-badge {
+  text-transform: none; letter-spacing: 0; font-size: 10.5px;
+  padding: 1px 7px; border-radius: 9px;
+}
+.core-page-specs .spc-badge-done { background: var(--ok-bg, rgba(46,160,67,0.18)); color: var(--ok, #2ea043); }
+.core-page-specs .spc-badge-todo { background: var(--warn-bg, rgba(210,153,34,0.18)); color: var(--warn, #d29922); }
+
+.core-page-specs .spc-row {
+  padding: 5px 12px; cursor: pointer;
+  border-left: 2px solid transparent;
+}
+.core-page-specs .spc-row:hover { background: var(--panel-2); }
+.core-page-specs .spc-row:focus { outline: none; background: var(--panel-3, var(--panel-2)); border-left-color: var(--accent); }
+.core-page-specs .spc-row-1 { font-size: 13px; color: var(--fg); }
+.core-page-specs .spc-row-2 {
+  font-size: 11px; color: var(--muted); margin-top: 1px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.core-page-specs .spc-empty { padding: 20px 16px; color: var(--muted); font-size: 12.5px; }
+.core-page-specs .spc-empty-sm { padding: 4px 16px; font-size: 11.5px; }
+.core-page-specs .spc-warn  { color: var(--warn); }
+.core-page-specs .spc-empty-detail { display: block; margin-top: 6px; font-size: 11px; color: var(--muted); font-family: ui-monospace, monospace; }
+
+.core-page-specs .spc-right {
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0;
+}
+.core-page-specs .spc-detail {
+  flex: 1; overflow: auto; padding: 16px 24px;
+}
+.core-page-specs .spc-det-h {
+  font-weight: 600; font-size: 12px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px; margin-bottom: 14px;
+  word-break: break-all;
+}
+
+/* Markdown body — used by the right pane to render fetched SPECs. */
+.core-page-specs .spc-md-body { line-height: 1.55; font-size: 13.5px; }
+.core-page-specs .spc-md-h    { margin: 1.2em 0 0.4em; line-height: 1.25; }
+.core-page-specs .spc-md-h1   { font-size: 22px; border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-top: 0; }
+.core-page-specs .spc-md-h2   { font-size: 18px; border-bottom: 1px solid var(--border); padding-bottom: 3px; }
+.core-page-specs .spc-md-h3   { font-size: 15.5px; }
+.core-page-specs .spc-md-h4   { font-size: 14px; }
+.core-page-specs .spc-md-h5,
+.core-page-specs .spc-md-h6   { font-size: 13px; color: var(--muted); }
+.core-page-specs .spc-md-p    { margin: 0.6em 0; }
+.core-page-specs .spc-md-ul,
+.core-page-specs .spc-md-ol   { margin: 0.5em 0 0.5em 1.4em; padding: 0; }
+.core-page-specs .spc-md-ul li,
+.core-page-specs .spc-md-ol li { margin: 0.2em 0; }
+.core-page-specs .spc-md-pre {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px;
+  padding: 10px 12px; margin: 0.8em 0;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px; line-height: 1.45;
+}
+.core-page-specs .spc-md-pre code { background: transparent; padding: 0; }
+.core-page-specs .spc-md-icode {
+  background: var(--panel-2); padding: 1px 5px; border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.core-page-specs .spc-md-bq {
+  border-left: 3px solid var(--border); margin: 0.8em 0; padding: 4px 12px;
+  color: var(--muted); background: var(--bg-card);
+}
+.core-page-specs .spc-md-hr { border: none; border-top: 1px solid var(--border); margin: 1.2em 0; }
+.core-page-specs .spc-md-tbl {
+  border-collapse: collapse; margin: 0.8em 0; font-size: 12.5px;
+}
+.core-page-specs .spc-md-tbl th,
+.core-page-specs .spc-md-tbl td {
+  border: 1px solid var(--border); padding: 4px 9px; text-align: left;
+}
+.core-page-specs .spc-md-tbl thead th { background: var(--bg); }
+.core-page-specs .spc-md-body a { color: var(--accent); text-decoration: none; }
+.core-page-specs .spc-md-body a:hover { text-decoration: underline; }

@@ -254,24 +254,49 @@ function _wireSchemaBadge() {
       body: _schemaModalBody(layers),
     });
   });
-  // 2026-05-20: clear the schema badge state on cross-atlas navigation.
-  // local_pca_dosage (inversion atlas) writes window.__atlasSchemaLayers
-  // once on mount and never clears it. If the user navigates to another
-  // atlas — e.g. relatedness — the badge keeps showing the inversion
-  // atlas's precomp fields (cusum_theta / dosage_chunks / envelopes / …)
-  // as if they belonged to relatedness. Clear on every atlas transition;
-  // the next page mount in the new atlas can write its own layers.
+  // 2026-05-20: reset + repopulate the schema badge on every atlas
+  // transition. Previously only the inversion atlas's local_pca_dosage
+  // wrote `window.__atlasSchemaLayers` (on chrom load), and that global
+  // never got cleared — so navigating to e.g. the relatedness atlas
+  // showed the inversion atlas's precomp fields as if they belonged to
+  // relatedness. The fix has two layers:
+  //
+  //   1. On every page_mount where atlas_id changes: blow away the
+  //      global + badge state.
+  //   2. Then read `window.__atlasRegistry.getAtlasLayerNames(atlas_id)`
+  //      (set in index.html) to repopulate with the new atlas's
+  //      declared layers. Pages can still overwrite later with richer
+  //      detail (e.g. inversion's local_pca_dosage writes "only the
+  //      layers actually present in this chrom's precomp"); the
+  //      registry baseline is just so the badge says SOMETHING even
+  //      when no page has run its loader yet.
   let _lastAtlasId = null;
   document.addEventListener('shell.page_mount', (e) => {
     const d = (e && e.detail) || {};
-    if (d.atlas_id && d.atlas_id !== _lastAtlasId) {
-      _lastAtlasId = d.atlas_id;
-      window.__atlasSchemaLayers = null;
-      badge.textContent = '';
-      badge.style.display = 'none';
-      badge.className = '';
-      badge.title = '';
-    }
+    if (!d.atlas_id || d.atlas_id === _lastAtlasId) return;
+    _lastAtlasId = d.atlas_id;
+    window.__atlasSchemaLayers = null;
+    badge.textContent = '';
+    badge.style.display = 'none';
+    badge.className = '';
+    badge.title = '';
+    // Repopulate from the registry, if it's exposed and has this atlas.
+    const reg = window.__atlasRegistry;
+    if (!reg || typeof reg.getAtlasLayers !== 'function') return;
+    const layers = reg.getAtlasLayers(d.atlas_id) || {};
+    const names = Object.keys(layers).sort();
+    if (names.length === 0) return;
+    window.__atlasSchemaLayers = names.map(name => {
+      const entry = layers[name] || {};
+      return {
+        name,
+        present: true,   // registered, not necessarily loaded; pages refine
+        description: entry._doc || entry._status || '',
+      };
+    });
+    badge.textContent = `schema · ${names.length} layer${names.length === 1 ? '' : 's'}`;
+    badge.title = `Atlas: ${d.atlas_id}\nLayers (registered): ${names.join(', ')}`;
+    badge.style.display = 'inline-block';
   });
 }
 

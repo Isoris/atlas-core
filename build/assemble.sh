@@ -93,6 +93,10 @@ if [ -d "$WORKSPACE/atlases" ]; then
     [ -f "$sub/manifest.json" ] || continue
     echo "==> bundled atlas $aid: $sub (from atlas-core)"
     atlas_ids+=("$aid")
+    # SPECs for bundled atlases come from atlas-core's repo root
+    # (atlas-core keeps them under docs/SPEC_*.md, not specs_done/).
+    python3 "$SCRIPT_DIR/index_specs.py" "$aid" "$ATLAS_CORE" \
+      "$WORKSPACE/atlases/$aid/specs" || true
   done
 fi
 
@@ -125,6 +129,11 @@ for key in "${kv_keys[@]}"; do
     rm -rf "$WORKSPACE/atlases/$aid"
     cp -r "$sub" "$WORKSPACE/atlases/"
     atlas_ids+=("$aid")
+    # Index specs_done/ + specs_todo/ + SPECS.md at the source repo root
+    # (NOT inside atlases/<aid>/). Fail-soft: missing folders just yield an
+    # empty section in specs_index.json; never aborts the assemble.
+    python3 "$SCRIPT_DIR/index_specs.py" "$aid" "$src" \
+      "$WORKSPACE/atlases/$aid/specs" || true
   done
 done
 

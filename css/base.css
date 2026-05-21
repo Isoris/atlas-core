@@ -371,15 +371,24 @@ header .header-folder[data-color="yellow"] .header-folder-btn .dot { color: rgb(
 
 /* Direct header buttons (compact / reset layout) — sized to match the
    other compact header buttons. Forward clicks to the page-owned button
-   via the CMD_TO_PAGE_ID map in shell_chrome.js. */
+   via the CMD_TO_PAGE_ID map in shell_chrome.js.
+   2026-05-20: pinned to 20px height + box-sizing border-box (same as
+   .header-folder-btn / .atlas-switcher-select / #scopebar select /
+   #schemaBadge / #jsScriptsBadge / .mode-b-tally / #globalSettingsBtn).
+   Was padding: 3px 9px which gave ~18px effective height — 2px shorter
+   than the rest of the row, so these direct buttons sat 1px higher than
+   the others. Quentin: "the buttons are not at the same y position". */
 header .header-direct-btn {
   align-self: center; flex-shrink: 0;
   background: var(--panel-2); color: var(--ink);
   border: 1px solid var(--rule); border-radius: 2px;
-  padding: 3px 9px; font-family: var(--mono); font-size: 10px;
+  padding: 0 9px; font-family: var(--mono); font-size: 10px;
+  height: 20px; line-height: 1;
+  box-sizing: border-box;
   letter-spacing: 0.02em; cursor: pointer;
-  line-height: 1; white-space: nowrap;
+  white-space: nowrap;
   display: inline-flex; align-items: center;
+  vertical-align: middle;
   transition: background 100ms, border-color 100ms;
 }
 header .header-direct-btn:hover {

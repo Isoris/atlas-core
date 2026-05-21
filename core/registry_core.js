@@ -351,7 +351,13 @@ export class Registry {
       return;
     }
     if (incumbent.entry.owned_by === atlas_id) {
-      console.info(`Registry: ownership transfer of ${kind} '${name}' from '${incumbent.atlas_id}' to '${atlas_id}'`);
+      // Working-as-designed handoff (incumbent declared owned_by:<atlas_id>).
+      // Demoted from info → debug 2026-05-20: the inversion-atlas declares
+      // ~24 such stubs as deliberate handoffs to population/diversity/genome
+      // atlases; surfacing all of them at info-level on every boot is noise
+      // for the typical user. Browser DevTools needs "Verbose" enabled to
+      // see this; the registry's behaviour is unchanged.
+      console.debug(`Registry: ownership transfer of ${kind} '${name}' from '${incumbent.atlas_id}' to '${atlas_id}'`);
       index.set(name, { atlas_id, entry });
       return;
     }
@@ -412,6 +418,51 @@ export class Registry {
   getLayerEntry(key) {
     const hit = this._lookup(key);
     return hit ? hit.entry : null;
+  }
+
+  /**
+   * Public list of layer names registered for a given atlas. Returns a
+   * flat array of strings, sorted alphabetically. Empty array when the
+   * atlas is unknown or has no layers. Used by the schema-badge populator
+   * in shell_chrome.js so every atlas gets a baseline badge content
+   * without each page having to write `window.__atlasSchemaLayers` itself.
+   *
+   * @param {string} atlas_id
+   * @param {{ include_disabled?: boolean }} [opts]
+   *        — include_disabled (default false): drop entries flagged
+   *        `disabled: true` (contract-only layers waiting on upstream
+   *        pipeline). Pass `true` to include them.
+   * @returns {string[]}
+   */
+  getAtlasLayerNames(atlas_id, opts) {
+    const atlas = this._atlases.get(atlas_id);
+    if (!atlas || !atlas.layers) return [];
+    const includeDisabled = !!(opts && opts.include_disabled);
+    const out = [];
+    for (const [name, entry] of Object.entries(atlas.layers)) {
+      if (!entry || name.startsWith('_')) continue;
+      if (!includeDisabled && entry.disabled === true) continue;
+      out.push(name);
+    }
+    return out.sort();
+  }
+
+  /**
+   * Same shape as getAtlasLayerNames but returns full entries (keyed by
+   * name). Used by the schema-badge modal so each row can carry
+   * description / disabled-reason / tier metadata.
+   */
+  getAtlasLayers(atlas_id, opts) {
+    const atlas = this._atlases.get(atlas_id);
+    if (!atlas || !atlas.layers) return {};
+    const includeDisabled = !!(opts && opts.include_disabled);
+    const out = {};
+    for (const [name, entry] of Object.entries(atlas.layers)) {
+      if (!entry || name.startsWith('_')) continue;
+      if (!includeDisabled && entry.disabled === true) continue;
+      out[name] = entry;
+    }
+    return out;
   }
 
   /**

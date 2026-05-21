@@ -44,6 +44,14 @@
       "fragment": "atlases/core/pages/inventory.html",
       "module": "atlases/core/pages/inventory.js",
       "tooltip": "Cross-atlas \"what's loaded right now\". Four tabs: live envelopes (GET /api/layers), per-atlas manifest pages, per-atlas registries (5 JSON files each), toolkit_registries TSVs. Click any row to inspect its JSON / TSV payload."
+    },
+    {
+      "id": "specs",
+      "label": "6. SPECs",
+      "stage": "dashboard",
+      "fragment": "atlases/core/pages/specs.html",
+      "module": "atlases/core/pages/specs.js",
+      "tooltip": "Cross-atlas SPEC inventory: one tab per atlas, each split into a 'Done' section (shipped specs from specs_done/) and a 'To-do' section (pending specs from specs_todo/). Click any row to read the SPEC markdown. Indexed at assemble time by build/index_specs.py — fail-soft for atlases with no specs/ folder yet."
     }
   ],
   "registries": {

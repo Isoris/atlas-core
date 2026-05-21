@@ -232,6 +232,12 @@ import { attachShellChrome } from './core/shell_chrome.js';
       return;
     }
 
+    // 2026-05-20: expose registry on `window.__atlasRegistry` so shell_chrome
+    // (and any future cross-page debug surface) can read per-atlas layer
+    // metadata without having to be passed the instance directly. The
+    // schema badge uses this to populate itself on every atlas transition.
+    window.__atlasRegistry = registry;
+
     // Wire prewarm scheduler
     const scheduler = new PrewarmScheduler({ atlasState: state, registry });
     scheduler.attach();

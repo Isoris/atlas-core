@@ -43,6 +43,21 @@ export class PrewarmScheduler {
     this.state.subscribe('shell.page_mount', (ev) => {
       this.onPageMount(ev.atlas_id, ev.page_id);
     });
+
+    // 2026-05-21: cold-boot kick. When the user lands with a persisted
+    // activeChrom in localStorage, setActiveChrom is skipped (old===new
+    // is false but the setter early-returns on no-change), so the
+    // chrom_change prewarm event never fires and scrubber_main is fetched
+    // cold inside the first page mount. Fire one synthetic chrom_change
+    // here for whatever is currently in shared so the heavy precomp JSONs
+    // start downloading before the first page mount's await touches them.
+    const sh = (this.state && this.state.shared) || {};
+    if (typeof sh.activeChrom === 'string' && sh.activeChrom.length > 0) {
+      this.onChromChange(sh.activeChrom, undefined);
+    }
+    if (sh.activeCandidate && sh.activeCandidate.id) {
+      this.onCandidateChange(sh.activeCandidate, undefined);
+    }
   }
 
   // ------------------------------------------------------------------
@@ -109,45 +124,40 @@ export class PrewarmScheduler {
 
     const args = this._buildArgs();
 
+    // 2026-05-21: was a sequential `for ... await` loop, which serialized
+    // every preload — 6 layers × ~200ms each = ~1.2s before first paint on
+    // a cold local_pca_dosage mount. Fan out in parallel via Promise.all
+    // (same shape as _preloadByEvent below). The in-flight Promise dedup
+    // in registry.resolve already coalesces duplicates with the chrom-
+    // change prewarm, so this won't double-fetch.
+    const tasks = [];
     for (const layerKey of pageEntry.preloads) {
-      if (ctrl.signal.aborted) return;
-      // 2026-05-19: skip layers explicitly marked `disabled: true` in the
-      // registry. These are layers whose pipeline output isn't on disk yet
-      // — preloading them just spams the console with HTTP 404s every time
-      // the user picks a chromosome. Flip `disabled` off in the layers
-      // registry when the pipeline starts emitting the file.
       const layerEntry = atlas.layers && atlas.layers[layerKey];
       if (layerEntry && layerEntry.disabled === true) continue;
-      try {
-        await this.registry.resolve(layerKey, args);
-      } catch (e) {
-        const msg = (e && e.message) || String(e);
-        // 2026-05-19: broadened expected-error filter to match the
-        // chrom-change path below. Per-page preloads commonly fail
-        // because: (a) the file isn't on disk yet (404), (b) the
-        // auto-indexer has no entry for the current chrom or returned
-        // empty, (c) the layer needs an arg the prewarm scheduler can't
-        // supply from canonical scope aliases (chrom / candidate_id /
-        // species) — e.g. ancestry K, version_id of a per-candidate
-        // lineage. These are configuration issues that should be fixed
-        // at the registry side (declare `preload_on: 'explicit'` on
-        // those layers); until then we downgrade the noise to debug
-        // since the actual data path works fine when the page asks
-        // for it with the right args at render time.
-        const isExpected = msg.includes('HTTP 404')
-                        || msg.includes('AUTO_INDEX_EMPTY')
-                        || msg.includes('AUTO_INDEX_MISS')
-                        || msg.includes('unresolved placeholder')
-                        || msg.includes('requires args.');
-        if (isExpected) {
-          if (typeof console.debug === 'function') {
-            console.debug(`Prewarm onPageMount: ${atlas_id}/${page_id} optional preload '${layerKey}' skipped:`, msg);
-          }
-        } else {
-          console.warn(`Prewarm onPageMount: ${atlas_id}/${page_id} preload '${layerKey}' failed:`, e);
-        }
-      }
+      tasks.push(
+        Promise.resolve()
+          .then(() => {
+            if (ctrl.signal.aborted) return undefined;
+            return this.registry.resolve(layerKey, args);
+          })
+          .catch(e => {
+            const msg = (e && e.message) || String(e);
+            const isExpected = msg.includes('HTTP 404')
+                            || msg.includes('AUTO_INDEX_EMPTY')
+                            || msg.includes('AUTO_INDEX_MISS')
+                            || msg.includes('unresolved placeholder')
+                            || msg.includes('requires args.');
+            if (isExpected) {
+              if (typeof console.debug === 'function') {
+                console.debug(`Prewarm onPageMount: ${atlas_id}/${page_id} optional preload '${layerKey}' skipped:`, msg);
+              }
+            } else {
+              console.warn(`Prewarm onPageMount: ${atlas_id}/${page_id} preload '${layerKey}' failed:`, e);
+            }
+          })
+      );
     }
+    await Promise.all(tasks);
   }
 
   // ------------------------------------------------------------------

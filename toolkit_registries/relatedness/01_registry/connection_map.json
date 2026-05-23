@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 84,
-  "n_edges": 120,
+  "n_nodes": 86,
+  "n_edges": 122,
   "warnings": [],
   "nodes": [
     {
@@ -306,6 +306,18 @@
       "status": "experimental"
     },
     {
+      "id": "wfmash_pairwise_alignment",
+      "type": "analysis",
+      "label": "wfmash pairwise whole-genome alignment",
+      "status": "experimental"
+    },
+    {
+      "id": "busco_ortholog_extraction",
+      "type": "analysis",
+      "label": "BUSCO single-copy ortholog table extraction",
+      "status": "experimental"
+    },
+    {
       "id": "mendelian_page_load",
       "type": "hook",
       "label": "Mendelian panel",
@@ -465,7 +477,7 @@
       "type": "atlas",
       "label": "Cross-Species Atlas",
       "status": "experimental",
-      "color": "#2f8550"
+      "color": "#e67e22"
     },
     {
       "id": "popstats_atlas",
@@ -773,6 +785,16 @@
     {
       "from": "cross_species_breakpoint_detection",
       "to": "pairwise_summary",
+      "kind": "output"
+    },
+    {
+      "from": "wfmash_pairwise_alignment",
+      "to": "wfmash_paf",
+      "kind": "output"
+    },
+    {
+      "from": "busco_ortholog_extraction",
+      "to": "busco_ortholog_table",
       "kind": "output"
     },
     {

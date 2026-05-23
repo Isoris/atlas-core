@@ -78,3 +78,35 @@ ibs_counts_pairs	analysis_result	sample_pair	IBS0/IBS1/IBS2 counts per pair	Iden
 inbreeding_F_per_sample	analysis_result	sample	Per-sample inbreeding coefficient F	Single-individual F from ngsRelate -F mode.				experimental		
 relatedness_res_perchrom_adaptive	analysis_result	sample_pair	Per-chromosome adaptive .res (23-column)	Stage-2-compatible per-chromosome .res file produced by the adaptive scheduler. Byte-equivalent column schema to the uniform-stride per-chrom .res; differs only in row-level site budgeting provenance, recorded in the co-emitted adaptive_run_manifest.				experimental		
 adaptive_validation_report	analysis_result	chromosome_run	6-gate adaptive validation report (JSON)	Per-chromosome verdicts for SPEC §6 gates 1–6 against the uniform-stride baseline. Tier-1 (Gates 4, 6) are hard fails; tier-2 (Gate 1) numeric target; tier-3 (Gates 2, 3, 5) informational.				experimental		
+assembly_stats	file		Assembly Stats	page_scaffold chromosome overview · QC banner (phase B)				experimental		
+chromosome_map	file		Chromosome Map	karyotype strip · per-chrom navigation (phase B)				experimental		
+gene_track	file		Gene Track	gene cargo per inversion · functional context (phase B/C)				experimental		
+repeat_track	file		Repeat Track	TE landscape · breakpoint repeat enrichment (phase B)				experimental		
+te_hierarchy	file		Te Hierarchy	page6 View 4 — TE-hierarchy alluvial (per parental haplotype, N-level)				experimental		
+conserved_elements	file		Conserved Elements	UCEs · regulatory candidates (phase C/D)				experimental		
+synteny_blocks	file		Synteny Blocks	collinearity vs related Siluriformes · ancestral karyotype (phase D)				experimental		
+macrosynteny_orthologs	file		Macrosynteny Orthologs	page9 View 3 — MacrosyntR-style Oxford macro-synteny grid (and linear macro-synteny in later rounds)				experimental		
+centromere_telomere	file		Centromere Telomere	centromere bands · T2T completeness chip (phase B)				experimental		
+variant_annotations	file		Variant Annotations	deleterious-variant overlap with inversions (phase E)				experimental		
+synteny_oxford_grid	file		Synteny Oxford Grid	page_synteny View 4 — macrosyntR-style Oxford grid (aggregated; one dot per chrom-pair, sized by ortholog count, coloured by BH-q)				experimental		
+ortholog_tables	file		Ortholog Tables	page_orthologues Views 1 + 2 — focal × non-focal summary table and per focal-chrom %1:1 breakdown				experimental		
+ortholog_pairs	file		Ortholog Pairs	page_orthologues View 3 — gene-level explorer (one column per non-focal, hydrated on reveal)				experimental		
+staging_genome_table_v0	analysis_result	genome_table	Staging genome table (v0)	Loose staging payload produced by the import_table runner. Carries the raw rows + columns; normalize via a downstream-specific schema once known.				experimental		
+ancestral_karyotype	analysis_result	ancestral_karyotype	Ancestral karyotype reconstruction	WGDI ancestral karyotype reconstruction output. Reserved — runner not yet implemented; layer not yet declared in atlases/genome/registries/data/layers.registry.json.				reserved		
+samples_genomewide_het	analysis_result	sample	Per-sample genome-wide heterozygosity	One row per sample: H, n_sites_sfs, sfs_bin0, sfs_bin1.				experimental		
+sample_sfs	analysis_result	sample	Per-sample folded 1-D SFS	Two-bin folded SFS from realSFS -fold 1; { sample_id, bins:[bin0,bin1], folded:true, h }.				experimental		
+theta_pi_aggregate_cohort	analysis_result	cohort	Cohort-aggregated θπ track	Sum of tP and nSites across the per-sample pestPG files re-rendered as a cohort track.				experimental		
+samples_roh_per_sample	analysis_result	sample	Per-sample ROH segments	Per-sample table of ROH (runs-of-homozygosity) intervals; chrom, start, end, length, n_sites, quality.				experimental		
+ancestry_het_kruskal	analysis_result	cohort	Heterozygosity Kruskal-Wallis test by K	Omnibus K-W test of H across K ancestry clusters; runtime params K + cohort.				experimental		
+ancestry_het_anova	analysis_result	cohort	Heterozygosity ANOVA by K	Parametric ANOVA of H across K ancestry clusters.				experimental		
+ancestry_het_pairwise_wilcox	analysis_result	cohort	Pairwise Wilcoxon between K clusters	Pairwise post-hoc Wilcoxon matrix across K ancestry-cluster labels.				experimental		
+ancestry_het_pairwise_ttest	analysis_result	cohort	Pairwise t-test between K clusters	Pairwise post-hoc t-test matrix across K ancestry-cluster labels.				experimental		
+ancestry_q_correlations	analysis_result	cohort	Per-Q × heterozygosity correlations	Spearman ρ between each NGSadmix Q-component and per-sample H.				experimental		
+staging_diversity_slot	analysis_result	cohort	Captured diversity-atlas slot envelope	Verbatim JSON capture of one /api/diversity/{slot} response wrapped with provenance metadata.				experimental		
+per_sample_diversity_envelope	analysis_result	sample	Per-sample diversity CHAIN envelope	CHAIN output: one envelope per sample composing genomewide_heterozygosity + sfs_folded_1d + theta_pi_windows + roh_per_sample.				experimental		
+ancestry_het_battery_envelope	analysis_result	cohort	Ancestry × heterozygosity test-battery envelope	CHAIN output: per-(K, cohort) envelope composing the five ancestry-het atomic tests.				experimental		
+cohort_master_samples	analysis_result	cohort	Per-sample master table	D.S1 replacement: per-sample H + F_ROH + K=8 label + ngsF-HMM convergence joined into one row per sample. PLANNED — blocked on roh_per_sample.				experimental		
+hpp_offspring_haplotype_variants	analysis_result	offspring_variant_haplotype	HPP offspring × variant × haplotype assignment	SPEC_HPP.md Table A. One row per (offspring, variant, hap_copy). hap_copy ∈ {hap_from_P1, hap_from_P2, unassigned}; allele_state ∈ {ref, alt, unknown}; projection_source ∈ {parent_homozygous, parent_heterozygous_phased, parent_heterozygous_unphased}; segment_confidence ∈ {Gold, Silver, Bronze}; composite confidence per SPEC §5.				experimental		
+hpp_offspring_gene_status	analysis_result	offspring_gene_segment	HPP per-(offspring, gene, segment) status	SPEC_HPP.md Table B. predicted_gene_status ∈ {reference_like, het_masked, hom_exposed_same_variant, compound_het_trans, compound_het_cis, partially_resolved, unresolved}. Headline HPP product for manuscript supplementary; same enum as KBC per-gene status but with per-individual exactness up to inheritance-map confidence.				experimental		
+hpp_transmission_summary	analysis_result	pedigree_relationship	HPP per-(dyad or triad) transmission summary	SPEC_HPP.md Tables C and D unified. Per-relationship variant-transmission counts, gene-status counts, Mendelian-consistency status, n_de_novo_candidates (triad-only). No family-hub aggregation.				experimental		
+hpp_kbc_crosscheck	analysis_result	variant_offspring_inversion	HPP × KBC arrangement-assignment cross-check	SPEC_HPP.md Table E. Per (variant, offspring, inversion) concordance between HPP haplotype assignment and KBC karyotype-derived arrangement-background assignment. Discordances at inversion edges / Bronze segments are diagnostic, not failures.				experimental		

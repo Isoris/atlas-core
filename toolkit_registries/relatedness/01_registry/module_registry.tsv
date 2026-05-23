@@ -44,3 +44,17 @@ instant_q_boundary_scan	v1	inversion_chain	popstats_atlas	installed	true	true			
 inversion_groupwise_popstats	v1	popstats_chain	popstats_atlas	installed	true	true			region_popstats;karyotype_resolution							226			2026-05-23
 ngsrelate_fast	1.0.0	relatedness	relatedness_atlas	installed	true	true	false			ngsrelate_adaptive_scheduler						226		assembly	
 ngsrelate_adaptive_scheduler	1.0.0	relatedness	relatedness_atlas	experimental	true	true	false	awaiting Phase 9 calibration on LG12 — config.py defaults still placeholders	ngsrelate_fast							226		assembly	
+import_table	1.0.0	file_io	genome_atlas	file_io_only	yes	yes													2026-05-19
+runners.import_slot	v1.0	capture	diversity_atlas	production	true	true				staging_diversity_slot_v0									2026-05-20
+runners.harvest_file	v1.0	capture	diversity_atlas	production	true	true													2026-05-20
+runners.run_realsfs	v1.0	sfs	diversity_atlas	planned				runner module not yet written; SAF binaries (.saf.idx/.saf.gz/.saf.pos.gz) not mirrored to compute host — see _handoff_docs/MISSING_DATA.md §1		sample_sfs									2026-05-20
+runners.run_thetastat	v1.0	theta	diversity_atlas	planned				runner module not yet written; per-sample .thetas.idx + .thetas.gz from angsd -doThetas required		samples_theta_pi_pestpg									2026-05-20
+runners.aggregate_pi	v1.0	theta	diversity_atlas	planned				runner module not yet written; pure-Python aggregator; targets 05_aggregated/ which is empty on disk — see MISSING_DATA.md §3		theta_pi_aggregate_cohort									2026-05-20
+extractors.diversity_slot	v0.1	extract	diversity_atlas	production	true	true			runners.import_slot	staging_diversity_slot_v0									2026-05-20
+extractors.genomewide_het	v1.0	extract	diversity_atlas	production	true	true			runners.harvest_file	samples_genomewide_het_v1						226			2026-05-20
+extractors.sfs_ml	v1.0	extract	diversity_atlas	production	true	true			runners.harvest_file	sample_sfs_v1						226			2026-05-20
+extractors.pestpg	v1.0	extract	diversity_atlas	production	true	true			runners.harvest_file	theta_pi_pestpg_v1						226			2026-05-20
+extractors.tsv_table	v1.0	extract	diversity_atlas	production	true	true			runners.harvest_file	tsv_table_v1,ancestry_het_kruskal_v1									2026-05-20
+extractors.roh_per_sample	v0.1	extract	diversity_atlas	stub				parser stub; pipeline output (per-sample ROH segment table) empty on disk — see MISSING_DATA.md §2	runners.harvest_file	samples_roh_per_sample_v1									2026-05-20
+ngspedigree_hpp	0.5.0-mvp1	haplotype_projection	relatedness_atlas	experimental	true			awaiting_stage3_real_schema_and_spec_audit	ngspedigree_stage3							226			
+_reserved	0.0.0	reserved	genome_atlas	reserved	false	false	false	placeholder slot — server-side runner not yet implemented											2026-05-23T00:00:00Z

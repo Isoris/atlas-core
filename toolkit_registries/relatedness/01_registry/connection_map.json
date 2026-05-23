@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 169,
-  "n_edges": 164,
+  "n_nodes": 229,
+  "n_edges": 190,
   "warnings": [],
   "nodes": [
     {
@@ -480,6 +480,198 @@
       "status": "experimental"
     },
     {
+      "id": "assembly_stats",
+      "type": "layer",
+      "label": "Assembly Stats",
+      "status": "experimental"
+    },
+    {
+      "id": "chromosome_map",
+      "type": "layer",
+      "label": "Chromosome Map",
+      "status": "experimental"
+    },
+    {
+      "id": "gene_track",
+      "type": "layer",
+      "label": "Gene Track",
+      "status": "experimental"
+    },
+    {
+      "id": "repeat_track",
+      "type": "layer",
+      "label": "Repeat Track",
+      "status": "experimental"
+    },
+    {
+      "id": "te_hierarchy",
+      "type": "layer",
+      "label": "Te Hierarchy",
+      "status": "experimental"
+    },
+    {
+      "id": "conserved_elements",
+      "type": "layer",
+      "label": "Conserved Elements",
+      "status": "experimental"
+    },
+    {
+      "id": "synteny_blocks",
+      "type": "layer",
+      "label": "Synteny Blocks",
+      "status": "experimental"
+    },
+    {
+      "id": "macrosynteny_orthologs",
+      "type": "layer",
+      "label": "Macrosynteny Orthologs",
+      "status": "experimental"
+    },
+    {
+      "id": "centromere_telomere",
+      "type": "layer",
+      "label": "Centromere Telomere",
+      "status": "experimental"
+    },
+    {
+      "id": "variant_annotations",
+      "type": "layer",
+      "label": "Variant Annotations",
+      "status": "experimental"
+    },
+    {
+      "id": "synteny_oxford_grid",
+      "type": "layer",
+      "label": "Synteny Oxford Grid",
+      "status": "experimental"
+    },
+    {
+      "id": "ortholog_tables",
+      "type": "layer",
+      "label": "Ortholog Tables",
+      "status": "experimental"
+    },
+    {
+      "id": "ortholog_pairs",
+      "type": "layer",
+      "label": "Ortholog Pairs",
+      "status": "experimental"
+    },
+    {
+      "id": "staging_genome_table_v0",
+      "type": "layer",
+      "label": "Staging genome table (v0)",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestral_karyotype",
+      "type": "layer",
+      "label": "Ancestral karyotype reconstruction",
+      "status": "reserved"
+    },
+    {
+      "id": "samples_genomewide_het",
+      "type": "layer",
+      "label": "Per-sample genome-wide heterozygosity",
+      "status": "experimental"
+    },
+    {
+      "id": "sample_sfs",
+      "type": "layer",
+      "label": "Per-sample folded 1-D SFS",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_pi_aggregate_cohort",
+      "type": "layer",
+      "label": "Cohort-aggregated \u03b8\u03c0 track",
+      "status": "experimental"
+    },
+    {
+      "id": "samples_roh_per_sample",
+      "type": "layer",
+      "label": "Per-sample ROH segments",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_kruskal",
+      "type": "layer",
+      "label": "Heterozygosity Kruskal-Wallis test by K",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_anova",
+      "type": "layer",
+      "label": "Heterozygosity ANOVA by K",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_pairwise_wilcox",
+      "type": "layer",
+      "label": "Pairwise Wilcoxon between K clusters",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_pairwise_ttest",
+      "type": "layer",
+      "label": "Pairwise t-test between K clusters",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_q_correlations",
+      "type": "layer",
+      "label": "Per-Q \u00d7 heterozygosity correlations",
+      "status": "experimental"
+    },
+    {
+      "id": "staging_diversity_slot",
+      "type": "layer",
+      "label": "Captured diversity-atlas slot envelope",
+      "status": "experimental"
+    },
+    {
+      "id": "per_sample_diversity_envelope",
+      "type": "layer",
+      "label": "Per-sample diversity CHAIN envelope",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_battery_envelope",
+      "type": "layer",
+      "label": "Ancestry \u00d7 heterozygosity test-battery envelope",
+      "status": "experimental"
+    },
+    {
+      "id": "cohort_master_samples",
+      "type": "layer",
+      "label": "Per-sample master table",
+      "status": "experimental"
+    },
+    {
+      "id": "hpp_offspring_haplotype_variants",
+      "type": "layer",
+      "label": "HPP offspring \u00d7 variant \u00d7 haplotype assignment",
+      "status": "experimental"
+    },
+    {
+      "id": "hpp_offspring_gene_status",
+      "type": "layer",
+      "label": "HPP per-(offspring, gene, segment) status",
+      "status": "experimental"
+    },
+    {
+      "id": "hpp_transmission_summary",
+      "type": "layer",
+      "label": "HPP per-(dyad or triad) transmission summary",
+      "status": "experimental"
+    },
+    {
+      "id": "hpp_kbc_crosscheck",
+      "type": "layer",
+      "label": "HPP \u00d7 KBC arrangement-assignment cross-check",
+      "status": "experimental"
+    },
+    {
       "id": "ngsrelate",
       "type": "analysis",
       "label": "ngsRelate \u2014 pairwise relatedness from genotype likelihoods",
@@ -816,6 +1008,162 @@
       "status": "experimental"
     },
     {
+      "id": "import_table",
+      "type": "analysis",
+      "label": "Import table",
+      "status": "experimental"
+    },
+    {
+      "id": "cactus_pairwise_align",
+      "type": "analysis",
+      "label": "Cactus pairwise alignment",
+      "status": "experimental"
+    },
+    {
+      "id": "wgdi_ancestral_karyotype",
+      "type": "analysis",
+      "label": "WGDI ancestral karyotype reconstruction",
+      "status": "experimental"
+    },
+    {
+      "id": "oxford_grid_reorder",
+      "type": "analysis",
+      "label": "macrosyntR-style Oxford-grid reordering",
+      "status": "experimental"
+    },
+    {
+      "id": "orthologue_pair_lookup",
+      "type": "analysis",
+      "label": "Per-pair orthologue lookup",
+      "status": "experimental"
+    },
+    {
+      "id": "genomewide_heterozygosity",
+      "type": "analysis",
+      "label": "genomewide_heterozygosity",
+      "status": "experimental"
+    },
+    {
+      "id": "sfs_folded_1d",
+      "type": "analysis",
+      "label": "sfs_folded_1d",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_pi_windows",
+      "type": "analysis",
+      "label": "theta_pi_windows",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_w_windows",
+      "type": "analysis",
+      "label": "theta_w_windows",
+      "status": "experimental"
+    },
+    {
+      "id": "tajimas_d_windows",
+      "type": "analysis",
+      "label": "tajimas_d_windows",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_pi_aggregate_cohort",
+      "type": "analysis",
+      "label": "theta_pi_aggregate_cohort",
+      "status": "experimental"
+    },
+    {
+      "id": "roh_per_sample",
+      "type": "analysis",
+      "label": "roh_per_sample",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_kruskal",
+      "type": "analysis",
+      "label": "ancestry_het_kruskal",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_anova",
+      "type": "analysis",
+      "label": "ancestry_het_anova",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_pairwise_wilcox",
+      "type": "analysis",
+      "label": "ancestry_het_pairwise_wilcox",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_pairwise_ttest",
+      "type": "analysis",
+      "label": "ancestry_het_pairwise_ttest",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_q_correlations",
+      "type": "analysis",
+      "label": "ancestry_q_correlations",
+      "status": "experimental"
+    },
+    {
+      "id": "import_slot",
+      "type": "analysis",
+      "label": "import_slot",
+      "status": "experimental"
+    },
+    {
+      "id": "per_sample_diversity_assembly",
+      "type": "analysis",
+      "label": "per_sample_diversity_assembly",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_test_battery",
+      "type": "analysis",
+      "label": "ancestry_het_test_battery",
+      "status": "experimental"
+    },
+    {
+      "id": "cohort_master_assembly",
+      "type": "analysis",
+      "label": "cohort_master_assembly",
+      "status": "experimental"
+    },
+    {
+      "id": "haplotype_projection",
+      "type": "analysis",
+      "label": "haplotype_projection",
+      "status": "experimental"
+    },
+    {
+      "id": "offspring_gene_status",
+      "type": "analysis",
+      "label": "offspring_gene_status",
+      "status": "experimental"
+    },
+    {
+      "id": "transmission_summary",
+      "type": "analysis",
+      "label": "transmission_summary",
+      "status": "experimental"
+    },
+    {
+      "id": "hpp_kbc_arrangement_crosscheck",
+      "type": "analysis",
+      "label": "hpp_kbc_arrangement_crosscheck",
+      "status": "experimental"
+    },
+    {
+      "id": "hpp_offspring_pipeline",
+      "type": "analysis",
+      "label": "hpp_offspring_pipeline",
+      "status": "experimental"
+    },
+    {
       "id": "mendelian_page_load",
       "type": "hook",
       "label": "Mendelian panel",
@@ -1004,6 +1352,20 @@
       "label": "Marker Design",
       "status": "stub",
       "color": "#e89c2a"
+    },
+    {
+      "id": "diversity_atlas",
+      "type": "atlas",
+      "label": "Diversity Atlas",
+      "status": "experimental",
+      "color": "#3aa6c0"
+    },
+    {
+      "id": "genome_atlas",
+      "type": "atlas",
+      "label": "Genome Atlas",
+      "status": "experimental",
+      "color": "#4a5d7e"
     },
     {
       "id": "cross_species_breakpoint_detection_adapter",
@@ -1503,6 +1865,136 @@
     {
       "from": "relatedness_adaptive_validation",
       "to": "adaptive_validation_report",
+      "kind": "output"
+    },
+    {
+      "from": "import_table",
+      "to": "staging_genome_table_v0",
+      "kind": "output"
+    },
+    {
+      "from": "cactus_pairwise_align",
+      "to": "synteny_blocks",
+      "kind": "output"
+    },
+    {
+      "from": "wgdi_ancestral_karyotype",
+      "to": "ancestral_karyotype",
+      "kind": "output"
+    },
+    {
+      "from": "oxford_grid_reorder",
+      "to": "synteny_oxford_grid",
+      "kind": "output"
+    },
+    {
+      "from": "orthologue_pair_lookup",
+      "to": "ortholog_pairs",
+      "kind": "output"
+    },
+    {
+      "from": "genomewide_heterozygosity",
+      "to": "samples_genomewide_het",
+      "kind": "output"
+    },
+    {
+      "from": "sfs_folded_1d",
+      "to": "sample_sfs",
+      "kind": "output"
+    },
+    {
+      "from": "theta_pi_windows",
+      "to": "theta_pi_windows",
+      "kind": "output"
+    },
+    {
+      "from": "theta_w_windows",
+      "to": "theta_w_windows",
+      "kind": "output"
+    },
+    {
+      "from": "tajimas_d_windows",
+      "to": "tajimas_d_windows",
+      "kind": "output"
+    },
+    {
+      "from": "theta_pi_aggregate_cohort",
+      "to": "theta_pi_aggregate_cohort",
+      "kind": "output"
+    },
+    {
+      "from": "roh_per_sample",
+      "to": "samples_roh_per_sample",
+      "kind": "output"
+    },
+    {
+      "from": "ancestry_het_kruskal",
+      "to": "ancestry_het_kruskal",
+      "kind": "output"
+    },
+    {
+      "from": "ancestry_het_anova",
+      "to": "ancestry_het_anova",
+      "kind": "output"
+    },
+    {
+      "from": "ancestry_het_pairwise_wilcox",
+      "to": "ancestry_het_pairwise_wilcox",
+      "kind": "output"
+    },
+    {
+      "from": "ancestry_het_pairwise_ttest",
+      "to": "ancestry_het_pairwise_ttest",
+      "kind": "output"
+    },
+    {
+      "from": "ancestry_q_correlations",
+      "to": "ancestry_q_correlations",
+      "kind": "output"
+    },
+    {
+      "from": "import_slot",
+      "to": "staging_diversity_slot",
+      "kind": "output"
+    },
+    {
+      "from": "per_sample_diversity_assembly",
+      "to": "per_sample_diversity_envelope",
+      "kind": "output"
+    },
+    {
+      "from": "ancestry_het_test_battery",
+      "to": "ancestry_het_battery_envelope",
+      "kind": "output"
+    },
+    {
+      "from": "cohort_master_assembly",
+      "to": "cohort_master_samples",
+      "kind": "output"
+    },
+    {
+      "from": "haplotype_projection",
+      "to": "hpp_offspring_haplotype_variants",
+      "kind": "output"
+    },
+    {
+      "from": "offspring_gene_status",
+      "to": "hpp_offspring_gene_status",
+      "kind": "output"
+    },
+    {
+      "from": "transmission_summary",
+      "to": "hpp_transmission_summary",
+      "kind": "output"
+    },
+    {
+      "from": "hpp_kbc_arrangement_crosscheck",
+      "to": "hpp_kbc_crosscheck",
+      "kind": "output"
+    },
+    {
+      "from": "hpp_offspring_pipeline",
+      "to": "hpp_offspring_gene_status",
       "kind": "output"
     },
     {

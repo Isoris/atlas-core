@@ -31,7 +31,21 @@
   border-left: 3px solid var(--rule);
   border-radius: 2px;
   line-height: 1.4;
-  min-height: 1em;
+  /* 2026-05-21: pin to a fixed box so dynamic textContent updates
+     (probe-in-flight → probe-resolved, single-line → wrapped) can't
+     reflow the page grid below. Quentin reported "everything goes up
+     and down by like 5% maybe its because of the B banner" on the
+     local_pca_dosage page — the badge sits ABOVE the grid template's
+     first explicit row, so any height change in the badge pushes
+     every panel below by the delta. Fixed height + overflow:hidden
+     stops the reflow; ellipsis keeps long single-line verdicts
+     readable; the full text remains in the title tooltip. */
+  height: 26px;
+  min-height: 26px;
+  box-sizing: border-box;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* When a probe initially has nothing to say (no candidate selected, no

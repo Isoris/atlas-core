@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 229,
-  "n_edges": 190,
+  "n_nodes": 299,
+  "n_edges": 230,
   "warnings": [],
   "nodes": [
     {
@@ -672,6 +672,216 @@
       "status": "experimental"
     },
     {
+      "id": "bp_atlas_passA_paf_v1",
+      "type": "layer",
+      "label": "BP_ATLAS Pass A PAFs (per pair)",
+      "status": "production"
+    },
+    {
+      "id": "bp_atlas_passB_paf_v1",
+      "type": "layer",
+      "label": "BP_ATLAS Pass B PAFs (per pair)",
+      "status": "production"
+    },
+    {
+      "id": "bp_atlas_events_v1",
+      "type": "layer",
+      "label": "BP_ATLAS raw breakpoint events",
+      "status": "production"
+    },
+    {
+      "id": "bp_atlas_zones_v1",
+      "type": "layer",
+      "label": "BP_ATLAS clustered zones per anchor",
+      "status": "production"
+    },
+    {
+      "id": "bp_atlas_reciprocity_v1",
+      "type": "layer",
+      "label": "BP_ATLAS reciprocity (both-anchor zones)",
+      "status": "production"
+    },
+    {
+      "id": "atlas_data_v1",
+      "type": "layer",
+      "label": "BP_ATLAS atlas data (BP5 figure input)",
+      "status": "production"
+    },
+    {
+      "id": "bp_atlas_arcs_v1",
+      "type": "layer",
+      "label": "BP_ATLAS PAF arcs (BP5 figure input)",
+      "status": "production"
+    },
+    {
+      "id": "joint_candidates_v1",
+      "type": "layer",
+      "label": "BP_ATLAS joint A-E classification (BP6)",
+      "status": "production"
+    },
+    {
+      "id": "breakpoints_consolidated_v1",
+      "type": "layer",
+      "label": "Headline consolidated breakpoint clusters",
+      "status": "production"
+    },
+    {
+      "id": "pairwise_summary_v1",
+      "type": "layer",
+      "label": "Per-focal pairwise summary tables",
+      "status": "production"
+    },
+    {
+      "id": "synteny_18sp_v1",
+      "type": "layer",
+      "label": "18-species gene-order breakpoints (\u22653sp support)",
+      "status": "production"
+    },
+    {
+      "id": "synteny_5sp_v1",
+      "type": "layer",
+      "label": "5-species gene-order breakpoints (denser)",
+      "status": "production"
+    },
+    {
+      "id": "tolerance_sweep_v1",
+      "type": "layer",
+      "label": "Tolerance sweep stability proofs",
+      "status": "production"
+    },
+    {
+      "id": "regime_mendelian_v1",
+      "type": "layer",
+      "label": "Per-regime Mendelian annotation",
+      "status": "experimental"
+    },
+    {
+      "id": "regime_pedigree_v1",
+      "type": "layer",
+      "label": "Inverse pedigree from regimes",
+      "status": "experimental"
+    },
+    {
+      "id": "msmc_per_group_v1",
+      "type": "layer",
+      "label": "MSMC2 Ne curve per founder-like group",
+      "status": "experimental"
+    },
+    {
+      "id": "per_window_kmeans_labels_v1",
+      "type": "layer",
+      "label": "Per-window K-means labels (Cluster 0)",
+      "status": "experimental"
+    },
+    {
+      "id": "band_quality_v1",
+      "type": "layer",
+      "label": "Per-window band-quality score",
+      "status": "experimental"
+    },
+    {
+      "id": "haplotype_seeds_v1",
+      "type": "layer",
+      "label": "Stage 1 V-walker seeds (per chromosome)",
+      "status": "experimental"
+    },
+    {
+      "id": "het_skeleton_intervals_v1",
+      "type": "layer",
+      "label": "Het-skeleton intervals (Cluster 1 Path B)",
+      "status": "experimental"
+    },
+    {
+      "id": "breadth_voting_consensus_v1",
+      "type": "layer",
+      "label": "Cluster 2 per-target consensus",
+      "status": "experimental"
+    },
+    {
+      "id": "haplotype_regimes_v1",
+      "type": "layer",
+      "label": "Refined haplotype regimes",
+      "status": "experimental"
+    },
+    {
+      "id": "regime_topology_v1",
+      "type": "layer",
+      "label": "Cross-regime topology graph",
+      "status": "experimental"
+    },
+    {
+      "id": "genome_scale_regimes_v1",
+      "type": "layer",
+      "label": "Genome-scale regime aggregation",
+      "status": "experimental"
+    },
+    {
+      "id": "regime_catalogue_v1",
+      "type": "layer",
+      "label": "Inversion regime catalogue (cross-page contract)",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_age_v1",
+      "type": "layer",
+      "label": "Per-candidate inversion age (3-bracket)",
+      "status": "experimental"
+    },
+    {
+      "id": "age_model_suggestion_v1",
+      "type": "layer",
+      "label": "Age-model best-fit suggestion",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_polarity_v1",
+      "type": "layer",
+      "label": "Per-candidate polarity verdict",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_internal_substructure_v1",
+      "type": "layer",
+      "label": "Sub-PCA on derived-only samples",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_haplotype_network_v1",
+      "type": "layer",
+      "label": "Per-candidate haplotype network",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_mosaicism_v1",
+      "type": "layer",
+      "label": "Per-window mosaicism leakage",
+      "status": "experimental"
+    },
+    {
+      "id": "cleaned_ancestry_layers_v1",
+      "type": "layer",
+      "label": "Kinship-downweighted ancestry layers",
+      "status": "experimental"
+    },
+    {
+      "id": "event_tree_v1",
+      "type": "layer",
+      "label": "Per-chromosome event-tree (relative ordering)",
+      "status": "experimental"
+    },
+    {
+      "id": "archaeology_synthesis_v1",
+      "type": "layer",
+      "label": "Per-candidate archaeology synthesis card",
+      "status": "experimental"
+    },
+    {
+      "id": "copy_origin_painting_v1",
+      "type": "layer",
+      "label": "Copy-origin painting (SPEC)",
+      "status": "experimental"
+    },
+    {
       "id": "ngsrelate",
       "type": "analysis",
       "label": "ngsRelate \u2014 pairwise relatedness from genotype likelihoods",
@@ -1161,6 +1371,216 @@
       "id": "hpp_offspring_pipeline",
       "type": "analysis",
       "label": "hpp_offspring_pipeline",
+      "status": "experimental"
+    },
+    {
+      "id": "pairwise_wfmash_two_pass",
+      "type": "analysis",
+      "label": "Pairwise wfmash (two-pass)",
+      "status": "experimental"
+    },
+    {
+      "id": "breakpoint_events",
+      "type": "analysis",
+      "label": "Per-PAF breakpoint event extraction",
+      "status": "experimental"
+    },
+    {
+      "id": "breakpoint_zones",
+      "type": "analysis",
+      "label": "Cluster events into zones per anchor",
+      "status": "experimental"
+    },
+    {
+      "id": "breakpoint_reciprocity",
+      "type": "analysis",
+      "label": "Both-anchor reciprocity (BP3c)",
+      "status": "experimental"
+    },
+    {
+      "id": "breakpoint_paf_arcs",
+      "type": "analysis",
+      "label": "BP5 atlas data + PAF arcs (figure prep)",
+      "status": "experimental"
+    },
+    {
+      "id": "breakpoint_joint_classify",
+      "type": "analysis",
+      "label": "BP6 joint A-E classification",
+      "status": "experimental"
+    },
+    {
+      "id": "gene_order_breakpoints",
+      "type": "analysis",
+      "label": "Gene-order breakpoint extraction",
+      "status": "experimental"
+    },
+    {
+      "id": "gene_order_cluster_consolidation",
+      "type": "analysis",
+      "label": "Tolerance-cluster consolidation + cross-method flag",
+      "status": "experimental"
+    },
+    {
+      "id": "bp_atlas_pipeline",
+      "type": "analysis",
+      "label": "BP_ATLAS chain (sequence method, full)",
+      "status": "experimental"
+    },
+    {
+      "id": "gene_order_consolidation",
+      "type": "analysis",
+      "label": "Gene-order + cross-method chain",
+      "status": "experimental"
+    },
+    {
+      "id": "regime_mendelian_annotation",
+      "type": "analysis",
+      "label": "Per-regime Mendelian annotation (trios + families)",
+      "status": "experimental"
+    },
+    {
+      "id": "regime_pedigree_inference",
+      "type": "analysis",
+      "label": "Inverse pedigree from regime co-membership",
+      "status": "experimental"
+    },
+    {
+      "id": "msmc_per_founder_background",
+      "type": "analysis",
+      "label": "MSMC2 per founder-like ancestry background",
+      "status": "experimental"
+    },
+    {
+      "id": "local_pca_kmeans",
+      "type": "analysis",
+      "label": "Per-window K-means on local PCA",
+      "status": "experimental"
+    },
+    {
+      "id": "band_quality_scoring",
+      "type": "analysis",
+      "label": "Per-window band-quality scorer",
+      "status": "experimental"
+    },
+    {
+      "id": "seed_discovery_v_walker",
+      "type": "analysis",
+      "label": "Stage 1 V-walker seed discovery",
+      "status": "experimental"
+    },
+    {
+      "id": "het_skeleton_detection",
+      "type": "analysis",
+      "label": "Het-skeleton seed detection",
+      "status": "experimental"
+    },
+    {
+      "id": "breadth_voting",
+      "type": "analysis",
+      "label": "Cluster 2 voting orchestrator",
+      "status": "experimental"
+    },
+    {
+      "id": "haplotype_regime_refine",
+      "type": "analysis",
+      "label": "Within-regime arrangement-identity refinement",
+      "status": "experimental"
+    },
+    {
+      "id": "regime_topology",
+      "type": "analysis",
+      "label": "Cross-regime topology",
+      "status": "experimental"
+    },
+    {
+      "id": "genome_scale_aggregation",
+      "type": "analysis",
+      "label": "Genome-scale regime aggregation",
+      "status": "experimental"
+    },
+    {
+      "id": "regime_catalogue_serialize",
+      "type": "analysis",
+      "label": "Catalogue serializer (cross-page contract)",
+      "status": "experimental"
+    },
+    {
+      "id": "banding_pipeline_full",
+      "type": "analysis",
+      "label": "Haplotype-regimes full pipeline (chain)",
+      "status": "experimental"
+    },
+    {
+      "id": "haplotype_regimes_het_mode",
+      "type": "analysis",
+      "label": "Haplotype regimes via het-skeleton (chain)",
+      "status": "experimental"
+    },
+    {
+      "id": "age_estimation_busco_4d",
+      "type": "analysis",
+      "label": "Per-candidate age estimation (BUSCO 4D)",
+      "status": "experimental"
+    },
+    {
+      "id": "age_model_suggest",
+      "type": "analysis",
+      "label": "Age-model suggester",
+      "status": "experimental"
+    },
+    {
+      "id": "polarize_synteny_vote",
+      "type": "analysis",
+      "label": "Outgroup synteny polarization",
+      "status": "experimental"
+    },
+    {
+      "id": "polarize_msa_stacked",
+      "type": "analysis",
+      "label": "Stacked MSA polarization (founder + doubleton)",
+      "status": "experimental"
+    },
+    {
+      "id": "inv_internal_substructure",
+      "type": "analysis",
+      "label": "Sub-PCA on derived-only samples",
+      "status": "experimental"
+    },
+    {
+      "id": "haplotype_network_build",
+      "type": "analysis",
+      "label": "Minimum-spanning haplotype network",
+      "status": "experimental"
+    },
+    {
+      "id": "mosaicism_leakage",
+      "type": "analysis",
+      "label": "Recombinant-tract / polarity-switch detector",
+      "status": "experimental"
+    },
+    {
+      "id": "layer_cleaning_kinship",
+      "type": "analysis",
+      "label": "Layer 0/1 noise removal (kinship downweight)",
+      "status": "experimental"
+    },
+    {
+      "id": "event_tree_order",
+      "type": "analysis",
+      "label": "Relative-ordering of inversions on a chromosome",
+      "status": "experimental"
+    },
+    {
+      "id": "archaeology_synthesis",
+      "type": "analysis",
+      "label": "Per-candidate archaeology synthesis card",
+      "status": "experimental"
+    },
+    {
+      "id": "copy_origin_painting",
+      "type": "analysis",
+      "label": "Copy-origin painting (Stage 5.6, SPEC ONLY)",
       "status": "experimental"
     },
     {
@@ -1995,6 +2415,206 @@
     {
       "from": "hpp_offspring_pipeline",
       "to": "hpp_offspring_gene_status",
+      "kind": "output"
+    },
+    {
+      "from": "pairwise_wfmash_two_pass",
+      "to": "bp_atlas_passA_paf_v1",
+      "kind": "output"
+    },
+    {
+      "from": "pairwise_wfmash_two_pass",
+      "to": "bp_atlas_passB_paf_v1",
+      "kind": "output"
+    },
+    {
+      "from": "breakpoint_events",
+      "to": "bp_atlas_events_v1",
+      "kind": "output"
+    },
+    {
+      "from": "breakpoint_zones",
+      "to": "bp_atlas_zones_v1",
+      "kind": "output"
+    },
+    {
+      "from": "breakpoint_reciprocity",
+      "to": "bp_atlas_reciprocity_v1",
+      "kind": "output"
+    },
+    {
+      "from": "breakpoint_paf_arcs",
+      "to": "atlas_data_v1",
+      "kind": "output"
+    },
+    {
+      "from": "breakpoint_paf_arcs",
+      "to": "bp_atlas_arcs_v1",
+      "kind": "output"
+    },
+    {
+      "from": "breakpoint_joint_classify",
+      "to": "joint_candidates_v1",
+      "kind": "output"
+    },
+    {
+      "from": "gene_order_breakpoints",
+      "to": "synteny_18sp_v1",
+      "kind": "output"
+    },
+    {
+      "from": "gene_order_breakpoints",
+      "to": "synteny_5sp_v1",
+      "kind": "output"
+    },
+    {
+      "from": "gene_order_cluster_consolidation",
+      "to": "breakpoints_consolidated_v1",
+      "kind": "output"
+    },
+    {
+      "from": "gene_order_cluster_consolidation",
+      "to": "pairwise_summary_v1",
+      "kind": "output"
+    },
+    {
+      "from": "gene_order_cluster_consolidation",
+      "to": "tolerance_sweep_v1",
+      "kind": "output"
+    },
+    {
+      "from": "bp_atlas_pipeline",
+      "to": "joint_candidates_v1",
+      "kind": "output"
+    },
+    {
+      "from": "gene_order_consolidation",
+      "to": "breakpoints_consolidated_v1",
+      "kind": "output"
+    },
+    {
+      "from": "regime_mendelian_annotation",
+      "to": "regime_mendelian_v1",
+      "kind": "output"
+    },
+    {
+      "from": "regime_pedigree_inference",
+      "to": "regime_pedigree_v1",
+      "kind": "output"
+    },
+    {
+      "from": "msmc_per_founder_background",
+      "to": "msmc_per_group_v1",
+      "kind": "output"
+    },
+    {
+      "from": "local_pca_kmeans",
+      "to": "per_window_kmeans_labels_v1",
+      "kind": "output"
+    },
+    {
+      "from": "band_quality_scoring",
+      "to": "band_quality_v1",
+      "kind": "output"
+    },
+    {
+      "from": "seed_discovery_v_walker",
+      "to": "haplotype_seeds_v1",
+      "kind": "output"
+    },
+    {
+      "from": "het_skeleton_detection",
+      "to": "het_skeleton_intervals_v1",
+      "kind": "output"
+    },
+    {
+      "from": "breadth_voting",
+      "to": "breadth_voting_consensus_v1",
+      "kind": "output"
+    },
+    {
+      "from": "haplotype_regime_refine",
+      "to": "haplotype_regimes_v1",
+      "kind": "output"
+    },
+    {
+      "from": "regime_topology",
+      "to": "regime_topology_v1",
+      "kind": "output"
+    },
+    {
+      "from": "genome_scale_aggregation",
+      "to": "genome_scale_regimes_v1",
+      "kind": "output"
+    },
+    {
+      "from": "regime_catalogue_serialize",
+      "to": "regime_catalogue_v1",
+      "kind": "output"
+    },
+    {
+      "from": "banding_pipeline_full",
+      "to": "regime_catalogue_v1",
+      "kind": "output"
+    },
+    {
+      "from": "haplotype_regimes_het_mode",
+      "to": "regime_catalogue_v1",
+      "kind": "output"
+    },
+    {
+      "from": "age_estimation_busco_4d",
+      "to": "inversion_age_v1",
+      "kind": "output"
+    },
+    {
+      "from": "age_model_suggest",
+      "to": "age_model_suggestion_v1",
+      "kind": "output"
+    },
+    {
+      "from": "polarize_synteny_vote",
+      "to": "inversion_polarity_v1",
+      "kind": "output"
+    },
+    {
+      "from": "polarize_msa_stacked",
+      "to": "inversion_polarity_v1",
+      "kind": "output"
+    },
+    {
+      "from": "inv_internal_substructure",
+      "to": "inversion_internal_substructure_v1",
+      "kind": "output"
+    },
+    {
+      "from": "haplotype_network_build",
+      "to": "inversion_haplotype_network_v1",
+      "kind": "output"
+    },
+    {
+      "from": "mosaicism_leakage",
+      "to": "inversion_mosaicism_v1",
+      "kind": "output"
+    },
+    {
+      "from": "layer_cleaning_kinship",
+      "to": "cleaned_ancestry_layers_v1",
+      "kind": "output"
+    },
+    {
+      "from": "event_tree_order",
+      "to": "event_tree_v1",
+      "kind": "output"
+    },
+    {
+      "from": "archaeology_synthesis",
+      "to": "archaeology_synthesis_v1",
+      "kind": "output"
+    },
+    {
+      "from": "copy_origin_painting",
+      "to": "copy_origin_painting_v1",
       "kind": "output"
     },
     {

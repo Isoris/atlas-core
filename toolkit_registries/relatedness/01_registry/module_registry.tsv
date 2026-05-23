@@ -58,3 +58,39 @@ extractors.tsv_table	v1.0	extract	diversity_atlas	production	true	true			runners
 extractors.roh_per_sample	v0.1	extract	diversity_atlas	stub				parser stub; pipeline output (per-sample ROH segment table) empty on disk — see MISSING_DATA.md §2	runners.harvest_file	samples_roh_per_sample_v1									2026-05-20
 ngspedigree_hpp	0.5.0-mvp1	haplotype_projection	relatedness_atlas	experimental	true			awaiting_stage3_real_schema_and_spec_audit	ngspedigree_stage3							226			
 _reserved	0.0.0	reserved	genome_atlas	reserved	false	false	false	placeholder slot — server-side runner not yet implemented											2026-05-23T00:00:00Z
+STEP_BP1_pairwise_wfmash	1.0	breakpoint_detection	cross_species_atlas	installed	true	true										18		wfmash_2024	2026-05-23T00:00:00Z
+STEP_BP2_call_breakpoints	1.0	breakpoint_detection	cross_species_atlas	installed	true	true			STEP_BP1_pairwise_wfmash							18		python_3_11	2026-05-23T00:00:00Z
+STEP_BP3_cluster_zones	1.0	breakpoint_detection	cross_species_atlas	installed	true	true			STEP_BP2_call_breakpoints							18		python_3_11	2026-05-23T00:00:00Z
+STEP_BP3c_reciprocity	1.0	breakpoint_detection	cross_species_atlas	installed	true	true			STEP_BP3_cluster_zones							18		python_3_11	2026-05-23T00:00:00Z
+STEP_BP5_prep_atlas_data	1.0	breakpoint_detection	cross_species_atlas	installed	true	true			STEP_BP3_cluster_zones							18		python_3_11	2026-05-23T00:00:00Z
+STEP_BP6_joint_classify	1.0	breakpoint_detection	cross_species_atlas	installed	true	true			STEP_BP3c_reciprocity							18		python_3_11	2026-05-23T00:00:00Z
+wide_orthologs_to_breakpoints	1.0	breakpoint_gene_order	cross_species_atlas	installed	true	true										18		python_3_11	2026-05-23T00:00:00Z
+csbp_json_to_breakpoints	1.0	breakpoint_gene_order	cross_species_atlas	installed	true	true										18		python_3_11	2026-05-23T00:00:00Z
+cluster_breakpoints	1.0	breakpoint_consolidation	cross_species_atlas	installed	true	true			wide_orthologs_to_breakpoints							18		python_3_11	2026-05-23T00:00:00Z
+popstats_server	1.0	popstats	popstats_atlas	installed	true	true										226		popstats_server	2026-05-23T00:00:00Z
+regime_mendelian	1.0	popstats_inversion	popstats_atlas	installed	true	true										226		node_22	2026-05-23T00:00:00Z
+regime_pedigree	1.0	popstats_inversion	popstats_atlas	installed	true	true										226		node_22	2026-05-23T00:00:00Z
+msmc_per_founder_background	0.1	demography	popstats_atlas	spec_only				awaiting producer implementation per specs_todo/SPEC_msmc_per_founder_background.md	regime_pedigree							226		msmc2	2026-05-23T00:00:00Z
+per_l2_cluster	1.0	local_pca	inversion_atlas	in_browser	true	true		runs as atlas-side JS module in the browser; not a cluster-side producer								226		node_22_browser	2026-05-23T00:00:00Z
+band_quality	1.0	local_pca	inversion_atlas	in_browser	true	true		atlas-side JS	per_l2_cluster							226		node_22_browser	2026-05-23T00:00:00Z
+seed_discovery	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS	band_quality							226		node_22_browser	2026-05-23T00:00:00Z
+het_skeleton	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS	per_l2_cluster							226		node_22_browser	2026-05-23T00:00:00Z
+cramers_v_merge	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS	het_skeleton							226		node_22_browser	2026-05-23T00:00:00Z
+breadth_voting	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS (projection + vote_evidence + band_voters + partition_enumerate + partition_consensus orchestrator)	seed_discovery							226		node_22_browser	2026-05-23T00:00:00Z
+haplotype_regime_refine	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS (haplotype_regime.refineRegimesFromIntervals — arrangement identity)	breadth_voting							226		node_22_browser	2026-05-23T00:00:00Z
+regime_topology	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS	haplotype_regime_refine							226		node_22_browser	2026-05-23T00:00:00Z
+genome_scale	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS (per-chromosome aggregation + cross-chrom CHAINED links; relatedness exports forwarded to popstats)	regime_topology							226		node_22_browser	2026-05-23T00:00:00Z
+regime_catalogue	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS (catalogue serializer — emits manifest + knobs + catalogue JSON triple, cross-page contract)	genome_scale							226		node_22_browser	2026-05-23T00:00:00Z
+banding_pipeline	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS (orchestrator for Cluster 1 V-walker → Cluster 2 voting → Cluster 3 refinement)		haplotype_regime_refine,regime_topology,genome_scale,regime_catalogue						226		node_22_browser	2026-05-23T00:00:00Z
+busco_4d_age	1.0	age_estimation	evolution_atlas	in_browser	true	true		atlas-side JS								226		node_22_browser	2026-05-23T00:00:00Z
+age_model_suggester	1.0	age_estimation	evolution_atlas	in_browser	true	true		atlas-side JS (3 frozen μ values, dxy→age_my, block builder)	busco_4d_age							226		node_22_browser	2026-05-23T00:00:00Z
+mgl_inversion_divergence	1.0	age_estimation	evolution_atlas	in_browser	true	true		atlas-side JS (per-candidate divergence compute for age_divergence page)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_outgroup_synteny	1.0	polarization	evolution_atlas	in_browser	true	true		atlas-side JS (outgroup synteny vote)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_founder_consensus	1.0	polarization	evolution_atlas	in_browser	true	true		atlas-side JS (founder consensus for polarize_msa_stacked)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_doubleton_sfs_clusters	1.0	polarization	evolution_atlas	in_browser	true	true		atlas-side JS (2D-SFS doubleton hierarchical clustering)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_haplotype_network	1.0	haplotype_network	evolution_atlas	in_browser	true	true		atlas-side JS (minimum-spanning haplotype network)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_event_tree	1.0	event_ordering	evolution_atlas	in_browser	true	true		atlas-side JS								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_archaeology_classifier	1.0	archaeology	evolution_atlas	in_browser	true	true		atlas-side JS (per-candidate archaeology synthesis)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_mosaicism_detector	1.0	mosaicism	evolution_atlas	in_browser	true	true		atlas-side JS (per-window leakage + integrity verdict)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_kinship_downweight	1.0	ancestry	evolution_atlas	in_browser	true	true		atlas-side JS (ancestry-layer cleaning)								226		node_22_browser	2026-05-23T00:00:00Z
+copy_origin_painting	1.0	polarization	evolution_atlas	spec_only				Stage 5.6 of v3.4 pipeline — explicit SPEC ONLY per specs_todo/SPEC_copy_origin_painting.md (awaiting audit before implementation).								226		node_22_browser	2026-05-23T00:00:00Z

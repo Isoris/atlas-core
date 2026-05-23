@@ -1,0 +1,74 @@
+<!-- atlases/core/pages/registries.html
+     Registries page — chains and compatibility browser, with brick-edit
+     sidebar. Round-1 migration from
+     toolkit_registries/relatedness/page/index.html. -->
+<div class="core-page core-page-registries">
+
+  <header>
+    <h1>Registries — chains and compatibility</h1>
+    <div class="sub">ngsRelate → ngsPedigree → mendelian. Highlighted in green when the contract holds end-to-end.</div>
+  </header>
+
+  <div class="controls">
+    <label>filter by sample_set
+      <select id="filter-sample"><option value="">(any)</option></select>
+    </label>
+    <label>filter by interval
+      <select id="filter-interval"><option value="">(any)</option></select>
+    </label>
+    <span class="stat" id="counts"></span>
+  </div>
+
+  <section>
+    <h2>Chains (existing + ready-to-run)</h2>
+    <div id="chains"></div>
+  </section>
+
+  <section>
+    <h2>All registered results</h2>
+    <div class="table-wrap"><div id="all-results"></div></div>
+  </section>
+
+  <div class="footer" id="footer"></div>
+
+  <!-- Brick-edit sidebar — populated by openBrick() in registries.js -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+  <aside class="sidebar" id="sidebar" role="dialog" aria-hidden="true" aria-label="Brick editor">
+    <div class="sidebar-header">
+      <div class="title">
+        <span class="ana" id="sb-ana"></span>
+        <div class="module" id="sb-module"></div>
+        <div class="rid" id="sb-rid"></div>
+      </div>
+      <button type="button" class="close" id="sb-close" aria-label="Close">×</button>
+    </div>
+    <div class="sidebar-body">
+      <h3>Resolved contract</h3>
+      <dl class="contract-dl" id="sb-contract"></dl>
+
+      <h3>Edit parameters</h3>
+      <div class="field">
+        <label for="sb-new-name">new module name</label>
+        <input type="text" id="sb-new-name" placeholder="e.g. ngsrelate_pairwise_v2_strict">
+      </div>
+      <div class="field">
+        <label for="sb-new-version">version</label>
+        <input type="text" id="sb-new-version" value="0.1.0">
+      </div>
+      <div class="field">
+        <label for="sb-params">parameter overrides (JSON)</label>
+        <textarea id="sb-params" class="mono" spellcheck="false" placeholder='{"min_maf": 0.05}'>{}</textarea>
+        <div class="hint" id="sb-params-hint">Only the overrides — biomod merges these on top of the parent's params.</div>
+      </div>
+      <div class="field">
+        <label for="sb-reason">reason for derivative (required)</label>
+        <textarea id="sb-reason" placeholder="Why does this derivative exist? Be specific — this is the only provenance biomod records." rows="3"></textarea>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <button type="button" class="btn" id="sb-copy">Copy JSON</button>
+      <button type="button" class="btn btn-primary" id="sb-save" disabled>Save as derivative</button>
+    </div>
+  </aside>
+
+</div>

@@ -91,7 +91,14 @@ local_q_dir: "${base}/atlas-cache/empty_ancestry_cache"
 #     <dosage_dir>/<chrom>.dosage.tsv.gz  n_sites x n_samples
 # Symlinked into 04_dosage_by_chr by setup_local_data.sh.
 dosage_dir: "${base}/results_inversions/02_dosage_sites"
-dosage_max_region_bp: 50000000
+# 2026-05-20: bumped from 50_000_000 to 200_000_000. The local_pca_dosage
+# lines panel's het / dosage colour modes request per-sample means
+# across the entire visible chromosome (startW=0, endW=n_windows-1) —
+# for catfish LG01 that's ~51 Mb, just over the previous 50 Mb cap, so
+# every paint produced a 400 Bad Request + grey lines. 200 Mb covers
+# every catfish chrom (LG01 is the longest at ~51 Mb) with headroom
+# and stays well under the dosage_bridge.py env-var default (300 Mb).
+dosage_max_region_bp: 200000000
 
 # ---- Cache directory --------------------------------------------------------
 # Original scratch:

@@ -1,0 +1,5 @@
+{
+  "$schema": "../../../../core/registry_core.schema.json",
+  "_doc": "File inventory for the atlas-core dashboard atlas. Round-1 stub: the dashboard pages read the eight TSV files under toolkit_registries/relatedness/01_registry/ (sample_sets, group_sets, interval_sets, site_sets, input_values, analysis_results, analysis_modes, module_registry) plus referenced set/value files under toolkit_registries/relatedness/02_sets/ and 03_inputs/. They fetch them directly today; promoting them to file entries with explicit `path_template`, `scope`, and `expected_files` is a follow-up.",
+  "files": {}
+}

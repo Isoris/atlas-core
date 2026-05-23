@@ -24,6 +24,30 @@ Two subsystems, both wired into the same FastAPI app:
 | POST   | `/compute/<name>`                 | run a registered compute op |
 | GET    | `/`                               | atlas UI from `--workspace-root/index.html` |
 
+**Action-pipeline subsystem** — engaged when `--workspace-root` is set
+(see `atlas-core/toolkit_registries/PIPELINE_FLOW.md` for the contract):
+
+| Method | Path                              | Purpose |
+|--------|-----------------------------------|---------|
+| POST   | `/api/actions`                    | submit an action manifest; dispatches to the per-atlas `dispatcher.py` and writes returned layer envelopes to `<workspace>/layers/` |
+| GET    | `/api/actions/<action_id>`        | latest entry from `<workspace>/registry/actions.log.jsonl` |
+| GET    | `/api/layers`                     | list registered layer envelopes; filters: `layer_type`, `dataset_id`, `stage`, `status`, `limit` |
+| GET    | `/api/layers/<layer_id>`          | read one envelope JSON via the layers index |
+
+Atlas resolution precedence for `POST /api/actions`:
+`?atlas=<id>` query param > `manifest.atlas_id` > `<workspace>/master_config.yaml :: atlas.active_atlas`.
+
+The dispatcher contract is:
+```python
+def dispatch_action(manifest: dict, client: ServerClient) -> list[dict]:
+    """returns one layer envelope dict per produced layer"""
+```
+where `client.post(path, body)` and `client.get(path)` call back into
+this same server (useful for `runners` that wrap `/api/popstats/groupwise`,
+`/api/ancestry/groupwise_q`, etc.). Envelopes must include the seven
+required fields from `layer_envelope.schema.json`; the server stamps
+`provenance.action_id` and writes the file.
+
 **Compute subsystem** — engaged when `--config <yaml>` is passed:
 
 | Method | Path                              | Purpose |

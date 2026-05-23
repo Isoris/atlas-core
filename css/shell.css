@@ -87,28 +87,53 @@
 /* Multi-atlas switcher — small "atlas: [select]" dropdown on the left
  * when more than one atlas is registered. Mirrors the legacy
  * atlasModeIndicator (header line 4902+). */
-#topbar .atlas-switcher {
+/* 2026-05-19: atlas switcher relocated from #topbar to the top-left of
+   the shell header (#atlas-switcher-host). Selectors below cover both
+   places so the styling is identical wherever the switcher gets
+   mounted (the router prefers the header host; falls back to #topbar
+   only on older index.html shells). The "ATLAS:" label markup was
+   removed in atlas_router.js — keeping the .atlas-switcher-label rule
+   in case an older host still emits one. */
+#topbar .atlas-switcher,
+#atlas-switcher-host .atlas-switcher {
   align-self: center;
   display: inline-flex; align-items: center;
   margin: 0 14px 0 0; gap: 6px;
   font-family: var(--mono); font-size: 10.5px;
   flex-shrink: 0;
 }
-#topbar .atlas-switcher-label {
+/* Tighter margin in the header position (no need for topbar's right
+   gutter — the scopebar sits immediately to its right). */
+#atlas-switcher-host .atlas-switcher { margin: 0 10px 0 0; }
+#topbar .atlas-switcher-label,
+#atlas-switcher-host .atlas-switcher-label {
   color: var(--ink-dimmer);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   font-size: 9.5px;
 }
-#topbar .atlas-switcher-select {
+/* 2026-05-19: pinned the atlas-switcher select to the same vertical
+   box geometry as header .header-folder-btn (padding 3px 9px,
+   line-height 1, font-size 10px, 1px border). Earlier the select sat
+   ~3px taller than the folder buttons + the scopebar select, so its
+   top edge poked above the row centerline and looked misaligned. The
+   explicit height + line-height + box-sizing locks the visual height
+   so all three element families (folder buttons, atlas select,
+   scopebar select) share a single 20px row centerline. */
+#topbar .atlas-switcher-select,
+#atlas-switcher-host .atlas-switcher-select {
   background: var(--panel-2); color: var(--ink);
-  border: 1px solid var(--rule); border-radius: 3px;
-  padding: 3px 8px;
-  font-family: var(--mono); font-size: 10.5px;
+  border: 1px solid var(--rule); border-radius: 2px;
+  padding: 0 8px;
+  height: 20px; line-height: 1;
+  box-sizing: border-box;
+  font-family: var(--mono); font-size: 10px;
   letter-spacing: 0.04em;
   cursor: pointer;
+  vertical-align: middle;
 }
-#topbar .atlas-switcher-select:hover {
+#topbar .atlas-switcher-select:hover,
+#atlas-switcher-host .atlas-switcher-select:hover {
   background: var(--panel-3); border-color: var(--accent);
 }
 
@@ -116,9 +141,9 @@
   background: none; border: none;
   border-bottom: 2px solid transparent;
   color: var(--ink-dim);
-  font-family: var(--mono); font-size: 11px;
-  padding: 0 14px; cursor: pointer;
-  letter-spacing: 0.04em;
+  font-family: var(--mono); font-size: 10.5px;
+  padding: 0 11px; cursor: pointer;
+  letter-spacing: 0.02em;
   white-space: nowrap !important; word-break: keep-all;
   overflow: hidden; text-overflow: ellipsis;
   max-width: 170px; min-width: 0;
@@ -170,15 +195,17 @@
  * line 426). Each pill is a folder-button-like rectangle with a colored
  * left edge tint + tinted background on expanded state. */
 #topbar .tab-stage-pill {
-  align-self: center;
+  /* No align-self override → inherits parent's `align-items: stretch`, so
+     the pill matches the page-tab height (the 28px topbar row). Vertical
+     padding is removed for the same reason; horizontal padding stays. */
   display: inline-flex; align-items: center;
-  font-family: var(--mono); font-size: 10.5px;
+  font-family: var(--mono); font-size: 10px;
   color: var(--ink-dim);
-  letter-spacing: 0.04em; line-height: 1;
-  padding: 4px 10px; margin: 0 2px;
+  letter-spacing: 0.02em; line-height: 1;
+  padding: 0 9px; margin: 0 2px;
   background: var(--panel-2);
   border: 1px solid var(--rule);
-  border-radius: 3px;
+  border-radius: 2px;
   white-space: nowrap; flex-shrink: 0;
   cursor: pointer;
   transition: background 100ms ease, border-color 100ms ease, color 100ms ease;
@@ -217,20 +244,19 @@
   border-color: rgba(138, 148, 163, 0.55);
 }
 
-/* When the topbar has an active stage, hide tabs of every other stage so
- * only ONE group of tabs is expanded at a time. The pills themselves stay
- * visible (they're how the user switches stages).
- * Show rules add :not(.tab-stage-pill) too so their specificity matches
- * the hide rule's; source order then makes the show rule win for the
- * active stage. Without that match the hide rule won regardless of which
- * stage was active and clicking pills appeared to do nothing. */
-#topbar[data-active-stage] button[data-stage]:not(.tab-stage-pill) { display: none; }
-#topbar[data-active-stage="discovery"]   button[data-stage="discovery"]:not(.tab-stage-pill)   { display: inline-flex; }
-#topbar[data-active-stage="review"]      button[data-stage="review"]:not(.tab-stage-pill)      { display: inline-flex; }
-#topbar[data-active-stage="catalogue"]   button[data-stage="catalogue"]:not(.tab-stage-pill)   { display: inline-flex; }
-#topbar[data-active-stage="comparative"] button[data-stage="comparative"]:not(.tab-stage-pill) { display: inline-flex; }
-#topbar[data-active-stage="synthesis"]   button[data-stage="synthesis"]:not(.tab-stage-pill)   { display: inline-flex; }
-#topbar[data-active-stage="help"]        button[data-stage="help"]:not(.tab-stage-pill)        { display: inline-flex; }
+/* Stage visibility is class-driven, not attribute-driven: atlas_router.js
+ * adds the `.stage-hidden` class to every page button whose data-stage
+ * doesn't match the currently active stage. Class-based scales to any
+ * stage name (each atlas declares its own — `classification`, `per_sample`,
+ * `assembly`, …) without per-stage CSS rules. The .tab-stage-pill nodes
+ * are exempt — they're always visible so the user can switch stages.
+ *
+ * Click-twice-to-collapse: when the user clicks the already-active stage
+ * pill, atlas_router.js sets data-collapsed="1" on #topbar. The second
+ * rule below adds a blanket hide independent of stage class. */
+#topbar button[data-stage].stage-hidden:not(.tab-stage-pill)        { display: none !important; }
+#topbar[data-collapsed="1"] button[data-stage]:not(.tab-stage-pill) { display: none !important; }
+
 #topbar .tab-stage-pill .pill-dot { font-size: 7px; opacity: 0.7; }
 #topbar .tab-stage-pill .pill-count {
   margin-left: 4px;
@@ -358,21 +384,32 @@ header #scopebar .scope-picker {
 
 header #scopebar .scope-picker-label {
   color: var(--ink-dimmer);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  font-size: 9.5px;
+  font-size: 9px;
 }
 
+/* 2026-05-19: matched height + padding to the atlas-switcher select
+   above (and to .header-folder-btn). Was padding 2px 6px which gave a
+   16px-tall box; now 20px to share the same centerline as every other
+   header element. The scopebar's vertical-align via align-items:center
+   on the parent (header) doesn't help when the children have DIFFERENT
+   intrinsic heights — the row stretches to the tallest, and shorter
+   ones sit lower than the centerline of taller ones. Locking heights
+   removes that drift. */
 header #scopebar select {
   background: var(--panel-2);
   border: 1px solid var(--rule);
-  border-radius: 3px;
+  border-radius: 2px;
   color: var(--ink);
   font-family: var(--mono);
-  font-size: 11px;
-  padding: 3px 8px;
+  font-size: 10px;
+  padding: 0 6px;
+  height: 20px; line-height: 1;
+  box-sizing: border-box;
   cursor: pointer;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
 }
 
 header #scopebar select:hover {

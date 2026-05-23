@@ -54,17 +54,53 @@ PARENT="$(cd "$ATLAS_CORE/.." && pwd)"
 WORKSPACE="$PARENT/atlas-workspace"
 
 # 1. Clean ----------------------------------------------------------------
-echo "==> cleaning $WORKSPACE/"
-rm -rf "$WORKSPACE"
-mkdir -p "$WORKSPACE/atlases"
+# 2026-05-20: was `rm -rf $WORKSPACE && mkdir -p ...` which broke any
+# running dev server's directory handle (the inode of $WORKSPACE changes
+# on wipe+recreate, so Starlette's StaticFiles loses its mount target
+# until restart). Quentin's report: a fresh assemble produced 404s on
+# every page fragment until the user restarted start.sh.
+# New strategy: keep $WORKSPACE intact; only wipe the inside (atlases/
+# and the top-level files we're about to overwrite). The atlas
+# subdirectories are individually wiped in step 3 so stale files from
+# removed atlases don't linger. Files that the tar in step 2 overwrites
+# are simply overwritten; files removed upstream may linger in workspace
+# (acceptable trade-off vs. breaking the running server).
+if [ ! -d "$WORKSPACE" ]; then
+  echo "==> creating $WORKSPACE/"
+  mkdir -p "$WORKSPACE/atlases"
+else
+  echo "==> refreshing $WORKSPACE/ in place (server-friendly)"
+  mkdir -p "$WORKSPACE/atlases"
+fi
 
 # 2. Copy atlas-core contents into workspace root ------------------------
 echo "==> copying atlas_core: $ATLAS_CORE"
 ( cd "$ATLAS_CORE" && tar -cf - --exclude=build --exclude=.git . ) \
   | ( cd "$WORKSPACE" && tar -xf - )
 
-# 3. Copy each other atlas -----------------------------------------------
+# 2b. Pick up atlases bundled inside atlas-core itself -------------------
+# atlas-core may ship its own atlas package(s) under atlas-core/atlases/<id>/
+# (e.g. the `core` atlas — the registry-dashboard pages: conversation, action,
+# registries, catalogue). The tar copy in step 2 already moved them into
+# $WORKSPACE/atlases/<id>/; here we just record their ids so they end up at
+# the FRONT of atlas_ids (i.e. first in atlases/_index.json, which makes
+# them the default atlas the router opens).
 atlas_ids=()
+if [ -d "$WORKSPACE/atlases" ]; then
+  for sub in "$WORKSPACE/atlases"/*/; do
+    [ -d "$sub" ] || continue
+    aid="$(basename "$sub")"
+    [ -f "$sub/manifest.json" ] || continue
+    echo "==> bundled atlas $aid: $sub (from atlas-core)"
+    atlas_ids+=("$aid")
+    # SPECs for bundled atlases come from atlas-core's repo root
+    # (atlas-core keeps them under docs/SPEC_*.md, not specs_done/).
+    python3 "$SCRIPT_DIR/index_specs.py" "$aid" "$ATLAS_CORE" \
+      "$WORKSPACE/atlases/$aid/specs" || true
+  done
+fi
+
+# 3. Copy each other atlas -----------------------------------------------
 for key in "${kv_keys[@]}"; do
   case "$key" in
     atlas_core|data|server_config) continue ;;
@@ -87,19 +123,40 @@ for key in "${kv_keys[@]}"; do
     aid="$(basename "$sub")"
     [ -f "$sub/manifest.json" ] || continue
     echo "==> copying atlas $aid: $sub"
+    # 2026-05-20: wipe just THIS atlas's destination before copying so
+    # stale files from a renamed/removed page don't linger. Keeps the
+    # workspace-root inode stable (see step 1 comment).
+    rm -rf "$WORKSPACE/atlases/$aid"
     cp -r "$sub" "$WORKSPACE/atlases/"
     atlas_ids+=("$aid")
+    # Index specs_done/ + specs_todo/ + SPECS.md at the source repo root
+    # (NOT inside atlases/<aid>/). Fail-soft: missing folders just yield an
+    # empty section in specs_index.json; never aborts the assemble.
+    python3 "$SCRIPT_DIR/index_specs.py" "$aid" "$src" \
+      "$WORKSPACE/atlases/$aid/specs" || true
   done
 done
 
 # 4. Write atlases/_index.json -------------------------------------------
+# Dedupe atlas_ids while preserving order: if an external atlas in step 3
+# shadows a bundled one from step 2b, the bundled id stays at the front
+# (which keeps it as the default) and the duplicate from step 3 is dropped.
+deduped_ids=()
+declare -A seen_ids=()
+for aid in "${atlas_ids[@]}"; do
+  if [ -z "${seen_ids[$aid]:-}" ]; then
+    deduped_ids+=("$aid")
+    seen_ids[$aid]=1
+  fi
+done
+
 {
   echo "{"
-  echo "  \"_doc\":          \"Atlas list. Written by assemble.sh.\","
+  echo "  \"_doc\":          \"Atlas list. Written by assemble.sh. Bundled atlases (shipped inside atlas-core/atlases/) come first, then external atlases in atlas.config order. The router opens the first listed atlas as the default.\","
   echo "  \"_assembled_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\","
   echo -n "  \"atlases\":      ["
   first=1
-  for aid in "${atlas_ids[@]}"; do
+  for aid in "${deduped_ids[@]}"; do
     if [ $first -eq 1 ]; then first=0; else echo -n ","; fi
     echo -n "\"$aid\""
   done
@@ -107,33 +164,35 @@ done
   echo "}"
 } > "$WORKSPACE/atlases/_index.json"
 
-# 5. Symlink the data folder into the workspace -------------------------
-# Two complementary links, both pointing at the same target:
-#   (a) $WORKSPACE/data            -> $DATA_DIR     (legacy convenience link)
-#   (b) $WORKSPACE/$DATA_DIR       -> $DATA_DIR     (full-path mirror)
-# Link (b) lets master_config.yaml use absolute paths like
-# /mnt/e/results_inversions/01_beagle and have the unified server's
-# static mount serve them: a fetch for /mnt/e/X resolves to
-# $WORKSPACE/mnt/e/X, which (b) bridges back to the real $DATA_DIR/X.
+# 5. Data folder — server handles external roots natively, no symlinks. ----
+# Earlier versions of assemble.sh symlinked $WORKSPACE/data → $DATA_DIR
+# and $WORKSPACE/$DATA_DIR → $DATA_DIR so the static-file mount could
+# serve files outside the workspace tree. Two reasons those are gone now:
+#
+#   1. WSL/DrvFs (Windows /mnt/c) rejects cross-drive symlinks with
+#      EPERM unless WSL is launched as Administrator with metadata mount
+#      options — `ln -s` failing was the visible symptom of "Operation
+#      not permitted" during assemble.
+#   2. They never actually worked for serving content anyway: Starlette's
+#      StaticFiles path-traversal guard realpath's the target and rejects
+#      anything outside the mount's own directory, so a symlink pointing
+#      OUT of $WORKSPACE returned 404 silently. The fix (in
+#      atlas_server._bootstrap_external_root_mounts) was to mount the
+#      external prefix as its OWN StaticFiles entry — see the docstring
+#      on that function. With native mounts in place the symlinks are
+#      pure cruft.
+#
+# We still record kv_data so start.sh / the server can pass it through
+# as an env or use it for sanity reporting, but no filesystem links are
+# created here. If a future workflow needs $WORKSPACE/data to be a real
+# directory (rather than nothing), copy your data in by hand or add a
+# separate config knob — don't bring the symlinks back.
 if [ "${kv_data:-}" ]; then
   DATA_DIR="$(resolve_path "$kv_data")"
   if [ -d "$DATA_DIR" ]; then
-    # (a) legacy convenience link
-    ln -s "$DATA_DIR" "$WORKSPACE/data"
-    echo "==> linked data: $DATA_DIR → $WORKSPACE/data"
-    # (b) full-path mirror (only for absolute DATA_DIR, which it always is
-    # after resolve_path; but be explicit for clarity).
-    case "$DATA_DIR" in
-      /*)
-        PARENT_DIR="$(dirname "$DATA_DIR")"
-        BASENAME="$(basename "$DATA_DIR")"
-        mkdir -p "$WORKSPACE$PARENT_DIR"
-        ln -s "$DATA_DIR" "$WORKSPACE$PARENT_DIR/$BASENAME"
-        echo "==> mirrored absolute path: $DATA_DIR → $WORKSPACE$PARENT_DIR/$BASENAME"
-        ;;
-    esac
+    echo "==> external data root: $DATA_DIR (served by atlas_server.py via _bootstrap_external_root_mounts)"
   else
-    echo "  ! data path not found: $DATA_DIR (skipping links)"
+    echo "  ! data path not found: $DATA_DIR (server will skip native mount for this prefix)"
   fi
 fi
 

@@ -132,30 +132,51 @@ class TestFileEndpointGET(unittest.TestCase):
 
 
 class TestFileEndpointPOST(unittest.TestCase):
+    # POST /file/<path> writes through the registry-v2 allowlist
+    # (atlas_server._is_path_allowed_for_write). Any path outside the
+    # allowlist returns 403 — the tests below use allowlisted prefixes
+    # (data/candidates/<cid>/lineage.json + data/candidates/<cid>/<vid>/
+    # <aspect>.json) so they exercise the success path. The traversal
+    # test below covers the rejection path.
+
     def test_post_creates_file(self):
         with tempfile.TemporaryDirectory() as td:
             client = _fresh_client(Path(td))
-            r = client.post("/file/written.txt", content=b"hello")
-            self.assertEqual(r.status_code, 200)
-            self.assertEqual(r.json(), {"ok": True, "path": "written.txt", "bytes": 5})
-            self.assertEqual((Path(td) / "written.txt").read_text(), "hello")
+            rel = "data/candidates/cand_LG28_001/lineage.json"
+            r = client.post(f"/file/{rel}", content=b"hello")
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(r.json(), {"ok": True, "path": rel, "bytes": 5})
+            self.assertEqual((Path(td) / rel).read_text(), "hello")
 
     def test_post_creates_intermediate_dirs(self):
         with tempfile.TemporaryDirectory() as td:
             client = _fresh_client(Path(td))
-            r = client.post("/file/a/b/c.json", content=b'{"deep": true}')
-            self.assertEqual(r.status_code, 200)
-            target = Path(td) / "a" / "b" / "c.json"
+            rel = "data/candidates/cand_LG28_001/v1/boundaries.json"
+            r = client.post(f"/file/{rel}", content=b'{"deep": true}')
+            self.assertEqual(r.status_code, 200, r.text)
+            target = Path(td) / rel
             self.assertTrue(target.exists())
             self.assertEqual(json.loads(target.read_text()), {"deep": True})
 
     def test_post_overwrites_existing(self):
         with tempfile.TemporaryDirectory() as td:
-            (Path(td) / "f.txt").write_text("OLD")
+            rel = "data/candidates/cand_LG28_001/lineage.json"
+            target = Path(td) / rel
+            target.parent.mkdir(parents=True)
+            target.write_text("OLD")
             client = _fresh_client(Path(td))
-            r = client.post("/file/f.txt", content=b"NEW")
-            self.assertEqual(r.status_code, 200)
-            self.assertEqual((Path(td) / "f.txt").read_text(), "NEW")
+            r = client.post(f"/file/{rel}", content=b"NEW")
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(target.read_text(), "NEW")
+
+    def test_post_path_not_on_allowlist_blocked(self):
+        """An arbitrary write path that doesn't match any allowed prefix
+        is rejected with 403 — registry-v2 second-line-of-defence."""
+        with tempfile.TemporaryDirectory() as td:
+            client = _fresh_client(Path(td))
+            r = client.post("/file/arbitrary.txt", content=b"x")
+            self.assertEqual(r.status_code, 403)
+            self.assertFalse((Path(td) / "arbitrary.txt").exists())
 
     def test_post_path_traversal_blocked(self):
         with tempfile.TemporaryDirectory() as td:

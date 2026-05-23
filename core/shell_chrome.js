@@ -26,9 +26,61 @@ const THEME_LABEL = { dark: '☀ light', light: '📓 academic', academic: '🌙
 export function attachShellChrome(opts = {}) {
   _wireThemeToggle();
   _wireFolderButtons();
+  _wireGlobalSettingsBtn();
   _wireServerPing(opts.serverUrl || window.ATLAS_SERVER_URL || 'http://127.0.0.1:8000');
   _wireSchemaBadge();
   _wireJsScriptsBadge();
+  _wireModeBTally();
+}
+
+// Mount the workspace-wide Mode-B tally chip into #modeBTallyHost. The
+// chip subscribes to the 'mode_b_badge_render' CustomEvent every per-page
+// badge dispatches and shows a single-line count ('● 8  ⚠ 1  ○ 5')
+// across all loaded atlases. Hidden until at least one badge reports.
+function _wireModeBTally() {
+  const host = document.getElementById('modeBTallyHost');
+  if (!host) return;
+  // Lazy import keeps the shell_chrome bundle thin if the tally is ever
+  // disabled — dynamic import returns immediately, mount on resolve.
+  import('./mode_b_tally.js')
+    .then((m) => { try { m.mountModeBTally(host); } catch (_) {} })
+    .catch(() => {});
+}
+
+// Forward header gear clicks to the active page's sidebar.
+//
+// Sidebar collapse semantics live in the active page (e.g. for inversion
+// page1, sidebar.js wires #sidebarToggleBtn against `.wrap[data-sidebar]`
+// and redraws canvases on transition). We click the page-owned toggle so
+// those handlers fire. As a robust fallback — for atlases that haven't
+// wired a toggle button yet, or for the brief window before page-mount —
+// we also flip `.wrap[data-sidebar]` directly so the CSS responds even
+// when no JS handler is listening.
+function _wireGlobalSettingsBtn() {
+  const btn = document.getElementById('globalSettingsBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const pageToggle = document.getElementById('sidebarToggleBtn');
+    if (pageToggle && pageToggle !== btn) {
+      // .click() is more reliable than dispatchEvent(new MouseEvent('click'))
+      // for triggering programmatically-added handlers — Safari quirks.
+      pageToggle.click();
+      return;
+    }
+    // Fallback: no page-owned toggle exists. Flip .wrap[data-sidebar]
+    // directly so the inversion.css grid-template-columns rule still
+    // collapses the aside. Other atlases use the same convention.
+    const wrap = document.querySelector('#app-root .wrap, main .wrap, .wrap');
+    if (wrap) {
+      const collapsed = wrap.getAttribute('data-sidebar') === 'collapsed';
+      if (collapsed) wrap.removeAttribute('data-sidebar');
+      else           wrap.setAttribute('data-sidebar', 'collapsed');
+      return;
+    }
+    // Last-ditch: toggle a `.collapsed` class on the first <aside>.
+    const aside = document.querySelector('#app-root aside, main aside');
+    if (aside) aside.classList.toggle('collapsed');
+  });
 }
 
 function _wireThemeToggle() {
@@ -92,6 +144,25 @@ function _wireFolderButtons() {
       // Synthesize a click on the page-owned button. Use dispatchEvent
       // instead of .click() so any framework-bound listeners still fire.
       target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      // 2026-05-20: mirror the page button's new label/title back onto
+      // the header button so its text reflects the new state instead of
+      // staying stuck on the initial "📐 compact". Defer one frame so the
+      // page handler has run + mutated its own button's text before we
+      // copy it. Quentin's report: clicking the header "compact" button
+      // changes the layout but the button label never updates.
+      requestAnimationFrame(() => {
+        try {
+          if (target.textContent && target.textContent !== btn.textContent) {
+            btn.textContent = target.textContent;
+          }
+          if (target.title && target.title !== btn.title) {
+            btn.title = target.title;
+          }
+          if (target.dataset && target.dataset.mode && btn.dataset) {
+            btn.dataset.mode = target.dataset.mode;
+          }
+        } catch (_) { /* never fail the click on a label-mirror */ }
+      });
     }
     document.dispatchEvent(new CustomEvent('shell.chrome.cmd', {
       detail: { cmd, sourceButton: btn },
@@ -100,7 +171,7 @@ function _wireFolderButtons() {
 }
 
 // =====================================================================
-// Server status probe — pings the atlas server's /healthz endpoint
+// Server status probe — pings the atlas server's /health endpoint
 // every 15s and reflects the result on the #atlasServerStandaloneBtn
 // indicator (green dot + "up", red "down", grey "probing"). Click opens
 // a small popup with the current status + the launcher command.
@@ -125,7 +196,7 @@ function _wireServerPing(baseUrl) {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), SERVER_PROBE_TIMEOUT_MS);
     try {
-      const r = await fetch(`${baseUrl.replace(/\/$/, '')}/healthz`, {
+      const r = await fetch(`${baseUrl.replace(/\/$/, '')}/health`, {
         method: 'GET', signal: ctrl.signal, cache: 'no-store',
       });
       setStatus(r.ok ? 'up' : 'down');
@@ -183,6 +254,50 @@ function _wireSchemaBadge() {
       body: _schemaModalBody(layers),
     });
   });
+  // 2026-05-20: reset + repopulate the schema badge on every atlas
+  // transition. Previously only the inversion atlas's local_pca_dosage
+  // wrote `window.__atlasSchemaLayers` (on chrom load), and that global
+  // never got cleared — so navigating to e.g. the relatedness atlas
+  // showed the inversion atlas's precomp fields as if they belonged to
+  // relatedness. The fix has two layers:
+  //
+  //   1. On every page_mount where atlas_id changes: blow away the
+  //      global + badge state.
+  //   2. Then read `window.__atlasRegistry.getAtlasLayerNames(atlas_id)`
+  //      (set in index.html) to repopulate with the new atlas's
+  //      declared layers. Pages can still overwrite later with richer
+  //      detail (e.g. inversion's local_pca_dosage writes "only the
+  //      layers actually present in this chrom's precomp"); the
+  //      registry baseline is just so the badge says SOMETHING even
+  //      when no page has run its loader yet.
+  let _lastAtlasId = null;
+  document.addEventListener('shell.page_mount', (e) => {
+    const d = (e && e.detail) || {};
+    if (!d.atlas_id || d.atlas_id === _lastAtlasId) return;
+    _lastAtlasId = d.atlas_id;
+    window.__atlasSchemaLayers = null;
+    badge.textContent = '';
+    badge.style.display = 'none';
+    badge.className = '';
+    badge.title = '';
+    // Repopulate from the registry, if it's exposed and has this atlas.
+    const reg = window.__atlasRegistry;
+    if (!reg || typeof reg.getAtlasLayers !== 'function') return;
+    const layers = reg.getAtlasLayers(d.atlas_id) || {};
+    const names = Object.keys(layers).sort();
+    if (names.length === 0) return;
+    window.__atlasSchemaLayers = names.map(name => {
+      const entry = layers[name] || {};
+      return {
+        name,
+        present: true,   // registered, not necessarily loaded; pages refine
+        description: entry._doc || entry._status || '',
+      };
+    });
+    badge.textContent = `schema · ${names.length} layer${names.length === 1 ? '' : 's'}`;
+    badge.title = `Atlas: ${d.atlas_id}\nLayers (registered): ${names.join(', ')}`;
+    badge.style.display = 'inline-block';
+  });
 }
 
 function _schemaModalBody(layers) {
@@ -219,6 +334,22 @@ function _wireJsScriptsBadge() {
     badge.classList.toggle('v2', total > 0);
   };
   refresh();
+  // 2026-05-20: re-count after every page mount. The router fires a
+  // `shell.page_mount` CustomEvent on `document` (see atlas_router.js
+  // navigate(): `state.emit('shell.page_mount', ...)` plus a DOM-level
+  // mirror below). Without this listener the badge stayed stuck on
+  // "JS · 0 scripts" until the user clicked it — Quentin reported
+  // "JS buttons still shows 0 scripts loaded (sometimes but not always)".
+  document.addEventListener('shell.page_mount', () => {
+    // rAF so the page's import() has resolved + the registry push has
+    // landed before we recount. Re-count on a second rAF too for the
+    // rare case where the page module pushes additional entries from
+    // its mount() body (defensive belt-and-suspenders).
+    requestAnimationFrame(() => {
+      refresh();
+      requestAnimationFrame(refresh);
+    });
+  });
   // Re-count on each click (modules load lazily after page mounts).
   badge.addEventListener('click', () => {
     refresh();

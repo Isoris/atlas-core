@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../../core/registry_core.schema.json",
+  "_doc": "Per-page dependency declarations for the atlas-core dashboard atlas. Round-1 stub: the four pages (conversation / action / registries / catalogue) declare only their identity. Their `requires_layers` / `requires_operations` / `requires_slots` / `preloads` lists are populated when the layer + operation registries are filled (round 2).",
+  "pages": {
+    "conversation": {
+      "_label": "1. Conversation",
+      "_doc": "Static design-doc page today. Will eventually require the LLM-funnel operation chain when wired."
+    },
+    "action": {
+      "_label": "2. Action",
+      "_doc": "Reads the eight TSVs under toolkit_registries/relatedness/01_registry/. No layer or operation dependencies in round 1 because the page does its own fetch()."
+    },
+    "registries": {
+      "_label": "3. Registries",
+      "_doc": "Reads the eight TSVs and renders chains + a brick-edit sidebar. Same round-1 posture as the action page."
+    },
+    "catalogue": {
+      "_label": "4. Catalogue",
+      "_doc": "Reads module_registry.tsv + analysis_modes.tsv. module_registry.tsv is optional — degrades gracefully when biomod isn't synced."
+    }
+  }
+}

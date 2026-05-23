@@ -48,7 +48,17 @@ const SHARED_DEFAULTS = {
   activeCohort: null,
   sampleIds: null,
   serverBaseUrl: null,
-  currentPage: null
+  currentPage: null,
+  // 2026-05-20: shared sample-grouping slot, used by popstats live-server
+  // calls (POST /api/popstats/groupwise) + any other page that wants to
+  // run per-group analyses. Shape:
+  //   { 'H1/H1': ['CGA_001', ...], 'H1/H2': [...], 'H2/H2': [...] }
+  // Producer: whichever page derived the partition from a promoted
+  // candidate's locked labels (promotion paths: catalogue, haplotype
+  // regimes, local_pca_dosage K-means lock). Consumer-agnostic — any
+  // page that wants per-group analyses reads this slot and any page that
+  // computes a partition pushes via setActiveGroups().
+  activeGroups: null,
 };
 
 export class AtlasState {
@@ -130,6 +140,13 @@ export class AtlasState {
     this.emit('shared.activeCandidate.changed', { newValue: cand, oldValue: old });
   }
 
+  setActiveGroups(groups) {
+    const old = this.shared.activeGroups;
+    if (old === groups) return;
+    this.shared.activeGroups = groups;
+    this.emit('shared.activeGroups.changed', { newValue: groups, oldValue: old });
+  }
+
   // ------------------------------------------------------------------
   // Persistence
   // ------------------------------------------------------------------
@@ -141,6 +158,16 @@ export class AtlasState {
     if (this.shared.activeChrom) out.shared.activeChrom = this.shared.activeChrom;
     if (this.shared.activeCandidate && this.shared.activeCandidate.id) {
       out.shared.activeCandidateId = this.shared.activeCandidate.id;
+    }
+    // 2026-05-19: persist the last visited page so close/reopen lands on
+    // the same atlas + tab the user was on. The router writes
+    // `shared.currentPage = { atlas_id, page_id }` after every navigate().
+    if (this.shared.currentPage && this.shared.currentPage.atlas_id
+        && this.shared.currentPage.page_id) {
+      out.shared.currentPage = {
+        atlas_id: this.shared.currentPage.atlas_id,
+        page_id:  this.shared.currentPage.page_id,
+      };
     }
     // Per-atlas persisted slots.
     if (this._persistKeys) {
@@ -175,6 +202,18 @@ export class AtlasState {
       // Note: activeCandidate is rehydrated by the caller using the id, since
       // the full candidate object lives in registry-resolved data.
       if (parsed.shared.activeCandidateId) this.shared._pendingCandidateId = parsed.shared.activeCandidateId;
+      // 2026-05-19: stash the persisted currentPage under _pendingCurrentPage
+      // so the router can use it as the hash fallback at boot time. Not
+      // written into shared.currentPage directly because the router treats
+      // that as live navigation state.
+      if (parsed.shared.currentPage
+          && parsed.shared.currentPage.atlas_id
+          && parsed.shared.currentPage.page_id) {
+        this.shared._pendingCurrentPage = {
+          atlas_id: parsed.shared.currentPage.atlas_id,
+          page_id:  parsed.shared.currentPage.page_id,
+        };
+      }
     }
     for (const k of Object.keys(parsed)) {
       if (k === 'shared') continue;

@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "cross_species_breakpoints/schema_out.json",
+  "title": "cross_species_breakpoints output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["breakpoint_clusters", "cross_method_validated_breakpoints",
+               "recurrent_breakpoints", "reciprocity_table",
+               "pairwise_summary", "recipe"],
+  "properties": {
+    "breakpoint_clusters": {
+      "type": "array",
+      "description": "All clusters from cluster_breakpoints.py. One row per cluster_id with centroid_mb, span_kb, methods, families, n_families, cross_method, pos_by_method, event_classes.",
+      "items": {
+        "type": "object",
+        "required": ["cluster_id", "ref_chrom", "centroid_mb",
+                     "span_kb", "methods", "families",
+                     "n_families", "cross_method"],
+        "properties": {
+          "cluster_id":    { "type": "string" },
+          "ref_chrom":     { "type": "string" },
+          "centroid_mb":   { "type": "number" },
+          "span_kb":       { "type": "number" },
+          "n_methods":     { "type": "number" },
+          "methods":       { "type": "string" },
+          "families":      { "type": "string" },
+          "n_families":    { "type": "number" },
+          "cross_method":  { "type": "boolean" },
+          "pos_by_method": { "type": "string" },
+          "event_classes": { "type": "string" }
+        }
+      }
+    },
+    "cross_method_validated_breakpoints": {
+      "type": "array",
+      "description": "Tier 1 — subset of breakpoint_clusters where cross_method == true (>=2 independent families agree ≤tol)."
+    },
+    "recurrent_breakpoints": {
+      "type": "array",
+      "description": "Tier 2 — clusters with multiple methods from the SAME family. Real but single-method-family."
+    },
+    "reciprocity_table": {
+      "type": "array",
+      "description": "BP3c — zones validated from BOTH anchors (Cgar AND Cmac). 'Supported from both directions' evidence tier."
+    },
+    "pairwise_summary": {
+      "type": "array",
+      "description": "Per-(edge × species) table — which species contribute to each edge in the focal frame."
+    },
+    "recipe": {
+      "type": "object",
+      "description": "Subprocess plan: which scripts to run, in what order, with what args. Runners consume this; the registry never executes.",
+      "properties": {
+        "gene_order_steps": { "type": "array" },
+        "sequence_steps":   { "type": "array" },
+        "reciprocity_step": { "type": "object" },
+        "fold_step":        { "type": "object" }
+      }
+    }
+  }
+}

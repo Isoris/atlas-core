@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 73,
-  "n_edges": 103,
+  "n_nodes": 84,
+  "n_edges": 120,
   "warnings": [],
   "nodes": [
     {
@@ -192,6 +192,48 @@
       "status": "stub"
     },
     {
+      "id": "wfmash_paf",
+      "type": "layer",
+      "label": "wfmash PAF (whole-genome alignment)",
+      "status": "experimental"
+    },
+    {
+      "id": "busco_ortholog_table",
+      "type": "layer",
+      "label": "Wide BUSCO single-copy ortholog table",
+      "status": "experimental"
+    },
+    {
+      "id": "breakpoint_clusters",
+      "type": "layer",
+      "label": "Breakpoint clusters (tolerance-clustered, cross-method aware)",
+      "status": "experimental"
+    },
+    {
+      "id": "cross_method_validated_breakpoints",
+      "type": "layer",
+      "label": "Tier 1 \u2014 cross-method validated breakpoints",
+      "status": "experimental"
+    },
+    {
+      "id": "recurrent_breakpoints",
+      "type": "layer",
+      "label": "Tier 2 \u2014 recurrent breakpoints (single method family)",
+      "status": "experimental"
+    },
+    {
+      "id": "reciprocity_table",
+      "type": "layer",
+      "label": "BP3c reciprocity (both-anchor validated zones)",
+      "status": "experimental"
+    },
+    {
+      "id": "pairwise_summary",
+      "type": "layer",
+      "label": "Pairwise summary (edge x species)",
+      "status": "experimental"
+    },
+    {
       "id": "ngsrelate",
       "type": "analysis",
       "label": "ngsRelate \u2014 pairwise relatedness from genotype likelihoods",
@@ -255,6 +297,12 @@
       "id": "inversion_pair_incompatibility",
       "type": "analysis",
       "label": "Inversion pair incompatibility test",
+      "status": "experimental"
+    },
+    {
+      "id": "cross_species_breakpoint_detection",
+      "type": "analysis",
+      "label": "Cross-species breakpoint detection",
       "status": "experimental"
     },
     {
@@ -413,25 +461,56 @@
       "color": "#b87a14"
     },
     {
+      "id": "cross_species_atlas",
+      "type": "atlas",
+      "label": "Cross-Species Atlas",
+      "status": "experimental",
+      "color": "#2f8550"
+    },
+    {
+      "id": "popstats_atlas",
+      "type": "atlas",
+      "label": "Popstats Atlas",
+      "status": "experimental",
+      "color": "#b13030"
+    },
+    {
       "id": "evolution_atlas",
       "type": "atlas",
       "label": "Evolution Atlas",
-      "status": "stub",
+      "status": "experimental",
       "color": "#6b3aa6"
     },
     {
       "id": "genome_synteny_atlas",
       "type": "atlas",
-      "label": "Genome / Synteny Atlas",
-      "status": "stub",
-      "color": "#2f8550"
+      "label": "Genome / Synteny Atlas (deprecated)",
+      "status": "deprecated",
+      "color": "#888888"
     },
     {
       "id": "marker_design",
       "type": "atlas",
       "label": "Marker Design",
       "status": "stub",
-      "color": "#b13030"
+      "color": "#e89c2a"
+    },
+    {
+      "id": "cross_species_breakpoint_detection_adapter",
+      "type": "adapter",
+      "label": "Cross-species breakpoint detection",
+      "status": "experimental",
+      "input_layer_types": [
+        "wfmash_paf",
+        "busco_ortholog_table"
+      ],
+      "produces": [
+        "breakpoint_clusters",
+        "cross_method_validated_breakpoints",
+        "recurrent_breakpoints",
+        "reciprocity_table",
+        "pairwise_summary"
+      ]
     },
     {
       "id": "inversion_pair_incompatibility_adapter",
@@ -659,6 +738,41 @@
     {
       "from": "inversion_pair_incompatibility",
       "to": "distortion_summary",
+      "kind": "output"
+    },
+    {
+      "from": "wfmash_paf",
+      "to": "cross_species_breakpoint_detection",
+      "kind": "input"
+    },
+    {
+      "from": "busco_ortholog_table",
+      "to": "cross_species_breakpoint_detection",
+      "kind": "input"
+    },
+    {
+      "from": "cross_species_breakpoint_detection",
+      "to": "breakpoint_clusters",
+      "kind": "output"
+    },
+    {
+      "from": "cross_species_breakpoint_detection",
+      "to": "cross_method_validated_breakpoints",
+      "kind": "output"
+    },
+    {
+      "from": "cross_species_breakpoint_detection",
+      "to": "recurrent_breakpoints",
+      "kind": "output"
+    },
+    {
+      "from": "cross_species_breakpoint_detection",
+      "to": "reciprocity_table",
+      "kind": "output"
+    },
+    {
+      "from": "cross_species_breakpoint_detection",
+      "to": "pairwise_summary",
       "kind": "output"
     },
     {
@@ -897,6 +1011,11 @@
       "kind": "package_panel"
     },
     {
+      "from": "cross_species_breakpoint_detection_adapter",
+      "to": "cross_species_breakpoint_detection",
+      "kind": "adapter_backs"
+    },
+    {
       "from": "inversion_pair_incompatibility_adapter",
       "to": "inversion_pair_incompatibility",
       "kind": "adapter_backs"
@@ -982,6 +1101,51 @@
       "kind": "atlas_member_product"
     },
     {
+      "from": "breakpoint_clusters.v1",
+      "to": "cross_species_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "cross_method_validated_breakpoints.v1",
+      "to": "cross_species_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "recurrent_breakpoints.v1",
+      "to": "cross_species_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "reciprocity_table.v1",
+      "to": "cross_species_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "pairwise_summary.v1",
+      "to": "cross_species_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "popstats_result.v1",
+      "to": "popstats_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "fst_windows.v1",
+      "to": "popstats_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "dxy_windows.v1",
+      "to": "popstats_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "theta_pi_windows.v1",
+      "to": "popstats_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
       "from": "inversion_effect_on_meiosis_per_chromosome",
       "to": "meiosis_atlas",
       "kind": "atlas_member_question"
@@ -1008,6 +1172,36 @@
     }
   ],
   "adapters": [
+    {
+      "analysis_id": "cross_species_breakpoint_detection",
+      "analysis_version": "v0",
+      "atlas_id": "cross_species_atlas",
+      "schema_version": "adapter_atlas_v1",
+      "label": "Cross-species breakpoint detection",
+      "description": "Comparative breakpoint catalog across 18 catfish species. Two independent method families (gene-order via BUSCO; sequence via wfmash) feed cluster_breakpoints.py with a cross_method flag set only when families agree. BP_ATLAS adds BP3c reciprocity. Headline: LG27 bounded inversion (12.43 Mb + 16.50 Mb both edges cross-method validated); LG23 @ 4.04 Mb cross-method; LG28 @ 15-19 Mb recurrent gene-order-only.",
+      "input_layer_types": [
+        "wfmash_paf",
+        "busco_ortholog_table"
+      ],
+      "produces": [
+        "breakpoint_clusters",
+        "cross_method_validated_breakpoints",
+        "recurrent_breakpoints",
+        "reciprocity_table",
+        "pairwise_summary"
+      ],
+      "engine": "subprocess",
+      "schema_in": "./schema_in.json",
+      "schema_out": "./schema_out.json",
+      "example_input": "./example_input.json",
+      "example_output": "./example_output.json",
+      "legacy_scripts_dir": "./legacy_scripts",
+      "default_params": "{\n    \n    wfmash_p: 90,\n    wfmash_s: 50000,\n    \n    pass_a_segment_kb: 100,\n    pass_b_segment_kb: 500,\n    \n    min_mapq: 1,            \n    min_block_bp: 50000,\n    cluster_radius_bp: 50000,\n    flank_bp: 100000,\n    \n    tol_kb: 500,\n    edge_merge_kb: 200,\n    \n    divergence_tiers: {\n      clariidae: 90,\n      cranoglanis: 85,\n      siluroidei: 80,\n      deep_outgroup: null,  \n    },\n  }",
+      "trigger_policy": "manual",
+      "status": "experimental",
+      "notes": "\"The pipeline runs on the comparative cohort (18 genomes + hybrid subgenomes); it produces COORDINATES that the hatchery LG01 x LG28 work consumes",
+      "_path": "analysis/cross_species_breakpoints/adapter_atlas.js"
+    },
     {
       "analysis_id": "inversion_pair_incompatibility",
       "analysis_version": "v0",

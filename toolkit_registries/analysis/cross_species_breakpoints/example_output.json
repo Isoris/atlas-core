@@ -1,0 +1,78 @@
+{
+  "breakpoint_clusters": [
+    { "cluster_id": "cl_001", "ref_chrom": "27", "centroid_mb": 12.43,
+      "span_kb": 123, "n_methods": 2,
+      "methods": "genejson;wfmash", "families": "gene_order;sequence",
+      "n_families": 2, "cross_method": true,
+      "pos_by_method": "genejson:12.43;wfmash:12.43",
+      "event_classes": "INVERSION" },
+    { "cluster_id": "cl_002", "ref_chrom": "27", "centroid_mb": 16.50,
+      "span_kb": 1, "n_methods": 2,
+      "methods": "genejson;wfmash", "families": "gene_order;sequence",
+      "n_families": 2, "cross_method": true,
+      "pos_by_method": "genejson:16.50;wfmash:16.50",
+      "event_classes": "INVERSION" },
+    { "cluster_id": "cl_003", "ref_chrom": "23", "centroid_mb": 4.04,
+      "span_kb": 200, "n_methods": 2,
+      "methods": "synteny5;wfmash", "families": "gene_order;sequence",
+      "n_families": 2, "cross_method": true,
+      "pos_by_method": "synteny5:4.04;wfmash:4.04",
+      "event_classes": "INVERSION" },
+    { "cluster_id": "cl_004", "ref_chrom": "28", "centroid_mb": 17.20,
+      "span_kb": 4000, "n_methods": 3,
+      "methods": "synteny18;synteny5;genejson", "families": "gene_order",
+      "n_families": 1, "cross_method": false,
+      "pos_by_method": "synteny18:18.50;synteny5:15.58;genejson:16.95",
+      "event_classes": "FISSION_OR_FUSION" }
+  ],
+  "cross_method_validated_breakpoints": [
+    { "cluster_id": "cl_001", "ref_chrom": "27", "centroid_mb": 12.43, "tier": "Tier1" },
+    { "cluster_id": "cl_002", "ref_chrom": "27", "centroid_mb": 16.50, "tier": "Tier1" },
+    { "cluster_id": "cl_003", "ref_chrom": "23", "centroid_mb": 4.04,  "tier": "Tier1" }
+  ],
+  "recurrent_breakpoints": [
+    { "cluster_id": "cl_004", "ref_chrom": "28", "centroid_mb": 17.20, "tier": "Tier2",
+      "note": "gene-order recurrent across 3 sources; not sequence-corroborated at p90" }
+  ],
+  "reciprocity_table": [
+    { "zone_id": "BP_zone_000013", "ref_chrom": "27", "centroid_mb": 12.40,
+      "anchor_a": "Cgar", "anchor_b": "Cmac", "both_anchors": true,
+      "confidence": "high" },
+    { "zone_id": "BP_zone_000015", "ref_chrom": "27", "centroid_mb": 16.50,
+      "anchor_a": "Cgar", "anchor_b": "Cmac", "both_anchors": true,
+      "confidence": "high" }
+  ],
+  "pairwise_summary": [
+    { "edge": "LG27@12.43", "n_species": 5,
+      "species_list": "C_macrocephalus;H_wyckioides;I_punctatus;T_fulvidraco;S_meridionalis" },
+    { "edge": "LG27@16.50", "n_species": 5,
+      "species_list": "C_macrocephalus;H_wyckioides;I_punctatus;T_fulvidraco;S_meridionalis" }
+  ],
+  "recipe": {
+    "gene_order_steps": [
+      { "script": "legacy_scripts/gene_order/wide_orthologs_to_breakpoints.py",
+        "args": ["--in", "data/orthologs_18sp.tsv",
+                 "--out", "out/synteny_synteny18_breakpoints.tsv",
+                 "--edge-merge-kb", "200"] }
+    ],
+    "sequence_steps": [
+      { "script": "legacy_scripts/gene_order/STEP_CS01_extract_breakpoints.py",
+        "args": ["--paf", "data/01_wfmash/gar_vs_mac.paf",
+                 "--out", "out/cs_wfmash_gar_vs_mac.json",
+                 "--min-mapq", "1", "--min-block-bp", "50000",
+                 "--cluster-radius-bp", "50000", "--flank-bp", "100000"] }
+    ],
+    "reciprocity_step": {
+      "script": "legacy_scripts/bp_atlas/STEP_BP3c_reciprocity.py",
+      "args": ["--anchor-a", "out/anchor_Cgar", "--anchor-b", "out/anchor_Cmac",
+               "--out", "out/reciprocity_table.tsv",
+               "--cluster-radius-bp", "50000"]
+    },
+    "fold_step": {
+      "script": "legacy_scripts/gene_order/cluster_breakpoints.py",
+      "args": ["--tol-kb", "500", "--out", "out/breakpoint_clusters.tsv",
+               "--source", "synteny18:out/synteny_synteny18_breakpoints.tsv:gene_order",
+               "--source", "wfmash_gar_vs_mac:out/cs_wfmash_gar_vs_mac.tsv:sequence"]
+    }
+  }
+}

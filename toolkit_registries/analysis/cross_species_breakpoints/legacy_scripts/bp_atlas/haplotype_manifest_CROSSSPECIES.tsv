@@ -1,0 +1,18 @@
+haplotype_id	species	source	qc_tier	fasta_path	notes
+fClaHyb_Gar	Cgar	F1_hybrid_Gar_subgenome	A	/mnt/e/01-catfish_assembly_manuscript_CGA/cross_species_breakpoints/00_fastas/fClaHyb_Gar_LG.fa	PRIMARY anchor; Gar subgenome, hybrid LG frame
+fClaHyb_Mac	Cmac	F1_hybrid_Mac_subgenome	A	/mnt/e/01-catfish_assembly_manuscript_CGA/cross_species_breakpoints/00_fastas/fClaHyb_Mac_LG.fa	SECONDARY anchor; Mac subgenome, hybrid LG frame
+C_fuscus	Cfus	public_GCA_030347435	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/C_fuscus.fa	Clariidae ~15-20 MYA, p90 tier
+C_apus	Capus	public_GCA_030522415	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/C_apus.fa	Clariidae (Channallabes), p90 tier
+C_bouderius	Cbou	public_GCA_023630585	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/C_bouderius.fa	Cranoglanididae ~40 MYA, p85 tier
+I_furcatus	Ifur	public_GCA_023375685	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/I_furcatus.fa	Ictaluridae ~60 MYA, p80 tier
+I_punctatus	Ipun	public_GCA_001660625	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/I_punctatus.fa	Ictaluridae ~60 MYA, p80 tier
+A_melas	Amel	public_GCA_012411365	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/A_melas.fa	Ictaluridae ~60 MYA, p80 tier
+H_wyckioides	Hwyc	public_GCA_019097595	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/H_wyckioides.fa	Bagridae ~65 MYA, p80 tier
+T_fulvidraco	Tful	public_GCA_022655615	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/T_fulvidraco.fa	Bagridae ~65 MYA, p80 tier
+T_vachellii	Tvac	public_GCA_030014155	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/T_vachellii.fa	Bagridae ~65 MYA, p80 tier
+S_meridionalis	Smer	public_GCA_014805685	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/S_meridionalis.fa	Siluridae ~65 MYA, p80 tier
+S_aristotelis	Sari	public_GCA_946808225	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/S_aristotelis.fa	Siluridae ~65 MYA, p80 tier
+P_hypophthalmus	Phyp	public_GCA_027358585	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/P_hypophthalmus.fa	Pangasiidae ~65 MYA, p80 tier
+N_graeffei	Ngra	public_GCA_027579695	A	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/N_graeffei.fa	Ariidae ~65 MYA, p80 tier; LARGEST 2.4GB (watch RAM)
+P_lineatus	Plin	public_GCA_024760905	C	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/P_lineatus.fa	Plotosidae ~85 MYA, SUPPORT-ONLY (deep, never query)
+T_rosablanca	Tros	public_GCA_030014385	C	/mnt/e/catfish_bundle_no_genomes_no_EDTA/catfish_phylogenomics_v1.0/phylogeny/results_tree_busco_catfish/T_rosablanca.fa	Trichomycteridae ~100 MYA, SUPPORT-ONLY (deep, never query)

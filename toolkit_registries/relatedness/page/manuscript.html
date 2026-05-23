@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Manuscript — chunks & placeholders</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #6c727f;
+    --bg: #fafafa;
+    --bg-card: #fff;
+    --border: #d8dce3;
+    --accent: #2b6cb0;
+    --ok:   #2f855a;
+    --warn: #b7791f;
+    --fail: #c53030;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+               font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  header { padding: 14px 24px 10px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+  h1 { margin: 0; font-size: 16px; font-weight: 600; }
+  .sub { color: var(--muted); margin-top: 3px; font-size: 12.5px; }
+
+  .layout { display: grid; grid-template-columns: 280px 1fr 420px; gap: 0;
+            height: calc(100vh - 100px); }
+  .pane { overflow-y: auto; padding: 14px 16px; }
+  .pane.left  { border-right: 1px solid var(--border); background: var(--bg-card); }
+  .pane.mid   { background: var(--bg); }
+  .pane.right { border-left: 1px solid var(--border); background: var(--bg-card); }
+
+  .section-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+  .section-tabs button {
+    background: #edf2f7; color: var(--fg); border: 1px solid var(--border);
+    border-radius: 4px; padding: 4px 10px; font-size: 11.5px; cursor: pointer;
+  }
+  .section-tabs button.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  .chunk-item {
+    display: flex; gap: 8px; align-items: flex-start;
+    padding: 6px 8px; border: 1px solid transparent; border-radius: 4px;
+    cursor: pointer; font-size: 12.5px;
+  }
+  .chunk-item:hover { background: #edf2f7; }
+  .chunk-item.selected { border-color: var(--accent); background: #ebf5ff; }
+  .chunk-item input[type="checkbox"] { margin-top: 3px; }
+  .chunk-item .label { font-weight: 500; }
+  .chunk-item .meta  { color: var(--muted); font-size: 11px; }
+
+  .atlas-badge {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em;
+    color: white; background: #6c727f; margin-right: 4px;
+  }
+
+  .chunk-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 14px; margin-bottom: 12px;
+  }
+  .chunk-card .head {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .chunk-card .head .title { font-weight: 600; font-size: 13px; flex: 1; }
+  .chunk-card .head .btn {
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+    border-radius: 3px; padding: 2px 6px; font-size: 11px; cursor: pointer;
+  }
+  .chunk-card .head .btn:hover { color: var(--fg); background: #edf2f7; }
+  .chunk-card .head .btn.danger:hover { color: var(--fail); border-color: var(--fail); }
+
+  .chunk-card .template-editor {
+    width: 100%; min-height: 90px; padding: 8px; font-size: 12.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    border: 1px solid var(--border); border-radius: 4px; resize: vertical;
+    background: #fcfcfd; color: var(--fg);
+  }
+  .chunk-card .placeholders { margin-top: 10px; }
+  .chunk-card .placeholders table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  .chunk-card .placeholders th { text-align: left; padding: 4px 6px; color: var(--muted);
+                                  font-weight: 500; border-bottom: 1px solid var(--border); }
+  .chunk-card .placeholders td { padding: 4px 6px; border-bottom: 1px solid #edf0f4; }
+  .chunk-card .placeholders td.name { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                                       color: var(--accent); white-space: nowrap; }
+  .chunk-card .placeholders input {
+    width: 100%; padding: 3px 6px; border: 1px solid var(--border); border-radius: 3px;
+    font-size: 11.5px; font-family: inherit; background: var(--bg-card);
+  }
+  .chunk-card .placeholders .src {
+    display: inline-block; padding: 1px 6px; border-radius: 3px; background: #edf2f7;
+    color: var(--muted); font-size: 10px;
+  }
+  .chunk-card .add-placeholder {
+    background: transparent; color: var(--accent); border: 1px dashed var(--accent);
+    border-radius: 3px; padding: 3px 8px; font-size: 11px; cursor: pointer; margin-top: 6px;
+  }
+
+  .preview-toolbar { display: flex; gap: 6px; margin-bottom: 10px; }
+  .preview-toolbar button {
+    background: var(--accent); color: white; border: none; border-radius: 4px;
+    padding: 6px 12px; font-size: 12px; cursor: pointer;
+  }
+  .preview-toolbar button:hover { background: #2754a0; }
+  .preview-toolbar button.ghost { background: #edf2f7; color: var(--fg); border: 1px solid var(--border); }
+
+  .preview {
+    background: #fcfcfd; border: 1px solid var(--border); border-radius: 4px;
+    padding: 16px 20px; font-size: 13px; line-height: 1.7; white-space: pre-wrap;
+  }
+  .preview .section-h { font-weight: 700; font-size: 13px; margin-top: 18px;
+                         margin-bottom: 8px; color: var(--muted);
+                         text-transform: uppercase; letter-spacing: 0.06em; }
+  .preview .section-h:first-child { margin-top: 0; }
+  .preview .unfilled { background: #fff5d7; color: #8a6a00; padding: 0 3px; border-radius: 2px; }
+  .preview .cite { color: var(--accent); text-decoration: none; }
+  .preview .cite:hover { text-decoration: underline; }
+  .preview .bibliography { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border);
+                            font-size: 12px; color: var(--fg); line-height: 1.55; }
+  .preview .bibliography ol { margin: 0; padding-left: 20px; }
+  .preview .bibliography li { margin-bottom: 6px; }
+  .preview .bibliography .doi { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  .ref-chips { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .ref-chips .chip {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 1px 7px; border-radius: 3px;
+    background: #ebf5ff; color: var(--accent); font-size: 10.5px;
+    border: 1px solid #cfe2f7; cursor: default;
+  }
+  .ref-chips .chip.missing { background: #fff5d7; color: #8a6a00; border-color: #f3e2a9; }
+  .ref-chips .chip .x { color: var(--muted); cursor: pointer; padding: 0 2px; }
+  .ref-chips .chip .x:hover { color: var(--fail); }
+  .add-ref {
+    display: inline-block; background: transparent; color: var(--accent);
+    border: 1px dashed var(--accent); border-radius: 3px; padding: 1px 7px;
+    font-size: 10.5px; cursor: pointer;
+  }
+
+  .empty { padding: 30px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html"><span class="num">1.</span> Conversation</a>
+  <a href="action.html"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html"><span class="num">4.</span> Catalogue</a>
+  <a href="layers.html"><span class="num">5.</span> Layers</a>
+  <a href="candidate_review.html"><span class="num">6.</span> Candidate review</a>
+  <a href="graph_builder.html"><span class="num">7.</span> Graph builder</a>
+  <a href="readiness.html"><span class="num">8.</span> Readiness</a>
+  <a href="layer_connector.html"><span class="num">9.</span> Layer Connector</a>
+  <a href="workspace_health.html"><span class="num">10.</span> Workspace Health</a>
+  <a href="queue.html"><span class="num">11.</span> Queue</a>
+  <a href="manuscript.html" class="current"><span class="num">12.</span> Manuscript</a>
+  <span class="tag">Atlas-core — page 12</span>
+</nav>
+
+<header>
+  <h1>Manuscript — chunks &amp; placeholders</h1>
+  <div class="sub">Pick chunks (modules / chains) on the left → edit body + placeholders in the middle → live manuscript on the right. Placeholders resolve from <code>scope</code>, <code>module_registry</code>, <code>analysis_registry</code>, or literals. Edits persist locally.</div>
+</header>
+
+<div class="layout">
+  <div class="pane left" id="picker"></div>
+  <div class="pane mid"  id="cards"></div>
+  <div class="pane right">
+    <div class="preview-toolbar">
+      <button id="copy-btn">Copy markdown</button>
+      <button id="dl-btn" class="ghost">Download .md</button>
+      <button id="reset-btn" class="ghost">Reset overrides</button>
+    </div>
+    <div class="preview" id="preview"></div>
+  </div>
+</div>
+
+<script>
+const SECTIONS = ["methods", "results", "discussion"];
+const LS_SEL = "atlas_manuscript_selection_v1";
+const LS_OVR = "atlas_manuscript_overrides_v1";
+
+let DB = { chunks: [], atlases: {}, modules: {}, registry: {}, references: {} };
+let SECTION = "methods";
+
+// ---- load ---------------------------------------------------------------- //
+
+async function fetchJsonl(rel) {
+  try {
+    const r = await fetch(rel, { cache: "no-store" });
+    if (!r.ok) return [];
+    return (await r.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
+  } catch { return []; }
+}
+
+async function load() {
+  const base = "../01_registry/";
+  const [chunks, atlases, modules, registry, refs] = await Promise.all([
+    fetchJsonl(base + "manuscript_chunks.jsonl"),
+    fetchJsonl(base + "atlases.jsonl"),
+    fetchJsonl(base + "module_registry.jsonl"),
+    fetchJsonl(base + "analysis_registry.jsonl"),
+    fetchJsonl(base + "references.jsonl"),
+  ]);
+  DB.chunks     = chunks;
+  DB.atlases    = Object.fromEntries(atlases.map(a => [a.atlas_id, a]));
+  DB.modules    = Object.fromEntries(modules.map(m => [m.module_name, m]));
+  DB.registry   = Object.fromEntries(registry.map(a => [a.analysis_id, a]));
+  DB.references = Object.fromEntries(refs.map(r => [r.ref_id, r]));
+}
+
+// ---- selection + overrides ---------------------------------------------- //
+
+function getSelection() {
+  try { return JSON.parse(localStorage.getItem(LS_SEL) || "[]"); }
+  catch { return []; }
+}
+function setSelection(arr) {
+  localStorage.setItem(LS_SEL, JSON.stringify(arr));
+}
+function getOverrides() {
+  try { return JSON.parse(localStorage.getItem(LS_OVR) || "{}"); }
+  catch { return {}; }
+}
+function setOverrides(obj) {
+  localStorage.setItem(LS_OVR, JSON.stringify(obj));
+}
+function setOverride(chunk_id, key, value) {
+  const o = getOverrides();
+  o[chunk_id] = o[chunk_id] || {};
+  o[chunk_id][key] = value;
+  setOverrides(o);
+}
+
+// ---- resolve a placeholder value ---------------------------------------- //
+
+function getScopeValue(path) {
+  if (typeof window.getScope !== "function") return null;
+  const s = window.getScope() || {};
+  return s[path] || null;
+}
+
+function resolvePlaceholder(chunk_id, name, spec) {
+  // Per-chunk manual override always wins.
+  const o = getOverrides()[chunk_id] || {};
+  if (o[name] !== undefined && o[name] !== "") return { value: o[name], src: "override" };
+  const src = (spec && spec.source) || "literal";
+  if (src === "scope") {
+    const v = getScopeValue(spec.path || name);
+    if (v) return { value: v, src: "scope" };
+  }
+  if (src === "scope_or_literal") {
+    const v = getScopeValue(spec.path || name);
+    if (v) return { value: v, src: "scope" };
+  }
+  if (src === "module") {
+    const m = DB.modules[spec.module_name];
+    if (m && m[spec.path]) return { value: m[spec.path], src: "module" };
+  }
+  if (src === "registry") {
+    const r = DB.registry[spec.analysis_id];
+    if (r && r[spec.path]) return { value: r[spec.path], src: "registry" };
+  }
+  if (spec && spec.default) return { value: spec.default, src: "default" };
+  return { value: null, src: "unfilled" };
+}
+
+function applyTemplate(chunk) {
+  const o = getOverrides()[chunk.chunk_id] || {};
+  const tpl = (o.__template__ !== undefined) ? o.__template__ : chunk.template;
+  const placeholders = Object.assign({}, chunk.placeholders || {}, o.__extra_placeholders__ || {});
+  return tpl.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (_, name) => {
+    const spec = placeholders[name] || { source: "literal" };
+    const r = resolvePlaceholder(chunk.chunk_id, name, spec);
+    if (r.value === null) return `<<UNFILLED:${name}>>`;
+    return r.value;
+  });
+}
+
+// Collect references for a chunk = jsonl-declared + any [@RefId] cite found in
+// the (possibly user-edited) template body.
+function chunkRefs(chunk) {
+  const o = getOverrides()[chunk.chunk_id] || {};
+  const tpl = (o.__template__ !== undefined) ? o.__template__ : chunk.template;
+  const declared = (chunk.references || []).slice();
+  const extra = (o.__extra_refs__ || []);
+  const fromBody = [];
+  const re = /\[@([A-Za-z][A-Za-z0-9_]*)\]/g;
+  let m; while ((m = re.exec(tpl)) !== null) fromBody.push(m[1]);
+  const suppressed = new Set(o.__suppressed_refs__ || []);
+  return Array.from(new Set([...declared, ...extra, ...fromBody])).filter(r => !suppressed.has(r));
+}
+
+// ---- atlas badge -------------------------------------------------------- //
+
+function atlasBadge(atlas_id) {
+  if (!atlas_id) return "";
+  const a = DB.atlases[atlas_id];
+  if (!a) return `<span class="atlas-badge" title="atlas not in registry">${atlas_id}</span>`;
+  return `<span class="atlas-badge" style="background:${a.color || '#6c727f'}" title="${(a.description||'').replace(/"/g,'')}">${a.icon || ''} ${a.label || a.atlas_id}</span>`;
+}
+
+// ---- render picker ------------------------------------------------------ //
+
+function renderPicker() {
+  const root = document.getElementById("picker");
+  const sel = new Set(getSelection());
+  const tabs = `<div class="section-tabs">${SECTIONS.map(s =>
+    `<button class="${s === SECTION ? 'active' : ''}" data-sec="${s}">${s}</button>`
+  ).join("")}</div>`;
+  const items = DB.chunks
+    .filter(c => c.section === SECTION)
+    .map(c => `
+      <div class="chunk-item ${sel.has(c.chunk_id) ? 'selected' : ''}" data-id="${c.chunk_id}">
+        <input type="checkbox" ${sel.has(c.chunk_id) ? 'checked' : ''} data-id="${c.chunk_id}">
+        <div>
+          <div class="label">${c.label || c.chunk_id}</div>
+          <div class="meta">${atlasBadge(c.atlas)} <code>${c.analysis_id || c.chunk_id}</code></div>
+        </div>
+      </div>`).join("") || `<div class="empty" style="padding:10px">No chunks in <code>${SECTION}</code> yet.</div>`;
+  root.innerHTML = tabs + items;
+  for (const b of root.querySelectorAll(".section-tabs button")) {
+    b.onclick = () => { SECTION = b.dataset.sec; renderPicker(); };
+  }
+  for (const cb of root.querySelectorAll('input[type="checkbox"]')) {
+    cb.onchange = () => {
+      const id = cb.dataset.id;
+      let s = getSelection();
+      if (cb.checked) { if (!s.includes(id)) s.push(id); }
+      else { s = s.filter(x => x !== id); }
+      setSelection(s);
+      renderPicker(); renderCards(); renderPreview();
+    };
+  }
+}
+
+// ---- render middle: selected chunk cards ------------------------------- //
+
+function renderCards() {
+  const root = document.getElementById("cards");
+  const sel = getSelection();
+  if (sel.length === 0) {
+    root.innerHTML = `<div class="empty">Pick chunks on the left to start composing the manuscript. Templates are markdown with <code>{{placeholder}}</code> slots.</div>`;
+    return;
+  }
+  const idx = Object.fromEntries(DB.chunks.map(c => [c.chunk_id, c]));
+  root.innerHTML = sel.map((cid, i) => {
+    const c = idx[cid]; if (!c) return "";
+    const o = getOverrides()[cid] || {};
+    const tpl = (o.__template__ !== undefined) ? o.__template__ : c.template;
+    const placeholders = Object.assign({}, c.placeholders || {}, o.__extra_placeholders__ || {});
+    const phRows = Object.entries(placeholders).map(([name, spec]) => {
+      const r = resolvePlaceholder(cid, name, spec);
+      const cur = (o[name] !== undefined) ? o[name] : (r.src === "default" ? "" : r.value || "");
+      const placeholder = (r.src === "default" ? spec.default || "" : (r.value || ""));
+      return `<tr>
+        <td class="name">{{${name}}}</td>
+        <td><input data-cid="${cid}" data-ph="${name}" value="${(cur||'').replace(/"/g,'&quot;')}" placeholder="${(placeholder||'').replace(/"/g,'&quot;')}"></td>
+        <td><span class="src">${r.src}</span></td>
+      </tr>`;
+    }).join("");
+    return `
+      <div class="chunk-card" data-cid="${cid}">
+        <div class="head">
+          ${atlasBadge(c.atlas)}
+          <div class="title">${c.label || cid}</div>
+          <button class="btn" data-act="up" data-i="${i}" ${i===0?'disabled':''}>↑</button>
+          <button class="btn" data-act="dn" data-i="${i}" ${i===sel.length-1?'disabled':''}>↓</button>
+          <button class="btn danger" data-act="rm" data-id="${cid}">✕</button>
+        </div>
+        <textarea class="template-editor" data-cid="${cid}" data-tpl="1">${tpl}</textarea>
+        <div class="placeholders">
+          <table>
+            <thead><tr><th>name</th><th>value</th><th>source</th></tr></thead>
+            <tbody>${phRows || `<tr><td colspan="3" style="color:var(--muted);padding:6px">no placeholders</td></tr>`}</tbody>
+          </table>
+          <button class="add-placeholder" data-act="add-ph" data-cid="${cid}">+ add placeholder</button>
+        </div>
+        <div class="ref-chips">
+          ${chunkRefs(c).map(rid => {
+            const r = DB.references[rid];
+            const known = !!r;
+            const title = known ? (r.citation + (r.doi ? `\n\nDOI: ${r.doi}` : "")) : "not in references.jsonl";
+            return `<span class="chip ${known?'':'missing'}" title="${title.replace(/"/g,'&quot;')}">@${rid}<span class="x" data-act="rm-ref" data-cid="${cid}" data-rid="${rid}" title="remove from this chunk">×</span></span>`;
+          }).join("")}
+          <button class="add-ref" data-act="add-ref" data-cid="${cid}">+ ref</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  for (const t of root.querySelectorAll('textarea[data-tpl]')) {
+    t.oninput = () => { setOverride(t.dataset.cid, "__template__", t.value); renderPreview(); };
+  }
+  for (const inp of root.querySelectorAll('input[data-ph]')) {
+    inp.oninput = () => { setOverride(inp.dataset.cid, inp.dataset.ph, inp.value); renderPreview(); };
+  }
+  for (const b of root.querySelectorAll('button[data-act]')) {
+    b.onclick = () => {
+      const act = b.dataset.act;
+      let s = getSelection();
+      if (act === "up") { const i = +b.dataset.i; if (i > 0) { [s[i-1], s[i]] = [s[i], s[i-1]]; setSelection(s); }}
+      if (act === "dn") { const i = +b.dataset.i; if (i < s.length-1) { [s[i+1], s[i]] = [s[i], s[i+1]]; setSelection(s); }}
+      if (act === "rm") { setSelection(s.filter(x => x !== b.dataset.id)); }
+      if (act === "add-ph") {
+        const name = prompt("Placeholder name (no braces):");
+        if (!name) return;
+        const o = getOverrides();
+        o[b.dataset.cid] = o[b.dataset.cid] || {};
+        o[b.dataset.cid].__extra_placeholders__ = o[b.dataset.cid].__extra_placeholders__ || {};
+        o[b.dataset.cid].__extra_placeholders__[name] = { source: "literal", default: "" };
+        setOverrides(o);
+      }
+      if (act === "add-ref") {
+        const known = Object.keys(DB.references).sort().join(", ");
+        const name = prompt(`Reference key (will be cited as [@key]).\nKnown keys: ${known}`);
+        if (!name) return;
+        const o = getOverrides();
+        o[b.dataset.cid] = o[b.dataset.cid] || {};
+        o[b.dataset.cid].__extra_refs__ = Array.from(new Set([...(o[b.dataset.cid].__extra_refs__ || []), name]));
+        setOverrides(o);
+      }
+      if (act === "rm-ref") {
+        const o = getOverrides(); const c = o[b.dataset.cid] || {};
+        c.__extra_refs__ = (c.__extra_refs__ || []).filter(r => r !== b.dataset.rid);
+        c.__suppressed_refs__ = Array.from(new Set([...(c.__suppressed_refs__ || []), b.dataset.rid]));
+        o[b.dataset.cid] = c; setOverrides(o);
+      }
+      renderPicker(); renderCards(); renderPreview();
+    };
+  }
+}
+
+// ---- render right: preview --------------------------------------------- //
+
+// Walk selected chunks in section order, assign 1-based citation indices to
+// each ref_id in first-appearance order. Returns {order: [ref_id,...],
+// indexOf: {ref_id: n}}.
+function buildCitationIndex(sel, idx) {
+  const order = [];
+  const indexOf = {};
+  for (const s of SECTIONS) {
+    for (const cid of sel) {
+      const c = idx[cid]; if (!c || (c.section || "methods") !== s) continue;
+      // declared / extra refs first, then [@...] cites in order of appearance
+      for (const r of chunkRefs(c)) {
+        if (!(r in indexOf)) { indexOf[r] = order.length + 1; order.push(r); }
+      }
+    }
+  }
+  return { order, indexOf };
+}
+
+function renderPreview() {
+  const root = document.getElementById("preview");
+  const sel = getSelection();
+  if (sel.length === 0) { root.innerHTML = `<div class="empty" style="padding:0;color:var(--muted)">Nothing selected.</div>`; return; }
+  const idx = Object.fromEntries(DB.chunks.map(c => [c.chunk_id, c]));
+  const cite = buildCitationIndex(sel, idx);
+  const bySection = { methods: [], results: [], discussion: [] };
+  for (const cid of sel) {
+    const c = idx[cid]; if (!c) continue;
+    bySection[c.section || "methods"].push({ chunk: c, body: applyTemplate(c) });
+  }
+  const blocks = [];
+  for (const s of SECTIONS) {
+    if (bySection[s].length === 0) continue;
+    blocks.push(`<div class="section-h">${s}</div>`);
+    for (const { chunk, body } of bySection[s]) {
+      let txt = body;
+      // expand [@RefId] → [n] (superscript link) in body text first
+      txt = txt.replace(/\[@([A-Za-z][A-Za-z0-9_]*)\]/g, (_, rid) => {
+        const n = cite.indexOf[rid];
+        if (!n) return `[@${rid}]`;
+        return `<<CITE:${n}:${rid}>>`;
+      });
+      // attach any declared refs that didn't appear inline by appending [n,...] before the period
+      const inlineMatches = new Set();
+      const reInline = /<<CITE:(\d+):([A-Za-z][A-Za-z0-9_]*)>>/g;
+      let m; while ((m = reInline.exec(txt)) !== null) inlineMatches.add(m[2]);
+      const trailing = chunkRefs(chunk).filter(r => !inlineMatches.has(r) && cite.indexOf[r]).map(r => `<<CITE:${cite.indexOf[r]}:${r}>>`);
+      if (trailing.length) {
+        // append before final period if present
+        const lastPeriod = txt.lastIndexOf(".");
+        const trailingTxt = " " + trailing.join("");
+        txt = (lastPeriod >= 0)
+          ? txt.slice(0, lastPeriod) + trailingTxt + txt.slice(lastPeriod)
+          : txt + trailingTxt;
+      }
+      let html = txt
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/&lt;&lt;UNFILLED:([a-zA-Z0-9_]+)&gt;&gt;/g, '<span class="unfilled">{{$1}}</span>')
+        .replace(/&lt;&lt;CITE:(\d+):([A-Za-z][A-Za-z0-9_]*)&gt;&gt;/g, (_, n, rid) => {
+          const ref = DB.references[rid];
+          const url = ref && ref.url ? ref.url : (ref && ref.doi ? `https://doi.org/${ref.doi}` : "#");
+          const title = ref ? ref.citation.replace(/"/g,'&quot;') : "unknown reference";
+          return `<sup><a class="cite" href="${url}" title="${title}" target="_blank" rel="noopener">[${n}]</a></sup>`;
+        })
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+        .replace(/`([^`]+)`/g, "<code>$1</code>");
+      blocks.push(`<p>${html}</p>`);
+    }
+  }
+  if (cite.order.length) {
+    const lis = cite.order.map(rid => {
+      const r = DB.references[rid];
+      if (!r) return `<li><em>${rid}</em> — <span class="doi">not in references.jsonl</span></li>`;
+      const doiLink = r.doi ? ` <a class="cite" href="https://doi.org/${r.doi}" target="_blank" rel="noopener" class="doi">doi:${r.doi}</a>` : (r.url ? ` <a class="cite" href="${r.url}" target="_blank" rel="noopener">link</a>` : "");
+      return `<li>${r.citation}${doiLink}</li>`;
+    }).join("");
+    blocks.push(`<div class="bibliography"><div class="section-h">References</div><ol>${lis}</ol></div>`);
+  }
+  root.innerHTML = blocks.join("");
+}
+
+function plainMarkdown() {
+  const sel = getSelection();
+  const idx = Object.fromEntries(DB.chunks.map(c => [c.chunk_id, c]));
+  const cite = buildCitationIndex(sel, idx);
+  const bySection = { methods: [], results: [], discussion: [] };
+  for (const cid of sel) {
+    const c = idx[cid]; if (!c) continue;
+    bySection[c.section || "methods"].push({ chunk: c, body: applyTemplate(c) });
+  }
+  const parts = [];
+  for (const s of SECTIONS) {
+    if (bySection[s].length === 0) continue;
+    parts.push(`## ${s.charAt(0).toUpperCase() + s.slice(1)}\n`);
+    for (const { chunk, body } of bySection[s]) {
+      let txt = body.replace(/\[@([A-Za-z][A-Za-z0-9_]*)\]/g, (_, rid) => {
+        const n = cite.indexOf[rid]; return n ? `[${n}]` : `[@${rid}]`;
+      });
+      const inline = new Set();
+      (chunk.references || []).forEach(r => inline.has(r));
+      const inlineSet = new Set(); body.match(/\[@[A-Za-z0-9_]+\]/g)?.forEach(c => inlineSet.add(c.slice(2, -1)));
+      const trailing = chunkRefs(chunk).filter(r => !inlineSet.has(r) && cite.indexOf[r]).map(r => `[${cite.indexOf[r]}]`);
+      if (trailing.length) {
+        const lp = txt.lastIndexOf(".");
+        const t = " " + trailing.join("");
+        txt = lp >= 0 ? txt.slice(0, lp) + t + txt.slice(lp) : txt + t;
+      }
+      parts.push(txt.replace(/<<UNFILLED:([a-zA-Z0-9_]+)>>/g, "{{$1}}") + "\n");
+    }
+  }
+  if (cite.order.length) {
+    parts.push(`## References\n`);
+    cite.order.forEach((rid, i) => {
+      const r = DB.references[rid];
+      if (!r) { parts.push(`${i+1}. ${rid} — not in references.jsonl\n`); return; }
+      const doi = r.doi ? ` doi:${r.doi}` : (r.url ? ` ${r.url}` : "");
+      parts.push(`${i+1}. ${r.citation}${doi}\n`);
+    });
+  }
+  return parts.join("\n");
+}
+
+document.getElementById("copy-btn").onclick = async () => {
+  await navigator.clipboard.writeText(plainMarkdown());
+  const b = document.getElementById("copy-btn");
+  const o = b.textContent; b.textContent = "Copied!"; setTimeout(() => b.textContent = o, 1200);
+};
+document.getElementById("dl-btn").onclick = () => {
+  const blob = new Blob([plainMarkdown()], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "manuscript.md"; a.click();
+  URL.revokeObjectURL(url);
+};
+document.getElementById("reset-btn").onclick = () => {
+  if (!confirm("Discard all per-chunk overrides (template edits + placeholder values)?")) return;
+  setOverrides({}); renderCards(); renderPreview();
+};
+
+if (typeof window.onScopeChange === "function") {
+  window.onScopeChange(() => { renderCards(); renderPreview(); });
+}
+
+(async () => {
+  await load();
+  renderPicker(); renderCards(); renderPreview();
+})();
+</script>
+
+<script defer src="doc.js"></script>
+<script defer src="search.js"></script>
+<script defer src="scope.js"></script>
+</body>
+</html>

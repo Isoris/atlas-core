@@ -1,8 +1,8 @@
 # MERGE_PLAN — landing the stacked PRs in order
 
-Status: **v1 (refreshed after PR #25).**
+Status: **v1.1 (refreshed after PR #28).**
 
-The atlas-core branch currently carries **23 stacked PRs** (#3 → #25).
+The atlas-core branch currently carries **26 stacked PRs** (#3 → #28).
 Each builds on the previous via branch stacking, so the cleanest merge
 sequence is **bottom-up, one PR at a time**, in the order below.
 
@@ -114,9 +114,12 @@ The phase plan from `LAYER_GRAPH_BUILDER_SPEC.md` §12 still has:
 
 - **Phase D** — page composition fan-out on pages 2 / 3 / 4
 - **Phase E** — LLM funnel Stages A + C (need a provider)
-- **Page 11 — Queue UI** that visualises `02_queue/`
+- **Page 11 — Queue UI** that visualises `02_queue/` *(landed in PR #27)*
+- **4-atlas split + cross-species adapter** *(landed in PR #28 — see `CROSS_SPECIES_BREAKPOINTS_WORKFLOW.md`)*
 - **Real runner** wired to `02_queue/` (PR #3's `POST /api/actions` is the natural target)
 - **`runs.jsonl`** for per-manifest state tracking
+- **BP4 population overlap** — intersect cross_species breakpoint catalog with 226-cohort haploblocks (separate chat; strict cohort boundary)
+- **BP5 figures** — R ribbons / dotplots / montages (separate chat)
 
 Each its own PR off `main` after this stack lands.
 

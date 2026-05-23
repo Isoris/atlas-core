@@ -39,7 +39,7 @@ from io_helpers import find_registry_root
 
 
 COLUMNS = [
-    "module_name", "version", "family", "biomod_status",
+    "module_name", "version", "family", "atlas", "biomod_status",
     "installed", "ready", "stale", "stale_reason",
     "parent", "derivatives",
     "last_run_id", "last_run_status", "last_run_qc",

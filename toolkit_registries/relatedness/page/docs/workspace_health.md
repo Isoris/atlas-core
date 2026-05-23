@@ -65,3 +65,16 @@ Set the ribbon back to "all atlases" (the default) to remove the filter.
 ## Per-atlas color stripes
 
 `page/atlas-colors.js` reads `atlases.jsonl` + `products.jsonl` and decorates every product card on pages 8 / 9 / 10 with a 4px left border in the owning atlas's color. Re-scans on render via `MutationObserver`. Add `color: "#RRGGBB"` to your atlas row to change the stripe.
+
+## The 4-atlas inversion split (PR #28)
+
+`inversion_atlas` used to own popstats AND cross-species products. As of PR #28 it is split into four sibling experimental atlases:
+
+| Atlas | Owns |
+|---|---|
+| `inversion_atlas`     | candidates + karyotypes + LG01 × LG28 pair-relation (manuscript stress test) |
+| `cross_species_atlas` | breakpoint catalog across 18 catfish genomes (NEW — wfmash + BUSCO gene-order) |
+| `popstats_atlas`      | window-wise FST / dxy / piN / piS between karyotype groups (NEW) |
+| `evolution_atlas`     | arrangement origin + selection + evolution summary (promoted from stub) |
+
+`genome_synteny_atlas` is folded into `cross_species_atlas` and marked deprecated. The headline cross-species result is the **LG27 bounded inversion** (both 12.43 Mb and 16.50 Mb edges cross-method validated). Spec: `toolkit_registries/CROSS_SPECIES_BREAKPOINTS_WORKFLOW.md`.

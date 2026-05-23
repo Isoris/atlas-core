@@ -70,6 +70,12 @@
     font-size: 10.5px; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.04em;
   }
+  .card .atlas-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 3px;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.03em;
+    color: white; background: #6c727f;
+  }
+  .card .atlas-badge .ico { margin-right: 4px; }
   .card.mod-ready          .pill { background: var(--ok);    color: white; }
   .card.mod-stale          .pill { background: var(--warn);  color: white; }
   .card.mod-failed         .pill { background: var(--fail);  color: white; }
@@ -109,6 +115,7 @@
   <a href="layer_connector.html"><span class="num">9.</span> Layer Connector</a>
   <a href="workspace_health.html"><span class="num">10.</span> Workspace Health</a>
   <a href="queue.html"><span class="num">11.</span> Queue</a>
+  <a href="manuscript.html"><span class="num">12.</span> Manuscript</a>
   <span class="tag">atlas-core dashboard</span>
 </nav>
 
@@ -123,7 +130,7 @@
 </nav>
 
 <div class="controls">
-  <label>filter <input id="filter" type="text" placeholder="match name / family / mode…" autocomplete="off"></label>
+  <label>filter <input id="filter" type="text" placeholder="match name / family / atlas / mode…" autocomplete="off"></label>
   <span class="stat" id="stat"></span>
 </div>
 
@@ -160,12 +167,41 @@ async function fetchTsv(rel, optional = false) {
   }
 }
 
-let DB = { modules: [], modes: [], moduleBy: {} };
+let DB = { modules: [], modes: [], moduleBy: {}, atlases: [], atlasBy: {} };
+
+async function fetchJsonl(rel, optional = false) {
+  try {
+    const resp = await fetch(rel, { cache: "no-store" });
+    if (!resp.ok) throw new Error(`${rel} → HTTP ${resp.status}`);
+    return (await resp.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
+  } catch (e) {
+    if (optional) return [];
+    throw e;
+  }
+}
 
 async function loadAll() {
   DB.modules = await fetchTsv("../01_registry/module_registry.tsv", true);
   DB.modes   = await fetchTsv("../01_registry/analysis_modes.tsv");
   DB.moduleBy = Object.fromEntries(DB.modules.map(m => [m.module_name, m]));
+  DB.atlases = await fetchJsonl("../01_registry/atlases.jsonl", true);
+  DB.atlasBy = Object.fromEntries(DB.atlases.map(a => [a.atlas_id, a]));
+}
+
+// Build atlas badge HTML — small chip tinted by atlas.color.
+function atlasBadge(atlas_id) {
+  if (!atlas_id) return "";
+  const a = DB.atlasBy[atlas_id];
+  if (!a) return `<span class="atlas-badge" title="atlas not in registry">${atlas_id}</span>`;
+  const bg = a.color || "#6c727f";
+  return `<span class="atlas-badge" style="background:${bg}" title="${a.description || ''}">`
+       + `<span class="ico">${a.icon || ""}</span>${a.label || a.atlas_id}</span>`;
+}
+
+// Resolve an analysis_modes row to an atlas via its module's atlas field.
+function modeAtlas(mode) {
+  const m = DB.moduleBy[mode.module_name];
+  return m ? (m.atlas || "") : "";
 }
 
 // ===== Wiring helpers ================================================== //
@@ -183,6 +219,10 @@ const REQ_TO_PRODUCES = {
   "pedigree_result":  "pedigree_result",
   "mendelian_result": "mendelian_result",
   "relatedness_res":  "relatedness_res",
+  // cross-species pipeline — input layer tags map to themselves.
+  "wfmash_paf":         "wfmash_paf",
+  "busco_ortholog_table": "busco_ortholog_table",
+  "breakpoint_clusters":  "breakpoint_clusters",
 };
 
 function downstreamOfModule(moduleName) {
@@ -273,6 +313,7 @@ function renderModuleCard(m) {
         <span class="name" data-preview-table="module_registry" data-preview-id="${m.module_name}">${m.module_name}</span>
         <span class="meta">v${m.version} · family=${m.family} · biomod_status=${m.biomod_status || "?"}</span>
         <span class="pill">${label}</span>
+        ${atlasBadge(m.atlas)}
       </div>
       ${lineage}
       <dl>
@@ -297,7 +338,7 @@ function renderModules(filter) {
     return;
   }
   const q = (filter || "").toLowerCase();
-  const ms = DB.modules.filter(m => !q || (m.module_name + " " + m.family + " " + m.biomod_status).toLowerCase().includes(q));
+  const ms = DB.modules.filter(m => !q || (m.module_name + " " + m.family + " " + m.biomod_status + " " + (m.atlas || "")).toLowerCase().includes(q));
   if (ms.length === 0) { root.innerHTML = `<div class="empty">No modules match the filter.</div>`; return; }
   root.innerHTML = ms.map(renderModuleCard).join("");
 }
@@ -320,6 +361,7 @@ function renderAnalysisCard(mode) {
         <span class="name">${mode.analysis_type}/${mode.mode}</span>
         <span class="meta">${mode.label || ""}</span>
         <span class="pill">${label}</span>
+        ${atlasBadge(modeAtlas(mode))}
       </div>
       <dl>
         <dt>module</dt><dd>${mode.module_name ? `<code>${mode.module_name}</code>` + (m ? ` v${m.version}` : "") : "—"}</dd>
@@ -337,7 +379,7 @@ function renderAnalysisCard(mode) {
 function renderAnalyses(filter) {
   const root = document.getElementById("analyses");
   const q = (filter || "").toLowerCase();
-  const ms = DB.modes.filter(m => !q || (`${m.analysis_type}/${m.mode} ${m.label} ${m.module_name}`).toLowerCase().includes(q));
+  const ms = DB.modes.filter(m => !q || (`${m.analysis_type}/${m.mode} ${m.label} ${m.module_name} ${modeAtlas(m)}`).toLowerCase().includes(q));
   if (ms.length === 0) { root.innerHTML = `<div class="empty">No analyses match the filter.</div>`; return; }
   root.innerHTML = ms.map(renderAnalysisCard).join("");
 }

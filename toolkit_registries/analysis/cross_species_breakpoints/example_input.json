@@ -1,0 +1,37 @@
+{
+  "sources": [
+    { "name": "synteny18", "family": "gene_order",
+      "kind": "wide_orthologs",
+      "path": "data/orthologs_18sp.tsv" },
+    { "name": "synteny5", "family": "gene_order",
+      "kind": "wide_orthologs",
+      "path": "data/orthologs_5sp.tsv" },
+    { "name": "genejson", "family": "gene_order",
+      "kind": "csbp_json_dir",
+      "path": "data/csbp_jsons/" },
+    { "name": "wfmash_gar_vs_mac", "family": "sequence",
+      "kind": "paf",
+      "path": "data/01_wfmash/gar_vs_mac.paf" },
+    { "name": "bp_atlas_crossspecies", "family": "sequence",
+      "kind": "bp_atlas_manifest",
+      "path": "legacy_scripts/bp_atlas/haplotype_manifest_CROSSSPECIES.tsv" }
+  ],
+  "params": {
+    "wfmash_p":          90,
+    "wfmash_s":          50000,
+    "min_mapq":          1,
+    "min_block_bp":      50000,
+    "cluster_radius_bp": 50000,
+    "flank_bp":          100000,
+    "tol_kb":            500,
+    "edge_merge_kb":     200,
+    "pass_a_segment_kb": 100,
+    "pass_b_segment_kb": 500,
+    "divergence_tiers": {
+      "clariidae":     90,
+      "cranoglanis":   85,
+      "siluroidei":    80,
+      "deep_outgroup": null
+    }
+  }
+}

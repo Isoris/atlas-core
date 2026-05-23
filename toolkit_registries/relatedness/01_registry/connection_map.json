@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 86,
-  "n_edges": 122,
+  "n_nodes": 169,
+  "n_edges": 164,
   "warnings": [],
   "nodes": [
     {
@@ -234,6 +234,252 @@
       "status": "experimental"
     },
     {
+      "id": "tract_classifications_v1",
+      "type": "layer",
+      "label": "ngsTracts CO/NCO/DCO/MOSAIC tract classifications",
+      "status": "experimental"
+    },
+    {
+      "id": "chromosome_meiosis_events_v1",
+      "type": "layer",
+      "label": "per-(chrom \u00d7 dyad) CO/DCO/NCO counts + karyo strat",
+      "status": "experimental"
+    },
+    {
+      "id": "coincidence_matrix_v1",
+      "type": "layer",
+      "label": "per-(chrom \u00d7 interval_a \u00d7 interval_b) coefficient of coincidence",
+      "status": "experimental"
+    },
+    {
+      "id": "local_inv_controls_v1",
+      "type": "layer",
+      "label": "per-(tested chrom \u00d7 local inversion) covariate matrix",
+      "status": "experimental"
+    },
+    {
+      "id": "family_aware_permutation_design_v1",
+      "type": "layer",
+      "label": "per-(focal_inv \u00d7 parent) null-model assignment",
+      "status": "experimental"
+    },
+    {
+      "id": "crossover_track",
+      "type": "layer",
+      "label": "per-candidate sex-specific CO ideogram + telomere curve",
+      "status": "experimental"
+    },
+    {
+      "id": "nco_gc_track",
+      "type": "layer",
+      "label": "per-candidate NCO/GC tract ideogram + telomere curve",
+      "status": "experimental"
+    },
+    {
+      "id": "prdm9_motif",
+      "type": "layer",
+      "label": "PRDM9 PWM from CO \u00b12kb hotspots (optional)",
+      "status": "experimental"
+    },
+    {
+      "id": "nco_enrichment_result",
+      "type": "layer",
+      "label": "NCO enrichment crosstab + Fisher result per candidate",
+      "status": "experimental"
+    },
+    {
+      "id": "intrachromosomal_co_effect",
+      "type": "layer",
+      "label": "CO_rate(het) vs CO_rate(non-het) per focal \u00d7 tested-chrom",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_meiosis_effects_v1",
+      "type": "layer",
+      "label": "HEADLINE: focal inversion karyotype effect on meiosis of OTHER chromosomes",
+      "status": "experimental"
+    },
+    {
+      "id": "tajimas_d_windows",
+      "type": "layer",
+      "label": "Tajima's D per window",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_w_windows",
+      "type": "layer",
+      "label": "Watterson's theta per window",
+      "status": "experimental"
+    },
+    {
+      "id": "hp_windows",
+      "type": "layer",
+      "label": "Pooled heterozygosity Hp per window",
+      "status": "experimental"
+    },
+    {
+      "id": "da_windows",
+      "type": "layer",
+      "label": "Net divergence dA per window",
+      "status": "experimental"
+    },
+    {
+      "id": "fhom_per_sample",
+      "type": "layer",
+      "label": "Individual F_HOM",
+      "status": "experimental"
+    },
+    {
+      "id": "fdm_windows",
+      "type": "layer",
+      "label": "Patterson's D / fdM per window",
+      "status": "experimental"
+    },
+    {
+      "id": "ihs_windows",
+      "type": "layer",
+      "label": "iHS per window",
+      "status": "experimental"
+    },
+    {
+      "id": "xpehh_windows",
+      "type": "layer",
+      "label": "XP-EHH per window",
+      "status": "experimental"
+    },
+    {
+      "id": "pi_ns_per_locus",
+      "type": "layer",
+      "label": "pi_N / pi_S per CDS locus",
+      "status": "experimental"
+    },
+    {
+      "id": "pi_0fold_4fold_per_locus",
+      "type": "layer",
+      "label": "pi at 0-fold / 4-fold sites per CDS locus",
+      "status": "experimental"
+    },
+    {
+      "id": "dn_ds_per_pair",
+      "type": "layer",
+      "label": "dN/dS per aligned CDS pair",
+      "status": "experimental"
+    },
+    {
+      "id": "hobs_per_group_windows",
+      "type": "layer",
+      "label": "Hobs per arrangement per window",
+      "status": "experimental"
+    },
+    {
+      "id": "rare_sfs_pairwise_table",
+      "type": "layer",
+      "label": "Rare-SFS sharing (pairwise)",
+      "status": "experimental"
+    },
+    {
+      "id": "outlier_scan_regions",
+      "type": "layer",
+      "label": "Outlier regions from genome scan",
+      "status": "experimental"
+    },
+    {
+      "id": "candidate_vs_flanks_table",
+      "type": "layer",
+      "label": "Inside vs flanks Wilcoxon table",
+      "status": "experimental"
+    },
+    {
+      "id": "q_residual_dosage_matrix",
+      "type": "layer",
+      "label": "Q-residualized genotype dosage matrix",
+      "status": "experimental"
+    },
+    {
+      "id": "q_support_windows",
+      "type": "layer",
+      "label": "Per-window Q-support coherence",
+      "status": "experimental"
+    },
+    {
+      "id": "internal_composition_classification",
+      "type": "layer",
+      "label": "Per (parent x sample) internal composition class",
+      "status": "experimental"
+    },
+    {
+      "id": "candidate_classification",
+      "type": "layer",
+      "label": "Inversion-candidate classification (path A / path B / mixed)",
+      "status": "experimental"
+    },
+    {
+      "id": "hobs_hwe_windows",
+      "type": "layer",
+      "label": "Per-subset multi-scale Hobs / HWE windows",
+      "status": "experimental"
+    },
+    {
+      "id": "hobs_hwe_candidate_overlay_table",
+      "type": "layer",
+      "label": "Hobs / HWE overlay on candidates",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_boundary_candidates",
+      "type": "layer",
+      "label": "Inversion-boundary candidate intervals",
+      "status": "experimental"
+    },
+    {
+      "id": "popstats_result_groupwise",
+      "type": "layer",
+      "label": "Inversion-candidate groupwise popstats",
+      "status": "experimental"
+    },
+    {
+      "id": "kinship_theta_pairs",
+      "type": "layer",
+      "label": "Pairwise kinship \u03b8 (Jacquard EM)",
+      "status": "experimental"
+    },
+    {
+      "id": "king_robust_pairs",
+      "type": "layer",
+      "label": "KING-robust kinship per pair",
+      "status": "experimental"
+    },
+    {
+      "id": "jacquard_9_pairs",
+      "type": "layer",
+      "label": "Jacquard 9-coefficient vector per pair",
+      "status": "experimental"
+    },
+    {
+      "id": "ibs_counts_pairs",
+      "type": "layer",
+      "label": "IBS0/IBS1/IBS2 counts per pair",
+      "status": "experimental"
+    },
+    {
+      "id": "inbreeding_F_per_sample",
+      "type": "layer",
+      "label": "Per-sample inbreeding coefficient F",
+      "status": "experimental"
+    },
+    {
+      "id": "relatedness_res_perchrom_adaptive",
+      "type": "layer",
+      "label": "Per-chromosome adaptive .res (23-column)",
+      "status": "experimental"
+    },
+    {
+      "id": "adaptive_validation_report",
+      "type": "layer",
+      "label": "6-gate adaptive validation report (JSON)",
+      "status": "experimental"
+    },
+    {
       "id": "ngsrelate",
       "type": "analysis",
       "label": "ngsRelate \u2014 pairwise relatedness from genotype likelihoods",
@@ -315,6 +561,258 @@
       "id": "busco_ortholog_extraction",
       "type": "analysis",
       "label": "BUSCO single-copy ortholog table extraction",
+      "status": "experimental"
+    },
+    {
+      "id": "tract_classifications",
+      "type": "analysis",
+      "label": "ngsTracts CO/NCO/DCO/MOSAIC classifier",
+      "status": "experimental"
+    },
+    {
+      "id": "chromosome_meiosis_events",
+      "type": "analysis",
+      "label": "per-(chrom \u00d7 dyad) CO/DCO/NCO counts",
+      "status": "experimental"
+    },
+    {
+      "id": "coincidence_matrix",
+      "type": "analysis",
+      "label": "per-(chrom \u00d7 interval_a \u00d7 interval_b) c-coincidence",
+      "status": "experimental"
+    },
+    {
+      "id": "local_inv_controls",
+      "type": "analysis",
+      "label": "per-(tested chrom \u00d7 local inversion) covariate matrix",
+      "status": "experimental"
+    },
+    {
+      "id": "family_aware_permutation_design",
+      "type": "analysis",
+      "label": "per-(focal_inv \u00d7 parent) null-model assignment",
+      "status": "experimental"
+    },
+    {
+      "id": "crossover_track",
+      "type": "analysis",
+      "label": "per-candidate sex-specific CO ideogram + telomere curve",
+      "status": "experimental"
+    },
+    {
+      "id": "nco_gc_track",
+      "type": "analysis",
+      "label": "per-candidate NCO/GC tract ideogram + telomere curve",
+      "status": "experimental"
+    },
+    {
+      "id": "prdm9_motif",
+      "type": "analysis",
+      "label": "PRDM9 PWM from CO \u00b12kb hotspots",
+      "status": "experimental"
+    },
+    {
+      "id": "nco_inside_vs_outside_inversion",
+      "type": "analysis",
+      "label": "NCO enrichment inside vs outside inversion candidate",
+      "status": "experimental"
+    },
+    {
+      "id": "intrachromosomal_co_karyotype_effect",
+      "type": "analysis",
+      "label": "CO_rate(het) vs CO_rate(non-het) per focal inversion \u00d7 tested chrom",
+      "status": "experimental"
+    },
+    {
+      "id": "interchromosomal_inversion_effect",
+      "type": "analysis",
+      "label": "HEADLINE: focal inversion karyotype \u2192 meiosis on OTHER chromosomes",
+      "status": "experimental"
+    },
+    {
+      "id": "tajimas_d",
+      "type": "analysis",
+      "label": "tajimas_d",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_w",
+      "type": "analysis",
+      "label": "theta_w",
+      "status": "experimental"
+    },
+    {
+      "id": "hp",
+      "type": "analysis",
+      "label": "hp",
+      "status": "experimental"
+    },
+    {
+      "id": "da",
+      "type": "analysis",
+      "label": "da",
+      "status": "experimental"
+    },
+    {
+      "id": "fhom",
+      "type": "analysis",
+      "label": "fhom",
+      "status": "experimental"
+    },
+    {
+      "id": "fdm",
+      "type": "analysis",
+      "label": "fdm",
+      "status": "experimental"
+    },
+    {
+      "id": "ihs",
+      "type": "analysis",
+      "label": "ihs",
+      "status": "experimental"
+    },
+    {
+      "id": "xpehh",
+      "type": "analysis",
+      "label": "xpehh",
+      "status": "experimental"
+    },
+    {
+      "id": "pi_ns",
+      "type": "analysis",
+      "label": "pi_ns",
+      "status": "experimental"
+    },
+    {
+      "id": "pi_0fold_4fold",
+      "type": "analysis",
+      "label": "pi_0fold_4fold",
+      "status": "experimental"
+    },
+    {
+      "id": "dn_ds",
+      "type": "analysis",
+      "label": "dn_ds",
+      "status": "experimental"
+    },
+    {
+      "id": "hobs_per_group",
+      "type": "analysis",
+      "label": "hobs_per_group",
+      "status": "experimental"
+    },
+    {
+      "id": "rare_sfs_pairwise",
+      "type": "analysis",
+      "label": "rare_sfs_pairwise",
+      "status": "experimental"
+    },
+    {
+      "id": "outlier_scan",
+      "type": "analysis",
+      "label": "outlier_scan",
+      "status": "experimental"
+    },
+    {
+      "id": "candidate_vs_flanks",
+      "type": "analysis",
+      "label": "candidate_vs_flanks",
+      "status": "experimental"
+    },
+    {
+      "id": "q_residual_dosage",
+      "type": "analysis",
+      "label": "q_residual_dosage",
+      "status": "experimental"
+    },
+    {
+      "id": "snp_q_support",
+      "type": "analysis",
+      "label": "snp_q_support",
+      "status": "experimental"
+    },
+    {
+      "id": "internal_ancestry_composition",
+      "type": "analysis",
+      "label": "internal_ancestry_composition",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_candidate_classifier",
+      "type": "analysis",
+      "label": "inversion_candidate_classifier",
+      "status": "experimental"
+    },
+    {
+      "id": "hobs_hwe_pipeline",
+      "type": "analysis",
+      "label": "hobs_hwe_pipeline",
+      "status": "experimental"
+    },
+    {
+      "id": "hobs_hwe_candidate_overlay",
+      "type": "analysis",
+      "label": "hobs_hwe_candidate_overlay",
+      "status": "experimental"
+    },
+    {
+      "id": "karyotype_resolution",
+      "type": "analysis",
+      "label": "karyotype_resolution",
+      "status": "experimental"
+    },
+    {
+      "id": "instant_q_boundary_scan",
+      "type": "analysis",
+      "label": "instant_q_boundary_scan",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_groupwise_popstats",
+      "type": "analysis",
+      "label": "inversion_groupwise_popstats",
+      "status": "experimental"
+    },
+    {
+      "id": "kinship_theta",
+      "type": "analysis",
+      "label": "kinship_theta",
+      "status": "experimental"
+    },
+    {
+      "id": "king_robust_kinship",
+      "type": "analysis",
+      "label": "king_robust_kinship",
+      "status": "experimental"
+    },
+    {
+      "id": "jacquard_coefficients_9",
+      "type": "analysis",
+      "label": "jacquard_coefficients_9",
+      "status": "experimental"
+    },
+    {
+      "id": "ibs_counts",
+      "type": "analysis",
+      "label": "ibs_counts",
+      "status": "experimental"
+    },
+    {
+      "id": "inbreeding_F",
+      "type": "analysis",
+      "label": "inbreeding_F",
+      "status": "experimental"
+    },
+    {
+      "id": "relatedness_per_chrom_adaptive",
+      "type": "analysis",
+      "label": "relatedness_per_chrom_adaptive",
+      "status": "experimental"
+    },
+    {
+      "id": "relatedness_adaptive_validation",
+      "type": "analysis",
+      "label": "relatedness_adaptive_validation",
       "status": "experimental"
     },
     {
@@ -795,6 +1293,216 @@
     {
       "from": "busco_ortholog_extraction",
       "to": "busco_ortholog_table",
+      "kind": "output"
+    },
+    {
+      "from": "tract_classifications",
+      "to": "tract_classifications_v1",
+      "kind": "output"
+    },
+    {
+      "from": "chromosome_meiosis_events",
+      "to": "chromosome_meiosis_events_v1",
+      "kind": "output"
+    },
+    {
+      "from": "coincidence_matrix",
+      "to": "coincidence_matrix_v1",
+      "kind": "output"
+    },
+    {
+      "from": "local_inv_controls",
+      "to": "local_inv_controls_v1",
+      "kind": "output"
+    },
+    {
+      "from": "family_aware_permutation_design",
+      "to": "family_aware_permutation_design_v1",
+      "kind": "output"
+    },
+    {
+      "from": "crossover_track",
+      "to": "crossover_track",
+      "kind": "output"
+    },
+    {
+      "from": "nco_gc_track",
+      "to": "nco_gc_track",
+      "kind": "output"
+    },
+    {
+      "from": "prdm9_motif",
+      "to": "prdm9_motif",
+      "kind": "output"
+    },
+    {
+      "from": "nco_inside_vs_outside_inversion",
+      "to": "nco_enrichment_result",
+      "kind": "output"
+    },
+    {
+      "from": "intrachromosomal_co_karyotype_effect",
+      "to": "intrachromosomal_co_effect",
+      "kind": "output"
+    },
+    {
+      "from": "interchromosomal_inversion_effect",
+      "to": "inversion_meiosis_effects_v1",
+      "kind": "output"
+    },
+    {
+      "from": "tajimas_d",
+      "to": "tajimas_d_windows",
+      "kind": "output"
+    },
+    {
+      "from": "theta_w",
+      "to": "theta_w_windows",
+      "kind": "output"
+    },
+    {
+      "from": "hp",
+      "to": "hp_windows",
+      "kind": "output"
+    },
+    {
+      "from": "da",
+      "to": "da_windows",
+      "kind": "output"
+    },
+    {
+      "from": "fhom",
+      "to": "fhom_per_sample",
+      "kind": "output"
+    },
+    {
+      "from": "fdm",
+      "to": "fdm_windows",
+      "kind": "output"
+    },
+    {
+      "from": "ihs",
+      "to": "ihs_windows",
+      "kind": "output"
+    },
+    {
+      "from": "xpehh",
+      "to": "xpehh_windows",
+      "kind": "output"
+    },
+    {
+      "from": "pi_ns",
+      "to": "pi_ns_per_locus",
+      "kind": "output"
+    },
+    {
+      "from": "pi_0fold_4fold",
+      "to": "pi_0fold_4fold_per_locus",
+      "kind": "output"
+    },
+    {
+      "from": "dn_ds",
+      "to": "dn_ds_per_pair",
+      "kind": "output"
+    },
+    {
+      "from": "hobs_per_group",
+      "to": "hobs_per_group_windows",
+      "kind": "output"
+    },
+    {
+      "from": "rare_sfs_pairwise",
+      "to": "rare_sfs_pairwise_table",
+      "kind": "output"
+    },
+    {
+      "from": "outlier_scan",
+      "to": "outlier_scan_regions",
+      "kind": "output"
+    },
+    {
+      "from": "candidate_vs_flanks",
+      "to": "candidate_vs_flanks_table",
+      "kind": "output"
+    },
+    {
+      "from": "q_residual_dosage",
+      "to": "q_residual_dosage_matrix",
+      "kind": "output"
+    },
+    {
+      "from": "snp_q_support",
+      "to": "q_support_windows",
+      "kind": "output"
+    },
+    {
+      "from": "internal_ancestry_composition",
+      "to": "internal_composition_classification",
+      "kind": "output"
+    },
+    {
+      "from": "inversion_candidate_classifier",
+      "to": "candidate_classification",
+      "kind": "output"
+    },
+    {
+      "from": "hobs_hwe_pipeline",
+      "to": "hobs_hwe_windows",
+      "kind": "output"
+    },
+    {
+      "from": "hobs_hwe_candidate_overlay",
+      "to": "hobs_hwe_candidate_overlay_table",
+      "kind": "output"
+    },
+    {
+      "from": "karyotype_resolution",
+      "to": "karyotype_calls",
+      "kind": "output"
+    },
+    {
+      "from": "instant_q_boundary_scan",
+      "to": "inversion_boundary_candidates",
+      "kind": "output"
+    },
+    {
+      "from": "inversion_groupwise_popstats",
+      "to": "popstats_result_groupwise",
+      "kind": "output"
+    },
+    {
+      "from": "kinship_theta",
+      "to": "kinship_theta_pairs",
+      "kind": "output"
+    },
+    {
+      "from": "king_robust_kinship",
+      "to": "king_robust_pairs",
+      "kind": "output"
+    },
+    {
+      "from": "jacquard_coefficients_9",
+      "to": "jacquard_9_pairs",
+      "kind": "output"
+    },
+    {
+      "from": "ibs_counts",
+      "to": "ibs_counts_pairs",
+      "kind": "output"
+    },
+    {
+      "from": "inbreeding_F",
+      "to": "inbreeding_F_per_sample",
+      "kind": "output"
+    },
+    {
+      "from": "relatedness_per_chrom_adaptive",
+      "to": "relatedness_res_perchrom_adaptive",
+      "kind": "output"
+    },
+    {
+      "from": "relatedness_adaptive_validation",
+      "to": "adaptive_validation_report",
       "kind": "output"
     },
     {

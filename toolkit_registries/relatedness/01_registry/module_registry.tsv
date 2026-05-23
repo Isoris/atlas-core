@@ -10,3 +10,37 @@ cs_extract_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental	tru
 bp_atlas_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental	true	true	false		wfmash_v0_13	bp_atlas_v0_laptop,bp_atlas_v0_slurm						5	~/.biomod/envs/default/conda/bp_atlas_v0/	default	2026-05-23T00:00:00Z
 bp_reciprocity_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental	true	true	false		bp_atlas_v0								~/.biomod/envs/default/conda/bp_reciprocity_v0/	default	2026-05-23T00:00:00Z
 cluster_breakpoints_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental	true	true	false										~/.biomod/envs/default/conda/cluster_breakpoints_v0/	default	2026-05-23T00:00:00Z
+ngstracts_classifier	v1.0.0	meiosis	meiosis_atlas	external_producer	true	true				tract_classifications_v1						226		ngsTracts	
+ngstracts_traversal_breakpoints	v1.0.0	meiosis	meiosis_atlas	external_producer	true	true			ngstracts_classifier	tract_classifications_v1						226		ngsTracts	
+chromosome_meiosis_events_builder	v1.0.0	meiosis	meiosis_atlas	experimental	true	true			ngstracts_classifier	chromosome_meiosis_events_v1						226		meiosis_atlas	
+coincidence_matrix_builder	v1.0.0	meiosis	meiosis_atlas	experimental	true	true			chromosome_meiosis_events_builder	coincidence_matrix_v1						226		meiosis_atlas	
+local_inv_controls_builder	v1.0.0	meiosis	meiosis_atlas	experimental	true	true				local_inv_controls_v1						226		meiosis_atlas	
+family_aware_permutation_design_builder	v1.0.0	meiosis	meiosis_atlas	experimental	true	true				family_aware_permutation_design_v1						226		meiosis_atlas	
+meiosis_nco_enrichment_test	v0.1.0	meiosis	meiosis_atlas	experimental	true	true			ngstracts_classifier	nco_enrichment_result						226		meiosis_atlas	
+meiosis_intrachromosomal_co_test	v0.1.0	meiosis	meiosis_atlas	experimental	true	true			chromosome_meiosis_events_builder	intrachromosomal_co_effect						226		meiosis_atlas	
+meiosis_interchromosomal_effect_test	v0.1.0	meiosis	meiosis_atlas	experimental	true	true	promotion_from_browser_js	currently inlined in atlases/meiosis/pages/hub/interchromosomal/_stats.js; needs server-side wrap before catalogue compute lookup works end-to-end	coincidence_matrix_builder	inversion_meiosis_effects_v1						226		meiosis_atlas	
+per_candidate_co_track_builder	v0.1.0	meiosis	meiosis_atlas	contract_only	false	false	missing_builder	per-candidate crossover_track JSON not yet emitted by any pedigree pipeline; layer is CONTRACT-ONLY	ngstracts_classifier	crossover_track						226		meiosis_atlas	
+per_candidate_nco_gc_track_builder	v0.1.0	meiosis	meiosis_atlas	contract_only	false	false	missing_builder	per-candidate nco_gc_track JSON not yet emitted by any pedigree pipeline; layer is CONTRACT-ONLY	ngstracts_classifier	nco_gc_track						226		meiosis_atlas	
+prdm9_motif_finder	v0.1.0	meiosis	meiosis_atlas	contract_only	false	false	missing_builder	MEME/STREME wrapper on CO ±2kb hotspots; optional layer, page hides logo card when pwm null	per_candidate_co_track_builder	prdm9_motif						226		meiosis_atlas	
+region_popstats	v3	popstats	popstats_atlas	installed	true	true				inversion_groupwise_popstats						226			2026-05-23
+fhom	v2	popstats	popstats_atlas	installed	true	true										226			2026-05-23
+fdM	v1	introgression	popstats_atlas	installed	true	true										226			2026-05-23
+iHS	v1	selection	popstats_atlas	installed	true	true										226			2026-05-23
+xpehh	v1	selection	popstats_atlas	installed	true	true										226			2026-05-23
+pi_NS	v2	selection	popstats_atlas	installed	true	true										226			2026-05-23
+codon_stats	v2	selection	popstats_atlas	installed	true	true										226			2026-05-23
+hobs_windower	v1	popstats	popstats_atlas	installed	true	true										226			2026-05-23
+rare_sfs_pairwise	v1	popstats	popstats_atlas	installed	true	true										226			2026-05-23
+outlier_scan	v1	popstats	popstats_atlas	installed	true	true				candidate_validation						226			2026-05-23
+candidate_vs_flanks	v1	popstats	popstats_atlas	installed	true	true										226			2026-05-23
+export_q_residual_dosage	v1	ancestry_prep	popstats_atlas	installed	true	true				karyotype_resolution						226			2026-05-23
+snp_q_support	v1	ancestry_chain	popstats_atlas	installed	true	true				inversion_candidate_classifier						226			2026-05-23
+internal_ancestry_composition	v1	ancestry_chain	popstats_atlas	installed	true	true				inversion_candidate_classifier						226			2026-05-23
+inversion_candidate_classifier	v1	inversion_chain	popstats_atlas	installed	true	true			snp_q_support;internal_ancestry_composition							226			2026-05-23
+hobs_hwe_pipeline	v1	popstats_chain	popstats_atlas	installed	true	true				hobs_hwe_candidate_overlay						226			2026-05-23
+hobs_hwe_candidate_overlay	v1	inversion_chain	popstats_atlas	installed	true	true			hobs_hwe_pipeline	karyotype_resolution						226			2026-05-23
+karyotype_resolution	v1	inversion_chain	popstats_atlas	installed	true	true			export_q_residual_dosage;hobs_hwe_candidate_overlay	inversion_groupwise_popstats						226			2026-05-23
+instant_q_boundary_scan	v1	inversion_chain	popstats_atlas	installed	true	true				inversion_candidate_classifier;karyotype_resolution						226			2026-05-23
+inversion_groupwise_popstats	v1	popstats_chain	popstats_atlas	installed	true	true			region_popstats;karyotype_resolution							226			2026-05-23
+ngsrelate_fast	1.0.0	relatedness	relatedness_atlas	installed	true	true	false			ngsrelate_adaptive_scheduler						226		assembly	
+ngsrelate_adaptive_scheduler	1.0.0	relatedness	relatedness_atlas	experimental	true	true	false	awaiting Phase 9 calibration on LG12 — config.py defaults still placeholders	ngsrelate_fast							226		assembly	

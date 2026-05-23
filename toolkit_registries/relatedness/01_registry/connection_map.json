@@ -2,7 +2,7 @@
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
   "n_nodes": 299,
-  "n_edges": 230,
+  "n_edges": 231,
   "warnings": [],
   "nodes": [
     {
@@ -2939,6 +2939,11 @@
     },
     {
       "from": "family_aware_permutation_design.v1",
+      "to": "meiosis_atlas",
+      "kind": "atlas_member_product"
+    },
+    {
+      "from": "gene_conversion_tracts.v1",
       "to": "meiosis_atlas",
       "kind": "atlas_member_product"
     },

@@ -28,6 +28,14 @@
 #   POST /file/<path>                   write body to file under project root
 #   POST /compute/<name>                run a registered compute, return JSON
 #
+#   POST /api/actions                   submit an action manifest; dispatches
+#                                       to the per-atlas dispatcher.py and
+#                                       writes returned layer envelopes
+#   GET  /api/actions/<id>              latest log entry for the action
+#   GET  /api/layers                    list registered layer envelopes
+#                                       (filters: layer_type, dataset_id, stage, status)
+#   GET  /api/layers/<id>               read one envelope JSON
+#
 #   POST /api/popstats/groupwise        wraps region_popstats (Engine F)
 #   POST /api/popstats/hobs_groupwise   wraps angsd_fixed_HWE -doHWE + hobs_windower
 #   POST /api/ancestry/groupwise_q      reads instant_q local_Q_samples cache
@@ -115,6 +123,15 @@ from dosage_bridge import (
     DosageChunkReq, handle_dosage_chunk,
     DEFAULT_MAX_REGION_BP as DOSAGE_DEFAULT_MAX_REGION_BP,
 )
+
+# /api/diversity/{slot} JSON shims for the diversity atlas. Router-style
+# sidecar so atlas_server stays untouched beyond this import + the
+# include_router call after _safe_project_path is defined.
+from diversity_endpoint import make_diversity_router
+
+# /api/population/{slot} + /api/population/ngsadmix/q/{k} JSON shims for
+# the population atlas — same sidecar pattern as diversity_endpoint.
+from population_endpoint import make_population_router
 
 # =============================================================================
 # Logging
@@ -1146,6 +1163,20 @@ PROJECT_ROOT: Optional[Path] = None
 # stays None, only the API endpoints are exposed (the previous behaviour).
 WORKSPACE_ROOT: Optional[Path] = None
 
+# Action-pipeline subsystem state. Hosts POST /api/actions, GET /api/actions/{id},
+# GET /api/layers, GET /api/layers/{id}. Per atlas-core/toolkit_registries/
+# PIPELINE_FLOW.md §"The flow": the server validates an action manifest, calls the
+# per-atlas dispatcher (a Python module at <workspace>/atlases/<atlas>/registries/
+# dispatcher.py), captures produced layer envelopes, appends to actions.log.jsonl,
+# and indexes layers in registry/layers.registry.json. Bootstrapped by
+# _bootstrap_actions(); set when WORKSPACE_ROOT is set.
+ACTIONS_LOG_PATH:   Optional[Path]      = None     # <workspace>/registry/actions.log.jsonl
+LAYERS_INDEX_PATH:  Optional[Path]      = None     # <workspace>/registry/layers.registry.json
+LAYERS_DIR:         Optional[Path]      = None     # <workspace>/layers/
+ATLAS_DISPATCHERS:  Dict[str, Any]      = {}       # atlas_id -> imported python module
+ACTIVE_ATLAS:       Optional[str]       = None     # from <workspace>/master_config.yaml
+SERVER_BIND_URL:    Optional[str]       = None     # http://host:port, used by dispatchers to call back
+
 SERVER_VERSION: str = "v2-merged-turn146"
 
 
@@ -1182,6 +1213,17 @@ async def _lifespan(app: FastAPI):
                 _bootstrap_static(Path(ws_path))
             except Exception as e:
                 log.error("startup _bootstrap_static failed: %s", e)
+    # Action-pipeline subsystem: only meaningful when WORKSPACE_ROOT is set.
+    # ATLAS_SERVER_BIND_URL is passed through by main() so dispatchers can
+    # call back into this same process.
+    if WORKSPACE_ROOT is not None and ACTIONS_LOG_PATH is None:
+        try:
+            _bootstrap_actions(
+                WORKSPACE_ROOT,
+                bind_url=os.environ.get("ATLAS_SERVER_BIND_URL"),
+            )
+        except Exception as e:
+            log.error("startup _bootstrap_actions failed: %s", e)
     yield
 
 
@@ -1237,6 +1279,14 @@ def _safe_project_path(rel: str) -> Path:
     except ValueError:
         raise HTTPException(403, f"path escapes project root: {rel}")
     return p
+
+
+# Mount /api/diversity/{slot} JSON shims (see server/diversity_endpoint.py).
+app.include_router(make_diversity_router(_safe_project_path))
+
+# Mount /api/population/{slot} + /api/population/ngsadmix/q/{k} JSON shims
+# (see server/population_endpoint.py).
+app.include_router(make_population_router(_safe_project_path))
 
 
 # =============================================================================
@@ -1415,6 +1465,16 @@ def _bootstrap_static(workspace_root: Path) -> None:
                     "(atlas discovery will fail; rerun assemble.sh)", root)
 
     WORKSPACE_ROOT = root
+
+    # Mount external data roots BEFORE the workspace catch-all so they
+    # match first. Without this, requests for /mnt/e/X hit the workspace
+    # mount, which Starlette's StaticFiles rejects: it realpath's the
+    # symlinked path, sees the target lives outside the workspace dir,
+    # and 404s under its path-traversal guard. Mounting /mnt/e as its
+    # own StaticFiles (directory=/mnt/e) keeps the realpath check happy
+    # because the file is now inside the mount's own directory.
+    _bootstrap_external_root_mounts(root)
+
     # Mount LAST: FastAPI dispatches in registration order. Any route
     # registered before this point (every @app.get / @app.post above)
     # wins for /api/*, /file/*, /compute/*, /health. Anything else
@@ -1429,6 +1489,75 @@ def _bootstrap_static(workspace_root: Path) -> None:
         name="atlas_workspace_static",
     )
     log.info("static subsystem ready: workspace_root=%s", root)
+
+
+def _bootstrap_external_root_mounts(workspace_root: Path) -> None:
+    """Mount filesystem prefixes that master_config roots point at, so
+    that absolute-path URLs (like /mnt/e/results_inversions/...) are
+    served from where the symlink mirror actually points.
+
+    Scans master_config.yaml's roots.* entries; for each absolute path
+    outside the workspace, computes the top-level filesystem prefix
+    (e.g. /mnt/e, /mnt/c) and adds an app.mount(prefix, StaticFiles(...))
+    entry. Idempotent across roots that share a prefix.
+
+    Why this is needed even though assemble.sh creates a symlink mirror:
+    Starlette's StaticFiles guards against path-traversal by realpath'ing
+    both the requested path and the mount's directory and confirming the
+    file still lives inside. A symlink that points OUT of the directory
+    (which is exactly what the /mnt/e mirror does) fails that check
+    silently and returns 404. By mounting /mnt/e as its own static root,
+    the realpath check passes (the file is inside the mount's own dir).
+    """
+    mc_path = workspace_root / "master_config.yaml"
+    if not mc_path.exists():
+        return
+    try:
+        with open(mc_path) as fh:
+            doc = yaml.safe_load(fh) or {}
+    except Exception as e:
+        log.warning("could not parse master_config.yaml for external mounts: %s", e)
+        return
+    roots = doc.get("roots") or {}
+    workspace_realpath = workspace_root.resolve()
+    seen_prefixes: set = set()
+    for name, entry in roots.items():
+        if not isinstance(entry, dict):
+            continue
+        p = entry.get("path")
+        if not isinstance(p, str) or not p.startswith("/"):
+            continue
+        # Top-level prefix: /mnt/e from /mnt/e/results_inversions/...,
+        # /mnt/c from /mnt/c/Users/.../bin/... . Two path components
+        # after the leading slash. (One component, /home for instance,
+        # would also work but is too coarse; two components is the
+        # natural granularity for /mnt/<drive_letter> on WSL and
+        # /home/<user> on Linux.)
+        parts = Path(p).parts
+        if len(parts) < 3:
+            continue
+        prefix = "/" + "/".join(parts[1:3])
+        if prefix in seen_prefixes:
+            continue
+        prefix_path = Path(prefix)
+        if not prefix_path.exists() or not prefix_path.is_dir():
+            continue
+        # Skip if this prefix is already inside the workspace (no
+        # symlink needed; the workspace mount already serves it).
+        try:
+            prefix_path.resolve().relative_to(workspace_realpath)
+            continue
+        except ValueError:
+            pass
+        mount_name = "external_root_" + re.sub(r"[^A-Za-z0-9]", "_", prefix).strip("_")
+        app.mount(
+            prefix,
+            StaticFiles(directory=str(prefix_path), html=False, check_dir=False),
+            name=mount_name,
+        )
+        log.info("mounted external root: %s -> %s (declared by master_config.roots.%s)",
+                 prefix, prefix_path, name)
+        seen_prefixes.add(prefix)
 
 
 # turn 146 — kill caching for static content during development.
@@ -1556,6 +1685,33 @@ async def health() -> Dict[str, Any]:
 @app.get("/health")
 async def health_alias() -> Dict[str, Any]:
     return await health()
+
+
+# 2026-05-19: dev-mode atlas list. core/atlas_discovery.js#_listAtlases
+# probes this endpoint first (when devMode=true) and falls back to the
+# static atlases/_index.json on failure. Without this route the dev
+# server logs a 404 on every page boot — harmless but noisy. We resolve
+# by serving the same _index.json contents the static path would return,
+# so the dev and prod codepaths agree. When the workspace isn't mounted
+# we return an empty list (the frontend then falls back gracefully).
+@app.get("/api/_dev/list-atlases")
+async def list_atlases_dev() -> Dict[str, Any]:
+    if WORKSPACE_ROOT is None:
+        return {"atlases": [], "_note": "no workspace mounted"}
+    idx = WORKSPACE_ROOT / "atlases" / "_index.json"
+    if idx.exists():
+        try:
+            return {"atlases": json.loads(idx.read_text(encoding="utf-8")).get("atlases", [])}
+        except Exception as e:
+            log.warning("list_atlases_dev: failed to parse _index.json: %s", e)
+    # Fallback: scan the atlases/ dir for sub-folders containing manifest.json.
+    out = []
+    atlas_dir = WORKSPACE_ROOT / "atlases"
+    if atlas_dir.is_dir():
+        for sub in sorted(atlas_dir.iterdir()):
+            if sub.is_dir() and (sub / "manifest.json").exists():
+                out.append(sub.name)
+    return {"atlases": out, "_note": "scanned from disk; no _index.json"}
 
 
 # =============================================================================
@@ -2275,6 +2431,606 @@ def _last_pos_in_sites(sites_gz: Path) -> int:
 
 
 # =============================================================================
+# Precomp index — GET /api/precomp_index?root=<name>
+# =============================================================================
+# Scans a master_config root for per-chromosome JSON files and returns a
+# {chrom_id → relative-path-under-root} index. Replaces hardcoded filename
+# templates and hardcoded chromosome lists in atlas manifests: the browser
+# registry uses this for auto_index layers (URL construction) and the
+# scopebar uses it to populate the chromosome dropdown.
+#
+# Why server-side: filenames are pipeline outputs that the browser can't
+# enumerate (no directory listing over HTTP). Server walks the FS once,
+# caches per-root keyed by max-mtime under the root, and returns a small
+# JSON map. Browser caches the result for the session.
+#
+# Handles both layouts the inversion pipelines use today:
+#   flat:    09_atlas_json/C_gar_LG28.atlas.json
+#   nested:  04_atlas_json/C_gar_LG28/C_gar_LG28_phase2_theta.json
+# (depth=2 scan; chrom id extracted from filename via /(LG\d+)/.)
+
+# Extracts an LG\d+ token from a filename. Negative look-around prevents
+# matching inside longer alphanumerics (e.g. "LG28" but not "LG285alpha").
+_CHROM_TOKEN_RE = re.compile(r"(?<![A-Za-z0-9])(LG\d+)(?![0-9])")
+
+# Per-root cache: {root_name: (max_mtime, payload_dict)}.
+# Invalidated when any file mtime under the root exceeds the cached value.
+_PRECOMP_INDEX_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}
+
+
+def _chrom_sort_key(c: str) -> Tuple[int, Any]:
+    """Sort key: numeric LG\\d+ ascending, then everything else lexically."""
+    m = re.match(r"^LG(\d+)$", c)
+    if m:
+        return (0, int(m.group(1)))
+    return (1, c)
+
+
+def _scan_precomp_root(root_path: Path, max_depth: int = 2) -> Dict[str, Dict[str, Any]]:
+    """Walk root_path up to max_depth, group .json files by chrom id.
+
+    Returns {chrom_id: {"path": rel_posix_path, "bytes": int}}. When
+    multiple files match the same chrom, picks the largest (the atlas
+    JSON; sidecars like a sketch or a manifest will be smaller).
+    """
+    out: Dict[str, Dict[str, Any]] = {}
+    if not root_path.exists() or not root_path.is_dir():
+        return out
+    root_resolved = root_path.resolve()
+
+    def _walk(dir_path: Path, depth: int) -> None:
+        if depth > max_depth:
+            return
+        try:
+            entries = list(dir_path.iterdir())
+        except OSError:
+            return
+        for entry in entries:
+            try:
+                if entry.is_dir():
+                    _walk(entry, depth + 1)
+                    continue
+                if not entry.is_file():
+                    continue
+            except OSError:
+                continue
+            name = entry.name
+            if not name.endswith(".json"):
+                continue
+            m = _CHROM_TOKEN_RE.search(name)
+            if not m:
+                continue
+            chrom = m.group(1)
+            try:
+                size = entry.stat().st_size
+            except OSError:
+                continue
+            try:
+                rel = entry.relative_to(root_resolved).as_posix()
+            except ValueError:
+                rel = entry.name
+            prev = out.get(chrom)
+            if prev is None or size > prev["bytes"]:
+                out[chrom] = {"path": rel, "bytes": size}
+
+    _walk(root_resolved, 0)
+    return out
+
+
+def _max_mtime_under(root_path: Path, max_depth: int = 2) -> float:
+    """Largest mtime among regular files under root_path, depth-limited.
+    Used as the cache key for /api/precomp_index — when any file is
+    written the cached payload is recomputed; idle reads are O(1).
+    """
+    if not root_path.exists() or not root_path.is_dir():
+        return 0.0
+    root_resolved = root_path.resolve()
+    best = 0.0
+
+    def _walk(dir_path: Path, depth: int) -> None:
+        nonlocal best
+        if depth > max_depth:
+            return
+        try:
+            entries = list(dir_path.iterdir())
+        except OSError:
+            return
+        for entry in entries:
+            try:
+                if entry.is_dir():
+                    _walk(entry, depth + 1)
+                    continue
+                if not entry.is_file():
+                    continue
+                mt = entry.stat().st_mtime
+                if mt > best:
+                    best = mt
+            except OSError:
+                continue
+
+    _walk(root_resolved, 0)
+    return best
+
+
+def _resolve_root_from_master_config(root_name: str) -> Path:
+    """Read <workspace>/master_config.yaml and return roots[root_name].path."""
+    if WORKSPACE_ROOT is None:
+        raise HTTPException(503, "workspace root not configured")
+    mc_path = WORKSPACE_ROOT / "master_config.yaml"
+    if not mc_path.exists():
+        raise HTTPException(503, f"master_config.yaml not found at {mc_path}")
+    try:
+        with open(mc_path) as fh:
+            doc = yaml.safe_load(fh) or {}
+    except Exception as e:
+        raise HTTPException(500, f"could not parse master_config.yaml: {e}")
+    roots = doc.get("roots") or {}
+    entry = roots.get(root_name)
+    if not entry or not isinstance(entry, dict):
+        raise HTTPException(
+            404,
+            f"unknown root '{root_name}' in master_config.yaml. "
+            f"known roots: {sorted(roots.keys())}",
+        )
+    p = entry.get("path")
+    if not p:
+        raise HTTPException(500, f"root '{root_name}' has no path field")
+    return Path(p)
+
+
+@app.get("/api/precomp_index")
+def precomp_index(root: str) -> Dict[str, Any]:
+    """Per-chromosome file index for a master_config root.
+
+    Query params:
+        root: name of a roots.* entry in master_config.yaml
+              (e.g. precomp_zblocks, precomp_thetapi, precomp_ghsl)
+
+    Response:
+        {
+          "root": "precomp_zblocks",
+          "root_path": "/mnt/e/results_inversions/local_PCA_MDS_z/09_atlas_json",
+          "chroms": {
+            "LG01": "C_gar_LG01.atlas.json",
+            ...
+            "LG28": "C_gar_LG28.atlas.json"
+          },
+          "file_count": 28
+        }
+
+    The browser constructs file URLs as `<root_path>/<chroms[chrom]>` —
+    the workspace's /mnt/e symlink mirror serves them via the static
+    mount with no further routing.
+    """
+    root_path = _resolve_root_from_master_config(root)
+    max_mtime = _max_mtime_under(root_path)
+    cached = _PRECOMP_INDEX_CACHE.get(root)
+    if cached is not None and cached[0] >= max_mtime and max_mtime > 0.0:
+        return cached[1]
+    files = _scan_precomp_root(root_path)
+    chroms_sorted = {
+        c: files[c]["path"]
+        for c in sorted(files.keys(), key=_chrom_sort_key)
+    }
+    payload: Dict[str, Any] = {
+        "root": root,
+        "root_path": str(root_path),
+        "chroms": chroms_sorted,
+        "file_count": len(chroms_sorted),
+    }
+    if not root_path.exists():
+        payload["error"] = f"root path does not exist on disk: {root_path}"
+    _PRECOMP_INDEX_CACHE[root] = (max_mtime, payload)
+    return payload
+
+
+# =============================================================================
+# Action pipeline — POST /api/actions, GET /api/actions/{id}, /api/layers
+# =============================================================================
+# Per atlas-core/toolkit_registries/PIPELINE_FLOW.md the server:
+#   1. receives a manifest at POST /api/actions
+#   2. validates manifest required fields (full schema_in/<type> validation
+#      lives in the dispatcher, not here)
+#   3. appends queued/running/success/error entries to actions.log.jsonl
+#   4. resolves which atlas owns the action (query 'atlas' > manifest
+#      'atlas_id' > master_config.atlas.active_atlas)
+#   5. imports the per-atlas dispatcher at <workspace>/atlases/<atlas>/
+#      registries/dispatcher.py and calls dispatch_action(manifest, client)
+#   6. writes returned layer envelopes to <workspace>/layers/... and
+#      indexes them in <workspace>/registry/layers.registry.json
+#
+# Dispatcher contract:
+#   def dispatch_action(manifest: dict, client: ServerClient) -> list[dict]
+#       - returns one envelope dict per produced layer
+#       - envelope must include layer_id, layer_type, schema_version, stage,
+#         dataset_id, status, created_at (per layer_envelope.schema.json)
+#       - server fills in provenance.action_id and writes the file
+#
+# Dispatchers are imported with their registries/ folder pushed onto
+# sys.path so they can do `import runners.x` / `import extractors.y` per
+# the layout in PIPELINE_FLOW.md §"Per-atlas wiring".
+
+_ACTION_ID_RE  = re.compile(r"^act_[A-Za-z0-9_]+$")
+_TYPE_RE       = re.compile(r"^[a-z][a-z0-9_]*$")
+_DATASET_ID_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+_LAYER_ID_RE   = re.compile(r"^[A-Za-z0-9_]+$")
+_ATLAS_ID_RE   = re.compile(r"^[a-z][a-z0-9_]*$")
+
+
+def _now_iso_z() -> str:
+    """UTC timestamp matching the JSON schema 'date-time' shape."""
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _validate_action_manifest(m: Any) -> None:
+    """Minimal required-field + pattern check. Mirrors
+    action_manifest.schema.json §required + property patterns. Per-type
+    schema_in/<type>_v1 validation is the dispatcher's job (it knows the
+    type)."""
+    if not isinstance(m, dict):
+        raise HTTPException(400, "action manifest must be a JSON object")
+    missing = [k for k in ("action_id", "type", "dataset_id", "runner") if k not in m]
+    if missing:
+        raise HTTPException(400, f"manifest missing required: {missing}")
+    if not isinstance(m["action_id"], str) or not _ACTION_ID_RE.match(m["action_id"]):
+        raise HTTPException(400, f"invalid action_id: {m['action_id']!r}")
+    if not isinstance(m["type"], str) or not _TYPE_RE.match(m["type"]):
+        raise HTTPException(400, f"invalid type: {m['type']!r}")
+    if not isinstance(m["dataset_id"], str) or not _DATASET_ID_RE.match(m["dataset_id"]):
+        raise HTTPException(400, f"invalid dataset_id: {m['dataset_id']!r}")
+    if not isinstance(m["runner"], str) or not m["runner"]:
+        raise HTTPException(400, f"invalid runner: {m['runner']!r}")
+
+
+def _resolve_atlas_id(manifest: Dict[str, Any], explicit: Optional[str]) -> str:
+    aid = explicit or manifest.get("atlas_id") or ACTIVE_ATLAS
+    if not aid:
+        raise HTTPException(
+            400,
+            "no atlas resolved — pass ?atlas=<id>, set manifest.atlas_id, or "
+            "configure atlas.active_atlas in <workspace>/master_config.yaml"
+        )
+    if not _ATLAS_ID_RE.match(aid):
+        raise HTTPException(400, f"invalid atlas_id: {aid!r}")
+    return aid
+
+
+def _load_dispatcher(atlas_id: str):
+    """Import <workspace>/atlases/<atlas_id>/registries/dispatcher.py.
+
+    The atlas's registries/ folder is pushed onto sys.path so the
+    dispatcher can `import runners.x` / `import extractors.y` per the
+    layout in PIPELINE_FLOW.md §"Per-atlas wiring". Cached after first
+    load."""
+    if atlas_id in ATLAS_DISPATCHERS:
+        return ATLAS_DISPATCHERS[atlas_id]
+    if WORKSPACE_ROOT is None:
+        raise HTTPException(503, "actions subsystem not configured (workspace root unset)")
+    disp_file = WORKSPACE_ROOT / "atlases" / atlas_id / "registries" / "dispatcher.py"
+    if not disp_file.exists():
+        raise HTTPException(
+            404,
+            f"no dispatcher for atlas '{atlas_id}': expected {disp_file}"
+        )
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(f"_atlas_dispatcher_{atlas_id}", disp_file)
+    if spec is None or spec.loader is None:
+        raise HTTPException(500, f"could not load dispatcher for {atlas_id}")
+    mod = importlib.util.module_from_spec(spec)
+    reg_dir = str(disp_file.parent)
+    if reg_dir not in sys.path:
+        sys.path.insert(0, reg_dir)
+    try:
+        spec.loader.exec_module(mod)
+    except Exception as e:
+        raise HTTPException(500, f"dispatcher import failed ({atlas_id}): {type(e).__name__}: {e}")
+    if not callable(getattr(mod, "dispatch_action", None)):
+        raise HTTPException(
+            500,
+            f"dispatcher {disp_file} missing callable dispatch_action(manifest, client)"
+        )
+    ATLAS_DISPATCHERS[atlas_id] = mod
+    return mod
+
+
+class _ServerClient:
+    """Stdlib-only HTTP client passed to atlas dispatchers so they can
+    call back into this same server (e.g. POST /api/popstats/groupwise)
+    without knowing the bind URL. Sync; the action endpoint runs the
+    dispatcher in a worker thread so the event loop is free to service
+    these callbacks.
+    """
+    def __init__(self, base_url: str, timeout: float = 600.0):
+        self.base_url = base_url.rstrip("/")
+        self.timeout  = float(timeout)
+
+    def post(self, path: str, body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        import urllib.request
+        data = json.dumps(body or {}).encode("utf-8")
+        req = urllib.request.Request(
+            self.base_url + path,
+            data=data,
+            headers={"content-type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            raw = resp.read()
+        try:
+            return json.loads(raw.decode("utf-8"))
+        except Exception:
+            return {"raw": raw.decode("utf-8", errors="replace")}
+
+    def get(self, path: str) -> bytes:
+        import urllib.request
+        with urllib.request.urlopen(self.base_url + path, timeout=self.timeout) as resp:
+            return resp.read()
+
+
+def _append_action_log(entry: Dict[str, Any]) -> None:
+    if ACTIONS_LOG_PATH is None:
+        return
+    ACTIONS_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with ACTIONS_LOG_PATH.open("a", encoding="utf-8") as fp:
+        fp.write(json.dumps(entry) + "\n")
+
+
+def _validate_envelope_min(env: Any) -> None:
+    """Check the minimal-stable-core fields per layer_envelope.schema.json."""
+    if not isinstance(env, dict):
+        raise RuntimeError(f"envelope must be a dict, got {type(env).__name__}")
+    for k in ("layer_id", "layer_type", "schema_version", "stage", "dataset_id", "status", "created_at"):
+        if k not in env:
+            raise RuntimeError(f"envelope missing required field: {k}")
+    if not _LAYER_ID_RE.match(str(env["layer_id"])):
+        raise RuntimeError(f"invalid layer_id: {env['layer_id']!r}")
+    if not _TYPE_RE.match(str(env["layer_type"])):
+        raise RuntimeError(f"invalid layer_type: {env['layer_type']!r}")
+    if env["stage"] not in ("staging", "normalized"):
+        raise RuntimeError(f"invalid stage: {env['stage']!r}")
+    if env["status"] not in ("review", "active", "deprecated", "stale", "superseded"):
+        raise RuntimeError(f"invalid status: {env['status']!r}")
+
+
+def _persist_envelope(env: Dict[str, Any], manifest: Dict[str, Any]) -> str:
+    """Write the envelope to <workspace>/layers/<layer_type>/<dataset_id>/<layer_id>.json
+    and return the workspace-relative path. Stamps provenance.action_id if
+    missing.
+    """
+    if LAYERS_DIR is None or WORKSPACE_ROOT is None:
+        raise RuntimeError("actions subsystem not configured (workspace root unset)")
+    prov = env.setdefault("provenance", {})
+    prov.setdefault("action_id", manifest["action_id"])
+    layer_id   = str(env["layer_id"])
+    layer_type = str(env["layer_type"])
+    dataset_id = str(env["dataset_id"])
+    out_dir = LAYERS_DIR / layer_type / dataset_id
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"{layer_id}.json"
+    out_path.write_text(json.dumps(env, indent=2), encoding="utf-8")
+    return str(out_path.relative_to(WORKSPACE_ROOT))
+
+
+def _append_layers_index(envelopes: List[Dict[str, Any]], paths: List[str]) -> None:
+    if LAYERS_INDEX_PATH is None or not envelopes:
+        return
+    try:
+        idx = json.loads(LAYERS_INDEX_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        idx = {"layers": []}
+    rows = idx.get("layers", [])
+    for env, path in zip(envelopes, paths):
+        rows.append({
+            "layer_id":       env["layer_id"],
+            "layer_type":     env["layer_type"],
+            "schema_version": env["schema_version"],
+            "stage":          env["stage"],
+            "dataset_id":     env["dataset_id"],
+            "status":         env["status"],
+            "created_at":     env["created_at"],
+            "path":           path,
+        })
+    LAYERS_INDEX_PATH.write_text(json.dumps({"layers": rows}, indent=2), encoding="utf-8")
+
+
+def _load_master_config_active_atlas(workspace_root: Path) -> Optional[str]:
+    """Peek at <workspace>/master_config.yaml for atlas.active_atlas.
+    Returns None if absent / unreadable (the action endpoint will then
+    require ?atlas or manifest.atlas_id instead)."""
+    mc = workspace_root / "master_config.yaml"
+    if not mc.exists():
+        return None
+    try:
+        with open(mc) as fh:
+            doc = yaml.safe_load(fh) or {}
+        return ((doc.get("atlas") or {}).get("active_atlas")) or None
+    except Exception as e:
+        log.warning("could not read master_config.yaml for active_atlas: %s", e)
+        return None
+
+
+def _bootstrap_actions(workspace_root: Path, bind_url: Optional[str] = None) -> None:
+    """Set up registry/actions.log.jsonl, registry/layers.registry.json,
+    layers/, and resolve active_atlas. Independent of the popstats
+    subsystem; usable whenever WORKSPACE_ROOT is set."""
+    global ACTIONS_LOG_PATH, LAYERS_INDEX_PATH, LAYERS_DIR, ACTIVE_ATLAS, SERVER_BIND_URL
+    reg = workspace_root / "registry"
+    reg.mkdir(parents=True, exist_ok=True)
+    ACTIONS_LOG_PATH = reg / "actions.log.jsonl"
+    LAYERS_INDEX_PATH = reg / "layers.registry.json"
+    LAYERS_DIR = workspace_root / "layers"
+    LAYERS_DIR.mkdir(parents=True, exist_ok=True)
+    if not LAYERS_INDEX_PATH.exists():
+        LAYERS_INDEX_PATH.write_text(json.dumps({"layers": []}, indent=2), encoding="utf-8")
+    ACTIVE_ATLAS = _load_master_config_active_atlas(workspace_root)
+    if bind_url:
+        SERVER_BIND_URL = bind_url
+    log.info("actions subsystem ready: registry=%s layers=%s active_atlas=%s bind=%s",
+             reg, LAYERS_DIR, ACTIVE_ATLAS, SERVER_BIND_URL)
+
+
+@app.post("/api/actions")
+async def actions_submit(request: Request) -> Dict[str, Any]:
+    """Submit an action manifest. Validates, dispatches via the per-atlas
+    dispatcher, writes returned envelopes, and appends a success/error
+    entry to actions.log.jsonl. Returns produced_layers.
+
+    Atlas resolution precedence (per atlas-core/toolkit_registries/
+    PIPELINE_FLOW.md):
+      ?atlas=<id>  >  manifest.atlas_id  >  master_config.atlas.active_atlas
+    """
+    if WORKSPACE_ROOT is None:
+        raise HTTPException(503, "actions subsystem not configured (no workspace root)")
+    if ACTIONS_LOG_PATH is None or LAYERS_INDEX_PATH is None:
+        raise HTTPException(503, "actions subsystem not bootstrapped")
+    try:
+        raw = await request.body()
+        manifest = json.loads(raw) if raw else {}
+    except Exception as e:
+        raise HTTPException(400, f"invalid JSON: {e}")
+    _validate_action_manifest(manifest)
+    atlas_id = _resolve_atlas_id(manifest, request.query_params.get("atlas"))
+
+    submitted_at = manifest.get("submitted_at") or _now_iso_z()
+    base_entry = {
+        "action_id":       manifest["action_id"],
+        "manifest":        manifest,
+        "submitted_at":    submitted_at,
+        "started_at":      None,
+        "finished_at":     None,
+        "status":          "queued",
+        "produced_layers": [],
+    }
+    _append_action_log(base_entry)
+
+    dispatcher = _load_dispatcher(atlas_id)
+    bind_url = SERVER_BIND_URL or "http://127.0.0.1:8000"
+    client = _ServerClient(bind_url)
+
+    started_at = _now_iso_z()
+    t_start = time.time()
+    _append_action_log({**base_entry, "started_at": started_at, "status": "running"})
+
+    try:
+        # Run sync dispatcher off the event loop so the dispatcher's
+        # callbacks (e.g. /api/popstats/groupwise) can be serviced.
+        envelopes = await asyncio.to_thread(dispatcher.dispatch_action, manifest, client)
+        if not isinstance(envelopes, list):
+            raise RuntimeError(
+                f"dispatcher returned {type(envelopes).__name__}, expected list of envelope dicts"
+            )
+        paths: List[str] = []
+        for env in envelopes:
+            _validate_envelope_min(env)
+            paths.append(_persist_envelope(env, manifest))
+        _append_layers_index(envelopes, paths)
+        produced = [e["layer_id"] for e in envelopes]
+        finished_at = _now_iso_z()
+        _append_action_log({
+            **base_entry,
+            "started_at":      started_at,
+            "finished_at":     finished_at,
+            "status":          "success",
+            "produced_layers": produced,
+            "duration_ms":     int((time.time() - t_start) * 1000),
+        })
+        return {
+            "ok":              True,
+            "action_id":       manifest["action_id"],
+            "atlas_id":        atlas_id,
+            "produced_layers": produced,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback as _tb
+        finished_at = _now_iso_z()
+        _append_action_log({
+            **base_entry,
+            "started_at":      started_at,
+            "finished_at":     finished_at,
+            "status":          "error",
+            "produced_layers": [],
+            "duration_ms":     int((time.time() - t_start) * 1000),
+            "error": {
+                "kind":    type(e).__name__,
+                "message": str(e),
+                "trace":   _tb.format_exc(),
+            },
+        })
+        raise HTTPException(500, f"{type(e).__name__}: {e}")
+
+
+@app.get("/api/actions/{action_id}")
+async def actions_get(action_id: str) -> Dict[str, Any]:
+    """Return the latest log entry for `action_id`. The log is append-only;
+    later writes win on read. 404 if no entry exists."""
+    if ACTIONS_LOG_PATH is None or not ACTIONS_LOG_PATH.exists():
+        raise HTTPException(404, f"action not found: {action_id}")
+    last: Optional[Dict[str, Any]] = None
+    with ACTIONS_LOG_PATH.open("r", encoding="utf-8") as fp:
+        for line in fp:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entry = json.loads(line)
+            except Exception:
+                continue
+            if entry.get("action_id") == action_id:
+                last = entry
+    if last is None:
+        raise HTTPException(404, f"action not found: {action_id}")
+    return last
+
+
+@app.get("/api/layers")
+async def layers_list(
+    layer_type: Optional[str] = None,
+    dataset_id: Optional[str] = None,
+    stage:      Optional[str] = None,
+    status:     Optional[str] = None,
+    limit:      int           = 500,
+) -> Dict[str, Any]:
+    """List registered layer envelopes (most-recent last). Filters are
+    optional and combined with AND. `limit` clamps the tail returned."""
+    if LAYERS_INDEX_PATH is None or not LAYERS_INDEX_PATH.exists():
+        return {"layers": [], "n": 0, "total": 0}
+    try:
+        idx = json.loads(LAYERS_INDEX_PATH.read_text(encoding="utf-8"))
+    except Exception as e:
+        raise HTTPException(500, f"layers index unreadable: {e}")
+    rows = idx.get("layers", [])
+    def _match(r: Dict[str, Any]) -> bool:
+        if layer_type and r.get("layer_type") != layer_type: return False
+        if dataset_id and r.get("dataset_id") != dataset_id: return False
+        if stage      and r.get("stage")      != stage:      return False
+        if status     and r.get("status")     != status:     return False
+        return True
+    filtered = [r for r in rows if _match(r)]
+    tail = filtered[-int(limit):] if limit and limit > 0 else filtered
+    return {"layers": tail, "n": len(tail), "total": len(rows)}
+
+
+@app.get("/api/layers/{layer_id}")
+async def layers_get(layer_id: str) -> Response:
+    """Read the envelope JSON for `layer_id`. Resolves via the layers
+    index; equivalent to GET /file/<index_entry.path>."""
+    if LAYERS_INDEX_PATH is None or not LAYERS_INDEX_PATH.exists():
+        raise HTTPException(404, f"layer not found: {layer_id}")
+    try:
+        idx = json.loads(LAYERS_INDEX_PATH.read_text(encoding="utf-8"))
+    except Exception as e:
+        raise HTTPException(500, f"layers index unreadable: {e}")
+    entry = next((r for r in idx.get("layers", []) if r.get("layer_id") == layer_id), None)
+    if entry is None or not entry.get("path"):
+        raise HTTPException(404, f"layer not found: {layer_id}")
+    target = _safe_project_path(entry["path"])
+    if not target.exists():
+        raise HTTPException(404, f"layer file missing: {entry['path']}")
+    return Response(content=target.read_bytes(), media_type="application/json")
+
+
+# =============================================================================
 # Startup
 # =============================================================================
 
@@ -2423,6 +3179,12 @@ def main() -> None:
         os.environ["ATLAS_WORKSPACE_ROOT"] = str(WORKSPACE_ROOT)
     if args.config is not None:
         os.environ["POPSTATS_CONFIG"] = str(args.config.resolve())
+
+    # Action pipeline: bind URL is needed by dispatchers calling back into
+    # this same server. Pass it through so the re-imported module's
+    # _lifespan can pick it up.
+    bind_url = f"http://{host}:{port}"
+    os.environ["ATLAS_SERVER_BIND_URL"] = bind_url
 
     import uvicorn
     uvicorn.run("atlas_server:app", host=host, port=port,

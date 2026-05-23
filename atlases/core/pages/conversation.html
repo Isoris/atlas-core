@@ -1,0 +1,85 @@
+<!-- atlases/core/pages/conversation.html
+     Conversation page — static design-doc page describing the LLM-driven
+     request resolver (deferred). Round-1 migration from
+     toolkit_registries/relatedness/page/conversation.html. -->
+<div class="core-page core-page-conversation">
+
+  <header>
+    <h1>Conversation — refine analysis with the LLM</h1>
+    <div class="sub">Free-text request → cleaned decomposition → controlled vocabulary → registry contracts → action plan.</div>
+  </header>
+
+  <section>
+
+    <div class="banner">
+      <strong>Status: deferred.</strong> The LLM-driven request resolver is designed but not wired today.
+      Use <a href="#/core/action">page 2 (Action)</a> to compose runs by hand against the existing
+      registry. When the LLM funnel is built, its output will land on this page and feed directly into
+      page 2.
+    </div>
+
+    <h2>What this page will be</h2>
+
+    <p>A staged resolver that funnels a vague human request into a concrete action plan, without
+    asking one big LLM to do everything in one shot. Per the design discussion:</p>
+
+    <div class="card">
+      <div class="stage"><span class="num">1.</span> <span class="name">Cleanup &amp; decomposition</span>
+        <span class="out">→ goal, targets, exclusions, vague terms</span></div>
+      <p>"Find Mendelian inversions on chr12 but not from old families."<br>
+      → Restated as: <em>goal</em>=identify inversions with Mendelian-compatible inheritance;
+      <em>target</em>=chromosome 12; <em>exclusion</em>=old families.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><span class="num">2.</span> <span class="name">Domain selection</span>
+        <span class="out">→ which keyword banks to load</span></div>
+      <p>Picks high-level domains from a controlled menu (genetics, relatedness, inheritance,
+      structural_variation, population_history, …). Loads only those domains' keyword banks for the
+      next stage — prevents the LLM from searching the whole vocabulary.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><span class="num">3.</span> <span class="name">Keyword mapping</span>
+        <span class="out">→ controlled vocabulary terms</span></div>
+      <p>Maps human words onto registry concepts: "mendelian" →
+      <code>analysis_id=mendelian</code>; "old families" →
+      <code>set_filter=old_family_population_history_v1</code>; "chromosome 12" →
+      <code>interval_set_id pattern</code>.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><span class="num">4.</span> <span class="name">Contract resolution</span>
+        <span class="out">→ action plan or missing/spawnable list</span></div>
+      <p>Resolves the mapped vocabulary against the actual registries on disk. Outputs:
+      required sets, required results, what's missing, what can be spawned, the recommended
+      ordered chain of action manifests. The page-2 dashboard then visualizes the readiness ladder.</p>
+    </div>
+
+    <h2>Why staged (not one-shot)</h2>
+
+    <p>Each stage has a single job. The LLM doesn't jump from vague words to files. Stage outputs
+    are inspectable, editable, and stable across sessions — so you can replay or tweak any stage
+    without redoing the rest. The contract resolver is deterministic; only stages 1–3 are LLM
+    calls.</p>
+
+    <h2>Today, do this instead</h2>
+
+    <ol>
+      <li>Use <a href="#/core/action">page 2 (Action)</a> to pick a target analysis + scope. The dashboard
+      walks the chain backward via <code>analysis_modes.tsv</code> and tells you what's
+      <code>RESULT_READY</code> (reuse), <code>RUN_READY</code>, <code>MISSING</code>, or
+      <code>BLOCKED</code>.</li>
+      <li>Use <a href="#/core/registries">page 3 (Registries)</a> to see existing chains and which orphan
+      results are ready to feed downstream analyses.</li>
+      <li>Use <code>scripts/resolve.py</code> from the CLI for the same logic without the browser.</li>
+    </ol>
+
+  </section>
+
+  <div class="footer">
+    When this page is wired, it produces the same contract output that page 2 already understands.
+    No re-typing.
+  </div>
+
+</div>

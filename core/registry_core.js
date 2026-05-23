@@ -67,6 +67,23 @@ export class Registry {
     }
 
     const { entry } = lookup;
+    // 2026-05-19: short-circuit disabled layers. The flag exists to mark
+    // layers whose pipeline output isn't on disk yet — we return null
+    // instead of hitting the network so the console isn't drowned in 404s.
+    // The first time a disabled layer is asked for, log a single debug
+    // line so it's still discoverable. Pages that handle null results
+    // gracefully (e.g. lazy preloads) keep working; the rest see the
+    // null and render their "not loaded" stub.
+    if (entry && entry.disabled === true) {
+      if (!this._disabledNotified) this._disabledNotified = new Set();
+      if (!this._disabledNotified.has(key)) {
+        this._disabledNotified.add(key);
+        if (typeof console.debug === 'function') {
+          console.debug(`Registry.resolve: layer '${key}' is disabled — returning null (see registry entry's _disabled_reason).`);
+        }
+      }
+      return null;
+    }
     const cacheKey = this._buildCacheKey(key, entry, args);
     const tier = entry.cache_tier || entry.tier;
 
@@ -92,12 +109,37 @@ export class Registry {
   }
 
   async _fetchAndCache(key, lookup, args, cacheKey, tier) {
-    const { atlas_id, entry } = lookup;
-    const value = await this._fetchFromSource(entry, args, atlas_id);
-    if (tier === 'hot' || tier === 'warm') {
-      this.cache.set(tier, cacheKey, value);
-    }
-    return value;
+    // 2026-05-19 — In-flight Promise dedup. Two callers that resolve()
+    // the same key in the same tick (e.g. the prewarm scheduler firing
+    // on chrom_change AND local_pca_dosage.mount() resolving its layers,
+    // both running before the first fetch settles) used to BOTH miss
+    // the cache and BOTH start HTTP fetches. The atlas JSONs are large
+    // (~14 MB each); a 2× duplicate fetch on every chrom change was the
+    // main cause of the "switching modes is slow" complaint.
+    //
+    // Fix: keep a Map<cacheKey, Promise>. While a fetch is in flight,
+    // subsequent resolve() calls attach to that same Promise instead of
+    // starting their own. Map entry is cleared in `finally` so a failed
+    // fetch doesn't permanently poison the cache slot (retries restart).
+    if (!this._inflightFetches) this._inflightFetches = new Map();
+    const inflight = this._inflightFetches.get(cacheKey);
+    if (inflight) return inflight;
+
+    const promise = (async () => {
+      try {
+        const { atlas_id, entry } = lookup;
+        const value = await this._fetchFromSource(entry, args, atlas_id);
+        if (tier === 'hot' || tier === 'warm') {
+          this.cache.set(tier, cacheKey, value);
+        }
+        return value;
+      } finally {
+        this._inflightFetches.delete(cacheKey);
+      }
+    })();
+
+    this._inflightFetches.set(cacheKey, promise);
+    return promise;
   }
 
   set(key, value, args = {}) {
@@ -309,7 +351,13 @@ export class Registry {
       return;
     }
     if (incumbent.entry.owned_by === atlas_id) {
-      console.info(`Registry: ownership transfer of ${kind} '${name}' from '${incumbent.atlas_id}' to '${atlas_id}'`);
+      // Working-as-designed handoff (incumbent declared owned_by:<atlas_id>).
+      // Demoted from info → debug 2026-05-20: the inversion-atlas declares
+      // ~24 such stubs as deliberate handoffs to population/diversity/genome
+      // atlases; surfacing all of them at info-level on every boot is noise
+      // for the typical user. Browser DevTools needs "Verbose" enabled to
+      // see this; the registry's behaviour is unchanged.
+      console.debug(`Registry: ownership transfer of ${kind} '${name}' from '${incumbent.atlas_id}' to '${atlas_id}'`);
       index.set(name, { atlas_id, entry });
       return;
     }
@@ -359,6 +407,62 @@ export class Registry {
       return this._layerIndex.get(bare) || this._operationIndex.get(bare) || null;
     }
     return this._layerIndex.get(key) || this._operationIndex.get(key) || null;
+  }
+
+  /**
+   * Public read of a layer/op's registry entry without resolving it. Returns
+   * null when the key is unknown. Lets callers (probeModeB, prewarm
+   * scheduler) inspect flags like `disabled: true` or `tier` before
+   * deciding whether to fire a fetch.
+   */
+  getLayerEntry(key) {
+    const hit = this._lookup(key);
+    return hit ? hit.entry : null;
+  }
+
+  /**
+   * Public list of layer names registered for a given atlas. Returns a
+   * flat array of strings, sorted alphabetically. Empty array when the
+   * atlas is unknown or has no layers. Used by the schema-badge populator
+   * in shell_chrome.js so every atlas gets a baseline badge content
+   * without each page having to write `window.__atlasSchemaLayers` itself.
+   *
+   * @param {string} atlas_id
+   * @param {{ include_disabled?: boolean }} [opts]
+   *        — include_disabled (default false): drop entries flagged
+   *        `disabled: true` (contract-only layers waiting on upstream
+   *        pipeline). Pass `true` to include them.
+   * @returns {string[]}
+   */
+  getAtlasLayerNames(atlas_id, opts) {
+    const atlas = this._atlases.get(atlas_id);
+    if (!atlas || !atlas.layers) return [];
+    const includeDisabled = !!(opts && opts.include_disabled);
+    const out = [];
+    for (const [name, entry] of Object.entries(atlas.layers)) {
+      if (!entry || name.startsWith('_')) continue;
+      if (!includeDisabled && entry.disabled === true) continue;
+      out.push(name);
+    }
+    return out.sort();
+  }
+
+  /**
+   * Same shape as getAtlasLayerNames but returns full entries (keyed by
+   * name). Used by the schema-badge modal so each row can carry
+   * description / disabled-reason / tier metadata.
+   */
+  getAtlasLayers(atlas_id, opts) {
+    const atlas = this._atlases.get(atlas_id);
+    if (!atlas || !atlas.layers) return {};
+    const includeDisabled = !!(opts && opts.include_disabled);
+    const out = {};
+    for (const [name, entry] of Object.entries(atlas.layers)) {
+      if (!entry || name.startsWith('_')) continue;
+      if (!includeDisabled && entry.disabled === true) continue;
+      out[name] = entry;
+    }
+    return out;
   }
 
   /**
@@ -466,6 +570,38 @@ export class Registry {
   }
 
   /**
+   * Fetch (and cache) the per-chromosome file index for a master_config
+   * root. Powers `auto_index: true` layers — the server walks the root
+   * directory and returns {chrom_id → relative path}, eliminating the
+   * need to template filenames whose convention the registry can't
+   * predict (species prefixes, per-chrom subdirs, etc.).
+   *
+   * Cache lifetime: process-wide. The server keys its own response cache
+   * on max-mtime under the root, so stale entries auto-refresh on the
+   * server side; clearing this client-side cache is rarely needed.
+   * Concurrent calls dedupe on the in-flight Promise.
+   */
+  async _fetchPrecompIndex(rootName) {
+    if (!this._precompIndexCache) this._precompIndexCache = new Map();
+    const cached = this._precompIndexCache.get(rootName);
+    if (cached) return cached;
+    const url = `/api/precomp_index?root=${encodeURIComponent(rootName)}`;
+    const p = (async () => {
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        throw new Error(
+          `Registry: GET ${url} → HTTP ${resp.status} ${resp.statusText}. ` +
+          `Check that '${rootName}' exists in master_config.yaml > roots.`
+        );
+      }
+      return resp.json();
+    })();
+    this._precompIndexCache.set(rootName, p);
+    p.catch(() => this._precompIndexCache.delete(rootName));
+    return p;
+  }
+
+  /**
    * Dispatch the actual fetch based on entry.source.
    */
   async _fetchFromSource(entry, args, atlas_id) {
@@ -486,17 +622,53 @@ export class Registry {
           );
         }
       }
-      // Two ways to specify a file path on a layer:
+      // Three ways to specify a file path on a layer:
       //   (a) `path: <template>` — atlas-relative; legacy form. Resolved
       //       by prepending atlases/<atlas_id>/ via _resolveAtlasFilePath.
       //   (b) `root: <name>` + `path_under_root: <template>` — portable
       //       form per toolkit_registries/MASTER_CONFIG.md. Root resolves
       //       through the loaded master_config; the under-root template
       //       is then filled with args / state.
-      // The two forms are mutually exclusive on a single layer; the
-      // master-config form takes precedence if both are present.
+      //   (c) `root: <name>` + `auto_index: true` — autodiscovery form.
+      //       The server's GET /api/precomp_index?root=<name> walks the
+      //       root and returns {chrom_id → relative-path}; the resolved
+      //       URL is <root_path>/<index.chroms[args.chrom]>. Eliminates
+      //       hardcoded filename templates for pipelines whose output
+      //       naming the registry can't predict (species prefixes,
+      //       per-chrom subdirs, etc.).
       let path;
-      if (entry.root) {
+      if (entry.root && entry.auto_index === true) {
+        const chrom = (args && args.chrom)
+          || (this.state && this.state.shared && this.state.shared.activeChrom);
+        if (!chrom) {
+          throw new Error(
+            `Registry: auto_index layer (root='${entry.root}') requires ` +
+            `args.chrom or state.shared.activeChrom; got neither.`
+          );
+        }
+        const index = await this._fetchPrecompIndex(entry.root);
+        const relPath = index && index.chroms ? index.chroms[chrom] : null;
+        if (!relPath) {
+          const knownList = index && index.chroms ? Object.keys(index.chroms) : [];
+          // Distinguish two failure modes so callers (the prewarm
+          // scheduler) can decide log severity:
+          //   - empty: the pipeline hasn't produced anything yet
+          //     (the root is empty). Expected during early development;
+          //     should not pollute the console.
+          //   - mismatch: the index has chroms but not this one. That's
+          //     a real bug (typo, naming-convention drift) and warrants
+          //     a loud warn. We prefix the message with a stable tag
+          //     the scheduler can grep for.
+          const tag = knownList.length === 0 ? 'AUTO_INDEX_EMPTY' : 'AUTO_INDEX_MISS';
+          throw new Error(
+            `Registry: ${tag}: auto_index for root '${entry.root}' has no file ` +
+            `for chrom '${chrom}'. Known chroms: ${knownList.length === 0 ? '(empty)' : knownList.join(', ')}. ` +
+            `(Server scanned ${index && index.root_path}; ` +
+            `${knownList.length === 0 ? 'pipeline may not have produced this root yet' : 'naming-convention or chrom-id drift'}.)`
+          );
+        }
+        path = _joinPath(index.root_path, relPath);
+      } else if (entry.root) {
         const rootPath = this._resolveRootPathForLayer(entry, args);
         const sub = entry.path_under_root
           ? templateFill(entry.path_under_root, args, this.state)

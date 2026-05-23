@@ -78,10 +78,37 @@ export class AtlasRouter {
     if (typeof module.mount !== 'function') {
       throw new Error(`Page ${atlas_id}/${page_id}: module has no mount() export`);
     }
+    // Register this page module so the shell's JS-badge modal can list it.
+    // The badge in shell_chrome.js reads window.__atlasJsRegistry — page
+    // modules opt in by pushing here. Dedup on path so re-navigating to
+    // the same page doesn't double-count.
+    try {
+      if (!Array.isArray(window.__atlasJsRegistry)) window.__atlasJsRegistry = [];
+      const entry = {
+        name: `${atlas_id}/${page_id}`,
+        path: page.module,
+        kind: 'page',
+      };
+      if (!window.__atlasJsRegistry.some(e => e && e.path === entry.path)) {
+        window.__atlasJsRegistry.push(entry);
+      }
+    } catch (_) { /* never fail navigation on a badge update */ }
 
     // Update state, fire page_mount event for prewarm scheduler
     this.state.shared.currentPage = { atlas_id, page_id };
     this.state.emit('shell.page_mount', { atlas_id, page_id });
+    // 2026-05-20: also dispatch a DOM CustomEvent so shell-side listeners
+    // that aren't wired through atlas_state (e.g. the JS-scripts badge
+    // refresh in shell_chrome.js) can react. Both signals carry the
+    // same payload.
+    try {
+      document.dispatchEvent(new CustomEvent('shell.page_mount', {
+        detail: { atlas_id, page_id },
+      }));
+    } catch (_) { /* non-DOM env */ }
+    // 2026-05-19: write the new currentPage to localStorage so a browser
+    // close/reopen lands on the same tab. Best-effort, never blocks nav.
+    try { this.state.savePersisted(); } catch (_) {}
 
     // Mount
     await module.mount(root, this.state, this.registry);
@@ -108,11 +135,39 @@ export class AtlasRouter {
 
     let atlas_id, page_id;
     if (parts.length === 0) {
-      // Default: first atlas, first page
-      const firstAtlas = [...this.manifests.keys()][0];
-      if (!firstAtlas) return;
-      atlas_id = firstAtlas;
-      page_id = this.manifests.get(firstAtlas).pages[0]?.id;
+      // 2026-05-19: cold-boot fallback ordering —
+      //   1. persisted last page (state.shared._pendingCurrentPage, set
+      //      by atlas_state.loadPersisted from localStorage) — only used
+      //      if that atlas is still registered AND that page id still
+      //      exists in its manifest. Stale entries fall through silently.
+      //   2. first atlas, first page.
+      const pending = this.state.shared && this.state.shared._pendingCurrentPage;
+      if (pending && this.manifests.has(pending.atlas_id)) {
+        const mf = this.manifests.get(pending.atlas_id);
+        if (mf && Array.isArray(mf.pages)
+            && mf.pages.some(p => p && p.id === pending.page_id)) {
+          atlas_id = pending.atlas_id;
+          page_id  = pending.page_id;
+        }
+      }
+      // Clear the pending pointer so a subsequent hashchange (e.g. user
+      // clicking a tab) doesn't keep snapping back to it.
+      if (this.state.shared) delete this.state.shared._pendingCurrentPage;
+      if (!atlas_id) {
+        const firstAtlas = [...this.manifests.keys()][0];
+        if (!firstAtlas) return;
+        atlas_id = firstAtlas;
+        page_id = this.manifests.get(firstAtlas).pages[0]?.id;
+      }
+      // Reflect the resolved page in the URL so a subsequent reload (and
+      // bookmarks / shared links) keep working without depending on
+      // localStorage.
+      try {
+        const newHash = `#/${atlas_id}/${page_id}`;
+        if (window.location.hash !== newHash) {
+          history.replaceState(null, '', newHash);
+        }
+      } catch (_) {}
     } else if (parts.length === 1) {
       // Backward-compat: if exactly one atlas loaded and someone hashed
       // #/page1, treat parts[0] as page id of that atlas.
@@ -216,6 +271,143 @@ export class AtlasRouter {
         bar.appendChild(wrap);
       }
     }
+
+    // Populate any pickers that declared `auto_options_from: <root_name>`.
+    // Fires async (the server scans the FS); the placeholder/static options
+    // are visible immediately, the discovered list replaces them on arrival.
+    // We don't await — render must stay sync for the rest of the boot path.
+    this._populateAutoOptions(currentAtlas).catch(err => {
+      console.warn('scope-picker auto_options_from failed:', err);
+    });
+  }
+
+  /**
+   * For each scope_picker that declares `auto_options_from: <root_name>`,
+   * fetch GET /api/precomp_index?root=<name> and replace the select's
+   * option list with the discovered chromosomes (preserving any current
+   * selection if it still exists in the new list).
+   *
+   * Lets a manifest say:
+   *   "scope_pickers": [{
+   *     "slot": "activeChrom",
+   *     "auto_options_from": "precomp_zblocks"
+   *   }]
+   * and have the dropdown stay in sync with whatever files the pipeline
+   * has produced — no need to edit the manifest each time a new chrom
+   * lands.
+   */
+  async _populateAutoOptions(currentAtlas) {
+    const bar = document.getElementById('scopebar');
+    if (!bar) return;
+    const targets = currentAtlas && this.manifests.has(currentAtlas)
+      ? [[currentAtlas, this.manifests.get(currentAtlas)]]
+      : [...this.manifests];
+    for (const [atlas_id, manifest] of targets) {
+      const pickers = Array.isArray(manifest.scope_pickers) ? manifest.scope_pickers : [];
+      for (const picker of pickers) {
+        if (!picker || !picker.slot || !picker.auto_options_from) continue;
+        const rootName = picker.auto_options_from;
+        // 2026-05-20: cache /api/precomp_index?root=... across page
+        // navigations. Was re-fetched on every page mount via
+        // _renderScopebar → _populateAutoOptions, even though the chrom
+        // list doesn't change between navigations. Cache hit returns the
+        // same Promise so concurrent callers also dedup. Cleared on
+        // explicit cache-invalidate (none yet wired) or a page reload.
+        if (!this._autoOptionsCache) this._autoOptionsCache = new Map();
+        let indexPromise = this._autoOptionsCache.get(rootName);
+        if (!indexPromise) {
+          indexPromise = fetch(`/api/precomp_index?root=${encodeURIComponent(rootName)}`)
+            .then(r => {
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              return r.json();
+            });
+          this._autoOptionsCache.set(rootName, indexPromise);
+          // On error, drop the cache slot so the next page mount can retry.
+          indexPromise.catch(() => this._autoOptionsCache.delete(rootName));
+        }
+        let index;
+        try {
+          index = await indexPromise;
+        } catch (e) {
+          console.warn(
+            `scope-picker '${picker.slot}': auto_options_from='${rootName}' → `
+            + (e && e.message ? e.message : e) + '; keeping static options'
+          );
+          continue;
+        }
+        const chroms = Object.keys((index && index.chroms) || {});
+        chroms.sort((a, b) => {
+          const ma = a.match(/^LG(\d+)$/);
+          const mb = b.match(/^LG(\d+)$/);
+          if (ma && mb) return Number(ma[1]) - Number(mb[1]);
+          return a.localeCompare(b);
+        });
+
+        const wrap = bar.querySelector(
+          `.scope-picker[data-atlas="${atlas_id}"][data-slot="${picker.slot}"]`
+        );
+        if (!wrap) continue;
+        const sel = wrap.querySelector('select');
+        if (!sel) continue;
+
+        const preserved = sel.value;
+        // Remove all options except a placeholder (value === '').
+        Array.from(sel.querySelectorAll('option')).forEach(o => {
+          if (o.value !== '') o.remove();
+        });
+        for (const c of chroms) {
+          const o = document.createElement('option');
+          o.value = c; o.textContent = c;
+          sel.appendChild(o);
+        }
+        if (preserved && chroms.includes(preserved)) {
+          sel.value = preserved;
+        } else {
+          const isShared = picker.shared !== false;
+          const stateVal = isShared
+            ? this.state.shared[picker.slot]
+            : (this.state[atlas_id] || {})[picker.slot];
+          if (stateVal && chroms.includes(String(stateVal))) {
+            sel.value = String(stateVal);
+          } else if (chroms.length > 0) {
+            // 2026-05-20: cold-boot autoload. Quentin: "start to load the
+            // first JSON item in chromosome list if nothing is in cache."
+            // When the user lands without a persisted activeChrom AND
+            // without a master_config default AND no URL hash override,
+            // auto-pick the first discovered chrom + fire the convenience
+            // setter so the prewarm scheduler + page remount kick in.
+            // Only fires once per picker per session.
+            const firstChrom = chroms[0];
+            sel.value = firstChrom;
+            try {
+              if (isShared && picker.slot === 'activeChrom'
+                  && typeof this.state.setActiveChrom === 'function') {
+                this.state.setActiveChrom(firstChrom);
+              } else if (isShared) {
+                this.state.shared[picker.slot] = firstChrom;
+                this.state.emit(`shared.${picker.slot}.changed`,
+                  { newValue: firstChrom, oldValue: null });
+              } else {
+                const bucket = this.state[atlas_id] || (this.state[atlas_id] = {});
+                bucket[picker.slot] = firstChrom;
+                this.state.emit(`${atlas_id}.${picker.slot}.changed`,
+                  { newValue: firstChrom, oldValue: null });
+              }
+              try { this.state.savePersisted(); } catch (_) {}
+              // Re-mount the current page so it sees the seeded scope.
+              const cur = this.state.shared.currentPage;
+              if (cur && cur.atlas_id && cur.page_id) {
+                this.navigate(cur.atlas_id, cur.page_id).catch(err => {
+                  console.error('autoload navigate failed:', err);
+                });
+              }
+            } catch (e) {
+              console.warn(`autoload first chrom for '${picker.slot}' failed:`, e);
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -242,6 +434,9 @@ export class AtlasRouter {
       bucket[slot] = value;
       this.state.emit(`${atlas_id}.${slot}.changed`, { newValue: value, oldValue: old });
     }
+    // 2026-05-19: persist the new scope (activeChrom / activeCandidate / …)
+    // so close+reopen lands the user back on the same chromosome.
+    try { this.state.savePersisted(); } catch (_) {}
     // Re-mount the current page so it sees the new scope. This matches
     // the scrubber/zone UX of the legacy app: changing chromosome
     // rebuilds the view.
@@ -258,27 +453,9 @@ export class AtlasRouter {
     if (!bar) return;
     bar.innerHTML = '';
 
-    // Orange settings gear — leftmost element on the topbar. Legacy: see
-    // monolith line 4983 (#globalSettingsBtn). Clicking it toggles the
-    // page's parameters sidebar (most pages render an <aside> with their
-    // own #sidebarToggleBtn; we forward the click).
-    const gear = document.createElement('button');
-    gear.id = 'globalSettingsBtn';
-    gear.type = 'button';
-    gear.title = 'Toggle the parameters sidebar';
-    gear.setAttribute('aria-label', 'Toggle parameters sidebar');
-    gear.textContent = '⚙';
-    gear.addEventListener('click', () => {
-      const pageToggle = document.getElementById('sidebarToggleBtn');
-      if (pageToggle) {
-        pageToggle.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      } else {
-        // Fallback: collapse the active page's <aside> directly.
-        const aside = document.querySelector('#app-root aside, main aside');
-        if (aside) aside.classList.toggle('collapsed');
-      }
-    });
-    bar.appendChild(gear);
+    // The settings gear (#globalSettingsBtn) used to live here at the
+    // leftmost slot of the topbar. It's now a static element in the shell
+    // header (atlas-core/index.html); wiring lives in shell_chrome.js.
 
     // Determine which stage to expand. If a page is active and we know
     // its stage (from the manifest), expand that stage; else fall back
@@ -301,21 +478,41 @@ export class AtlasRouter {
     if (activeStageForBar) bar.dataset.activeStage = activeStageForBar;
     else delete bar.dataset.activeStage;
 
+    // Helper: toggle the `.stage-hidden` class on every page button so
+    // only the active stage's pages render. Class-based instead of CSS
+    // per-stage rules so any atlas's stage names work (inversion adds
+    // `classification`, diversity adds `per_sample`/`per_chromosome`/…,
+    // genome adds `assembly`/`annotation`, etc.). Pills are always
+    // visible — they're how the user switches stages.
+    const applyStageVisibility = (activeStage) => {
+      bar.querySelectorAll('button[data-stage]:not(.tab-stage-pill)').forEach(b => {
+        if (!activeStage || b.dataset.stage === activeStage) {
+          b.classList.remove('stage-hidden');
+        } else {
+          b.classList.add('stage-hidden');
+        }
+      });
+    };
+
     const multi = this.manifests.size > 1;
 
-    // Multi-atlas switcher — small <select> at the left of the topbar
-    // when more than one atlas is registered. Pages render to its right
-    // on the same row (topbar uses flex-wrap: nowrap). Switching
-    // navigates to the chosen atlas's first page.
+    // 2026-05-19: multi-atlas switcher moved out of the topbar to the
+    // top-left of the shell header (#atlas-switcher-host). Dropping the
+    // "atlas:" label per user request — the select's current value
+    // identifies the active atlas on its own. The switcher is rebuilt
+    // on every renderTopbar() call to keep the active-option highlight
+    // in sync with the current atlas; idempotent because we clear the
+    // host first. Falls back to appending to the topbar if the shell
+    // host isn't in the DOM (defensive — older index.html lacks it).
     if (multi) {
+      const host = document.getElementById('atlas-switcher-host') || bar;
+      host.innerHTML = '';
       const switcher = document.createElement('span');
       switcher.className = 'atlas-switcher';
-      const label = document.createElement('span');
-      label.className = 'atlas-switcher-label';
-      label.textContent = 'atlas:';
-      switcher.appendChild(label);
       const sel = document.createElement('select');
       sel.className = 'atlas-switcher-select';
+      sel.setAttribute('aria-label', 'Active atlas');
+      sel.title = 'Switch atlas';
       for (const [aid, mf] of this.manifests) {
         const opt = document.createElement('option');
         opt.value = aid;
@@ -332,7 +529,7 @@ export class AtlasRouter {
         }
       });
       switcher.appendChild(sel);
-      bar.appendChild(switcher);
+      host.appendChild(switcher);
     }
 
     for (const [atlas_id, manifest] of this.manifests) {
@@ -404,23 +601,33 @@ export class AtlasRouter {
           count.className = 'pill-count';
           count.textContent = '(' + pagesInStage.length + ')';
           pill.appendChild(count);
-          // Click → toggle this stage's expansion. If the clicked pill is
-          // already the active stage, REMOVE the active-stage attribute so
-          // all tab clusters collapse (only pills visible). Otherwise focus
-          // on this stage. Mutates the topbar's data-active-stage attribute
-          // that the CSS reads to show/hide tabs. Does NOT navigate.
+          // Click → toggle this stage's expansion.
+          //
+          //   - Same pill clicked while expanded → set data-collapsed="1"
+          //     so every page button hides (the row folds). data-active-stage
+          //     is kept so re-expanding restores the same stage.
+          //   - Different stage clicked → expand it; clear data-collapsed.
+          //   - Same pill clicked while collapsed → expand again.
+          //
+          // The CSS contract: when data-collapsed="1" is set on #topbar,
+          // shell.css hides every button[data-stage]:not(.tab-stage-pill).
+          // Removing data-collapsed restores the per-stage show/hide rules.
+          // Does NOT navigate.
           pill.addEventListener('click', () => {
-            const isActive = bar.dataset.activeStage === stage;
-            if (isActive) {
-              delete bar.dataset.activeStage;
+            const isActive    = bar.dataset.activeStage === stage;
+            const isCollapsed = bar.dataset.collapsed === '1';
+            if (isActive && !isCollapsed) {
+              bar.dataset.collapsed = '1';
               bar.querySelectorAll('.tab-stage-pill').forEach(p => {
                 p.dataset.expanded = '0';
               });
             } else {
+              delete bar.dataset.collapsed;
               bar.dataset.activeStage = stage;
               bar.querySelectorAll('.tab-stage-pill').forEach(p => {
                 p.dataset.expanded = (p.dataset.stage === stage) ? '1' : '0';
               });
+              applyStageVisibility(stage);
             }
           });
           sec.appendChild(pill);
@@ -456,6 +663,11 @@ export class AtlasRouter {
 
       bar.appendChild(sec);
     }
+
+    // Apply initial stage visibility now that every page button is in the
+    // DOM. Without this, on first paint every stage's pages are visible
+    // because no button has the `.stage-hidden` class yet.
+    applyStageVisibility(activeStageForBar);
   }
 
   /**

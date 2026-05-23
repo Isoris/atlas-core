@@ -192,3 +192,6 @@ discovers it on next reload. That's it.
   add a server adapter under
   `atlases/inversion/server-adapters/`, write a schema under
   `atlases/inversion/registries/schemas/`. No core changes.
+- Adding a Mode-B cross-check probe to an atlas page: read
+  `docs/SPEC_mode_b_pattern.md`. ~1 import line + 1 helper function
+  per page. 18 callsites shipped across 6 atlases as of 2026-05-20.

@@ -1,0 +1,53 @@
+<!-- atlases/core/pages/action.html
+     Action page — readiness & routing dashboard. Round-1 migration from
+     toolkit_registries/relatedness/page/action.html. The inline <form
+     onsubmit> is gone — action.js wires the submit handler in mount(). -->
+<div class="core-page core-page-action">
+
+  <header>
+    <h1>Action — readiness &amp; routing dashboard</h1>
+    <div class="sub">Pick a target. The dashboard walks the chain backward and shows each step's status. It does <strong>not</strong> run anything — it tells you what to reuse, what's run-ready, what's spawnable, and what's blocked.</div>
+  </header>
+
+  <form class="form" data-core-form>
+    <label>Target analysis
+      <select id="f-analysis"></select>
+    </label>
+    <label>Mode
+      <select id="f-mode"></select>
+    </label>
+    <label>Sample set
+      <select id="f-sample"></select>
+    </label>
+    <label>Chromosome
+      <input id="f-chrom" placeholder="e.g. C_gar_LG12" />
+    </label>
+    <label>Candidate id
+      <input id="f-candidate" placeholder="e.g. LG12_INV_001" />
+    </label>
+    <button type="submit">Resolve →</button>
+  </form>
+
+  <div class="summary" id="summary" style="display:none"></div>
+
+  <div class="legend">
+    <span><span class="pill RESULT_READY">result_ready</span> output exists &amp; matches → reuse</span>
+    <span><span class="pill RUN_READY">run_ready</span> all inputs exist &amp; checks pass → run</span>
+    <span><span class="pill SPAWNABLE">spawnable</span> some inputs missing but derivable</span>
+    <span><span class="pill BLOCKED">blocked</span> existing result conflicts or contracts mismatch</span>
+    <span><span class="pill MISSING">missing</span> required input doesn't exist &amp; isn't spawnable</span>
+    <span style="margin-left:18px;color:var(--st-conceptual);font-weight:600">module:</span>
+    <span><span class="pill MOD_READY">mod_ready</span> installed, last run passed</span>
+    <span><span class="pill MOD_STALE">mod_stale</span> installed but inputs changed</span>
+    <span><span class="pill MOD_FAILED">mod_failed</span> installed, last run failed</span>
+    <span><span class="pill MOD_NOT_INSTALLED">not installed</span> module missing from biomod env</span>
+    <span><span class="pill MOD_CONCEPTUAL">conceptual</span> module name set in analysis_modes but unknown to biomod</span>
+  </div>
+
+  <section>
+    <div id="steps"></div>
+  </section>
+
+  <div class="footer" id="footer"></div>
+
+</div>

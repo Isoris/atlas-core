@@ -43,6 +43,21 @@ export class PrewarmScheduler {
     this.state.subscribe('shell.page_mount', (ev) => {
       this.onPageMount(ev.atlas_id, ev.page_id);
     });
+
+    // 2026-05-21: cold-boot kick. When the user lands with a persisted
+    // activeChrom in localStorage, setActiveChrom is skipped (old===new
+    // is false but the setter early-returns on no-change), so the
+    // chrom_change prewarm event never fires and scrubber_main is fetched
+    // cold inside the first page mount. Fire one synthetic chrom_change
+    // here for whatever is currently in shared so the heavy precomp JSONs
+    // start downloading before the first page mount's await touches them.
+    const sh = (this.state && this.state.shared) || {};
+    if (typeof sh.activeChrom === 'string' && sh.activeChrom.length > 0) {
+      this.onChromChange(sh.activeChrom, undefined);
+    }
+    if (sh.activeCandidate && sh.activeCandidate.id) {
+      this.onCandidateChange(sh.activeCandidate, undefined);
+    }
   }
 
   // ------------------------------------------------------------------
@@ -66,13 +81,20 @@ export class PrewarmScheduler {
     await this._preloadByEvent('candidate_change', this._buildArgs({ candidate_id: newCand.id }), ctrl, gen, 'candidate');
   }
 
-  // Pull every primitive from shared state into the resolve args so layer
-  // path templates like 'data/precomp/{chrom}.json' or
-  // 'data/cohort/ancestry/windows/{chrom}_K{K}.tsv' can fill all placeholders
-  // without each event handler needing to know which keys matter.
+  // Resolve the canonical scope aliases (chrom / candidate_id / species)
+  // so layer path templates like `data/precomp/{chrom}.json` or
+  // `data/cohort/ancestry/windows/{chrom}_K{K}.tsv` can fill them. ANY
+  // other placeholder is left to templateFill's `state.shared` fallback —
+  // do NOT widen args here.
   //
-  // Aliases: shared state uses 'activeChrom' but legacy layer templates
-  // use {chrom}; same for {candidate_id} ← shared.activeCandidate.id.
+  // Why: the registry's default cache key is `key + JSON.stringify(args)`.
+  // If the prewarm passes e.g. `{chrom, serverBaseUrl, sampleIds, …}`
+  // while a page passes `{chrom}` for the same layer, the cache keys
+  // diverge and the in-flight Promise dedup misses → the same precomp
+  // JSON is fetched twice on cold boot (once by the prewarm scheduler
+  // firing on chrom_change, once by the page mounting and re-resolving
+  // the same layer). 2026-05-20: scoped args down to the three aliases
+  // so prewarm + page resolves hit the same cache slot.
   _buildArgs(seed) {
     const args = Object.assign({}, seed || {});
     const sh = (this.state && this.state.shared) || {};
@@ -84,12 +106,6 @@ export class PrewarmScheduler {
     }
     if (args.species === undefined && typeof sh.activeSpecies === 'string') {
       args.species = sh.activeSpecies;
-    }
-    for (const [k, v] of Object.entries(sh)) {
-      if (args[k] !== undefined) continue;
-      if (v != null && (typeof v === 'string' || typeof v === 'number')) {
-        args[k] = v;
-      }
     }
     return args;
   }
@@ -108,21 +124,40 @@ export class PrewarmScheduler {
 
     const args = this._buildArgs();
 
+    // 2026-05-21: was a sequential `for ... await` loop, which serialized
+    // every preload — 6 layers × ~200ms each = ~1.2s before first paint on
+    // a cold local_pca_dosage mount. Fan out in parallel via Promise.all
+    // (same shape as _preloadByEvent below). The in-flight Promise dedup
+    // in registry.resolve already coalesces duplicates with the chrom-
+    // change prewarm, so this won't double-fetch.
+    const tasks = [];
     for (const layerKey of pageEntry.preloads) {
-      if (ctrl.signal.aborted) return;
-      try {
-        await this.registry.resolve(layerKey, args);
-      } catch (e) {
-        const msg = (e && e.message) || String(e);
-        if (msg.includes('HTTP 404')) {
-          if (typeof console.debug === 'function') {
-            console.debug(`Prewarm onPageMount: ${atlas_id}/${page_id} optional preload '${layerKey}' missing (404)`);
-          }
-        } else {
-          console.warn(`Prewarm onPageMount: ${atlas_id}/${page_id} preload '${layerKey}' failed:`, e);
-        }
-      }
+      const layerEntry = atlas.layers && atlas.layers[layerKey];
+      if (layerEntry && layerEntry.disabled === true) continue;
+      tasks.push(
+        Promise.resolve()
+          .then(() => {
+            if (ctrl.signal.aborted) return undefined;
+            return this.registry.resolve(layerKey, args);
+          })
+          .catch(e => {
+            const msg = (e && e.message) || String(e);
+            const isExpected = msg.includes('HTTP 404')
+                            || msg.includes('AUTO_INDEX_EMPTY')
+                            || msg.includes('AUTO_INDEX_MISS')
+                            || msg.includes('unresolved placeholder')
+                            || msg.includes('requires args.');
+            if (isExpected) {
+              if (typeof console.debug === 'function') {
+                console.debug(`Prewarm onPageMount: ${atlas_id}/${page_id} optional preload '${layerKey}' skipped:`, msg);
+              }
+            } else {
+              console.warn(`Prewarm onPageMount: ${atlas_id}/${page_id} preload '${layerKey}' failed:`, e);
+            }
+          })
+      );
     }
+    await Promise.all(tasks);
   }
 
   // ------------------------------------------------------------------
@@ -139,6 +174,9 @@ export class PrewarmScheduler {
         if (name.startsWith('_')) continue;
         if (typeof entry !== 'object' || entry === null) continue;
         if (entry.preload_on !== eventName) continue;
+        // 2026-05-19: skip layers marked `disabled: true` so we don't
+        // generate 404 traffic for files the pipeline hasn't produced yet.
+        if (entry.disabled === true) continue;
         tasks.push(this._preloadLayer(name, entry, args, atlas_id, ctrl));
       }
     }
@@ -147,11 +185,34 @@ export class PrewarmScheduler {
     // etc.) are expected when the precomp ships only the main scrubber JSON.
     // Downgrade those to debug-only so the console isn't drowned in noise;
     // genuine errors (5xx, network, parse failures) still console.warn.
+    //
+    // AUTO_INDEX_EMPTY also downgrades to debug — that's the case where a
+    // master_config root points at a pipeline output dir that hasn't been
+    // produced yet (e.g. precomp_ghsl before the GHSL pipeline runs). The
+    // distinct AUTO_INDEX_MISS tag (chroms exist but not this one) stays
+    // at warn level because it's a naming-convention bug.
     await Promise.all(tasks.map(t => t.catch(e => {
       const msg = (e && e.message) || String(e);
-      if (msg.includes('HTTP 404')) {
+      // 2026-05-19: broadened expected-error filter.
+      // Adds AUTO_INDEX_MISS (chroms exist but not THIS one — e.g. GHSL
+      // ships only LG01 while the user picks LG02) and `requires args.`
+      // (registry layers that need extra context like version_id which
+      // the prewarm scheduler can't supply from scope aliases alone).
+      // Both were previously falling through to console.warn and
+      // cluttering the dev console on every chrom change.
+      const isExpected = msg.includes('HTTP 404')
+                      || msg.includes('AUTO_INDEX_EMPTY')
+                      || msg.includes('AUTO_INDEX_MISS')
+                      || msg.includes('unresolved placeholder')
+                      || msg.includes('requires args.');
+      if (isExpected) {
         if (typeof console.debug === 'function') {
-          console.debug(`Prewarm ${eventName}: optional layer missing (404):`, msg);
+          const kind = msg.includes('AUTO_INDEX_EMPTY') ? 'empty root'
+                     : msg.includes('AUTO_INDEX_MISS')  ? 'chrom not in index'
+                     : msg.includes('unresolved placeholder') ? 'unresolved arg'
+                     : msg.includes('requires args.')   ? 'missing args'
+                     : '404';
+          console.debug(`Prewarm ${eventName}: optional layer skipped (${kind}):`, msg);
         }
       } else {
         console.warn(`Prewarm ${eventName}: layer preload failed:`, e);

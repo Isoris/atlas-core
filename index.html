@@ -132,14 +132,15 @@
 // On any error, replace #boot with a clear error message and stop.
 // =====================================================================
 
-import { AtlasState }        from './core/atlas_state.js';
-import { Registry }          from './core/registry_core.js';
-import { PrewarmScheduler }  from './core/prewarm_scheduler.js';
-import { AtlasRouter }       from './core/atlas_router.js';
-import { discover }          from './core/atlas_discovery.js';
-import { bootstrap }         from './core/atlas_api.js';
-import { loadMasterConfig }  from './core/master_config.js';
-import { attachShellChrome } from './core/shell_chrome.js';
+import { AtlasState }            from './core/atlas_state.js';
+import { Registry }              from './core/registry_core.js';
+import { PrewarmScheduler }      from './core/prewarm_scheduler.js';
+import { AtlasRouter }           from './core/atlas_router.js';
+import { discover }              from './core/atlas_discovery.js';
+import { bootstrap }             from './core/atlas_api.js';
+import { loadMasterConfig }      from './core/master_config.js';
+import { attachShellChrome }     from './core/shell_chrome.js';
+import { loadCohortsRegistry }   from './core/cohorts_registry.js';
 
 (async () => {
   try {
@@ -169,6 +170,19 @@ import { attachShellChrome } from './core/shell_chrome.js';
       masterConfig,
     });
     bootstrap({ registry, atlasState: state });
+
+    // Load the global cohorts registry + atlases index for cross-validation
+    // by register_atlas(). Both are optional — when missing, the workflows
+    // and tree-layer validators fall back to schema-only mode (no
+    // cohort_id / atlas_id xref check). See SPEC_cohorts_v1, SPEC_workflows_v1.
+    const [cohortsRegistry, atlasesIndex] = await Promise.all([
+      loadCohortsRegistry('').catch(err => {
+        console.warn('cohorts registry load failed; xref checks will be skipped:', err);
+        return null;
+      }),
+      fetch('atlases/_index.json').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]);
+    registry.setGlobalRegistries({ cohortsRegistry, atlasesIndex });
 
     // Seed activeSpecies from master_config so species_scoped roots
     // resolve at first fetch. Pages can override via the scopebar.

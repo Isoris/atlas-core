@@ -10,23 +10,68 @@
 //   - json    → fetch + JSON.parse
 //   - tsv     → fetch + parseTsv
 //   - csv     → fetch + parseCsv
+//   - text    → fetch + raw string (caller parses; used for bespoke
+//               formats like ANGSD .est.ml — two whitespace-separated
+//               values on one line, no header)
 //   - binary  → fetch + arrayBuffer
+//
+// Tree-layer extension (SPEC_tree_layers_v1):
+//   - readTreePath(layerEntry, treePath) — resolves the typed dot-path
+//     through layerEntry.tree via core/tree_layer_registry.js, then
+//     dispatches to fetchFile() with the leaf_kind mapped to a format.
+//     Leaf + pattern_match return parsed data; metadata / subtree /
+//     dir return structural objects (no I/O). Pattern-dir bulk-read
+//     (returning a Map of all matches) is deferred to v2 — needs an
+//     atlas-server directory-listing endpoint that doesn't exist yet.
 //
 // The router does not cache. Caching is the registry's job.
 // =====================================================================
 
+import { resolveTreePath } from './tree_layer_registry.js';
+
+// Leaf-kind → fetchFile format mapping. SPEC §5 lists the leaf kinds
+// and how they parse; this table picks the closest existing format for
+// each. Streamed kinds (fasta/vcf/vcfgz) are out of v1 scope per
+// SPEC §12 — they throw a clear error if requested.
+//
+// `headerless: true` formats are tab-delimited but lack a header row
+// (PAF, BED, GFF, FAI). For those, readTreePath bypasses fetchFile and
+// calls parseDelimited directly with {hasHeader: false} so columns are
+// synthesized as col_0, col_1, ... — caller maps those to format-specific
+// field names (PAF has a canonical 12-column spec + tagged extras, etc.).
+const _LEAF_KIND_TO_FORMAT = {
+  tsv:    { format: 'tsv' },
+  csv:    { format: 'csv' },
+  paf:    { format: 'tsv', headerless: true },   // PAF: 12 spec cols + tagged extras
+  bed:    { format: 'tsv', headerless: true },   // BED: 3+9 cols
+  gff:    { format: 'tsv', headerless: true },   // GFF: 9 cols
+  fai:    { format: 'tsv', headerless: true },   // FASTA index: name\tlength\toffset\tlinebases\tlinewidth
+  json:   { format: 'json' },
+  jsonl:  { format: 'text' },                    // caller .split('\n').map(JSON.parse) — keep router simple
+  bin:    { format: 'binary' },
+  // fasta / vcf / vcfgz: streamed leaves — caller must use a streaming
+  // reader (out of v1 scope; the loader throws on these).
+};
+
 export class LayerRouter {
 
   // fields: optional Array<string>. Forwarded to parseDelimited for
-  // tsv/csv. Ignored for json/binary (where column-level filtering
+  // tsv/csv. Ignored for json/text/binary (where column-level filtering
   // doesn't apply). Out-of-list columns are dropped at parse time so
   // wide files don't waste RAM. See parseDelimited for semantics.
   async fetchFile(path, format = 'json', fields = null) {
     if (format === 'json')   return this._fetchJson(path);
     if (format === 'tsv')    return this._fetchDelimited(path, '\t', fields);
     if (format === 'csv')    return this._fetchDelimited(path, ',', fields);
+    if (format === 'text')   return this._fetchText(path);
     if (format === 'binary') return this._fetchBinary(path);
     throw new Error(`LayerRouter.fetchFile: unknown format '${format}'`);
+  }
+
+  async _fetchText(path) {
+    const resp = await fetch(path);
+    if (!resp.ok) throw new Error(`LayerRouter: GET ${path} → HTTP ${resp.status}`);
+    return resp.text();
   }
 
   async _fetchJson(path) {
@@ -51,6 +96,58 @@ export class LayerRouter {
     const resp = await fetch(path);
     if (!resp.ok) throw new Error(`LayerRouter: GET ${path} → HTTP ${resp.status}`);
     return resp.arrayBuffer();
+  }
+
+  // Typed read into a tree-layer (SPEC_tree_layers_v1 §6).
+  //   layerEntry — the tree-layer entry (kind:'tree', root, tree)
+  //   treePath   — dot-separated path through layerEntry.tree. null/'' →
+  //                metadata read (returns the tree object, no I/O).
+  //
+  // Returns one of:
+  //   - parsed leaf data    (kind:'leaf' / 'pattern_match')
+  //   - {kind, node, ...}   (kind:'metadata' / 'subtree' / 'dir')
+  //
+  // Pattern-dir bulk-read (treePath stops at a pattern dir, expecting a
+  // Map of {filename → parsed}) is NOT implemented — needs an
+  // atlas-server directory-listing endpoint. The current behaviour
+  // returns the dir metadata so the caller knows what to fetch.
+  async readTreePath(layerEntry, treePath, opts) {
+    const o = opts || {};
+    const resolved = resolveTreePath(layerEntry, treePath);
+
+    // Structural results — no I/O.
+    if (resolved.kind === 'metadata' || resolved.kind === 'subtree'
+        || resolved.kind === 'dir') {
+      return resolved;
+    }
+
+    // Leaf or pattern-match — fetch the file. Both have absPath + leaf_kind.
+    if (resolved.kind === 'leaf' || resolved.kind === 'pattern_match') {
+      const leafKind = resolved.leaf_kind;
+      const mapping = _LEAF_KIND_TO_FORMAT[leafKind];
+      if (!mapping) {
+        throw new Error(
+          `LayerRouter.readTreePath: leaf_kind '${leafKind}' is not supported in v1 `
+          + `(streamed kinds fasta/vcf/vcfgz need a streaming reader; see SPEC §12). `
+          + `Path: ${resolved.absPath}`
+        );
+      }
+      // Allow caller to override the abs-path prefix (e.g. atlas-server
+      // mounts files under /file/<root>/...). Default is the raw absPath
+      // built from layerEntry.root + tree path segments.
+      const prefix = (typeof o.urlPrefix === 'string') ? o.urlPrefix.replace(/\/+$/, '') + '/' : '';
+      const url = prefix + resolved.absPath.replace(/^\/+/, '');
+      const fields = (mapping.format === 'tsv' || mapping.format === 'csv') ? o.fields : null;
+      // Headerless formats bypass fetchFile (which assumes hasHeader:true
+      // via parseDelimited's default) and call the parser directly.
+      if (mapping.headerless) {
+        const text = await this._fetchText(url);
+        return parseDelimited(text, '\t', fields, { hasHeader: false });
+      }
+      return this.fetchFile(url, mapping.format, fields);
+    }
+
+    throw new Error(`LayerRouter.readTreePath: unknown resolution kind '${resolved.kind}'`);
   }
 }
 

@@ -52,6 +52,14 @@
       "fragment": "atlases/core/pages/specs.html",
       "module": "atlases/core/pages/specs.js",
       "tooltip": "Cross-atlas SPEC inventory: one tab per atlas, each split into a 'Done' section (shipped specs from specs_done/) and a 'To-do' section (pending specs from specs_todo/). Click any row to read the SPEC markdown. Indexed at assemble time by build/index_specs.py — fail-soft for atlases with no specs/ folder yet."
+    },
+    {
+      "id": "system_health",
+      "label": "7. System Health",
+      "stage": "dashboard",
+      "fragment": "atlases/core/pages/system_health.html",
+      "module": "atlases/core/pages/system_health.js",
+      "tooltip": "Cross-atlas system health. Three sections: (1) per-atlas summary cards (page/layer/op counts, % ready); (2) layer status table (all 155 layers, sortable + filterable by status); (3) cross-atlas dependency graph (producer -> consumer edges from cohorts.registry.json). Useful for navigating the 11-atlas system."
     }
   ],
   "registries": {

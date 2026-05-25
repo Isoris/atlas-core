@@ -246,10 +246,17 @@ header .header-folder-panel {
      position:fixed which create their own stacking contexts that escape
      the parent's z-index ordering and end up painted over the dropdown.
      Bump to z-index 9999 so the folder menus always paint on top.
-     Background is solid var(--panel); no transparency. */
-  padding: 4px; z-index: 9999;
+     Background is solid var(--panel); no transparency.
+
+     2026-05-23: tabs row appeared to "show through" the dropdown.
+     Added isolation:isolate + bumped z-index to 99999 so the panel
+     forces its own stacking context that wins over the sticky
+     #topbar's (z:100) context regardless of source order. */
+  padding: 4px; z-index: 99999;
   min-width: 170px;
   flex-direction: column; gap: 2px;
+  isolation: isolate;
+  opacity: 1;
 }
 /* Tinted left border on the panel matching the folder colour */
 header .header-folder[data-color="blue"]   .header-folder-panel { border-left: 3px solid rgba(64, 144, 220, 0.65); }

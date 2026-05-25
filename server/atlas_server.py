@@ -133,6 +133,12 @@ from diversity_endpoint import make_diversity_router
 # the population atlas — same sidecar pattern as diversity_endpoint.
 from population_endpoint import make_population_router
 
+# /compute/relatedness_* handlers — ports of the Mendelian/compatibility
+# computes the relatedness atlas does in-browser today. Sidecar module
+# keeps the algorithm + TSV plumbing out of atlas_server.py. See
+# atlases/relatedness/server/RELATEDNESS_ENDPOINTS.md for the contract.
+from relatedness_compute import register_handlers as _register_relatedness_handlers
+
 # =============================================================================
 # Logging
 # =============================================================================
@@ -1859,6 +1865,11 @@ COMPUTE_REGISTRY: Dict[str, Any] = {
     "echo":       _compute_echo,
     "list_files": _compute_list_files,
 }
+
+# Mount relatedness atlas handlers (dyad/triad/cohort scan/compatibility).
+# JOBS is the JobManager singleton from line ~1151 — the async cohort scan
+# parks progress + final result there for /api/jobs/<id> polling.
+_register_relatedness_handlers(COMPUTE_REGISTRY, JOBS)
 
 @app.get("/api/cache/keys")
 async def cache_keys(prefix: str = "", limit: int = 200) -> Dict[str, Any]:

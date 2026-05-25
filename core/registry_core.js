@@ -22,6 +22,8 @@
 import { CacheStore }      from './cache_store.js';
 import { OperationRunner } from './operation_runner.js';
 import { LayerRouter }     from './layer_router.js';
+import { validateWorkflowsRegistry } from './workflows_registry.js';
+import { validateTreeLayer }         from './tree_layer_registry.js';
 
 export class Registry {
 
@@ -37,16 +39,82 @@ export class Registry {
     // `root: <name>` + `path_under_root: <template>` for portable paths.
     this.masterConfig = masterConfig;
 
-    this._atlases = new Map();           // atlas_id → { layers, ops, files, pages, slots }
+    this._atlases = new Map();           // atlas_id → { layers, ops, files, pages, slots, workflows }
     this._layerIndex = new Map();        // layer_key → { atlas_id, entry }
     this._operationIndex = new Map();    // op_key → { atlas_id, entry }
     this._analysisModuleCache = new Map(); // module_path → resolved module
+
+    // SPEC_cohorts_v1 / SPEC_workflows_v1 — registries set via setter before
+    // register_atlas calls so xref validation can run. Both optional; when
+    // null, the validators skip the corresponding xref rules (schema-only mode).
+    this._cohortsRegistry = null;
+    this._atlasesIndex    = null;
 
     // Persist sub-system (per SPEC v2 item 4 + the operation persist hook).
     // Server results cache logical prefix; the server rewrites this to the
     // configured filesystem root (popstats_server.config.yaml >
     // server_results_cache_root, default /mnt/e/inversion-atlas-cache/server_results/).
     this._serverResultsCachePrefix = '_cache/server_results';
+  }
+
+  /**
+   * Stash the global cohorts registry + installed-atlases index so
+   * subsequent register_atlas() calls can cross-validate workflows /
+   * tree-layer entries against them. Must be called BEFORE register_atlas.
+   * Both args are optional and null-tolerated — when omitted, validators
+   * fall back to schema-only mode (matches the pre-trilogy behaviour).
+   */
+  setGlobalRegistries({ cohortsRegistry = null, atlasesIndex = null } = {}) {
+    this._cohortsRegistry = cohortsRegistry;
+    this._atlasesIndex    = atlasesIndex;
+  }
+
+  /**
+   * Look up an atlas's workflows registry. Returns null when the atlas
+   * never declared workflows.registry.json (most atlases today).
+   */
+  getWorkflows(atlas_id) {
+    const a = this._atlases.get(atlas_id);
+    return (a && a.workflows) ? a.workflows : null;
+  }
+
+  /**
+   * Typed read into a tree-layer (SPEC_tree_layers_v1 §6).
+   *   layer_key — fully-qualified `<atlas_id>.<layer_id>` or bare `<layer_id>`.
+   *   treePath  — dot-separated path through the tree (null/'' → metadata).
+   *   args      — { fields?, urlPrefix? } forwarded to LayerRouter.readTreePath.
+   *
+   * Caches the resolved value at a per-treePath key so sub-paths cache
+   * independently (SPEC §9). Returns null for unknown layer_key (matches
+   * Registry.resolve()'s "unknown key" convention).
+   */
+  async readTreePath(layer_key, treePath, args = {}) {
+    const lookup = this._lookup(layer_key);
+    if (!lookup) {
+      console.warn(`Registry.readTreePath: unknown layer '${layer_key}'`);
+      return null;
+    }
+    const { entry } = lookup;
+    if (entry.kind !== 'tree') {
+      throw new Error(
+        `Registry.readTreePath: layer '${layer_key}' is not a tree-layer ` +
+        `(kind=${JSON.stringify(entry.kind)}). Use resolve() for scalar layers.`
+      );
+    }
+    const cacheKey = `${layer_key}@tree=${treePath || ''}`;
+    const tier = entry.cache_tier || entry.tier || 'warm';
+    if (tier === 'hot' || tier === 'warm') {
+      // Hot tier returns sync; warm returns a Promise (IndexedDB). Await
+      // covers both safely; without it the Promise was treated as the
+      // cached value and returned directly.
+      const cached = await this.cache.get(tier, cacheKey);
+      if (cached !== null && cached !== undefined) return cached;
+    }
+    const value = await this.router.readTreePath(entry, treePath, args);
+    if (tier === 'hot' || tier === 'warm') {
+      this.cache.set(tier, cacheKey, value);
+    }
+    return value;
   }
 
   // -------------------------------------------------------------------
@@ -307,11 +375,75 @@ export class Registry {
    *   - Otherwise different         → throw
    */
   register_atlas(atlas_id, configs) {
-    const layers     = (configs.layers     && configs.layers.layers)     || {};
-    const operations = (configs.operations && configs.operations.operations) || {};
-    const files      = (configs.files      && configs.files.files)       || {};
-    const pages      = (configs.pages      && configs.pages.pages)       || {};
-    const slots      = (configs.slots      && configs.slots.slots)       || {};
+    // 2026-05-23: registries ship in two shapes — the legacy object-keyed
+    // shape (`{ "layers": { "scrubber_main": {...} } }`, inversion/diversity/
+    // genome/population/relatedness/meiosis) and the newer array-of-records
+    // shape (`{ "layers": [ { "layer_id": "breakpoints_consolidated_v1",
+    // ... } ] }`, cross-species/evolution/popstats split-outs). Normalize
+    // both into a plain object keyed by name so the indexer downstream
+    // doesn't care. Without this, the new shape was getting indexed under
+    // stringified numeric keys ("0", "1", "2"...) — symptom was
+    // `Registry.resolve: unknown key 'cross-species.breakpoints_consolidated_v1'`.
+    const layers     = _normalizeRegistrySection(configs.layers     && configs.layers.layers,         'layer_id');
+    const operations = _normalizeRegistrySection(configs.operations && configs.operations.operations, 'op_id');
+    const files      = _normalizeRegistrySection(configs.files      && configs.files.files,           'file_id');
+    const pages      = _normalizeRegistrySection(configs.pages      && configs.pages.pages,           'page_id');
+    const slots      = _normalizeRegistrySection(configs.slots      && configs.slots.slots,           'slot_id');
+    // Workflows registry (SPEC_workflows_v1) — per-atlas, optional. The
+    // file is the whole registry object (atlas_id/version/workflows[]),
+    // not name-keyed. Pass through unchanged so consumers can iterate
+    // .workflows[] or look up by workflow_id.
+    const workflows = (configs.workflows && typeof configs.workflows === 'object')
+      ? configs.workflows : null;
+
+    // Validate any tree-layer entries (SPEC_tree_layers_v1) at registration
+    // time. Non-fatal per 2026-05-24 boot-failure feedback: a single
+    // malformed tree-layer used to throw + drop the whole atlas, which is
+    // worse UX than continuing with the entry un-tree-validated. Pages
+    // calling registry.resolve() still get the scalar path (works for the
+    // common "kind:tree but really scalar-with-templated-path" misclassification);
+    // pages calling registry.readTreePath() will see a clear error at that
+    // specific call site, which is the right place to surface the issue.
+    let _activeTreeLayers = null;   // lazy — only allocated if any tree-layer is malformed
+    for (const [name, entry] of Object.entries(layers)) {
+      if (name.startsWith('_')) continue;
+      if (!entry || typeof entry !== 'object') continue;
+      if (entry.kind !== 'tree') continue;
+      const treeErrors = validateTreeLayer(entry, {
+        cohortsRegistry:  this._cohortsRegistry || null,
+        workflowsRegistry: workflows,
+      });
+      if (treeErrors.length) {
+        console.warn(
+          `[registry] tree-layer '${atlas_id}.${name}' failed SPEC_tree_layers_v1 validation; ` +
+          `entry is still indexed (scalar resolve still works) but readTreePath() will error. ` +
+          `Errors:\n  - ` + treeErrors.join('\n  - ')
+        );
+      }
+    }
+
+    // Validate workflows registry shape + cross-refs (when xref data
+    // available). Non-fatal: log + drop the workflows registry but keep
+    // the rest of the atlas loading. Pages that consume workflows
+    // metadata (chrome status badge etc.) get null back, matching the
+    // "no workflows declared" pre-trilogy path.
+    let validatedWorkflows = workflows;
+    if (workflows) {
+      const wfErrors = validateWorkflowsRegistry(workflows, {
+        cohortsRegistry: this._cohortsRegistry || null,
+        layersIndex: { layers: Object.keys(layers)
+          .filter(n => !n.startsWith('_'))
+          .map(layer_id => ({ layer_id })) },
+        atlasesIndex: this._atlasesIndex || null,
+      });
+      if (wfErrors.length) {
+        console.warn(
+          `[registry] workflows.registry.json for '${atlas_id}' failed SPEC_workflows_v1 validation; ` +
+          `dropping workflows (atlas still mounts). Errors:\n  - ` + wfErrors.join('\n  - ')
+        );
+        validatedWorkflows = null;
+      }
+    }
 
     // Index layers
     for (const [name, entry] of Object.entries(layers)) {
@@ -327,7 +459,7 @@ export class Registry {
       this._registerKey(this._operationIndex, name, atlas_id, entry, 'operation');
     }
 
-    this._atlases.set(atlas_id, { layers, operations, files, pages, slots });
+    this._atlases.set(atlas_id, { layers, operations, files, pages, slots, workflows: validatedWorkflows });
 
     // Hook for prewarm scheduler
     if (this.state && typeof this.state.emit === 'function') {
@@ -359,6 +491,21 @@ export class Registry {
       // see this; the registry's behaviour is unchanged.
       console.debug(`Registry: ownership transfer of ${kind} '${name}' from '${incumbent.atlas_id}' to '${atlas_id}'`);
       index.set(name, { atlas_id, entry });
+      return;
+    }
+    // 2026-05-24: two non-canonical atlases both declaring placeholders
+    // for the SAME third-party canonical owner. Common pattern: inversion
+    // and population both declare popstats_groupwise with
+    // `owned_by: "popstats"` for page-side documentation, awaiting the
+    // popstats atlas to register and take ownership. Silently keep the
+    // incumbent — both are identical-intent stubs; field-level differences
+    // are doc-only.
+    if (entry.owned_by && entry.owned_by === incumbent.entry.owned_by) {
+      console.debug(
+        `Registry: ${kind} '${name}' declared by both '${incumbent.atlas_id}' and ` +
+        `'${atlas_id}' as a handoff to '${entry.owned_by}'; keeping incumbent (both ` +
+        `defer to the same canonical owner).`
+      );
       return;
     }
     throw new Error(
@@ -402,11 +549,23 @@ export class Registry {
    * namespaced lookups (atlas:key).
    */
   _lookup(key) {
+    // 2026-05-23: accept three forms — bare ("scrubber_main"), colon-prefixed
+    // ("inversion:scrubber_main"), and dot-prefixed ("cross-species.bp_atlas_arcs_v1").
+    // The cross-species/evolution/popstats pages adopted the dotted
+    // <atlas_id>.<layer_id> convention for cross-atlas reads; before this
+    // hook _lookup only stripped colons, so dotted lookups silently failed
+    // with "Registry.resolve: unknown key 'cross-species.X'".
+    let bare = key;
     if (key.includes(':')) {
-      const [, bare] = key.split(':');
-      return this._layerIndex.get(bare) || this._operationIndex.get(bare) || null;
+      bare = key.split(':')[1];
+    } else if (key.includes('.')) {
+      // Only treat as namespaced if the prefix looks like an atlas id (hyphens
+      // or letters, no underscores in the prefix part is the actual cross-atlas
+      // convention). Generic "foo.bar" keys that aren't atlas-namespaced just
+      // fall through to the bare-key lookup, which is the right behavior.
+      bare = key.split('.').slice(1).join('.');
     }
-    return this._layerIndex.get(key) || this._operationIndex.get(key) || null;
+    return this._layerIndex.get(bare) || this._operationIndex.get(bare) || null;
   }
 
   /**
@@ -622,7 +781,7 @@ export class Registry {
           );
         }
       }
-      // Three ways to specify a file path on a layer:
+      // Four ways to specify a file path on a layer:
       //   (a) `path: <template>` — atlas-relative; legacy form. Resolved
       //       by prepending atlases/<atlas_id>/ via _resolveAtlasFilePath.
       //   (b) `root: <name>` + `path_under_root: <template>` — portable
@@ -636,6 +795,16 @@ export class Registry {
       //       hardcoded filename templates for pipelines whose output
       //       naming the registry can't predict (species prefixes,
       //       per-chrom subdirs, etc.).
+      //   (d) `source_file: <file_id>` — 2026-05-21: indirection form.
+      //       Layer points at a file entry in files.registry.json; we
+      //       read that entry's path_template (or root + path_under_root)
+      //       at resolve-time. Lets the SAME file definition back multiple
+      //       layers (e.g. inversion_karyotypes is read by karyotypes /
+      //       mendelian / inversions pages) without copy-pasting paths.
+      //       Without this branch, registry_core fell through to (a)
+      //       with entry.path === undefined → templateFill returned
+      //       undefined → fetch(undefined) → server logged `GET /undefined`
+      //       404 (Quentin's report from the relatedness atlas).
       let path;
       if (entry.root && entry.auto_index === true) {
         const chrom = (args && args.chrom)
@@ -674,8 +843,50 @@ export class Registry {
           ? templateFill(entry.path_under_root, args, this.state)
           : '';
         path = sub ? _joinPath(rootPath, sub) : rootPath;
+      } else if (entry.source_file) {
+        // 2026-05-21: indirect-via-files-registry path. The layer names
+        // a file_id; we look it up in the atlas's files registry and
+        // reuse its path_template (or root + path_under_root). Same
+        // path-build helpers as branches (a) / (b) so the same template
+        // semantics apply.
+        const atlasEntry = this._atlases.get(atlas_id);
+        const fileEntry = atlasEntry && atlasEntry.files
+                       && atlasEntry.files[entry.source_file];
+        if (!fileEntry) {
+          throw new Error(
+            `Registry: layer references source_file '${entry.source_file}' ` +
+            `but atlas '${atlas_id}' has no matching files-registry entry. ` +
+            `Known files: ${atlasEntry && atlasEntry.files
+                              ? Object.keys(atlasEntry.files).join(', ')
+                              : '(none)'}`);
+        }
+        if (fileEntry.root) {
+          const rootPath = this._resolveRootPathForLayer(fileEntry, args);
+          const sub = fileEntry.path_under_root
+            ? templateFill(fileEntry.path_under_root, args, this.state)
+            : (fileEntry.path_template
+                ? templateFill(fileEntry.path_template, args, this.state)
+                : '');
+          path = sub ? _joinPath(rootPath, sub) : rootPath;
+        } else if (fileEntry.path_template) {
+          const filled = templateFill(fileEntry.path_template, args, this.state);
+          path = this._resolveAtlasFilePath(filled, atlas_id);
+        } else if (fileEntry.path) {
+          const filled = templateFill(fileEntry.path, args, this.state);
+          path = this._resolveAtlasFilePath(filled, atlas_id);
+        } else {
+          throw new Error(
+            `Registry: file '${entry.source_file}' has neither path_template ` +
+            `nor root+path_under_root nor path; can't resolve a URL.`);
+        }
       } else {
         const filled = templateFill(entry.path, args, this.state);
+        if (filled == null) {
+          throw new Error(
+            `Registry: layer entry has no resolvable path (no 'path', ` +
+            `'root', 'auto_index', or 'source_file' field). Atlas '${atlas_id}' ` +
+            `layer entry: ${JSON.stringify(Object.keys(entry))}.`);
+        }
         path = this._resolveAtlasFilePath(filled, atlas_id);
       }
       const fields = this._resolveFields(entry, args);
@@ -775,6 +986,32 @@ function _joinPath(a, b) {
   if (!a) return b || '';
   if (!b) return a || '';
   return a.replace(/\/+$/, '') + '/' + b.replace(/^\/+/, '');
+}
+
+/**
+ * Normalize a registry section into a plain object keyed by name.
+ *
+ * Accepts two shapes:
+ *   1. Legacy object form: `{ "scrubber_main": {...}, "candidate_lineage": {...} }`
+ *   2. New array-of-records form: `[ { "layer_id": "scrubber_main", ... }, ... ]`
+ *      where the id field is named per section: layers use `layer_id`,
+ *      operations `op_id`, files `file_id`, pages `page_id`, slots `slot_id`.
+ *      Records that don't carry the id field fall back to `name` then `id`.
+ *
+ * Returns {} when the input is null/undefined. Records lacking any
+ * identifier are silently dropped (would be unindexable anyway).
+ */
+function _normalizeRegistrySection(section, idField) {
+  if (!section) return {};
+  if (!Array.isArray(section)) return section;
+  const out = {};
+  for (const rec of section) {
+    if (!rec || typeof rec !== 'object') continue;
+    const name = rec[idField] || rec.name || rec.id;
+    if (!name) continue;
+    out[name] = rec;
+  }
+  return out;
 }
 
 /**

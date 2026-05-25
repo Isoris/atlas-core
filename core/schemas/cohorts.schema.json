@@ -1,0 +1,105 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id":     "cohorts.schema.json",
+  "title":   "cohorts.registry.json — global cohort registry per SPEC_cohorts_v1",
+  "description": "One row per cohort + one row per cross_reference_handoff. Atlas-core's cross_atlas_imports.js consults this at every cross-atlas read. See atlas-core/docs/SPEC_cohorts_v1.md for the full specification, design rationale, and migration plan.",
+  "type": "object",
+  "required": ["version", "cohorts", "cross_reference_handoffs"],
+  "additionalProperties": true,
+  "properties": {
+    "$schema":  { "type": "string" },
+    "_doc":     { "type": "string" },
+    "version":  {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
+      "description": "Semver of the registry shape itself, NOT of any individual cohort."
+    },
+    "cohorts": {
+      "type": "array",
+      "description": "Every cohort that exists in any atlas (and reserved cohort_ids for future work).",
+      "items": {
+        "type": "object",
+        "required": ["cohort_id", "label", "species", "reference_id", "scope", "atlases"],
+        "additionalProperties": false,
+        "properties": {
+          "cohort_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Stable slug. Unique across the registry."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable cohort name surfaced in UIs / error messages."
+          },
+          "species": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1,
+            "description": "List of binomial species names. F1 hybrid cohorts list both parents."
+          },
+          "reference_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Reference assembly id (e.g. fClaHyb_Gar_LG)."
+          },
+          "n_samples_approx": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "description": "Approximate sample count; null when not yet enumerated."
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Free-text scope statement (assembly_paper_only / inversion_atlas_main_cohort / future_paper / …)."
+          },
+          "atlases": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "description": "atlas_ids (from atlases/_index.json) that use this cohort. Empty for reserved cohort_ids."
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "cross_reference_handoffs": {
+      "type": "array",
+      "description": "Every legitimate cross-cohort coordinate flow. cross_atlas_imports.js denies cross-cohort reads UNLESS they match a handoff entry.",
+      "items": {
+        "type": "object",
+        "required": ["handoff_id", "from_cohort", "to_cohort", "via_layer_pattern", "handoff_kind", "rationale"],
+        "additionalProperties": false,
+        "properties": {
+          "handoff_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Stable slug. Unique across handoffs."
+          },
+          "from_cohort": {
+            "type": "string",
+            "description": "cohort_id of the producer side."
+          },
+          "to_cohort": {
+            "type": "string",
+            "description": "cohort_id of the consumer side."
+          },
+          "via_layer_pattern": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Regex matched against `<atlas_id>.<layer_id>`. Single source of truth for which producer layers this handoff covers."
+          },
+          "handoff_kind": {
+            "type": "string",
+            "enum": ["coordinate_handoff", "reference_join", "none_yet"],
+            "description": "What's being passed across the cohort boundary. 'coordinate_handoff' = bp positions / interval coords only (BP_ATLAS pattern). 'reference_join' = both sides share a reference assembly. 'none_yet' = reserved for future handoffs."
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Why this read is safe. Required, audited at review. The text is shown verbatim in CohortMismatchError messages."
+          }
+        }
+      }
+    }
+  }
+}

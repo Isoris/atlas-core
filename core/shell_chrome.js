@@ -354,10 +354,25 @@ function _wireJsScriptsBadge() {
   badge.addEventListener('click', () => {
     refresh();
     const tags = _collectScriptTags();
-    const modules = _collectRegisteredModules();
+    const allModules = _collectRegisteredModules();
+    // 2026-05-23: window.__atlasJsRegistry is a process-lifetime global
+    // that accumulates entries from every atlas you've ever visited in
+    // this tab. Filtering to the active atlas matches what the user
+    // expects when they click the badge — "what's running for THIS
+    // atlas right now". The full cross-atlas list is still available
+    // under the "all atlases" tab below. Active atlas is inferred from
+    // the hash (#/<atlas_id>/<page_id>); falls back to "all" when there
+    // is no hash. Modules are bucketed by name/path prefix matching the
+    // atlas id (page modules push `relatedness/karyotypes` etc.).
+    const activeAtlas = _activeAtlasFromHash();
+    const scopedModules = activeAtlas
+      ? allModules.filter(m => _moduleBelongsTo(m, activeAtlas))
+      : allModules;
     _openModal({
-      title: 'JavaScript modules',
-      body: _jsScriptsModalBody(tags, modules),
+      title: activeAtlas
+        ? `JavaScript modules · ${activeAtlas}`
+        : 'JavaScript modules',
+      body: _jsScriptsModalBody(tags, scopedModules, allModules, activeAtlas),
     });
   });
 }
@@ -377,7 +392,25 @@ function _collectRegisteredModules() {
   return reg.slice();
 }
 
-function _jsScriptsModalBody(tags, modules) {
+function _activeAtlasFromHash() {
+  const h = (window.location.hash || '').replace(/^#\/?/, '');
+  if (!h) return null;
+  const aid = h.split('/')[0];
+  return aid || null;
+}
+
+function _moduleBelongsTo(mod, atlasId) {
+  if (!mod || !atlasId) return false;
+  const name = String(mod.name || '');
+  const path = String(mod.path || '');
+  // page modules typically push name="<atlas_id>/<page_id>" and
+  // path="atlases/<atlas_id>/pages/.../<page>.js". Either side is enough.
+  return name.startsWith(`${atlasId}/`) ||
+         path.startsWith(`atlases/${atlasId}/`) ||
+         path.includes(`/atlases/${atlasId}/`);
+}
+
+function _jsScriptsModalBody(tags, modules, allModules, activeAtlas) {
   const tagRows = tags.length === 0
     ? `<div class="dim">No <code>&lt;script src&gt;</code> tags in document.</div>`
     : tags.map(t => `
@@ -388,7 +421,7 @@ function _jsScriptsModalBody(tags, modules) {
         </div>`).join('');
 
   const moduleRows = modules.length === 0
-    ? `<div class="dim">No ES modules registered themselves on <code>window.__atlasJsRegistry</code>.</div>`
+    ? `<div class="dim">No ES modules registered themselves on <code>window.__atlasJsRegistry</code>${activeAtlas ? ` for atlas '${_esc(activeAtlas)}' yet` : ''}.</div>`
     : modules.map(m => `
         <div style="display: grid; grid-template-columns: 24px 1fr 1fr; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--rule);">
           <div style="color: var(--good);">✅</div>
@@ -396,7 +429,12 @@ function _jsScriptsModalBody(tags, modules) {
           <div class="dim" style="font-size: 11px;">${_esc(m.path || m.kind || '')}</div>
         </div>`).join('');
 
+  const scopeBanner = activeAtlas
+    ? `<div style="font-size: 11px; color: var(--ink-dim); margin-bottom: 10px;">Showing modules for <b>${_esc(activeAtlas)}</b> only — ${modules.length} of ${(allModules || modules).length} loaded this session.</div>`
+    : '';
+
   return `
+    ${scopeBanner}
     <div style="margin-bottom: 14px;">
       <div style="font-size: 10px; color: var(--ink-dimmer); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">
         &lt;script src&gt; tags (${tags.length})

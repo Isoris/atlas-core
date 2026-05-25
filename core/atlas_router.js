@@ -513,7 +513,19 @@ export class AtlasRouter {
       sel.className = 'atlas-switcher-select';
       sel.setAttribute('aria-label', 'Active atlas');
       sel.title = 'Switch atlas';
-      for (const [aid, mf] of this.manifests) {
+      // 2026-05-23: sort the dropdown alphabetically by atlas_name (the
+      // user-visible label) instead of by atlas_id insertion order. Earlier
+      // the order was atlas_id-alphabetical via the assembled _index.json,
+      // which put 'popstats' (Population Statistics Atlas) BEFORE
+      // 'population' (Population Atlas) because 's' < 'u'. Sorting by
+      // atlas_name fixes that — and keeps the bundled 'core' atlas first
+      // because "Atlas Core" sorts before everything else alphabetically.
+      const sorted = [...this.manifests.entries()].sort(([aidA, mfA], [aidB, mfB]) => {
+        const a = (mfA.atlas_name || aidA).toLocaleLowerCase();
+        const b = (mfB.atlas_name || aidB).toLocaleLowerCase();
+        return a < b ? -1 : a > b ? 1 : 0;
+      });
+      for (const [aid, mf] of sorted) {
         const opt = document.createElement('option');
         opt.value = aid;
         opt.textContent = mf.atlas_name || aid;
@@ -697,7 +709,13 @@ export class AtlasRouter {
     wrap.dataset.color = activeColor;
 
     drop.innerHTML = '';
-    for (const [aid, mf] of this.manifests) {
+    // 2026-05-23: same alphabetical-by-atlas_name sort as the topbar select.
+    const sortedRows = [...this.manifests.entries()].sort(([aidA, mfA], [aidB, mfB]) => {
+      const a = (mfA.atlas_name || aidA).toLocaleLowerCase();
+      const b = (mfB.atlas_name || aidB).toLocaleLowerCase();
+      return a < b ? -1 : a > b ? 1 : 0;
+    });
+    for (const [aid, mf] of sortedRows) {
       const row = document.createElement('button');
       row.type = 'button';
       row.className = 'atlas-row';

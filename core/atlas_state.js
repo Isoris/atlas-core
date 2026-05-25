@@ -1,6 +1,10 @@
 // core/atlas_state.js
 // =====================================================================
 // The global AtlasState container.
+
+import { persistDebounced } from './persist_debounced.js';
+
+
 //
 // Lives on window.AtlasState. Pages read/write through it directly.
 // Shape (per SPEC_atlas_state_v1.md, TBD):
@@ -217,11 +221,14 @@ export class AtlasState {
         }
       }
     }
-    try {
-      localStorage.setItem('atlas_state_v1', JSON.stringify(out));
-    } catch (e) {
-      console.warn('AtlasState.savePersisted: localStorage write failed:', e);
-    }
+    // 2026-05-21 perf: route through persistDebounced so rapid clicks
+    // (every navigate + every scope-pick fires savePersisted) coalesce
+    // into one localStorage write per ~300ms. Pre-fix this was a
+    // synchronous JSON.stringify + setItem per call — for `out` with
+    // chromSummaries populated, the stringify alone is ~1-5ms each.
+    // Quota errors and disabled-localStorage still drop silently inside
+    // the helper.
+    persistDebounced('atlas_state_v1', out);
   }
 
   loadPersisted() {

@@ -526,7 +526,12 @@
       "Read(//c/Users/quent/**)",
       "Bash(python build/_lint_atlases.py)",
       "Bash(python -c 'import json, sys; *)",
-      "Bash(python -c 'import yaml *)"
+      "Bash(python -c 'import yaml *)",
+      "Bash(python /tmp/_lskey_check.py)",
+      "Bash(grep -i \"atlas$\")",
+      "Bash(grep -n \"^\\\\s\\\\{2,4\\\\}[a-zA-Z_]\\\\+\\\\\\(.*\\\\\\)\\\\s*{\" core/atlas_router.js)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\quent\\\\Desktop\\\\population-atlas\\\\atlases\\\\population\\\\pages\" -Recurse -File | Where-Object {$_.Extension -in '.html', '.js'} | Select-Object -ExpandProperty FullName | Sort-Object)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\quent\\\\Desktop\\\\meiosis-atlas\\\\atlases\\\\meiosis\\\\pages\\\\\" -Recurse -Include \"*.html\", \"*.js\" | Select-Object -ExpandProperty FullName | Sort-Object)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

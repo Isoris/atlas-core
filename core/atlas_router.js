@@ -220,6 +220,40 @@ export class AtlasRouter {
   _renderScopebar(currentAtlas) {
     const bar = document.getElementById('scopebar');
     if (!bar) return;
+
+    // 2026-05-21 perf: skip the rebuild when the active atlas hasn't
+    // changed. The pickers are stable per atlas; only the selected
+    // values may shift (and those track shared state via change events
+    // anyway). Just re-sync the values to the current state so a
+    // re-mount after a scope change in a different tab reflects the
+    // current truth, then return early.
+    if (this._scopebarBuiltFor === currentAtlas && currentAtlas) {
+      const manifest = this.manifests.get(currentAtlas);
+      const pickers = (manifest && Array.isArray(manifest.scope_pickers))
+        ? manifest.scope_pickers : [];
+      for (const picker of pickers) {
+        if (!picker || !picker.slot) continue;
+        const wrap = bar.querySelector(
+          `.scope-picker[data-atlas="${currentAtlas}"][data-slot="${picker.slot}"]`);
+        if (!wrap) continue;
+        const sel = wrap.querySelector('select');
+        if (!sel) continue;
+        const isShared = picker.shared !== false;
+        const cur = isShared
+          ? this.state.shared[picker.slot]
+          : (this.state[currentAtlas] || {})[picker.slot];
+        sel.value = (cur != null) ? String(cur) : '';
+      }
+      // Re-run auto-options too — it's dedup'd via _autoOptionsCache so
+      // a hit is cheap. Needed in case auto options arrived AFTER the
+      // last full render (race-free this way).
+      this._populateAutoOptions(currentAtlas).catch(err => {
+        console.warn('scope-picker auto_options_from failed:', err);
+      });
+      return;
+    }
+    this._scopebarBuiltFor = currentAtlas;
+
     bar.innerHTML = '';
 
     // Only render pickers for the currently-active atlas. Pickers from
@@ -458,6 +492,49 @@ export class AtlasRouter {
   _renderTopbar(currentAtlas, currentPage) {
     const bar = document.getElementById('topbar');
     if (!bar) return;
+
+    // 2026-05-21 perf: skip the full rebuild when only the active PAGE
+    // changed within the same atlas. The topbar structure (atlas
+    // switcher, stage pills, tab buttons) is identical for two pages
+    // under the same atlas; only the .active class on one button shifts.
+    // Pre-fix every tab click rebuilt the entire topbar (10-20ms with
+    // multi-atlas + many stages); post-fix only the active class moves.
+    if (this._topbarBuiltFor === currentAtlas) {
+      bar.querySelectorAll('button.active').forEach(b => {
+        if (!b.classList.contains('tab-stage-pill')) b.classList.remove('active');
+      });
+      if (currentAtlas && currentPage) {
+        // Match by data-page-id (stamped at build time below). O(1)
+        // querySelector instead of walking + text-matching all buttons.
+        const target = bar.querySelector(`button[data-page-id="${currentPage}"]`);
+        if (target) target.classList.add('active');
+      }
+      // Stage may have changed (different page → different stage). Update
+      // data-active-stage + per-button .stage-hidden. Also clear
+      // data-collapsed so a previously-collapsed pill state doesn't
+      // hide every tab in the new stage.
+      let newStage = null;
+      if (currentAtlas && currentPage) {
+        const mf = this.manifests.get(currentAtlas);
+        const p = mf && mf.pages && mf.pages.find(x => x.id === currentPage);
+        if (p && p.stage) newStage = p.stage;
+      }
+      if (newStage && (bar.dataset.activeStage !== newStage
+                       || bar.dataset.collapsed === '1')) {
+        bar.dataset.activeStage = newStage;
+        delete bar.dataset.collapsed;
+        bar.querySelectorAll('button[data-stage]:not(.tab-stage-pill)').forEach(b => {
+          if (b.dataset.stage === newStage) b.classList.remove('stage-hidden');
+          else                              b.classList.add('stage-hidden');
+        });
+        bar.querySelectorAll('.tab-stage-pill').forEach(p => {
+          p.dataset.expanded = (p.dataset.stage === newStage) ? '1' : '0';
+        });
+      }
+      return;
+    }
+    this._topbarBuiltFor = currentAtlas;
+
     bar.innerHTML = '';
 
     // The settings gear (#globalSettingsBtn) used to live here at the
@@ -670,6 +747,10 @@ export class AtlasRouter {
           }
           btn.appendChild(document.createTextNode(' ' + (page.label || page.id)));
           if (page.tooltip) btn.title = page.tooltip;
+          // 2026-05-21 perf: stamp data-page-id so the partial-update
+          // path in _renderTopbar can locate the right tab by id, not
+          // by text (which would mismatch on label-suffix collisions).
+          btn.dataset.pageId = page.id;
           if (atlas_id === currentAtlas && page.id === currentPage) {
             btn.classList.add('active');
           }

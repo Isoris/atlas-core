@@ -6,6 +6,38 @@ This spec documents the **bundle** version (Markdown + TSV + JSON +
 figure references) that drops cleanly into a Methods/Results/Supplementary
 skeleton.
 
+**Slices 1 + 2 + 3 + 5 shipped 2026-05-26:**
+- [`inversion-atlas/atlases/inversion/shared/manuscript_bundle.js`](../../inversion-atlas/atlases/inversion/shared/manuscript_bundle.js)
+  exports `renderCandidateParagraph(cand, opts)`,
+  `renderResultsBoilerplate(candidates, opts)`,
+  `renderBundleReadme(meta)`,
+  `renderSupplementaryTableS1(candidates)`,
+  `renderKaryotypeMatrix(candidates, samples)`,
+  `renderAtlasLinks(candidates, opts)`, and the
+  Slice-1 assembler `buildManuscriptBundleBlob({ candidates, samples,
+  meta?, figures?, linkOpts?, catalogueTSV?, methodsBoilerplate? })
+  → Promise<Blob>`. Pure (the assembler is async only because of the
+  dynamic import of zip_store); no DOM, no state.
+- [`inversion-atlas/atlases/inversion/shared/zip_store.js`](../../inversion-atlas/atlases/inversion/shared/zip_store.js)
+  is the dep-free STORE-only ZIP writer that backs Slice 1. ~150 LOC;
+  CRC-32 with a 256-entry table; produces files that unzip cleanly in
+  macOS Archive Utility, Windows Explorer, 7-Zip, Info-ZIP `unzip`,
+  Python `zipfile`. No DEFLATE (text contents compress at the HTTP
+  layer); no ZIP64 (capped at 4 GB / 65535 entries, well within scope).
+- Tests:
+  [`test_shared_manuscript_bundle.js`](../../inversion-atlas/tests/test_shared_manuscript_bundle.js)
+  + [`test_shared_zip_store.js`](../../inversion-atlas/tests/test_shared_zip_store.js)
+  cover paragraph + table + link rendering edge cases plus the bundle
+  assembler (10-file zip layout + filename presence + pass-through of
+  caller-supplied catalogueTSV and methodsBoilerplate), and the zip
+  writer (CRC-32 against RFC test vectors, local-file-header / EOCD
+  layout, empty zip, unicode filenames + content round-trip, input
+  validation).
+- Only Slice 4 (figure SVGs) still pending — depends on un-shipped
+  per-figure SPECs. The bundle accepts caller-supplied SVGs today
+  (`args.figures = [{ name, svg }]`); Slice 4 is the "generate the
+  SVGs from the atlas state" half.
+
 **Trigger** (Quentin, multiple chats, paraphrased):
 > *"Full automatic export manuscript text and send to you to write and
 > finish."*

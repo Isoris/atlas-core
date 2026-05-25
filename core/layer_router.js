@@ -59,8 +59,8 @@ export class LayerRouter {
   // tsv/csv. Ignored for json/text/binary (where column-level filtering
   // doesn't apply). Out-of-list columns are dropped at parse time so
   // wide files don't waste RAM. See parseDelimited for semantics.
-  async fetchFile(path, format = 'json', fields = null) {
-    if (format === 'json')   return this._fetchJson(path);
+  async fetchFile(path, format = 'json', fields = null, opts = null) {
+    if (format === 'json')   return this._fetchJson(path, opts);
     if (format === 'tsv')    return this._fetchDelimited(path, '\t', fields);
     if (format === 'csv')    return this._fetchDelimited(path, ',', fields);
     if (format === 'text')   return this._fetchText(path);
@@ -74,9 +74,26 @@ export class LayerRouter {
     return resp.text();
   }
 
-  async _fetchJson(path) {
+  async _fetchJson(path, opts) {
     const resp = await fetch(path);
     if (!resp.ok) throw new Error(`LayerRouter: GET ${path} → HTTP ${resp.status}`);
+    // 2026-05-26 perf: opt-in worker parse for genuinely heavy payloads
+    // (set `worker_parse: true` on the layer entry). The parse blocks
+    // the main thread for ~300-800 ms on a 30 MB scrubber_main JSON;
+    // offloading keeps paint + scroll + clicks responsive during the
+    // mount await. Falls back to a main-thread JSON.parse on the same
+    // text when Worker or the helper module is unavailable.
+    if (opts && opts.worker_parse) {
+      const text = await resp.text();
+      try {
+        const { parseJsonInWorker } = await import('./worker_json_parse.js');
+        return await parseJsonInWorker(text);
+      } catch (e) {
+        console.warn(`[LayerRouter] worker_parse failed for ${path}; main-thread fallback:`,
+          (e && e.message) || e);
+        return JSON.parse(text);
+      }
+    }
     return resp.json();
   }
 
@@ -224,28 +241,31 @@ export function parseDelimited(text, sep, fieldsAllowList = null, opts = {}) {
 
   if (header === null) return [];
 
-  // Coerce numeric columns. Only for columns we actually kept.
+  // 2026-05-21 perf (Tier-C finding #3): single-pass numeric coercion.
+  // Previously this loop did two passes per column — one to decide
+  // numeric-ness, one to coerce. For a 100k-row TSV with 20 columns
+  // that's 4M visits. Combined pass: collect Numbers as we scan; if we
+  // hit a non-numeric, fall back to the original strings for that
+  // column without touching the others.
   const colsToCoerce = allowSet
     ? header.filter((c) => allowSet.has(c))
     : header;
 
   for (const col of colsToCoerce) {
+    const coerced = new Array(rows.length);
     let allNumeric = true;
-    for (const row of rows) {
-      const v = row[col];
-      if (v === '' || v === 'NA' || v === 'NaN') continue;
+    for (let i = 0; i < rows.length; i++) {
+      const v = rows[i][col];
+      if (v === '' || v === 'NA' || v === 'NaN') {
+        coerced[i] = null;
+        continue;
+      }
       const n = Number(v);
       if (!Number.isFinite(n)) { allNumeric = false; break; }
+      coerced[i] = n;
     }
     if (allNumeric) {
-      for (const row of rows) {
-        const v = row[col];
-        if (v === '' || v === 'NA' || v === 'NaN') {
-          row[col] = null;
-        } else {
-          row[col] = Number(v);
-        }
-      }
+      for (let i = 0; i < rows.length; i++) rows[i][col] = coerced[i];
     }
   }
 

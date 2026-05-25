@@ -1,7 +1,7 @@
 # SPEC — Mode-B pattern: cross-checking carved data against the registry
 
 **Audience**: anyone adding a Mode-B probe to a new atlas page, debugging a
-drifting badge, or extending the workspace-wide tally chip.
+drifting badge, or adding a new probe.
 
 **Status**: shipped 2026-05-20. 18 pages wired across 6 atlases. Helper +
 event bus + CSS + tally all live in `atlas-core/core/` and `atlas-core/css/`.
@@ -13,9 +13,7 @@ registry. A "Mode-B probe" calls the registry path at mount time, compares
 the result to the page's primary source via a small comparator callback, and
 renders a single-line badge above the page content showing whether the two
 agree (`●` live), disagree (`⚠` drift), or whether the registry path is
-empty (`○` data pending / unavailable). All 18 badges also dispatch a
-`mode_b_badge_render` `CustomEvent`; a workspace tally chip in the top chrome
-subscribes and reports `Mode B ●8 ⚠1 ○9` across loaded atlases.
+empty (`○` data pending / unavailable). 
 
 ---
 
@@ -59,11 +57,9 @@ apart for debugging.
 
 | File | Role |
 |---|---|
-| [`core/mode_b_badge.js`](../core/mode_b_badge.js) | Canonical helper. Exports `probeModeB`, `renderModeBBadge`, `medianOf`, `meanOf`, `distinctCount`, `relDiff`. ~190 LOC. |
-| [`core/mode_b_tally.js`](../core/mode_b_tally.js) | Workspace tally chip. Exports `mountModeBTally(host)`. Subscribes to the `mode_b_badge_render` event. ~95 LOC. |
-| [`core/shell_chrome.js`](../core/shell_chrome.js) — `_wireModeBTally()` | Dynamic-imports `mode_b_tally.js` at shell boot and mounts it into `#modeBTallyHost`. |
-| [`css/badges.css`](../css/badges.css) | Style for `.data-source-badge` (per-page slot) + `.mode-b-tally` (chrome chip). Uses tokens `--ink-dim` / `--panel-2` / `--rule` from `tokens.css`. |
-| [`index.html`](../index.html) | Loads `badges.css`; declares `#modeBTallyHost` next to `#jsScriptsBadge`. |
+| [`core/mode_b_badge.js`](../../core/mode_b_badge.js) | Canonical helper. Exports `probeModeB`, `renderModeBBadge`, `medianOf`, `meanOf`, `distinctCount`, `relDiff`. ~190 LOC. |
+| [`css/badges.css`](../../css/badges.css) | Style for `.data-source-badge` (per-page slot) + `.mode-b-card` (expanded card). Uses tokens `--ink-dim` / `--panel-2` / `--rule` from `tokens.css`. |
+| [`index.html`](../../index.html) | Loads `badges.css`. |
 
 Per-atlas pages declare ONLY the badge slot (`<div id="..." class="data-source-badge">`)
 and call `probeModeB` + `renderModeBBadge` from their `mount()`. No per-atlas
@@ -125,9 +121,6 @@ the slot is missing (browser-less test mode, deferred-mount race).
 | `context` | string | Scope tag (chrom / candidate id / version id) appended after the label. Surfaces multi-scope debugging. |
 | `compare` | `(probeResult) => { pass, summary }` | Comparator. `pass=false` → ⚠ drift. Omit → generic `(N rows resolved)` summary. |
 | `provenance` | `ctx.PROVENANCE` block from a data_loader | Appends `— vs carve: <version> · sha <hash>` to the tooltip. Diversity-only today; other atlases stamp on demand. |
-
-Also dispatches a `mode_b_badge_render` `CustomEvent` on `document` so the
-tally chip updates. See §6.
 
 ### Statistic helpers
 
@@ -254,59 +247,7 @@ const pass = loaded.length === axes.length && new Set(loaded.map(r => r.n)).size
 
 ---
 
-## 6. Event-bus contract
-
-Every `renderModeBBadge` call dispatches:
-
-```js
-new CustomEvent('mode_b_badge_render', {
-  bubbles: true,
-  composed: true,
-  detail: {
-    slotId,                    // 'myPageModeBBadge'
-    label,                     // 'short name'
-    layerKey,                  // 'my_layer_key'
-    context,                   // 'C_gar_LG28' or null
-    state,                     // 'live' | 'drift' | 'stub' | 'missing'
-    n,                         // probeResult.n or 0
-    reason,                    // probeResult.reason or null
-  },
-});
-```
-
-Consumers (today: just `mode_b_tally.js`) key by `slotId` so re-renders update
-the existing entry instead of double-counting. Stale entries from unmounted
-pages are NOT pruned automatically — the chip subscriber owns pruning if it
-cares.
-
-Adding a second consumer: attach a `document.addEventListener` and dedupe by
-`slotId`. The event is `composed: true`, so shadow-DOM-isolated subscribers
-also see it.
-
----
-
-## 7. Workspace tally chip
-
-[`core/mode_b_tally.js`](../core/mode_b_tally.js) — `mountModeBTally(host)`
-attaches one chip to `host`. Idempotent: if the host already has a chip,
-returns a no-op teardown.
-
-Renders:
-
-```
-Mode B  ●8  ⚠1  ○9
-```
-
-Zero-count states get `opacity: 0.35`. Tooltip lists every slot sorted
-`live → drift → stub → missing → most-recent-first`. The chip hides itself
-when the count is zero (e.g. before any page has mounted).
-
-Mounted from `shell_chrome.js::_wireModeBTally()` via dynamic import — keeps
-the shell bundle thin if Mode-B is ever disabled wholesale.
-
----
-
-## 8. The 18 wired pages
+## 6. The 18 wired pages
 
 Reference for the cookbook (each pattern shows up at least twice):
 
@@ -333,15 +274,13 @@ Reference for the cookbook (each pattern shows up at least twice):
 
 ---
 
-## 9. CSS tokens consumed
+## 7. CSS tokens consumed
 
 | Token | Used for | Defined in |
 |---|---|---|
 | `--ink-dim` | badge + chip text colour | `tokens.css` (all 3 themes) |
 | `--panel-2` | badge + chip background | `tokens.css` (all 3 themes) |
 | `--rule` | badge left border + chip outline | `tokens.css` (all 3 themes) |
-| `--ink-dimmer` | tally chip `○ stub` glyph fallback | `tokens.css` (some themes); falls back to `#6a7280` |
-| `--mono` | tally chip font stack | `tokens.css`; falls back to system mono stack |
 
 The two glyph-tone colours (`#3cc08a` for `●` live, `#f5a524` for `⚠` drift)
 are hardcoded in `badges.css` rather than tokenised — they match the
@@ -350,7 +289,7 @@ should stay in sync with it.
 
 ---
 
-## 10. Adding a new wired page (checklist)
+## 8. Adding a new wired page (checklist)
 
 1. **HTML**: insert `<div id="<page>ModeBBadge" class="data-source-badge"></div>`
    above the first content card.
@@ -360,8 +299,7 @@ should stay in sync with it.
 4. **mount() call**: append `_render<Page>Badge(atlasState, registry).catch(...)`
    AFTER the existing synchronous render. Non-blocking.
 5. **Verify**: balance check (`python3 -c "..."`), then if the atlas has a
-   smoke test, run it. The tally chip will tick up at the next page mount
-   in the browser.
+   smoke test, run it.
 
 Onboarding cost is **1 import line + 1 helper function + 1 mount call** —
 deliberately the same shape across all 18 callsites so the pattern stays
@@ -369,20 +307,18 @@ greppable.
 
 ---
 
-## 11. Failure modes seen in the wild
+## 9. Failure modes seen in the wild
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `○ registry-not-injected` on every page | Shell not passing `registry` as 3rd `mount()` arg | Should not happen — `atlas_router.js:114` does this. If observed, atlas-core regression. |
-| `○ empty-result` on a `format: tsv` layer | Static mount unreachable, or `parseDelimited` skipped the header | Check `master_config.yaml` root + first-line `#` prefix (see [`extractors/pestpg.py` history](../../diversity-atlas/atlases/diversity/registries/extractors/pestpg.py) — same bug class on the Python side, fixed in turn 2026-05-20). |
+| `○ empty-result` on a `format: tsv` layer | Static mount unreachable, or `parseDelimited` skipped the header | Check `master_config.yaml` root + first-line `#` prefix (see [`extractors/pestpg.py` history](../../../diversity-atlas/atlases/diversity/registries/extractors/pestpg.py) — same bug class on the Python side, fixed in turn 2026-05-20). |
 | `○ stub-payload` on an optional payload | File exists but empty `{}` — round-1 stub state | Expected today; auto-flips to `●` when upstream pipeline writes a real payload. |
 | `⚠` even though carve looks right | Comparator's pass condition is too strict | Loosen the threshold (`< 0.01` → `< 0.05`), or surface a soft `summary` without flipping `pass: false`. The badge is provenance, not validation gate. |
-| Tally chip says 18 ●, page says ⚠ | Tally is keyed by `slotId`; one page may have re-rendered live AFTER a drift event. Tally shows latest. | Working as intended. Hover the chip to see the per-slot breakdown. |
-| Tally chip stays at zero | `mountModeBTally` failed to find `#modeBTallyHost` | Check `index.html` has the host element (was added 2026-05-20); confirm `shell_chrome.js::_wireModeBTally` is in the boot path. |
 
 ---
 
-## 12. Future work
+## 10. Future work
 
 Not blocking any current round. Listed so a future session knows the obvious
 gaps:
@@ -392,27 +328,19 @@ gaps:
    `"mode_b_probe": { "layerKey": "samples_genomewide_het" }`) would let
    the chrome surface coverage stats without needing each page to mount
    first. ~30 min to refactor 18 callsites.
-2. **Tally-chip click → coverage report**. Today the chip is read-only.
-   Click → open a popover listing all slots with their current state and
-   "go to page" links would replace the tooltip for serious debugging.
-3. **CI report**. A headless run could emit "this branch adds 2 ●, breaks 1
+2. **CI report**. A headless run could emit "this branch adds 2 ●, breaks 1
    from ● → ⚠" to the PR description. Useful at the 50+ page coverage mark.
-4. **Promote the green/orange glyph colours** to tokens. Currently
+3. **Promote the green/orange glyph colours** to tokens. Currently
    hardcoded in `badges.css`; should match the inversion `pca_comparator`
    concord badge's palette if either ever changes.
-5. **Optional pruning** of stale slots from `mode_b_tally.js::_slots` on
-   page unmount. Currently the Map accumulates forever; for long-running
-   sessions a 100-page count is fine, a 10000-page count would leak.
-
 ---
 
-## 13. Provenance
+## 11. Provenance
 
 | | |
 |---|---|
 | Pattern shipped | 2026-05-20 |
 | First atlas | diversity-atlas (`samples` page) |
 | Promoted to atlas-core/core | 2026-05-20 (third-use threshold met by inversion-atlas) |
-| Workspace tally + CSS extraction | 2026-05-20 |
 | Authors | Quentin Andres (architecture) + Claude (implementation) |
-| Reference smoke test | [`atlases/diversity/pages/per_sample/test_samples_modeb.js`](../../diversity-atlas/atlases/diversity/pages/per_sample/test_samples_modeb.js) — 10 cases including a real-disk variant |
+| Reference smoke test | [`atlases/diversity/pages/per_sample/test_samples_modeb.js`](../../../diversity-atlas/atlases/diversity/pages/per_sample/test_samples_modeb.js) — 10 cases including a real-disk variant |

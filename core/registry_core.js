@@ -32,7 +32,9 @@ export class Registry {
     this.cache = new CacheStore();
     this.runner = new OperationRunner({ serverBaseUrl });
     this.router = new LayerRouter();
-    this.serverBaseUrl = serverBaseUrl || 'http://localhost:8765';
+    // 2026-05-26: empty string is a valid value (same-origin). See
+    // operation_runner.js for full rationale. Only undefined/null falls back.
+    this.serverBaseUrl = (typeof serverBaseUrl === 'string') ? serverBaseUrl : 'http://localhost:8765';
     // master_config (per toolkit_registries/MASTER_CONFIG.md). Optional —
     // when null, layers must use bare `path:` (resolved atlas-relative
     // via _resolveAtlasFilePath). When present, layers may opt in to
@@ -890,7 +892,12 @@ export class Registry {
         path = this._resolveAtlasFilePath(filled, atlas_id);
       }
       const fields = this._resolveFields(entry, args);
-      return this.router.fetchFile(path, entry.format || 'json', fields);
+      // 2026-05-26: opt-in worker_parse for heavy JSON layers. The flag
+      // sits on the layer entry (e.g. layers.registry.json sets
+      // `worker_parse: true` on scrubber_main). Forwarded as a router
+      // option so unknown layers don't trigger Worker spin-up.
+      const routerOpts = entry.worker_parse ? { worker_parse: true } : null;
+      return this.router.fetchFile(path, entry.format || 'json', fields, routerOpts);
     }
     if (entry.source === 'operation') {
       const opLookup = this._operationIndex.get(entry.operation);

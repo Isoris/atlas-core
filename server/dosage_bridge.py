@@ -212,8 +212,29 @@ def _detect_dosage_header(first_line: str, n_samples_expected: int) -> bool:
     return False
 
 
+# 2026-05-21 perf (Tier-B finding #5): cache parsed samples lists keyed
+# by (resolved-path, mtime_ns). samples.tsv is tiny (~1KB, ~200 lines)
+# and never changes mid-session, but the original _read_samples re-read
+# + re-parsed it on EVERY dosage chunk request. A user scrubbing 10
+# regions in 5 seconds triggered 10 redundant file reads. The cache is
+# bounded by the number of distinct samples files seen (typically 1-3
+# in a session); each entry is a few KB.
+_SAMPLES_CACHE: Dict[Tuple[str, int], List[str]] = {}
+
+
 def _read_samples(path: Path) -> List[str]:
-    """Read one-sample-ID-per-line file. Strips blanks and comments."""
+    """Read one-sample-ID-per-line file. Strips blanks and comments.
+    Result is cached keyed by (absolute-path, file mtime_ns); a stat()
+    happens per call but is much cheaper than a re-read + re-parse.
+    Stat failures fall through to the original read path."""
+    try:
+        st = path.stat()
+        key = (str(path.resolve()), st.st_mtime_ns)
+        cached = _SAMPLES_CACHE.get(key)
+        if cached is not None:
+            return cached
+    except OSError:
+        key = None
     out: List[str] = []
     with open(path, encoding="utf-8") as f:
         for line in f:
@@ -224,6 +245,8 @@ def _read_samples(path: Path) -> List[str]:
             if "\t" in line:
                 line = line.split("\t", 1)[0]
             out.append(line)
+    if key is not None:
+        _SAMPLES_CACHE[key] = out
     return out
 
 
@@ -432,11 +455,25 @@ def handle_dosage_chunk(req: DosageChunkReq, *,
 
     sites_path = dosage_dir / f"{req.chrom}.sites.tsv.gz"
     dos_path = dosage_dir / f"{req.chrom}.dosage.tsv.gz"
+    # 2026-05-26: cohort-prefixed filename fallback. The atlas-side chrom
+    # IDs are bare ("LG01") but on-disk filenames are commonly species-
+    # prefixed ("C_gar_LG01.sites.tsv.gz", per master_config.yaml §dosage).
+    # When the bare-chrom file is missing, scan for any *<chrom>.sites.tsv.gz
+    # match. Tolerant + zero-config; if multiple match (shouldn't happen),
+    # we pick the lex-first deterministically.
+    if not sites_path.exists():
+        candidates = sorted(dosage_dir.glob(f"*{req.chrom}.sites.tsv.gz"))
+        if candidates:
+            sites_path = candidates[0]
+            # Derive the matching dosage path from the same prefix.
+            prefix = sites_path.name[:-len(f"{req.chrom}.sites.tsv.gz")]
+            dos_path = dosage_dir / f"{prefix}{req.chrom}.dosage.tsv.gz"
     if not sites_path.exists():
         raise HTTPException(status_code=404, detail={
             "error": "chrom_not_found",
             "chrom": req.chrom,
             "expected_file": str(sites_path),
+            "hint": f"Also tried glob *{req.chrom}.sites.tsv.gz under {dosage_dir}.",
         })
     if not dos_path.exists():
         raise HTTPException(status_code=404, detail={

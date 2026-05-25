@@ -42,11 +42,19 @@ export class ChromPrewarmScheduler {
    * @param {object} opts.registry     — Registry (for resolve())
    * @param {function} [opts.getChromList]  — () → string[] of all chroms to consider.
    *                                          Default reads the active scope picker DOM.
+   * @param {string[]} [opts.extraLayers]   — Additional layer keys to prewarm
+   *   per chrom AFTER scrubber_main lands. 2026-05-21: added for Tier-C
+   *   finding #1 (pca_comparator's 3-axis cold-fetch). When the consumer
+   *   wants the comparator to feel hot, pass
+   *   `extraLayers: ['scrubber_thetapi','scrubber_ghsl']`. Each extra
+   *   layer is resolved on its own idle tick after the main payload, so
+   *   the active page never competes for bandwidth. Default: [].
    */
-  constructor({ atlasState, registry, getChromList } = {}) {
+  constructor({ atlasState, registry, getChromList, extraLayers } = {}) {
     this.state = atlasState;
     this.registry = registry;
     this.getChromList = getChromList || _readChromListFromScopebar;
+    this.extraLayers = Array.isArray(extraLayers) ? extraLayers.slice() : [];
     this._aborted = false;
     this._inflight = false;
     this._currentToken = 0;
@@ -143,10 +151,38 @@ export class ChromPrewarmScheduler {
         })
         .finally(() => {
           this._inflight = false;
-          // Yield to the browser before the next chrom so the active
-          // page never feels janky from background fetches.
-          _idle(() => this._scheduleNext(queue, token), 500);
+          // 2026-05-21 Tier-C #1: after scrubber_main lands, prewarm any
+          // configured extra layers for this chrom (one per idle tick),
+          // then advance to the next chrom. extraLayers is empty by
+          // default so existing behaviour is unchanged.
+          this._prewarmExtras(chrom, this.extraLayers.slice(), token, () => {
+            _idle(() => this._scheduleNext(queue, token), 500);
+          });
         });
+    };
+    _idle(fire, 1500);
+  }
+
+  // Resolve `extras` one layer at a time on idle ticks. Each resolve
+  // hits the same in-flight-dedup registry path, so a later page mount
+  // that asks for the same layer shares the cached payload. Failures
+  // are swallowed (these are best-effort prewarms; the consuming page
+  // will retry with its own user-visible error path if needed).
+  _prewarmExtras(chrom, queue, token, done) {
+    if (token !== this._currentToken || this._aborted) { done(); return; }
+    if (queue.length === 0) { done(); return; }
+    const layer = queue.shift();
+    const fire = () => {
+      if (token !== this._currentToken || this._aborted) { done(); return; }
+      if (!this.registry || typeof this.registry.resolve !== 'function') { done(); return; }
+      Promise.resolve(this.registry.resolve(layer, { chrom }))
+        .catch((e) => {
+          if (typeof console.debug === 'function') {
+            console.debug(`[chrom prewarm extra] ${chrom}/${layer} skipped:`,
+                          (e && e.message) || e);
+          }
+        })
+        .finally(() => this._prewarmExtras(chrom, queue, token, done));
     };
     _idle(fire, 1500);
   }

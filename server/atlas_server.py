@@ -890,8 +890,16 @@ async def run_angsd_hwe(
 def _parse_hwe_sites(hwe_gz: Path) -> pd.DataFrame:
     """Parse the patched-ANGSD .hwe.gz output. Columns are
     chr pos major minor hweFreq freq F LRT pval [hetFreq] (10-col variant
-    when -maxHetFreq < 1.0 mode, else 9). Mirrors hobs_windower's parser."""
-    df = pd.read_csv(hwe_gz, sep="\t", compression="gzip", low_memory=False)
+    when -maxHetFreq < 1.0 mode, else 9). Mirrors hobs_windower's parser.
+
+    2026-05-21 perf (Tier-B finding #7): pass dtype=str to skip pandas'
+    per-column type sniffing (the typical ~5-20ms cost per call on a
+    multi-MB hwe file). Downstream code already does explicit
+    .astype(int) / .astype(float) on the columns it cares about, so the
+    column-typing happens at the same place — we just skip the sniffing
+    pass that produced unused type guesses for the columns we ignore.
+    """
+    df = pd.read_csv(hwe_gz, sep="\t", compression="gzip", dtype=str)
     # Normalize column casing — patched ANGSD writes "Chromo Position Major Minor hweFreq Freq F LRT p-value"
     rename = {c: c.strip() for c in df.columns}
     df = df.rename(columns=rename)
@@ -1059,7 +1067,20 @@ def _per_group_mean_q(samples_path: Path, groups: Dict[str, List[str]],
     OR wide: window_mid_bp + one column per sample, values = K-vector.
     We sniff the columns and dispatch.
     """
-    df = pd.read_csv(samples_path, sep="\t", compression="gzip", low_memory=False)
+    # 2026-05-21 perf (Tier-B finding #7): explicit dtype hints for the
+    # structural columns skip pandas' sniffing pass for them. Q1..QK
+    # columns are unknown until after the read so we leave them to
+    # inference (Q values are floats; pandas guesses correctly first
+    # time). Modern pandas (>=1.0) silently ignores dtype entries for
+    # columns absent from the file — both `chrom` and `window_start_bp`
+    # are optional in the wide-format variant. Using "object" instead of
+    # "string" keeps compat with pre-1.0 pandas.
+    df = pd.read_csv(
+        samples_path, sep="\t", compression="gzip",
+        dtype={"sample": "object", "chrom": "object",
+               "window_mid_bp": "int64", "window_start_bp": "int64",
+               "window_end_bp": "int64"},
+    )
     cols = list(df.columns)
     q_cols = [c for c in cols if c.startswith("Q") and c[1:].isdigit()]
     if "sample" in cols and q_cols and "window_mid_bp" in cols:
@@ -1182,6 +1203,17 @@ LAYERS_DIR:         Optional[Path]      = None     # <workspace>/layers/
 ATLAS_DISPATCHERS:  Dict[str, Any]      = {}       # atlas_id -> imported python module
 ACTIVE_ATLAS:       Optional[str]       = None     # from <workspace>/master_config.yaml
 SERVER_BIND_URL:    Optional[str]       = None     # http://host:port, used by dispatchers to call back
+
+# 2026-05-21 perf (Tier-B finding #1): in-memory mirror of LAYERS_INDEX_PATH.
+# Loaded once at _bootstrap_actions() time; the server is the only writer
+# (via POST /api/actions → _append_layers_index), so we can keep the cache
+# authoritative and skip re-parsing the JSON on every /api/layers and
+# /api/layers/{id} call. Was: ~50-100ms per call to read + json.loads on a
+# multi-MB index. Now: O(1) dict lookup; the only disk write happens at
+# index-append time. LAYERS_INDEX_BY_ID gives O(1) by-id lookup, replacing
+# the previous O(n) linear scan in /api/layers/{id}.
+LAYERS_INDEX_CACHE:  Dict[str, Any]                  = {"layers": []}
+LAYERS_INDEX_BY_ID:  Dict[str, Dict[str, Any]]       = {}
 
 SERVER_VERSION: str = "v2-merged-turn146"
 
@@ -1737,7 +1769,7 @@ async def list_atlases_dev() -> Dict[str, Any]:
 # =============================================================================
 
 @app.get("/file/{path:path}")
-async def file_get(path: str) -> Response:
+async def file_get(path: str, request: Request) -> Response:
     # Reads from _cache/server_results/* go to the configured cache
     # root (default /mnt/e/inversion-atlas-cache/server_results/). All
     # other reads stay inside PROJECT_ROOT.
@@ -1785,11 +1817,47 @@ async def file_get(path: str) -> Response:
         ct = "image/svg+xml"
     else:
         ct = "application/octet-stream"
+
+    # 2026-05-21 perf (Tier-C finding #2): conditional-GET support via
+    # ETag + Last-Modified. Big static files (precomp scrubber_main is
+    # ~14 MB) survive hard-reloads by responding 304 when unchanged, so
+    # the browser doesn't re-download the body. ETag is weak (size +
+    # mtime_ns) — content equality isn't required for our use case
+    # (atomic file writes are the contract). The short max-age + the
+    # must-revalidate directive together mean the browser will check
+    # with us before serving a stale copy, but the check is the cheap
+    # 304 path rather than a full re-download.
+    try:
+        st = target.stat()
+        etag = f'W/"{st.st_size:x}-{st.st_mtime_ns:x}"'
+        last_modified_ts = st.st_mtime
+    except OSError:
+        etag = None
+        last_modified_ts = None
+
+    if etag is not None:
+        inm = request.headers.get("if-none-match")
+        if inm and inm == etag:
+            cache_headers = {
+                "ETag": etag,
+                "Cache-Control": "public, max-age=10, must-revalidate",
+            }
+            return Response(status_code=304, headers=cache_headers)
+
     try:
         body = target.read_bytes()
     except Exception as e:
         raise HTTPException(500, f"read failed: {type(e).__name__}: {e}")
-    return Response(content=body, media_type=ct)
+
+    headers = {}
+    if etag is not None:
+        headers["ETag"] = etag
+        headers["Cache-Control"] = "public, max-age=10, must-revalidate"
+    if last_modified_ts is not None:
+        # HTTP-date format: per RFC 7231, IMF-fixdate.
+        import email.utils as _eu
+        headers["Last-Modified"] = _eu.formatdate(last_modified_ts, usegmt=True)
+    return Response(content=body, media_type=ct, headers=headers)
 
 
 @app.post("/file/{path:path}")
@@ -2821,16 +2889,40 @@ def _persist_envelope(env: Dict[str, Any], manifest: Dict[str, Any]) -> str:
     return str(out_path.relative_to(WORKSPACE_ROOT))
 
 
-def _append_layers_index(envelopes: List[Dict[str, Any]], paths: List[str]) -> None:
-    if LAYERS_INDEX_PATH is None or not envelopes:
+def _load_layers_index_into_cache() -> None:
+    """Populate LAYERS_INDEX_CACHE + LAYERS_INDEX_BY_ID from disk. Called
+    at bootstrap; the cache is authoritative thereafter (this server is
+    the only writer). Safe to re-call — fully replaces the in-memory
+    state from the on-disk file."""
+    global LAYERS_INDEX_CACHE, LAYERS_INDEX_BY_ID
+    if LAYERS_INDEX_PATH is None or not LAYERS_INDEX_PATH.exists():
+        LAYERS_INDEX_CACHE = {"layers": []}
+        LAYERS_INDEX_BY_ID = {}
         return
     try:
-        idx = json.loads(LAYERS_INDEX_PATH.read_text(encoding="utf-8"))
-    except Exception:
-        idx = {"layers": []}
-    rows = idx.get("layers", [])
+        LAYERS_INDEX_CACHE = json.loads(LAYERS_INDEX_PATH.read_text(encoding="utf-8"))
+    except Exception as e:
+        log.warning("layers index unreadable; starting with empty cache: %s", e)
+        LAYERS_INDEX_CACHE = {"layers": []}
+    if not isinstance(LAYERS_INDEX_CACHE, dict):
+        LAYERS_INDEX_CACHE = {"layers": []}
+    LAYERS_INDEX_BY_ID = {
+        r["layer_id"]: r
+        for r in LAYERS_INDEX_CACHE.get("layers", [])
+        if isinstance(r, dict) and r.get("layer_id")
+    }
+
+
+def _append_layers_index(envelopes: List[Dict[str, Any]], paths: List[str]) -> None:
+    """Append new envelopes to the in-memory cache + write through to disk.
+    The cache is authoritative; we never re-read from disk in this path
+    (avoids a race where two concurrent actions clobber each other via
+    read-modify-write)."""
+    if LAYERS_INDEX_PATH is None or not envelopes:
+        return
+    rows = LAYERS_INDEX_CACHE.setdefault("layers", [])
     for env, path in zip(envelopes, paths):
-        rows.append({
+        row = {
             "layer_id":       env["layer_id"],
             "layer_type":     env["layer_type"],
             "schema_version": env["schema_version"],
@@ -2839,7 +2931,10 @@ def _append_layers_index(envelopes: List[Dict[str, Any]], paths: List[str]) -> N
             "status":         env["status"],
             "created_at":     env["created_at"],
             "path":           path,
-        })
+        }
+        rows.append(row)
+        if row["layer_id"]:
+            LAYERS_INDEX_BY_ID[row["layer_id"]] = row
     LAYERS_INDEX_PATH.write_text(json.dumps({"layers": rows}, indent=2), encoding="utf-8")
 
 
@@ -2872,6 +2967,7 @@ def _bootstrap_actions(workspace_root: Path, bind_url: Optional[str] = None) -> 
     LAYERS_DIR.mkdir(parents=True, exist_ok=True)
     if not LAYERS_INDEX_PATH.exists():
         LAYERS_INDEX_PATH.write_text(json.dumps({"layers": []}, indent=2), encoding="utf-8")
+    _load_layers_index_into_cache()
     ACTIVE_ATLAS = _load_master_config_active_atlas(workspace_root)
     if bind_url:
         SERVER_BIND_URL = bind_url
@@ -3003,14 +3099,15 @@ async def layers_list(
     limit:      int           = 500,
 ) -> Dict[str, Any]:
     """List registered layer envelopes (most-recent last). Filters are
-    optional and combined with AND. `limit` clamps the tail returned."""
-    if LAYERS_INDEX_PATH is None or not LAYERS_INDEX_PATH.exists():
+    optional and combined with AND. `limit` clamps the tail returned.
+
+    2026-05-21 perf: reads from LAYERS_INDEX_CACHE; no disk I/O or
+    json.loads on the request path. Cache is loaded at bootstrap and
+    refreshed on every successful POST /api/actions via
+    _append_layers_index."""
+    if LAYERS_INDEX_PATH is None:
         return {"layers": [], "n": 0, "total": 0}
-    try:
-        idx = json.loads(LAYERS_INDEX_PATH.read_text(encoding="utf-8"))
-    except Exception as e:
-        raise HTTPException(500, f"layers index unreadable: {e}")
-    rows = idx.get("layers", [])
+    rows = LAYERS_INDEX_CACHE.get("layers", [])
     def _match(r: Dict[str, Any]) -> bool:
         if layer_type and r.get("layer_type") != layer_type: return False
         if dataset_id and r.get("dataset_id") != dataset_id: return False
@@ -3024,15 +3121,12 @@ async def layers_list(
 
 @app.get("/api/layers/{layer_id}")
 async def layers_get(layer_id: str) -> Response:
-    """Read the envelope JSON for `layer_id`. Resolves via the layers
-    index; equivalent to GET /file/<index_entry.path>."""
-    if LAYERS_INDEX_PATH is None or not LAYERS_INDEX_PATH.exists():
+    """Read the envelope JSON for `layer_id`. Resolves via the in-memory
+    LAYERS_INDEX_BY_ID map (O(1) — was an O(n) linear scan before).
+    Equivalent to GET /file/<index_entry.path>."""
+    if LAYERS_INDEX_PATH is None:
         raise HTTPException(404, f"layer not found: {layer_id}")
-    try:
-        idx = json.loads(LAYERS_INDEX_PATH.read_text(encoding="utf-8"))
-    except Exception as e:
-        raise HTTPException(500, f"layers index unreadable: {e}")
-    entry = next((r for r in idx.get("layers", []) if r.get("layer_id") == layer_id), None)
+    entry = LAYERS_INDEX_BY_ID.get(layer_id)
     if entry is None or not entry.get("path"):
         raise HTTPException(404, f"layer not found: {layer_id}")
     target = _safe_project_path(entry["path"])

@@ -129,4 +129,6 @@ min_group_n: 10
 cors_origins:
   - "http://localhost:8765"
   - "http://127.0.0.1:8765"
+  - "http://localhost:8000"   # `python -m http.server` default
+  - "http://127.0.0.1:8000"   # `python -m http.server` default
   - "null"           # file:// origin shows as "null" in CORS preflight

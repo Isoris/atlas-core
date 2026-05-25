@@ -165,5 +165,51 @@ console.log('\n=== "auto" knob_hash never flags stale ===');
 }
 
 // ---------------------------------------------------------------------
+console.log('\n=== parallel fan-out — all status fetches start before any resolve ===');
+{
+  // 2026-05-26: locks in the parallelization _collectSnapshot shipped in
+  // this commit. Previously the doubly-nested for-await did one fetch at
+  // a time; now it's Promise.all. We prove the fan-out by gating fetch
+  // resolutions on a barrier — the snapshot can only complete when at
+  // least N fetches are concurrently in-flight.
+  const N = 6;   // 2 atlases × 3 workflows each
+  const reg = {
+    getWorkflows(atlas_id) {
+      if (atlas_id === 'a' || atlas_id === 'b') {
+        return { workflows: [
+          { workflow_id: `${atlas_id}_w1`, label: 'w1', default_knob_hash: 'x',
+            status_file: `_status_${atlas_id}_w1.json` },
+          { workflow_id: `${atlas_id}_w2`, label: 'w2', default_knob_hash: 'x',
+            status_file: `_status_${atlas_id}_w2.json` },
+          { workflow_id: `${atlas_id}_w3`, label: 'w3', default_knob_hash: 'x',
+            status_file: `_status_${atlas_id}_w3.json` },
+        ] };
+      }
+      return null;
+    },
+  };
+  const manifests = new Map([['a', {}], ['b', {}]]);
+
+  let inflight = 0, peak = 0;
+  let resolveBarrier;
+  const barrier = new Promise((r) => { resolveBarrier = r; });
+  const gatedFetch = async (url) => {
+    inflight++;
+    if (inflight > peak) peak = inflight;
+    if (inflight >= N) resolveBarrier();   // all started
+    await barrier;
+    inflight--;
+    return { ok: true, status: 200, text: async () => '',
+             json: async () => ({ knob_hash: 'x', stages_failed: [],
+                                  finished_at: new Date().toISOString(), runner_id: 'local' }) };
+  };
+
+  const snap = await _collectSnapshot(reg, manifests, gatedFetch);
+  ok(peak === N, `all ${N} fetches concurrent at peak (got ${peak})`);
+  ok(snap.total === N, `snapshot still classifies all ${N} workflows`);
+  ok(snap.fresh === N, 'all classified fresh (barrier returns matching knob_hash)');
+}
+
+// ---------------------------------------------------------------------
 console.log(`\n${_pass} passed, ${_fail} failed.`);
 if (_fail > 0) process.exit(1);

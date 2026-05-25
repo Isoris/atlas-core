@@ -464,3 +464,58 @@ header #scopebar select:focus {
   padding: 1px 5px;
   border-radius: 2px;
 }
+
+/* =====================================================================
+ * Floating-sidebar mode (Quentin 2026-05-26; promoted to atlas-core).
+ *
+ * Pages opt in by including `#sidebarFloatBtn` in their HTML. The
+ * core/sidebar_floating.js wirer subscribes to `shell.page_mount` and
+ * auto-installs the toggle + drag handle for any matching page.
+ *
+ * When data-sidebar="floating": aside leaves the grid (position:fixed),
+ * main reclaims the full width. Default position top-right; user-dragged
+ * position persists to localStorage.
+ *
+ * The .wrap > aside grid is per-atlas styling (inversion.css owns the
+ * docked layout). These rules layer on top via the [data-sidebar="floating"]
+ * attribute, so atlases that don't have a docked aside grid are unaffected.
+ * ===================================================================== */
+/* Closed: aside fully hidden; main reclaims the full grid. Default for
+ * opt-in pages (those that include #sidebarFloatBtn). The gear in the
+ * topbar flips closed ↔ floating. */
+.wrap[data-sidebar="closed"] { grid-template-columns: 1fr !important; }
+.wrap[data-sidebar="closed"] > aside { display: none !important; }
+
+.wrap[data-sidebar="floating"] { grid-template-columns: 1fr !important; }
+.wrap[data-sidebar="floating"] > aside {
+  position: fixed;
+  z-index: 200;
+  width: 320px;
+  max-height: 75vh;
+  top: 88px;
+  right: 24px;                 /* default position; overridden by inline left/top after drag */
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+  overflow-y: auto;
+}
+.wrap[data-sidebar="floating"] > aside.sidebar-dragging {
+  user-select: none;
+  cursor: grabbing;
+  box-shadow: 0 18px 52px rgba(0,0,0,0.7),
+              0 0 0 1px var(--accent, #f5a524);
+}
+.wrap[data-sidebar="floating"] > aside h2:first-of-type {
+  cursor: grab;
+  user-select: none;
+  padding-top: 6px;
+  margin-top: 0;
+  position: relative;
+}
+.wrap[data-sidebar="floating"] > aside h2:first-of-type::before {
+  content: '⋮⋮';
+  color: var(--ink-dim);
+  margin-right: 6px;
+  letter-spacing: -2px;
+  font-weight: 400;
+}

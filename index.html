@@ -31,20 +31,18 @@
        header per Quentin's request. The router renders pickers into
        this <nav id="scopebar"> at navigate time. -->
   <nav id="scopebar"></nav>
-  <!-- Per-page parameters-sidebar toggle. Previously lived in the per-atlas
-       topbar (#tabBar) as a large orange gear; promoted into the shell
-       header so it's tone-matched with the other header controls. Click
-       forwards to the active page's #sidebarToggleBtn (see shell_chrome.js). -->
-  <button id="globalSettingsBtn" type="button"
-          title="Toggle the parameters sidebar"
-          aria-label="Toggle parameters sidebar">⚙</button>
-  <span id="schemaBadge" style="display: none;"></span>
+  <!-- 2026-05-26: removed #globalSettingsBtn (header ⚙). Each page now
+       owns its own #sidebarFloatBtn (📌) — the atlas-core
+       core/sidebar_floating.js shell installer wires it on every page
+       mount. The header-level gear was redundant + cluttering. Per-page
+       toggle stays; this just stops duplicating it in the chrome. -->
+  <!-- 2026-05-26: removed #schemaBadge ("schema · N layers") from the
+       header. The chip surfaced the registered layer count for the
+       active atlas — useful for debugging during atlas-onboarding, but
+       noise once the atlas is settled. The wiring in
+       shell_chrome.js#_wireSchemaBadge is safe with the host element
+       absent (`if (!badge) return;`). -->
   <span id="jsScriptsBadge" title="Loaded JavaScript modules registered as window globals.">JS · 0 scripts</span>
-  <!-- Workspace-wide Mode-B tally — mounted by core/mode_b_tally.js,
-       subscribes to the 'mode_b_badge_render' CustomEvent that every
-       per-page Mode-B badge dispatches. Stays hidden until at least
-       one badge reports state. -->
-  <span id="modeBTallyHost" class="shell-chip-host"></span>
 
   <!-- Workflows status chip — mounted by core/workflow_status_badge.js
        (SPEC_workflows_v1 §5). Reads each installed atlas's workflows
@@ -161,7 +159,14 @@ import { setStrictMode as setCrossAtlasStrict }
 
 (async () => {
   try {
-    const SERVER_BASE_URL = window.ATLAS_SERVER_URL || 'http://localhost:5000';
+    // 2026-05-26: default to same-origin (empty base). The unified server
+    // (atlas_server.py) hosts both the static files AND /api/* — port is
+    // chosen by start.sh (default 8000). A hardcoded 'http://localhost:5000'
+    // here used to send dosage-chunk operation requests to a non-existent
+    // port and trip the browser's CORS guard, leaving the heatmap empty
+    // forever. Use window.ATLAS_SERVER_URL to override (e.g. when serving
+    // statics from one host and routing /api/* to another).
+    const SERVER_BASE_URL = window.ATLAS_SERVER_URL || '';
 
     // 2026-05-21 perf: previously this boot block ran in three serial
     // stages — (1) await master_config, (2) await Promise.all([cohorts,
@@ -324,7 +329,20 @@ import { setStrictMode as setCrossAtlasStrict }
     // for each via requestIdleCallback, so subsequent chrom switches
     // come out of the warm-tier IDB cache. Exposed on window so the
     // shell chrome's modal can flip the toggle.
-    const chromPrewarm = new ChromPrewarmScheduler({ atlasState: state, registry });
+    // 2026-05-26: include scrubber_thetapi + scrubber_ghsl in the
+    // background prewarm. These are the same shape + size class as
+    // scrubber_main and load on every chrom_change for the discovery
+    // pages (local_pca_dosage's mount fans out all three). Without them
+    // here, the background prewarm only fills scrubber_main and the
+    // user pays a fresh fetch for thetapi/ghsl on the next page mount;
+    // adding them means a complete warm-tier cache per chrom. Each
+    // extra layer is resolved on its own idle tick AFTER the main
+    // payload, so the active page never competes for bandwidth.
+    const chromPrewarm = new ChromPrewarmScheduler({
+      atlasState: state,
+      registry,
+      extraLayers: ['scrubber_thetapi', 'scrubber_ghsl'],
+    });
     chromPrewarm.attach();
     window.__atlasChromPrewarm = chromPrewarm;
 

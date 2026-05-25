@@ -30,9 +30,28 @@ export function attachShellChrome(opts = {}) {
   _wireServerPing(opts.serverUrl || window.ATLAS_SERVER_URL || 'http://127.0.0.1:8000');
   _wireSchemaBadge();
   _wireJsScriptsBadge();
-  _wireModeBTally();
   _wireWorkflowsBadge(opts);
   _wireChromSummaryBadge(opts);
+  _wireFloatingSidebar(opts);
+}
+
+// Subscribe to the router's `shell.page_mount` event and auto-install
+// the floating-sidebar wirer on any page that has `.wrap > aside` +
+// `#sidebarFloatBtn`. Pages opt in by including the button in their HTML;
+// no per-page mount() call needed. SPEC: Quentin 2026-05-26 promotion of
+// the inversion-atlas prototype to atlas-core.
+function _wireFloatingSidebar(opts) {
+  if (!opts || !opts.atlasState) {
+    // Without an atlasState we can't subscribe to the mount event; the
+    // wirer still works if a page calls installFloatingSidebar() directly.
+    return;
+  }
+  import('./sidebar_floating.js')
+    .then((m) => {
+      try { m.attachFloatingSidebarToShell(opts.atlasState); }
+      catch (e) { console.warn('[shell_chrome] attachFloatingSidebarToShell threw:', e); }
+    })
+    .catch((e) => console.warn('[shell_chrome] sidebar_floating import failed:', e));
 }
 
 // SPEC_multichrom_load_orchestrator Slice 1 — visible counter of how many
@@ -397,33 +416,27 @@ function _wireWorkflowsBadge(opts) {
     .catch((e) => console.warn('[shell_chrome] workflow_status_badge import failed:', e));
 }
 
-// Mount the workspace-wide Mode-B tally chip into #modeBTallyHost. The
-// chip subscribes to the 'mode_b_badge_render' CustomEvent every per-page
-// badge dispatches and shows a single-line count ('● 8  ⚠ 1  ○ 5')
-// across all loaded atlases. Hidden until at least one badge reports.
-function _wireModeBTally() {
-  const host = document.getElementById('modeBTallyHost');
-  if (!host) return;
-  // Lazy import keeps the shell_chrome bundle thin if the tally is ever
-  // disabled — dynamic import returns immediately, mount on resolve.
-  import('./mode_b_tally.js')
-    .then((m) => { try { m.mountModeBTally(host); } catch (_) {} })
-    .catch(() => {});
-}
-
 // Forward header gear clicks to the active page's sidebar.
 //
-// Sidebar collapse semantics live in the active page (e.g. for inversion
-// page1, sidebar.js wires #sidebarToggleBtn against `.wrap[data-sidebar]`
-// and redraws canvases on transition). We click the page-owned toggle so
-// those handlers fire. As a robust fallback — for atlases that haven't
-// wired a toggle button yet, or for the brief window before page-mount —
-// we also flip `.wrap[data-sidebar]` directly so the CSS responds even
-// when no JS handler is listening.
+// 2026-05-26: gear now prefers #sidebarFloatBtn (floating-mode toggle) over
+// the legacy #sidebarToggleBtn (column-collapse) when both exist. Quentin's
+// "the setting bar should be floating, not on the left" — the gear is the
+// canonical entry point; the in-aside 📌 button is too easy to miss. On
+// pages that haven't opted in to floating mode, we fall back to the legacy
+// collapse so the gear still does something useful.
 function _wireGlobalSettingsBtn() {
   const btn = document.getElementById('globalSettingsBtn');
   if (!btn) return;
   btn.addEventListener('click', () => {
+    // Prefer the floating-mode toggle (page opted in by including
+    // #sidebarFloatBtn). atlas-core's sidebar_floating.js handles the
+    // mode flip + position persistence.
+    const floatBtn = document.getElementById('sidebarFloatBtn');
+    if (floatBtn && floatBtn !== btn) {
+      floatBtn.click();
+      return;
+    }
+    // Fallback: legacy column-collapse toggle.
     const pageToggle = document.getElementById('sidebarToggleBtn');
     if (pageToggle && pageToggle !== btn) {
       // .click() is more reliable than dispatchEvent(new MouseEvent('click'))

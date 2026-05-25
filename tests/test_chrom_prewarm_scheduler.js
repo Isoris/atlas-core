@@ -178,6 +178,62 @@ group('abort() cancels the in-flight chain');
 }
 
 // ---------------------------------------------------------------------------
+group('extraLayers — fire per chrom AFTER scrubber_main, in order');
+{
+  localStorage.clear();
+  globalThis.setTimeout = sync;
+  const state = new AtlasState({});
+  state.setActiveChrom('LG01');
+  const reg = makeRegistry();
+  const scheduler = new ChromPrewarmScheduler({
+    atlasState: state, registry: reg,
+    getChromList: () => ['LG01', 'LG02', 'LG03'],
+    extraLayers: ['scrubber_thetapi', 'scrubber_ghsl'],
+  });
+  scheduler.setEnabled(true);
+  scheduler.kick();
+  await new Promise((resolve) => _origSetTimeout(resolve, 0));
+
+  const callLog = reg.calls.map(c => `${c.key}@${c.args.chrom}`);
+  check('LG02 main fires before LG02 thetapi',
+        callLog.indexOf('scrubber_main@LG02') < callLog.indexOf('scrubber_thetapi@LG02'));
+  check('LG02 thetapi fires before LG02 ghsl',
+        callLog.indexOf('scrubber_thetapi@LG02') < callLog.indexOf('scrubber_ghsl@LG02'));
+  check('LG02 ghsl fires before LG03 main starts',
+        callLog.indexOf('scrubber_ghsl@LG02') < callLog.indexOf('scrubber_main@LG03'));
+  check('total resolves = 6 (2 non-active chroms × 3 layers each)',
+        reg.calls.length === 6);
+  // Active chrom (LG01) is never prewarmed by EITHER the main or extra path.
+  check('LG01 main never called',
+        !callLog.includes('scrubber_main@LG01'));
+  check('LG01 extras never called',
+        !callLog.includes('scrubber_thetapi@LG01') && !callLog.includes('scrubber_ghsl@LG01'));
+  globalThis.setTimeout = _origSetTimeout;
+}
+
+// ---------------------------------------------------------------------------
+group('extraLayers — empty (default) leaves existing behavior unchanged');
+{
+  localStorage.clear();
+  globalThis.setTimeout = sync;
+  const state = new AtlasState({});
+  state.setActiveChrom('LG01');
+  const reg = makeRegistry();
+  const scheduler = new ChromPrewarmScheduler({
+    atlasState: state, registry: reg,
+    getChromList: () => ['LG01', 'LG02', 'LG03'],
+    // no extraLayers passed
+  });
+  scheduler.setEnabled(true);
+  scheduler.kick();
+  await new Promise((resolve) => _origSetTimeout(resolve, 0));
+  check('only scrubber_main resolves (2 non-active chroms)',
+        reg.calls.length === 2
+        && reg.calls.every(c => c.key === 'scrubber_main'));
+  globalThis.setTimeout = _origSetTimeout;
+}
+
+// ---------------------------------------------------------------------------
 console.log('\n=================');
 console.log(`pass: ${pass}   fail: ${fail}`);
 console.log('=================');

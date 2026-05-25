@@ -179,7 +179,6 @@ export function renderModeBBadge(slotId, probeResult, opts) {
                    : 'failed') +
                  '; page rendering unaffected.' +
                  carveTip;
-    _emitBadgeEvent(slotId, opts, isPending ? 'stub' : 'missing', probeResult);
     return;
   }
 
@@ -198,43 +197,6 @@ export function renderModeBBadge(slotId, probeResult, opts) {
   slot.title = `registry.resolve("${(opts && opts.layerKey) || label}") → ` +
                `${probeResult.n} rows, columns: ${probeResult.sample_keys.join(', ')}` +
                carveTip;
-
-  _emitBadgeEvent(slotId, opts, pass ? 'live' : 'drift', probeResult);
-}
-
-/**
- * Emit a CustomEvent on document so a workspace-wide listener (e.g. the
- * top-chrome tally chip) can keep a running count of how many slots are
- * live / drifting / pending across all loaded atlases. Detail shape:
- *
- *   { slotId, label, layerKey, state: 'live' | 'drift' | 'stub' | 'missing',
- *     n, reason }
- *
- * Failure-state callsites use `_emitBadgeEvent(... 'stub' | 'missing', null)`
- * so the listener can still update the tally even when no probe payload
- * exists. Bubbles and is composed so the chip subscriber can live anywhere
- * in the document tree.
- */
-function _emitBadgeEvent(slotId, opts, state, probeResult) {
-  if (typeof document === 'undefined' || typeof CustomEvent !== 'function') return;
-  try {
-    document.dispatchEvent(new CustomEvent('mode_b_badge_render', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        slotId,
-        label:    (opts && opts.label) || null,
-        layerKey: (opts && opts.layerKey) || null,
-        context:  (opts && opts.context) || null,
-        state,
-        n:        probeResult && probeResult.n ? probeResult.n : 0,
-        reason:   probeResult && probeResult.reason ? probeResult.reason : null,
-      },
-    }));
-  } catch (_) {
-    // Older browsers without composed-event support — silent; the tally
-    // chip is best-effort UX, not a correctness primitive.
-  }
 }
 
 // ---------------------------------------------------------------------------

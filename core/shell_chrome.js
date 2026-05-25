@@ -31,6 +31,370 @@ export function attachShellChrome(opts = {}) {
   _wireSchemaBadge();
   _wireJsScriptsBadge();
   _wireModeBTally();
+  _wireWorkflowsBadge(opts);
+  _wireChromSummaryBadge(opts);
+}
+
+// SPEC_multichrom_load_orchestrator Slice 1 — visible counter of how many
+// chroms have a cached summary in this session. Subscribes to
+// `shared.chromSummaries.changed`; hides itself until at least one
+// summary lands. Tooltip enumerates every chrom + its counts so the user
+// can sanity-check the cache without opening devtools. Click opens a
+// modal with a jump-to-chrom link per row so the chip doubles as a
+// session-history navigator.
+function _wireChromSummaryBadge(opts) {
+  const badge = document.getElementById('chromSummaryBadge');
+  if (!badge) return;
+  const state = (opts && opts.atlasState) || null;
+  if (!state || typeof state.subscribe !== 'function') return;
+
+  const orderedEntries = () => {
+    const all = state.shared && state.shared.chromSummaries;
+    if (!all || typeof all !== 'object') return [];
+    const entries = Object.entries(all);
+    entries.sort(([a], [b]) => {
+      const ma = a.match(/LG0*(\d+)$/);
+      const mb = b.match(/LG0*(\d+)$/);
+      if (ma && mb) return Number(ma[1]) - Number(mb[1]);
+      return a.localeCompare(b);
+    });
+    return entries;
+  };
+
+  // The scope-picker chrom count gives the denominator so the chip can
+  // show "12 / 28 warmed". Best-effort: when the picker hasn't rendered
+  // yet (cold boot before navigate) this returns 0 and we fall back to
+  // the bare "chroms · N" label.
+  const readScopebarChromCount = () => {
+    if (typeof document === 'undefined') return 0;
+    const sel = document.querySelector(
+      '#scopebar .scope-picker[data-slot="activeChrom"] select');
+    if (!sel) return 0;
+    return Array.from(sel.options).filter(o => o.value && o.value.length > 0).length;
+  };
+
+  const refresh = () => {
+    const entries = orderedEntries();
+    if (entries.length === 0) {
+      badge.style.display = 'none';
+      return;
+    }
+    const total = readScopebarChromCount();
+    const prewarm = (typeof window !== 'undefined') ? window.__atlasChromPrewarm : null;
+    const warming = prewarm && prewarm.isEnabled && prewarm.isEnabled()
+                 && total > 0 && entries.length < total;
+    badge.style.display = 'inline-block';
+    badge.style.cursor = 'pointer';
+    badge.textContent = total > 0
+      ? `chroms · ${entries.length} / ${total}${warming ? ' ⟳' : ''}`
+      : `chroms · ${entries.length}`;
+    badge.title = 'Chrom-summary cache (SPEC_multichrom_load_orchestrator Slice 1)\n'
+      + (warming ? `Background prewarm running — ${total - entries.length} chrom(s) remaining.\n` : '')
+      + 'Click to list cached chroms and jump.\n'
+      + entries.map(([chrom, s]) => {
+          const w = (s && s.n_windows != null) ? s.n_windows : '?';
+          const n = (s && s.n_samples != null) ? s.n_samples : '?';
+          const c = (s && s.n_candidates != null) ? s.n_candidates : 0;
+          return `${chrom} — ${w} windows · ${n} samples · ${c} candidates`;
+        }).join('\n');
+  };
+
+  // Idempotent click handler (the badge keeps the same DOM node across
+  // refresh calls; we only need to bind once).
+  if (!badge.dataset.cscWired) {
+    badge.dataset.cscWired = '1';
+    badge.setAttribute('role', 'button');
+    badge.setAttribute('tabindex', '0');
+    badge.addEventListener('click', () => _openChromSummaryModal(state, orderedEntries));
+    badge.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        _openChromSummaryModal(state, orderedEntries);
+      }
+    });
+  }
+
+  refresh();
+  state.subscribe('shared.chromSummaries.changed', refresh);
+}
+
+function _openChromSummaryModal(state, orderedEntriesFn) {
+  const entries = orderedEntriesFn();
+  const activeChrom = (state.shared && state.shared.activeChrom) || null;
+  const rows = entries.map(([chrom, s]) => {
+    const w = (s && s.n_windows != null) ? s.n_windows : 0;
+    const n = (s && s.n_samples != null) ? s.n_samples : 0;
+    const c = (s && s.n_candidates != null) ? s.n_candidates : 0;
+    const layers = (s && Array.isArray(s.layers_present)) ? s.layers_present : [];
+    const layerChips = layers.slice(0, 6).map(l =>
+      `<span style="background: var(--panel-3, #232a36); color: var(--ink-dim);
+                    padding: 1px 5px; border-radius: 2px; font-size: 10px;
+                    margin-right: 3px;">${_esc(l)}</span>`
+    ).join('') + (layers.length > 6 ? `<span style="color: var(--ink-dimmer); font-size: 10px;">+${layers.length - 6}</span>` : '');
+    const isActive = chrom === activeChrom;
+    const jumpBtn = isActive
+      ? '<span style="color: var(--ink-dimmer); font-size: 10px;">(active)</span>'
+      : `<button type="button" data-jump-chrom="${_esc(chrom)}"
+                 style="background: var(--panel-3, #232a36); border: 1px solid var(--rule);
+                        color: var(--ink); padding: 2px 8px; border-radius: 2px;
+                        font: 10px var(--mono, ui-monospace, monospace); cursor: pointer;">
+                 jump →</button>`;
+    return `
+      <div style="display: grid; grid-template-columns: 0.9fr 0.6fr 0.6fr 0.6fr 2fr 0.6fr;
+                  gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--rule);
+                  align-items: center; ${isActive ? 'background: var(--panel-3, #232a36);' : ''}">
+        <div style="font-family: var(--mono); color: var(--ink); font-weight: ${isActive ? '600' : '400'};">${_esc(chrom)}</div>
+        <div class="dim" style="font-family: var(--mono); font-size: 11px;">${w.toLocaleString()} win</div>
+        <div class="dim" style="font-family: var(--mono); font-size: 11px;">${n} samp</div>
+        <div class="dim" style="font-family: var(--mono); font-size: 11px;">${c} cand</div>
+        <div>${layerChips || '<span class="dim" style="font-size: 10px;">—</span>'}</div>
+        <div style="text-align: right;">${jumpBtn}</div>
+      </div>`;
+  }).join('');
+
+  const prewarm = (typeof window !== 'undefined') ? window.__atlasChromPrewarm : null;
+  const prewarmEnabled = prewarm && prewarm.isEnabled && prewarm.isEnabled();
+  const prewarmRow = prewarm
+    ? `<div style="display: flex; align-items: center; gap: 10px;
+                   padding: 8px 4px; margin-top: 4px;
+                   border-top: 1px solid var(--rule);">
+         <label style="display: inline-flex; align-items: center; gap: 6px;
+                       cursor: pointer; font-family: var(--mono); font-size: 11px;">
+           <input type="checkbox" id="atlasChromPrewarmToggle"
+                  ${prewarmEnabled ? 'checked' : ''} />
+           <span>Background prewarm of remaining chroms</span>
+         </label>
+         <span class="dim" style="font-size: 10.5px;">
+           Uses <code>requestIdleCallback</code>; warms one chrom at a time,
+           neighbors-first. Toggle persists across sessions.
+         </span>
+       </div>`
+    : '';
+
+  // Bulk-load: opens a multi-file picker OR accepts drag-drop;
+  // loadChromJsons parses each and writes to the registry warm tier +
+  // chromSummary. Visible iff the host registered `window.__atlasRegistry`
+  // (it does — see index.html).
+  const canBulkLoad = (typeof window !== 'undefined' && window.__atlasRegistry);
+  const bulkRow = canBulkLoad
+    ? `<div id="atlasChromBulkLoadZone"
+            style="padding: 10px 12px; margin-top: 6px;
+                   border: 1px dashed var(--rule); border-radius: 3px;
+                   background: var(--panel-2);
+                   transition: background 80ms ease, border-color 80ms ease;">
+         <div style="display: flex; align-items: center; gap: 10px;">
+           <button type="button" id="atlasChromBulkLoadBtn"
+                   style="background: var(--panel-3, #232a36); border: 1px solid var(--rule);
+                          color: var(--ink); padding: 3px 12px; border-radius: 2px;
+                          font: 10.5px var(--mono, ui-monospace, monospace); cursor: pointer;">
+             📂 Bulk-load chrom JSONs…
+           </button>
+           <input type="file" id="atlasChromBulkLoadInput"
+                  accept=".json,application/json" multiple
+                  style="display: none;" />
+           <span class="dim" style="font-size: 10.5px;">
+             …or drag &amp; drop N scrubber_main JSONs anywhere on this row.
+             Populates the registry cache + chromSummary for each. No network.
+           </span>
+         </div>
+         <div id="atlasChromBulkLoadStatus" class="dim"
+              style="font-size: 10.5px; margin-top: 6px; min-height: 14px;"></div>
+       </div>`
+    : '';
+
+  const body = entries.length === 0
+    ? '<div class="dim">No chroms summarized yet. Visit a page that loads a chromosome to populate the cache, or bulk-load JSONs from disk below.</div>' + bulkRow + prewarmRow
+    : `<div style="display: grid; grid-template-columns: 0.9fr 0.6fr 0.6fr 0.6fr 2fr 0.6fr;
+                   gap: 8px; padding: 4px; color: var(--ink-dim);
+                   font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+                   border-bottom: 1px solid var(--rule);">
+        <div>chrom</div><div>windows</div><div>samples</div><div>candidates</div><div>layers</div><div></div>
+      </div>${rows}
+      <div class="dim" style="margin-top: 10px; font-size: 10.5px;">
+        Active row is highlighted. "jump" sets the chromosome selector — pages re-mount
+        on the new chrom; cached layers reload instantly from the in-flight Promise
+        dedup + warm-tier IDB cache.
+      </div>${bulkRow}${prewarmRow}`;
+  _openModal({ title: `Chrom-summary cache · ${entries.length} cached`, body });
+
+  // Wire jump buttons after the modal mounts.
+  const overlay = document.getElementById('atlasChromeModalOverlay');
+  if (!overlay) return;
+  overlay.querySelectorAll('[data-jump-chrom]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-jump-chrom');
+      if (!target) return;
+      // Find the active atlas's chrom selector and dispatch a change so
+      // the router runs its full _applyScopePick path (state setter +
+      // page re-mount). Falls back to a direct setActiveChrom + re-nav
+      // when no scope picker is in the DOM.
+      const sel = document.querySelector(
+        '#scopebar .scope-picker[data-slot="activeChrom"] select');
+      if (sel) {
+        sel.value = target;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      } else if (typeof state.setActiveChrom === 'function') {
+        state.setActiveChrom(target);
+      }
+      // Close the modal so the user sees the new chrom rendering.
+      overlay.style.display = 'none';
+    });
+  });
+
+  // Background-prewarm toggle.
+  const toggle = overlay.querySelector('#atlasChromPrewarmToggle');
+  if (toggle && prewarm && typeof prewarm.setEnabled === 'function') {
+    toggle.addEventListener('change', (e) => {
+      prewarm.setEnabled(!!e.target.checked);
+      // Re-emit the chromSummaries event so the shell-header chip
+      // immediately repaints with/without the ⟳ progress glyph,
+      // without waiting for the next chrom to warm.
+      if (typeof state.emit === 'function') {
+        state.emit('shared.chromSummaries.changed', {
+          chrom: null, summary: null, source: 'prewarm_toggle',
+        });
+      }
+    });
+  }
+
+  // Bulk-load chrom JSONs (Slice 2). The picker button + the drag-drop
+  // zone both funnel through the same runBulkLoad(files) helper so the
+  // progress / refresh path is consistent.
+  const bulkZone  = overlay.querySelector('#atlasChromBulkLoadZone');
+  const bulkBtn   = overlay.querySelector('#atlasChromBulkLoadBtn');
+  const bulkInput = overlay.querySelector('#atlasChromBulkLoadInput');
+  const bulkStat  = overlay.querySelector('#atlasChromBulkLoadStatus');
+  if (bulkZone && bulkBtn && bulkInput && bulkStat) {
+    const runBulkLoad = async (files) => {
+      if (!files || files.length === 0) return;
+      bulkBtn.disabled = true;
+      const start = Date.now();
+      bulkStat.textContent = `Loading 0 / ${files.length}…`;
+      try {
+        const { loadChromJsons } = await import('./chrom_bulk_loader.js');
+        const result = await loadChromJsons({
+          files,
+          registry:   window.__atlasRegistry,
+          atlasState: state,
+          onProgress: (p) => {
+            bulkStat.textContent =
+              `${p.status === 'loaded' ? '✓' : '⚠'} ${p.name}` +
+              (p.chrom ? ` → ${p.chrom}` : '') +
+              (p.reason ? ` (${p.reason})` : '') +
+              `   ·   ${p.loaded} / ${p.total} loaded`;
+          },
+        });
+        const ms = Date.now() - start;
+        const skipNote = result.skipped.length
+          ? ` · ${result.skipped.length} skipped`
+          : '';
+        bulkStat.textContent =
+          `✓ ${result.loaded} / ${result.total} loaded in ${ms}ms${skipNote}. ` +
+          `Modal refreshing…`;
+        // Re-open the modal to show the new rows (preserves the toggle
+        // state because it reads through prewarm.isEnabled()).
+        setTimeout(() => _openChromSummaryModal(state, orderedEntriesFn), 600);
+      } catch (err) {
+        bulkStat.textContent = `bulk-load failed: ${err.message || err}`;
+      } finally {
+        bulkBtn.disabled = false;
+        bulkInput.value = ''; // allow re-selecting the same files
+      }
+    };
+
+    bulkBtn.addEventListener('click', () => bulkInput.click());
+    bulkInput.addEventListener('change', (e) => runBulkLoad(e.target.files));
+
+    // Drag-drop. Highlight the zone while a drag is in progress; capture
+    // dropped files (or — when DataTransferItem with webkitGetAsEntry is
+    // available — walk a dropped folder for its JSONs).
+    const setActive = (active) => {
+      bulkZone.style.borderColor = active ? 'var(--accent, #f5a524)' : 'var(--rule)';
+      bulkZone.style.background  = active ? 'var(--panel-3, #232a36)' : 'var(--panel-2)';
+    };
+    bulkZone.addEventListener('dragenter', (e) => { e.preventDefault(); setActive(true);  });
+    bulkZone.addEventListener('dragover',  (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+    bulkZone.addEventListener('dragleave', (e) => {
+      // Only un-highlight when the drag truly leaves the zone (dragleave
+      // fires on every child element too — we ignore the inner ones).
+      if (e.target === bulkZone) setActive(false);
+    });
+    bulkZone.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      setActive(false);
+      const dt = e.dataTransfer;
+      if (!dt) return;
+      const collected = await _collectDroppedFiles(dt);
+      runBulkLoad(collected);
+    });
+  }
+}
+
+// Walk a DataTransfer for File objects, recursing into dropped folders
+// when the browser supports webkitGetAsEntry. Skips non-JSON entries
+// at the walk level so the user can drag an entire workspace folder
+// without selecting individual files. Falls back to dt.files when the
+// folder API isn't available (older browsers, Safari < 11.1).
+async function _collectDroppedFiles(dt) {
+  const items = dt.items;
+  const out = [];
+  if (items && items.length > 0 && typeof items[0].webkitGetAsEntry === 'function') {
+    const entries = [];
+    for (let i = 0; i < items.length; i++) {
+      const entry = items[i].webkitGetAsEntry && items[i].webkitGetAsEntry();
+      if (entry) entries.push(entry);
+    }
+    for (const entry of entries) await _walkEntry(entry, out);
+    if (out.length > 0) return out;
+  }
+  return Array.from(dt.files || []);
+}
+
+async function _walkEntry(entry, out) {
+  if (!entry) return;
+  if (entry.isFile) {
+    if (!/\.json$/i.test(entry.name)) return;
+    await new Promise((resolve) => {
+      entry.file(
+        (file) => { out.push(file); resolve(); },
+        () => resolve()
+      );
+    });
+    return;
+  }
+  if (entry.isDirectory) {
+    const reader = entry.createReader();
+    // readEntries returns at most 100 per call; loop until empty.
+    const readBatch = () => new Promise((resolve) => {
+      reader.readEntries((batch) => resolve(batch || []), () => resolve([]));
+    });
+    while (true) {
+      const batch = await readBatch();
+      if (batch.length === 0) break;
+      for (const sub of batch) await _walkEntry(sub, out);
+    }
+  }
+}
+
+// Mount the workflows-status chip into #workflowsBadgeHost. Requires
+// `opts.registry` (for getWorkflows) and `opts.manifests` (for the
+// per-atlas iteration). Skips silently when either is absent.
+// SPEC_workflows_v1 §5.
+function _wireWorkflowsBadge(opts) {
+  const host = document.getElementById('workflowsBadgeHost');
+  if (!host) return;
+  if (!opts || !opts.registry || !opts.manifests) {
+    // Dev hint: missing inputs means the boot path forgot to pass them.
+    // The badge is non-essential; warn-and-skip rather than throw.
+    console.debug('[shell_chrome] workflows badge skipped (registry/manifests not passed to attachShellChrome).');
+    return;
+  }
+  import('./workflow_status_badge.js')
+    .then((m) => {
+      try { m.mountWorkflowsBadge(host, { registry: opts.registry, manifests: opts.manifests }); }
+      catch (e) { console.warn('[shell_chrome] mountWorkflowsBadge threw:', e); }
+    })
+    .catch((e) => console.warn('[shell_chrome] workflow_status_badge import failed:', e));
 }
 
 // Mount the workspace-wide Mode-B tally chip into #modeBTallyHost. The

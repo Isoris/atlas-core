@@ -127,8 +127,12 @@ const r2 = await read({
 eq(r2.meta.cohort_status, 'handoff', 'cross-cohort via known handoff');
 eq(r2.meta.handoff_used, 'bp_atlas_to_hatchery_join', 'handoff_used set');
 
-console.log('\n=== cross_atlas_imports.read (mismatch — Phase 0a permissive default) ===');
-// Strict mode off → mismatch should be allowed with a warn.
+console.log('\n=== cross_atlas_imports.read (mismatch — permissive mode warns instead of throws) ===');
+// 2026-05-26: module default flipped to strict (Phase 0b). Explicitly flip
+// back to permissive here so this section keeps testing the permissive code
+// path. The "strict mode throws" section below toggles back to strict.
+setStrictMode(false);
+ok(isStrictMode() === false, 'permissive mode active after explicit setStrictMode(false)');
 const oldWarn = console.warn;
 let warnedOnce = false;
 console.warn = (...args) => { warnedOnce = true; };
@@ -164,7 +168,7 @@ try {
 ok(caught instanceof CohortMismatchError, 'strict mode throws CohortMismatchError');
 ok(caught && caught.message.includes('cohorts.registry.json'), 'error message hints at registry edit');
 ok(caught && caught.detail && caught.detail.producer_cohort_id === 'f1_hybrid_cga_cma', 'error carries detail block');
-setStrictMode(false);
+// Leave strict mode on at module exit — matches the new Phase 0b default.
 
 console.log('\n=== cross_atlas_imports.read (producer with no cohort_id) ===');
 const r4 = await read({

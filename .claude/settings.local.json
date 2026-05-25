@@ -478,7 +478,16 @@
       "Bash(mkdir -p c:/Users/quent/Desktop/cross-species-atlas/atlases/cross-species/registries/schemas/schema_in c:/Users/quent/Desktop/cross-species-atlas/atlases/cross-species/registries/schemas/schema_out && echo OK)",
       "Bash(node tests/test_shared_sample_color.js)",
       "PowerShell(node C:\\\\Users\\\\quent\\\\Desktop\\\\inversion-atlas\\\\tests\\\\test_shared_sample_color.js 2>&1)",
-      "Bash(grep -nB1 -A2 \"fish_ancestry_v1\" c:/Users/quent/Desktop/popstats-atlas/atlases/popstats/registries/data/layers.registry.json)"
+      "Bash(grep -nB1 -A2 \"fish_ancestry_v1\" c:/Users/quent/Desktop/popstats-atlas/atlases/popstats/registries/data/layers.registry.json)",
+      "PowerShell(Get-Command node -ErrorAction SilentlyContinue; Get-ChildItem \"C:\\\\Program Files\\\\nodejs\\\\node.exe\",\"C:\\\\Program Files \\(x86\\)\\\\nodejs\\\\node.exe\",\"$env:APPDATA\\\\npm\\\\node.exe\",\"$env:LOCALAPPDATA\\\\Programs\\\\nodejs\\\\node.exe\",\"$env:USERPROFILE\\\\scoop\\\\apps\\\\nodejs\\\\current\\\\node.exe\" -ErrorAction SilentlyContinue | Select-Object FullName)",
+      "Bash(grep -hoE \"id=[\\\\\"'][a-zA-Z][a-zA-Z0-9_-]*[\\\\\"']\" \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/local_pca_dosage.html\" | sed -E 's/id=[\"'\\\\'']\\(.*\\)[\"'\\\\'']/\\\\1/' | sort -u > /tmp/html_ids.txt *)",
+      "Bash(grep -hoE 'getElementById\\\\\\(\\\\s*['\\\\''\"][a-zA-Z][a-zA-Z0-9_-]*['\\\\''\"]' c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/local_pca_dosage/__TRACKED_VAR__)",
+      "Bash(grep -hoE 'querySelector\\(All\\)?\\\\\\(\\\\s*['\\\\''\"]#[a-zA-Z][a-zA-Z0-9_-]*['\\\\''\"]' c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/discovery/local_pca_dosage/__TRACKED_VAR__)",
+      "Bash(node tests/test_shared_build_family_palette.js)",
+      "PowerShell(node \"c:/Users/quent/Desktop/inversion-atlas/tests/test_shared_build_family_palette.js\" 2>&1)",
+      "Bash(grep -rn \"for \\(.*of.*\\) {[^}]*$\" \"c:/Users/quent/Desktop/atlas-core/core/\" --include=\"*.js\")",
+      "Bash(grep -rn \"for.*await\\\\|for \\(const.*of.*\\) {$\" \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/\" --include=\"*.js\")",
+      "Bash(grep -nB1 \"await \" \"c:/Users/quent/Desktop/inversion-atlas/atlases/inversion/pages/catalogue/marker_readiness.js\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

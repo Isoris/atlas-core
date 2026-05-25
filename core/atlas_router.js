@@ -69,12 +69,19 @@ export class AtlasRouter {
       this._ensureStylesheet(page.stylesheet, atlas_id);
     }
 
-    // Fetch fragment + import module
-    const fragmentHtml = await fetch(page.fragment).then(r => r.text());
+    // Fetch fragment + import module. 2026-05-21 perf: was two sequential
+    // awaits (fragmentHtml, then module import). They're independent —
+    // the module doesn't read the HTML and the HTML doesn't need the
+    // module — so fan them out via Promise.all. Saves one RTT per page
+    // navigation. The browser's module cache means repeat navigates to
+    // the same page only pay the fragment fetch.
+    const [fragmentHtml, module] = await Promise.all([
+      fetch(page.fragment).then(r => r.text()),
+      import('/' + page.module),
+    ]);
     const root = document.getElementById('app-root');
     root.innerHTML = fragmentHtml;
 
-    const module = await import('/' + page.module);
     if (typeof module.mount !== 'function') {
       throw new Error(`Page ${atlas_id}/${page_id}: module has no mount() export`);
     }

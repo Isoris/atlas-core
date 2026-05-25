@@ -59,6 +59,15 @@ const SHARED_DEFAULTS = {
   // page that wants per-group analyses reads this slot and any page that
   // computes a partition pushes via setActiveGroups().
   activeGroups: null,
+  // 2026-05-26: per-chrom lightweight summaries. Keyed by chrom id,
+  // populated by pages on chrom mount via setChromSummary() (see
+  // core/chrom_summary.js — SPEC_multichrom_load_orchestrator Slice 1).
+  // Stays small enough to keep all 28 chroms resident (~few KB each).
+  // Heavy per-chrom payloads still live in the warm-tier IDB cache;
+  // this is the in-memory metadata cache that powers the genome-wide
+  // ideogram + bulk-load progress strip without paying the rehydrate
+  // cost for every UI tick.
+  chromSummaries: {},
 };
 
 export class AtlasState {
@@ -147,6 +156,22 @@ export class AtlasState {
     this.emit('shared.activeGroups.changed', { newValue: groups, oldValue: old });
   }
 
+  // 2026-05-26: chrom-summary writer. Pages call this after loading a
+  // chrom's full scrubber payload — pass a summary built by
+  // core/chrom_summary.js#buildChromSummary. Always emits, even when
+  // overwriting an existing entry, so subscribers (Slice 2 bulk-load
+  // progress strip + future cross-chrom views) can re-render. Wraps
+  // setChromSummary in core/chrom_summary.js for the convenience-setter
+  // pattern other shared slots use.
+  setChromSummary(chrom, summary) {
+    if (typeof chrom !== 'string' || chrom.length === 0) return;
+    if (!this.shared.chromSummaries || typeof this.shared.chromSummaries !== 'object') {
+      this.shared.chromSummaries = {};
+    }
+    this.shared.chromSummaries[chrom] = summary;
+    this.emit('shared.chromSummaries.changed', { chrom, summary });
+  }
+
   // ------------------------------------------------------------------
   // Persistence
   // ------------------------------------------------------------------
@@ -168,6 +193,17 @@ export class AtlasState {
         atlas_id: this.shared.currentPage.atlas_id,
         page_id:  this.shared.currentPage.page_id,
       };
+    }
+    // 2026-05-26: persist chrom summaries (SPEC_multichrom_load_orchestrator
+    // Slice 1). Summaries are small (~few KB each), so the full Map fits
+    // well within localStorage quota even for 28 chroms. Cold-boot restore
+    // means the shell chrom-summary chip lights up immediately on reload,
+    // showing the user which chroms have warm-tier IDB data they paid for
+    // last session. Drops silently if the map is empty.
+    if (this.shared.chromSummaries
+        && typeof this.shared.chromSummaries === 'object'
+        && Object.keys(this.shared.chromSummaries).length > 0) {
+      out.shared.chromSummaries = this.shared.chromSummaries;
     }
     // Per-atlas persisted slots.
     if (this._persistKeys) {
@@ -213,6 +249,15 @@ export class AtlasState {
           atlas_id: parsed.shared.currentPage.atlas_id,
           page_id:  parsed.shared.currentPage.page_id,
         };
+      }
+      // 2026-05-26: rehydrate the chrom-summary cache. The cache is
+      // purely metadata — full payloads still re-fetch on demand —
+      // but having the summaries warm at boot means the chrom-summary
+      // chip + future genome-wide ideogram render immediately on cold
+      // reload instead of waiting for the user to revisit each chrom.
+      if (parsed.shared.chromSummaries
+          && typeof parsed.shared.chromSummaries === 'object') {
+        this.shared.chromSummaries = parsed.shared.chromSummaries;
       }
     }
     for (const k of Object.keys(parsed)) {

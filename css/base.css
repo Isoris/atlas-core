@@ -141,7 +141,8 @@ header #resetLayoutBtn:hover { background: var(--panel-3); border-color: var(--a
 }
 /* 2026-05-19: 20px height pin matches the rest of the header row. */
 header #schemaBadge,
-header #jsScriptsBadge {
+header #jsScriptsBadge,
+header #chromSummaryBadge {
   align-self: center; margin-left: 6px;
   background: var(--panel-2); border: 1px solid var(--rule); color: var(--ink-dim);
   padding: 0 7px; font-family: var(--mono); font-size: 10px;

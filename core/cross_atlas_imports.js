@@ -22,14 +22,18 @@
 // Phase 0a vs 0b:
 //
 //   SPEC_cohorts_v1 §11 prescribes a two-step rollout. This module
-//   ships Phase 0a (allow_cohort_mismatch defaults to TRUE, only logs
-//   a warning on cohort cross). Atlas authors get a window to declare
-//   handoffs without breakage. Phase 0b flips the default to FALSE.
+//   originally shipped Phase 0a (permissive default + warn). 2026-05-26
+//   default flipped to Phase 0b (strict default + throw on unhandoff'd
+//   mismatch). Atlas-side code today uses zero call sites (every cross-
+//   atlas read still goes through Registry.resolve directly), so the
+//   flip is a no-op for current runtime behavior but ratchets discipline
+//   for any future code that wires through `read()`.
 //
-//   To opt INTO strict mode early, atlases can pass
-//   `cross_atlas_imports.setStrictMode(true)` at boot. The flag is
+//   To opt OUT (re-enable permissive mode), call
+//   `cross_atlas_imports.setStrictMode(false)` early in boot. The flag is
 //   read by every `read()` call; per-call `allow_cohort_mismatch` is
-//   still honoured (escape hatch).
+//   still honoured (escape hatch) so individual reads can override either
+//   way regardless of the global default.
 //
 // Public exports:
 //
@@ -84,10 +88,13 @@ export class AtlasNotInstalledError extends Error {
 // ---------------------------------------------------------------------
 // Phase 0a / 0b strict-mode flag
 // ---------------------------------------------------------------------
-// Default false === "Phase 0a" === permissive (warn instead of throw).
-// Flipping to true === "Phase 0b" === strict (throw on unhandoff'd mismatch).
+// 2026-05-26: default flipped from false (Phase 0a, permissive) → true
+// (Phase 0b, strict). Per-call `allow_cohort_mismatch` overrides honoured.
+// See header comment for the rationale (no atlas-side code currently goes
+// through read() so the flip is a no-op for today's runtime; declares
+// the discipline for any future cross-atlas reads wired through this module).
 
-let _strictMode = false;
+let _strictMode = true;
 
 export function setStrictMode(enabled) {
   _strictMode = !!enabled;

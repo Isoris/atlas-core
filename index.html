@@ -37,6 +37,13 @@
   <!-- MID GROUP — status badges (read-only info chips). -->
   <div class="header-group header-group-status">
     <span id="jsScriptsBadge" title="Loaded JavaScript modules registered as window globals.">JS · 0 scripts</span>
+    <!-- 2026-05-26: small indicator chip next to JS scripts badge. Polls
+         /api/health and shows ✅ when every configured server path exists,
+         or ⚠ N when any are missing. Click to open the same modal as the
+         JS badge (server-paths section is pre-expanded). -->
+    <span id="serverPathsBadge" class="shell-chip"
+          title="Server-config path checks (dosage / sample list / binaries / etc.). Click for details."
+          style="display: none; cursor: pointer;">PATHS · …</span>
     <span id="workflowsBadgeHost" class="shell-chip-host"></span>
     <span id="chromSummaryBadge" class="shell-chip-host" style="display: none;"></span>
   </div>

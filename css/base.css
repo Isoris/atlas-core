@@ -148,12 +148,14 @@ header #resetLayoutBtn:hover { background: var(--panel-3); border-color: var(--a
   }
   header #schemaBadge { font-size: 9px; padding: 2px 5px; }
   header #jsScriptsBadge { font-size: 9px; padding: 2px 5px; }
+  header #serverPathsBadge { font-size: 9px; padding: 2px 5px; }
 }
 /* Status badges — read-only chips. Borderless, just text in dim ink, so
    they read as inline information instead of competing with the
    bordered buttons. */
 header #schemaBadge,
 header #jsScriptsBadge,
+header #serverPathsBadge,
 header #chromSummaryBadge {
   align-self: center;
   background: transparent; border: none; color: var(--ink-dim);
@@ -172,6 +174,10 @@ header #schemaBadge.v2 { color: var(--good); border-color: var(--good); }
    globals (orange/dim warning); .v2 = all green. */
 header #jsScriptsBadge.v2      { color: var(--good); border-color: var(--good); }
 header #jsScriptsBadge.partial { color: var(--accent, #f5a524); border-color: var(--accent, #f5a524); }
+/* 2026-05-26: server-paths indicator. Same .v2 / .partial palette so the
+   chip cluster reads as a single visual family. */
+header #serverPathsBadge.v2      { color: var(--good); border-color: var(--good); }
+header #serverPathsBadge.partial { color: var(--accent, #f5a524); border-color: var(--accent, #f5a524); }
 
 /* v4 turn 58: atlas-mode three-pill indicator. Three buttons in a single
    bordered container; "active" pill has darker bg + brighter text;

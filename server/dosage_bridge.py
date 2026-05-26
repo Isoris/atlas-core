@@ -157,26 +157,42 @@ def _maybe_float(s: str) -> Optional[float]:
 
 
 def _maybe_dosage_int(s: str) -> int:
-    """Parse a dosage cell into int8-range, normalizing NA to -1.
+    """Parse a dosage cell into int8-range {0, 1, 2}, normalizing NA to -1.
 
-    Accepts: 0, 1, 2, -1, NA, ., '' → -1 for any missing/non-numeric cell.
-    Out-of-range numeric values are also treated as missing (defensive;
-    a real cohort will only ever have 0/1/2/NA).
+    Accepts:
+      - Integer hard-calls: 0, 1, 2 → pass through; -1, NA, ., '' → -1
+      - 2026-05-26: Continuous dosages: floats in [0, 2] (e.g. ANGSD/Beagle
+        posterior-mean dosages like 0.000031, 0.999906, 1.001060). Rounded
+        to nearest int and clamped to {0, 1, 2}. Out-of-range floats
+        (e.g. -0.5 or 2.5+) → -1 (treated as missing).
+      - Out-of-range integer values (e.g. 3, 99) → -1
+    The renderer's missing-test is `v < 0`, so any non-finite or
+    out-of-range value funnels safely to NA.
     """
     s = (s or "").strip()
     if not s or s == "." or s.upper() == "NA":
         return -1
+    # Try integer first (fast path for hard-call cohorts).
     try:
         v = int(s)
+        if v in (0, 1, 2):
+            return v
+        if v == -1:
+            return -1
+        return -1   # any other int → missing
+    except ValueError:
+        pass
+    # Float fallback (continuous-dosage cohorts).
+    try:
+        f = float(s)
     except ValueError:
         return -1
-    if v in (0, 1, 2):
-        return v
-    if v == -1:
+    if not (0.0 <= f <= 2.0):
         return -1
-    # Any other value (e.g. 3 or 99) is treated as missing rather than
-    # leaking through to the renderer where v < 0 is the missing test.
-    return -1
+    # Round to nearest int. Banker's rounding via Python's round() is
+    # fine here — boundary values (0.5, 1.5) are biologically rare and
+    # the renderer doesn't distinguish 0 vs 1 vs 2 at sub-call resolution.
+    return int(round(f))
 
 
 def _open_gz_text(path: Path) -> io.TextIOWrapper:
@@ -328,7 +344,8 @@ def _closest_index(sorted_vals: List[int], target: float) -> int:
 
 def _load_sites_in_window(sites_path: Path, start: int, end: int
                           ) -> Tuple[List[int], List[Optional[float]],
-                                     List[Optional[float]], List[int]]:
+                                     List[Optional[float]], List[int],
+                                     Dict[str, Any]]:
     """Stream <chrom>.sites.tsv.gz, keeping rows where pos in [start, end].
 
     Returns (positions, missingness, diagnostic_score, line_indices).
@@ -342,20 +359,37 @@ def _load_sites_in_window(sites_path: Path, start: int, end: int
       - site_id column absent (we don't return it from this helper —
         the bridge renderer doesn't need it; selectTopMarkers reads
         pos_bp / missingness / diagnostic_score)
-      - 2026-05-26: TWO file layouts:
-          (a) legacy: cols = [pos, major, minor, missingness?, diagnostic?]
-          (b) ANGSD-sites: cols = [chrom, pos, major, minor, ...]
-        Auto-detected from the FIRST data row (after header) by checking
-        whether col 0 parses as int. The user's local cohort uses (b);
-        upstream test fixtures used (a). One parser handles both.
+      - 2026-05-26: THREE file layouts (was two):
+          (a) legacy:        cols = [pos, major, minor, missingness?, diagnostic?]
+          (b) ANGSD-sites:   cols = [chrom, pos, major, minor, ...]
+          (c) marker-prefix: cols = [marker_id, chrom, pos, allele1, allele2, ...]
+        Auto-detected from the FIRST data row by walking col 0 → col 1 →
+        col 2 and stopping at the first cell that parses as int. The
+        user's local cohort uses (c) (e.g. `C_gar_LG01_68605  C_gar_LG01
+        68605  2  0`); upstream test fixtures used (a) and (b). One
+        parser handles all three.
     """
     positions: List[int] = []
     missingness: List[Optional[float]] = []
     diagnostic: List[Optional[float]] = []
     line_indices: List[int] = []
 
+    # 2026-05-26: counters for the "0 markers in range" diagnostic. The
+    # handle_dosage_chunk caller logs these when n_kept==0 so we can see
+    # whether the cause was (a) empty file (n_rows=0), (b) all positions
+    # below the requested start (n_below>0, n_kept=0, last_pos<start),
+    # (c) all positions above the requested end (n_above>0, n_kept=0,
+    # first_pos>end), (d) pos column misdetected (pos_col=None), or
+    # (e) sort-order break fired prematurely (n_above==1, first_pos<start).
+    n_rows = 0
+    n_below = 0
+    n_above_break = 0
+    first_pos = None
+    last_pos = None
+    sample_header_cells: Optional[List[str]] = None
+
     row_idx = -1   # Tracks logical row index (excluding comments + header)
-    pos_col = None  # 0 for legacy, 1 for ANGSD-sites; detected on first data row
+    pos_col = None  # 0/1/2; detected on first data row
     with _open_gz_text(sites_path) as f:
         for raw in f:
             if not raw or raw.startswith("#"):
@@ -364,33 +398,42 @@ def _load_sites_in_window(sites_path: Path, start: int, end: int
             cells = line.split("\t")
             if not cells or not cells[0]:
                 continue
-            # Detect the position column on the first data row we see.
-            # Try col 0 first (legacy layout). If non-numeric, try col 1
-            # (ANGSD-sites layout where col 0 is the chrom id). If
-            # neither parses, treat as a header and skip.
+            # Detect the position column on the first data row. Walk
+            # candidate columns 0..2 (covering all three layouts) and
+            # accept the first one that parses as int. If none do, treat
+            # the row as a header and skip.
             if pos_col is None:
-                try:
-                    pos = int(cells[0])
-                    pos_col = 0
-                except ValueError:
-                    if len(cells) > 1:
-                        try:
-                            pos = int(cells[1])
-                            pos_col = 1
-                        except ValueError:
-                            continue  # header row, skip
-                    else:
+                pos = None
+                for candidate in (0, 1, 2):
+                    if candidate >= len(cells):
+                        break
+                    try:
+                        pos = int(cells[candidate])
+                        pos_col = candidate
+                        break
+                    except ValueError:
                         continue
+                if pos_col is None:
+                    # Remember the first header-shaped row for diagnostics.
+                    if sample_header_cells is None:
+                        sample_header_cells = cells[:8]
+                    continue  # header row, skip
             else:
                 try:
                     pos = int(cells[pos_col])
                 except (ValueError, IndexError):
                     continue
             row_idx += 1
+            n_rows += 1
+            if first_pos is None:
+                first_pos = pos
+            last_pos = pos
             if pos < start:
+                n_below += 1
                 continue
             if pos > end:
                 # Sites are sorted by pos — we can stop early
+                n_above_break = 1
                 break
             # Column offsets for missingness/diagnostic shift by pos_col
             # so 'pos col + 3' = legacy col 3 (missingness) under either layout.
@@ -402,7 +445,16 @@ def _load_sites_in_window(sites_path: Path, start: int, end: int
             missingness.append(miss)
             diagnostic.append(ds)
             line_indices.append(row_idx)
-    return positions, missingness, diagnostic, line_indices
+    stats = {
+        "pos_col":         pos_col,
+        "n_rows_scanned":  n_rows,
+        "n_below_start":   n_below,
+        "n_above_end_break": n_above_break,
+        "first_pos_seen":  first_pos,
+        "last_pos_seen":   last_pos,
+        "header_cells":    sample_header_cells,
+    }
+    return positions, missingness, diagnostic, line_indices, stats
 
 
 def _load_dosage_rows(dosage_path: Path, line_indices_sorted: List[int],
@@ -533,11 +585,21 @@ def handle_dosage_chunk(req: DosageChunkReq, *,
         })
 
     # Sites in window
-    positions, missingness, diagnostic, line_indices = _load_sites_in_window(
+    positions, missingness, diagnostic, line_indices, sites_stats = _load_sites_in_window(
         sites_path, req.start, req.end
     )
     n_total = len(positions)
     t_io_sites = time.perf_counter() - t0
+    # 2026-05-26: when the window came back empty, log enough to tell
+    # WHY (file empty? all positions below start? all above end? pos col
+    # misdetected?) so the next reproduction self-documents. Quentin's
+    # log: chunks return 200 OK but markers + dosage are empty arrays —
+    # the atlas validator then warns "first-chunk shape validation
+    # FAILED · chunk.markers is empty".
+    if n_total == 0:
+        log.warning(
+            "dosage_chunk: 0 sites in %s [%d-%d] · sites_path=%s · stats=%s",
+            req.chrom, req.start, req.end, sites_path, sites_stats)
 
     # Selection
     t1 = time.perf_counter()

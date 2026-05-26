@@ -29,9 +29,82 @@ export function attachShellChrome(opts = {}) {
   _wireServerPing(opts.serverUrl || window.ATLAS_SERVER_URL || 'http://127.0.0.1:8000');
   _wireSchemaBadge();
   _wireJsScriptsBadge();
+  _wireServerPathsBadge(opts.serverUrl || window.ATLAS_SERVER_URL || 'http://127.0.0.1:8000');
   _wireWorkflowsBadge(opts);
   _wireChromSummaryBadge(opts);
   _wireFloatingSidebar(opts);
+}
+
+// =====================================================================
+// Server-paths indicator chip (#serverPathsBadge). Polls /api/health,
+// reads the popstats.paths_check + popstats.paths_summary blocks the
+// server now emits, and shows a one-glance "PATHS · ✅" / "PATHS · ⚠ N"
+// signal next to the JS scripts badge. Click opens the same modal as
+// the JS badge with the server-paths section anchored at the top.
+//
+// Cached at module scope so the JS scripts modal can read the same data
+// without re-fetching.
+// =====================================================================
+let _serverHealthCache = null;     // last /api/health payload
+let _serverHealthFetchAt = 0;     // ms epoch — TTL guard
+
+async function _fetchServerHealth(serverUrl, force = false) {
+  const TTL_MS = 5000;
+  const now = Date.now();
+  if (!force && _serverHealthCache && (now - _serverHealthFetchAt) < TTL_MS) {
+    return _serverHealthCache;
+  }
+  try {
+    const r = await fetch(`${serverUrl.replace(/\/$/, '')}/api/health`,
+                          { cache: 'no-store' });
+    if (!r.ok) return null;
+    const data = await r.json();
+    _serverHealthCache = data;
+    _serverHealthFetchAt = now;
+    return data;
+  } catch (_) {
+    return null;
+  }
+}
+
+function _wireServerPathsBadge(serverUrl) {
+  const badge = document.getElementById('serverPathsBadge');
+  if (!badge) return;
+
+  const refresh = async (force) => {
+    const data = await _fetchServerHealth(serverUrl, force);
+    const ps = data && data.subsystems && data.subsystems.popstats;
+    // Hide the chip entirely when the popstats subsystem is disabled —
+    // there's nothing to check (no paths configured).
+    if (!ps || !ps.ready) {
+      badge.style.display = 'none';
+      return;
+    }
+    const sum = ps.paths_summary || {};
+    const nMissing = sum.n_missing || 0;
+    const nOk = sum.n_ok || 0;
+    const nTotal = sum.n_total || 0;
+    badge.style.display = '';
+    if (nMissing === 0) {
+      badge.textContent = `PATHS · ✅ ${nOk}/${nTotal}`;
+      badge.classList.add('v2');
+      badge.classList.remove('partial');
+    } else {
+      badge.textContent = `PATHS · ⚠ ${nMissing} missing`;
+      badge.classList.remove('v2');
+      badge.classList.add('partial');
+    }
+  };
+
+  refresh(true);
+  // Re-poll on page mount (a freshly-loaded page may have triggered
+  // server-side state changes the chip should reflect).
+  document.addEventListener('shell.page_mount', () => refresh(false));
+  // Click opens the JS-scripts modal with server paths section visible.
+  badge.addEventListener('click', async () => {
+    await refresh(true);
+    _openJsScriptsModal({ focusServerPaths: true });
+  });
 }
 
 // Subscribe to the router's `shell.page_mount` event and auto-install
@@ -685,28 +758,36 @@ function _wireJsScriptsBadge() {
   // Re-count on each click (modules load lazily after page mounts).
   badge.addEventListener('click', () => {
     refresh();
-    const tags = _collectScriptTags();
-    const allModules = _collectRegisteredModules();
-    // 2026-05-23: window.__atlasJsRegistry is a process-lifetime global
-    // that accumulates entries from every atlas you've ever visited in
-    // this tab. Filtering to the active atlas matches what the user
-    // expects when they click the badge — "what's running for THIS
-    // atlas right now". The full cross-atlas list is still available
-    // under the "all atlases" tab below. Active atlas is inferred from
-    // the hash (#/<atlas_id>/<page_id>); falls back to "all" when there
-    // is no hash. Modules are bucketed by name/path prefix matching the
-    // atlas id (page modules push `relatedness/karyotypes` etc.).
-    const activeAtlas = _activeAtlasFromHash();
-    const scopedModules = activeAtlas
-      ? allModules.filter(m => _moduleBelongsTo(m, activeAtlas))
-      : allModules;
-    _openModal({
-      title: activeAtlas
-        ? `JavaScript modules · ${activeAtlas}`
-        : 'JavaScript modules',
-      body: _jsScriptsModalBody(tags, scopedModules, allModules, activeAtlas),
-    });
+    _openJsScriptsModal({ focusServerPaths: false });
   });
+}
+
+// 2026-05-26: shared modal-open helper so #serverPathsBadge and
+// #jsScriptsBadge open the same surface (just with a different default
+// section anchored). The server-paths section fetches /api/health
+// asynchronously and patches its placeholder once the response lands.
+async function _openJsScriptsModal({ focusServerPaths = false } = {}) {
+  const tags = _collectScriptTags();
+  const allModules = _collectRegisteredModules();
+  const activeAtlas = _activeAtlasFromHash();
+  const scopedModules = activeAtlas
+    ? allModules.filter(m => _moduleBelongsTo(m, activeAtlas))
+    : allModules;
+  const serverUrl = window.ATLAS_SERVER_URL || 'http://127.0.0.1:8000';
+  _openModal({
+    title: activeAtlas
+      ? `JavaScript modules · ${activeAtlas}`
+      : 'JavaScript modules',
+    body: _jsScriptsModalBody(tags, scopedModules, allModules, activeAtlas, {
+      focusServerPaths,
+    }),
+  });
+  // Populate the #serverPathsModalSection placeholder once /api/health resolves.
+  const data = await _fetchServerHealth(serverUrl, /*force=*/ true);
+  const slot = document.getElementById('serverPathsModalSection');
+  if (slot) {
+    slot.innerHTML = _serverPathsSectionHtml(data);
+  }
 }
 
 function _collectScriptTags() {
@@ -742,7 +823,7 @@ function _moduleBelongsTo(mod, atlasId) {
          path.includes(`/atlases/${atlasId}/`);
 }
 
-function _jsScriptsModalBody(tags, modules, allModules, activeAtlas) {
+function _jsScriptsModalBody(tags, modules, allModules, activeAtlas, opts = {}) {
   const tagRows = tags.length === 0
     ? `<div class="dim">No <code>&lt;script src&gt;</code> tags in document.</div>`
     : tags.map(t => `
@@ -765,8 +846,18 @@ function _jsScriptsModalBody(tags, modules, allModules, activeAtlas) {
     ? `<div style="font-size: 11px; color: var(--ink-dim); margin-bottom: 10px;">Showing modules for <b>${_esc(activeAtlas)}</b> only — ${modules.length} of ${(allModules || modules).length} loaded this session.</div>`
     : '';
 
-  return `
-    ${scopeBanner}
+  // 2026-05-26: server config paths section — populated async after the
+  // modal is open (see _openJsScriptsModal). Placeholder shows a spinner.
+  // When opts.focusServerPaths is true the section is rendered first.
+  const serverPathsPlaceholder = `
+    <div id="serverPathsModalSection" style="margin-bottom: 14px;">
+      <div style="font-size: 10px; color: var(--ink-dimmer); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">
+        Server config paths
+      </div>
+      <div class="dim">Loading <code>/api/health</code> …</div>
+    </div>`;
+
+  const jsSection = `
     <div style="margin-bottom: 14px;">
       <div style="font-size: 10px; color: var(--ink-dimmer); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">
         &lt;script src&gt; tags (${tags.length})
@@ -778,8 +869,105 @@ function _jsScriptsModalBody(tags, modules, allModules, activeAtlas) {
         Registered ES modules (${modules.length})
       </div>
       ${moduleRows}
-    </div>
-  `;
+    </div>`;
+
+  return opts.focusServerPaths
+    ? `${scopeBanner}${serverPathsPlaceholder}${jsSection}`
+    : `${scopeBanner}${jsSection}${serverPathsPlaceholder}`;
+}
+
+// 2026-05-26: render the server-paths section once /api/health has
+// landed. Groups paths by purpose family (dosage / sample list /
+// binaries / cache / reference) for at-a-glance readability. Each row
+// shows: status glyph, key + purpose, resolved path. ⚠ rows surface
+// the _reason ("does not exist", "exists but is not executable", etc.).
+function _serverPathsSectionHtml(health) {
+  if (!health) {
+    return `<div class="dim">/api/health unreachable — server may not be running.</div>`;
+  }
+  const ps = health.subsystems && health.subsystems.popstats;
+  if (!ps || !ps.ready) {
+    const reason = ps && ps.reason
+      ? `<div class="dim" style="font-size: 11px;">${_esc(ps.reason)}</div>` : '';
+    return `<div class="dim">Popstats subsystem not configured — no server paths to report.</div>${reason}`;
+  }
+  const checks = Array.isArray(ps.paths_check) ? ps.paths_check : [];
+  if (checks.length === 0) {
+    return `<div class="dim">No paths configured.</div>`;
+  }
+  // Group by family. Order matters — dosage first because that's what
+  // surfaced the original bug.
+  const FAMILIES = [
+    { label: 'Dosage + sites',  names: ['dosage_dir'] },
+    { label: 'Sample list',     names: ['sample_list'] },
+    { label: 'BEAGLE imputed',  names: ['beagle_dir'] },
+    { label: 'BAMs',            names: ['bam_dir'] },
+    { label: 'Ancestry Q',      names: ['local_q_dir'] },
+    { label: 'Engine binaries', names: ['region_popstats', 'hobs_windower',
+                                        'angsd_patched', 'instant_q', 'ngsld'] },
+    { label: 'Reference + base', names: ['ref', 'ref_fai', 'chrom_sizes', 'base'] },
+    { label: 'Caches',          names: ['cache_dir', 'server_results_cache_root'] },
+  ];
+  const byName = new Map(checks.map(c => [c.name, c]));
+  const usedNames = new Set();
+
+  const familyHtml = FAMILIES.map(fam => {
+    const rows = fam.names
+      .map(n => { usedNames.add(n); return byName.get(n); })
+      .filter(Boolean)
+      .map(_pathRowHtml).join('');
+    if (!rows) return '';
+    return `
+      <div style="margin-top: 10px;">
+        <div style="font-size: 10px; color: var(--ink-dim); font-family: var(--mono); margin-bottom: 4px;">
+          ${_esc(fam.label)}
+        </div>
+        ${rows}
+      </div>`;
+  }).join('');
+
+  // Anything in checks that wasn't in any family (forward-compat for new
+  // keys the server starts emitting).
+  const leftovers = checks.filter(c => !usedNames.has(c.name));
+  const leftoverHtml = leftovers.length === 0 ? '' : `
+    <div style="margin-top: 10px;">
+      <div style="font-size: 10px; color: var(--ink-dim); font-family: var(--mono); margin-bottom: 4px;">Other</div>
+      ${leftovers.map(_pathRowHtml).join('')}
+    </div>`;
+
+  const sum = ps.paths_summary || {};
+  const sumLine = `
+    <div style="font-size: 11px; color: var(--ink-dim); margin-bottom: 8px;">
+      <b>${sum.n_ok || 0}</b> ok · <b>${sum.n_missing || 0}</b> missing · <b>${sum.n_unset || 0}</b> unset · <b>${sum.n_total || 0}</b> total
+      ${ps.data && ps.data.config_path
+        ? `· config: <code>${_esc(ps.data.config_path)}</code>` : ''}
+    </div>`;
+
+  return `${sumLine}${familyHtml}${leftoverHtml}`;
+}
+
+function _pathRowHtml(c) {
+  const glyph = c.ok === true  ? '<span style="color: var(--good);">✅</span>'
+              : c.ok === false ? '<span style="color: var(--accent, #f5a524);">⚠</span>'
+              : '<span style="color: var(--ink-dimmer);">·</span>';
+  const pathCell = c.path
+    ? `<span style="font-family: var(--mono); color: var(--ink); word-break: break-all;">${_esc(c.path)}</span>`
+    : `<span class="dim" style="font-style: italic;">unset</span>`;
+  const reason = (c.ok === false && c._reason)
+    ? `<div class="dim" style="font-size: 10.5px; margin-top: 1px;">${_esc(c._reason)}</div>`
+    : '';
+  return `
+    <div style="display: grid; grid-template-columns: 18px 160px 1fr; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--rule); align-items: start;">
+      <div>${glyph}</div>
+      <div style="font-family: var(--mono); font-size: 11px; color: var(--ink);">
+        <div>${_esc(c.name)}</div>
+        <div class="dim" style="font-size: 10px; font-family: var(--serif);">${_esc(c.purpose || '')}</div>
+      </div>
+      <div>
+        ${pathCell}
+        ${reason}
+      </div>
+    </div>`;
 }
 
 // =====================================================================

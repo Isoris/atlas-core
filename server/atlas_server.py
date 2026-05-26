@@ -1633,6 +1633,14 @@ def _popstats_subsystem_status() -> Dict[str, Any]:
             "reason": "popstats subsystem not configured. Pass --config <yaml> "
                       "(or POPSTATS_CONFIG env) to enable.",
         }
+    # 2026-05-26: probe each configured path on disk so the JS chrome can
+    # show an at-a-glance ✅/⚠ summary + the modal can highlight missing
+    # files/binaries. Each entry = {name, path, purpose, kind, ok}. kind
+    # in {dir, file, binary}; ok=true when path exists + matches kind +
+    # (for binaries) is executable. Missing config keys → ok:null + kind:
+    # "unset" — distinguishable from "configured but missing on disk".
+    paths_check = _build_paths_check()
+
     return {
         "ready": True,
         "engines": ENGINES.all_hashes(),
@@ -1644,16 +1652,120 @@ def _popstats_subsystem_status() -> Dict[str, Any]:
             "root": str(CACHE.root),
         },
         "data": {
-            "beagle_dir": CFG.get("beagle_dir"),
-            "sample_list": str(SAMPLES.path),
-            "n_samples": len(SAMPLES),
-            "local_q_dir": CFG.get("local_q_dir"),
+            "base":             CFG.get("base"),
+            "ref":              CFG.get("ref"),
+            "ref_fai":          CFG.get("ref_fai"),
+            "beagle_dir":       CFG.get("beagle_dir"),
+            "dosage_dir":       CFG.get("dosage_dir"),
+            "bam_dir":          CFG.get("bam_dir"),
+            "sample_list":      str(SAMPLES.path),
+            "n_samples":        len(SAMPLES),
+            "local_q_dir":      CFG.get("local_q_dir"),
+            "config_path":      os.environ.get("POPSTATS_CONFIG"),
+        },
+        "paths_check": paths_check,
+        "paths_summary": {
+            "n_ok":      sum(1 for c in paths_check if c["ok"] is True),
+            "n_missing": sum(1 for c in paths_check if c["ok"] is False),
+            "n_unset":   sum(1 for c in paths_check if c["ok"] is None),
+            "n_total":   len(paths_check),
         },
         "limits": {
             "min_group_n": CFG.get("min_group_n", 10),
             "max_groups": 10,
         },
     }
+
+
+def _build_paths_check() -> List[Dict[str, Any]]:
+    """Probe every configured path on disk + classify by purpose.
+
+    Returns a list of {name, path, purpose, kind, ok} dicts. The JS
+    chrome renders this as a grouped checklist (dosage / binaries /
+    sample list / etc.) and counts ok=false for the topbar indicator.
+    """
+    if CFG is None:
+        return []
+    out: List[Dict[str, Any]] = []
+
+    # (name in CFG, purpose label shown in the modal, kind for the check)
+    DATA_PATHS = [
+        ("base",            "Project base — all ${base} substitutions resolve here", "dir"),
+        ("ref",             "Reference genome FASTA",                                  "file"),
+        ("ref_fai",         "Reference FASTA index (.fai)",                            "file"),
+        ("chrom_sizes",     "Canonical chromosome lengths (chrom_sizes.tsv) — feeds /api/dosage/manifest length_bp", "file"),
+        ("beagle_dir",      "BEAGLE imputed dosages (per-chrom)",                      "dir"),
+        ("dosage_dir",      "Per-chrom sites + dosage TSVs (dosage-heatmap bridge)",   "dir"),
+        ("bam_dir",         "Per-sample BAMs (Hobs/HWE endpoint)",                     "dir"),
+        ("local_q_dir",     "Engine B ancestry-Q cache",                               "dir"),
+        ("cache_dir",       "Popstats engine output cache",                            "dir"),
+        ("server_results_cache_root",
+                            "Server-side persist cache (registry v2 persist contract)", "dir"),
+    ]
+    for key, purpose, kind in DATA_PATHS:
+        raw = CFG.get(key)
+        out.append(_check_one(name=key, raw=raw, purpose=purpose, kind=kind))
+
+    # Sample list path comes from SAMPLES.path (already resolved at boot).
+    if SAMPLES is not None and getattr(SAMPLES, "path", None):
+        out.append(_check_one(
+            name="sample_list",
+            raw=str(SAMPLES.path),
+            purpose="Sample-ID list (one ID per line, BEAGLE column order)",
+            kind="file",
+        ))
+
+    # Engine binaries — same shape but kind="binary" (checks +x).
+    if ENGINES is not None:
+        engine_purposes = {
+            "region_popstats": "Region popstats binary (pi / FST / dXY / HWE per region)",
+            "hobs_windower":   "Hobs windower binary (per-window Hobs/Hexp from BAMs)",
+            "angsd_patched":   "Patched ANGSD binary (fixed HWE; Hobs/HWE endpoint)",
+            "instant_q":       "Instant-Q binary (ancestry Q-matrix on demand)",
+            "ngsld":           "ngsLD binary (linkage-disequilibrium endpoint)",
+        }
+        for name, p in ENGINES._paths.items():
+            out.append(_check_one(
+                name=name,
+                raw=str(p) if p else None,
+                purpose=engine_purposes.get(name, "Engine binary"),
+                kind="binary",
+            ))
+    return out
+
+
+def _check_one(*, name: str, raw, purpose: str, kind: str) -> Dict[str, Any]:
+    """Build one paths_check entry. kind in {dir, file, binary}. ok in
+    {True (found + right kind + executable for binaries),
+     False (configured but missing/wrong kind),
+     None (not configured at all)}."""
+    if raw is None or str(raw).strip() == "":
+        return {"name": name, "path": None, "purpose": purpose,
+                "kind": "unset", "ok": None}
+    try:
+        p = Path(str(raw))
+        exists = p.exists()
+    except (OSError, ValueError):
+        return {"name": name, "path": str(raw), "purpose": purpose,
+                "kind": kind, "ok": False, "_reason": "path resolution failed"}
+    if not exists:
+        return {"name": name, "path": str(p), "purpose": purpose,
+                "kind": kind, "ok": False, "_reason": "does not exist"}
+    if kind == "dir":
+        return {"name": name, "path": str(p), "purpose": purpose,
+                "kind": kind, "ok": p.is_dir(),
+                "_reason": None if p.is_dir() else "exists but is not a directory"}
+    if kind == "file":
+        return {"name": name, "path": str(p), "purpose": purpose,
+                "kind": kind, "ok": p.is_file(),
+                "_reason": None if p.is_file() else "exists but is not a file"}
+    if kind == "binary":
+        is_exec = p.is_file() and os.access(p, os.X_OK)
+        return {"name": name, "path": str(p), "purpose": purpose,
+                "kind": kind, "ok": is_exec,
+                "_reason": None if is_exec else "exists but is not executable"}
+    return {"name": name, "path": str(p), "purpose": purpose,
+            "kind": kind, "ok": exists}
 
 
 def _file_subsystem_status() -> Dict[str, Any]:
@@ -2176,6 +2288,7 @@ async def hobs_groupwise(req: HobsGroupwiseReq) -> Response:
     bam_suffix = CFG.get("bam_suffix", "markdup.bam")
     angsd_bin = ENGINES.path("angsd_patched")
     if not angsd_bin.exists():
+        log.error("hobs_groupwise: angsd_patched binary missing at %s", angsd_bin)
         raise HTTPException(500, f"angsd_patched not found: {angsd_bin}")
     ref = Path(CFG["ref"])
     ref_fai = Path(CFG["ref_fai"])
@@ -2199,7 +2312,15 @@ async def hobs_groupwise(req: HobsGroupwiseReq) -> Response:
         try:
             results = await asyncio.gather(*tasks)
         except RuntimeError as e:
+            log.exception("hobs_groupwise: angsd path failed (chrom=%s, groups=%s, region=%s)",
+                          req.chrom, list(cleaned.keys()), region_dict)
             raise HTTPException(500, f"angsd failed: {e}")
+        except Exception as e:
+            # Catch-all so a non-RuntimeError (e.g. asyncio.CancelledError,
+            # FileNotFoundError from subprocess) still surfaces the trace.
+            log.exception("hobs_groupwise: unexpected error in angsd gather (chrom=%s, groups=%s, region=%s)",
+                          req.chrom, list(cleaned.keys()), region_dict)
+            raise HTTPException(500, f"angsd path unexpected error: {type(e).__name__}: {e}")
 
         hwe_paths: Dict[str, Path] = {g: p for g, p in results}
 
@@ -2214,6 +2335,8 @@ async def hobs_groupwise(req: HobsGroupwiseReq) -> Response:
             try:
                 sites = _parse_hwe_sites(hwe)
             except (KeyError, ValueError, OSError) as e:
+                log.exception("hobs_groupwise: failed to parse hwe for group=%s file=%s",
+                              gname, hwe)
                 raise HTTPException(500, f"failed to parse {hwe}: {e}")
             if req.region is not None:
                 sites = sites[(sites["pos"] >= req.region.start_bp) &

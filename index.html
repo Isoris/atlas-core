@@ -26,75 +26,48 @@
        stays empty (no switcher dropdown). The "ATLAS:" label is
        intentionally absent — the dropdown's current value already
        names the atlas. -->
-  <div id="atlas-switcher-host"></div>
-  <!-- Chromosome (and any other) scope pickers live at the top of the
-       header per Quentin's request. The router renders pickers into
-       this <nav id="scopebar"> at navigate time. -->
-  <nav id="scopebar"></nav>
-  <!-- 2026-05-26: removed #globalSettingsBtn (header ⚙). Each page now
-       owns its own #sidebarFloatBtn (📌) — the atlas-core
-       core/sidebar_floating.js shell installer wires it on every page
-       mount. The header-level gear was redundant + cluttering. Per-page
-       toggle stays; this just stops duplicating it in the chrome. -->
-  <!-- 2026-05-26: removed #schemaBadge ("schema · N layers") from the
-       header. The chip surfaced the registered layer count for the
-       active atlas — useful for debugging during atlas-onboarding, but
-       noise once the atlas is settled. The wiring in
-       shell_chrome.js#_wireSchemaBadge is safe with the host element
-       absent (`if (!badge) return;`). -->
-  <span id="jsScriptsBadge" title="Loaded JavaScript modules registered as window globals.">JS · 0 scripts</span>
+  <!-- LEFT GROUP — identity (atlas + scope). -->
+  <div class="header-group header-group-identity">
+    <div id="atlas-switcher-host"></div>
+    <nav id="scopebar"></nav>
+  </div>
 
-  <!-- Workflows status chip — mounted by core/workflow_status_badge.js
-       (SPEC_workflows_v1 §5). Reads each installed atlas's workflows
-       registry, fetches every workflow's status_file, shows total counts
-       of fresh / stale / failed / never-ran. Click for per-workflow detail.
-       Stays hidden when no atlas declares workflows. -->
-  <span id="workflowsBadgeHost" class="shell-chip-host"></span>
+  <span class="header-divider" aria-hidden="true"></span>
 
-  <!-- Chrom-summary chip (SPEC_multichrom_load_orchestrator Slice 1) —
-       subscribes to `shared.chromSummaries.changed` and shows how many
-       chroms have a summary cached in this session. Tooltip lists every
-       chrom id + window/sample/candidate counts. Stays hidden until a
-       page writes its first summary. -->
-  <span id="chromSummaryBadge" class="shell-chip-host" style="display: none;"></span>
+  <!-- MID GROUP — status badges (read-only info chips). -->
+  <div class="header-group header-group-status">
+    <span id="jsScriptsBadge" title="Loaded JavaScript modules registered as window globals.">JS · 0 scripts</span>
+    <span id="workflowsBadgeHost" class="shell-chip-host"></span>
+    <span id="chromSummaryBadge" class="shell-chip-host" style="display: none;"></span>
+  </div>
 
   <!-- Flex spacer pushes the right-side cluster to the right edge -->
   <div style="flex: 1;"></div>
 
-  <!-- BLUE folder — session / layout -->
-  <div class="header-folder" data-color="blue" title="Session and layout controls">
+  <!-- RIGHT GROUP — actions (tools + direct buttons + server + theme). -->
+  <div class="header-group header-group-actions">
+  <!-- 2026-05-26: three folders (session/mode/data) combined into one
+       "tools" folder. The internal panel keeps the three groups visually
+       separated by section dividers so the data-cmd relay
+       (CMD_TO_PAGE_ID in shell_chrome.js) keeps working unchanged. -->
+  <div class="header-folder" title="Session · mode · data controls">
     <button class="header-folder-btn" type="button">
-      <span class="dot">●</span>&nbsp;session
+      tools
       <span class="arrow">▾</span>
     </button>
-    <div class="header-folder-panel" id="sessionPanel">
+    <div class="header-folder-panel" id="toolsPanel">
+      <div class="folder-section-label">session</div>
       <button class="folder-btn" data-cmd="save-session" title="Save session JSON">💾 save</button>
       <button class="folder-btn" data-cmd="load-session" title="Load session JSON">📂 load</button>
       <button class="folder-btn" data-cmd="layout-mode" title="Toggle layout (fixed / free / compact)">📐 fixed</button>
       <button class="folder-btn" data-cmd="reset-layout" title="Reset layout to defaults">↺ reset layout</button>
-    </div>
-  </div>
-
-  <!-- GREEN folder — modes -->
-  <div class="header-folder" data-color="green" title="Working modes">
-    <button class="header-folder-btn" type="button">
-      <span class="dot">●</span>&nbsp;mode
-      <span class="arrow">▾</span>
-    </button>
-    <div class="header-folder-panel" id="modePanel">
+      <div class="folder-section-divider"></div>
+      <div class="folder-section-label">mode</div>
       <button class="folder-btn" data-cmd="candidate-mode" title="Toggle candidate drafting mode">🏗 candidate mode</button>
       <button class="folder-btn" data-cmd="auto-fill" title="Auto-fill haplotype labels">🪄 auto-fill</button>
       <button class="folder-btn" data-cmd="ig-labels" title="Toggle I·g labels strip">I·g labels: on</button>
-    </div>
-  </div>
-
-  <!-- YELLOW folder — data -->
-  <div class="header-folder" data-color="yellow" title="Data tools">
-    <button class="header-folder-btn" type="button">
-      <span class="dot">●</span>&nbsp;data
-      <span class="arrow">▾</span>
-    </button>
-    <div class="header-folder-panel" id="dataPanel">
+      <div class="folder-section-divider"></div>
+      <div class="folder-section-label">data</div>
       <button class="folder-btn" data-cmd="export-data" title="Download full atlas context as JSON">📥 export</button>
       <button class="folder-btn" data-cmd="open-matrix" title="Open candidate × candidate Cramér's V matrix">🔗 matrix</button>
       <button class="folder-btn" data-cmd="active-samples" title="Active samples subset">active: —</button>
@@ -123,6 +96,7 @@
 
   <!-- Theme toggle — cycles dark → light → academic -->
   <button id="themeToggleBtn" type="button" title="Cycle theme">☀ light</button>
+  </div><!-- /.header-group.header-group-actions -->
 </header>
 
 <nav id="topbar"></nav>

@@ -26,7 +26,6 @@ const THEME_LABEL = { dark: '☀ light', light: '📓 academic', academic: '🌙
 export function attachShellChrome(opts = {}) {
   _wireThemeToggle();
   _wireFolderButtons();
-  _wireGlobalSettingsBtn();
   _wireServerPing(opts.serverUrl || window.ATLAS_SERVER_URL || 'http://127.0.0.1:8000');
   _wireSchemaBadge();
   _wireJsScriptsBadge();
@@ -414,50 +413,6 @@ function _wireWorkflowsBadge(opts) {
       catch (e) { console.warn('[shell_chrome] mountWorkflowsBadge threw:', e); }
     })
     .catch((e) => console.warn('[shell_chrome] workflow_status_badge import failed:', e));
-}
-
-// Forward header gear clicks to the active page's sidebar.
-//
-// 2026-05-26: gear now prefers #sidebarFloatBtn (floating-mode toggle) over
-// the legacy #sidebarToggleBtn (column-collapse) when both exist. Quentin's
-// "the setting bar should be floating, not on the left" — the gear is the
-// canonical entry point; the in-aside 📌 button is too easy to miss. On
-// pages that haven't opted in to floating mode, we fall back to the legacy
-// collapse so the gear still does something useful.
-function _wireGlobalSettingsBtn() {
-  const btn = document.getElementById('globalSettingsBtn');
-  if (!btn) return;
-  btn.addEventListener('click', () => {
-    // Prefer the floating-mode toggle (page opted in by including
-    // #sidebarFloatBtn). atlas-core's sidebar_floating.js handles the
-    // mode flip + position persistence.
-    const floatBtn = document.getElementById('sidebarFloatBtn');
-    if (floatBtn && floatBtn !== btn) {
-      floatBtn.click();
-      return;
-    }
-    // Fallback: legacy column-collapse toggle.
-    const pageToggle = document.getElementById('sidebarToggleBtn');
-    if (pageToggle && pageToggle !== btn) {
-      // .click() is more reliable than dispatchEvent(new MouseEvent('click'))
-      // for triggering programmatically-added handlers — Safari quirks.
-      pageToggle.click();
-      return;
-    }
-    // Fallback: no page-owned toggle exists. Flip .wrap[data-sidebar]
-    // directly so the inversion.css grid-template-columns rule still
-    // collapses the aside. Other atlases use the same convention.
-    const wrap = document.querySelector('#app-root .wrap, main .wrap, .wrap');
-    if (wrap) {
-      const collapsed = wrap.getAttribute('data-sidebar') === 'collapsed';
-      if (collapsed) wrap.removeAttribute('data-sidebar');
-      else           wrap.setAttribute('data-sidebar', 'collapsed');
-      return;
-    }
-    // Last-ditch: toggle a `.collapsed` class on the first <aside>.
-    const aside = document.querySelector('#app-root aside, main aside');
-    if (aside) aside.classList.toggle('collapsed');
-  });
 }
 
 function _wireThemeToggle() {

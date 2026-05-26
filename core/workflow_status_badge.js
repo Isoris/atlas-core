@@ -51,10 +51,11 @@ export function mountWorkflowsBadge(host, opts = {}) {
   const chip = document.createElement('span');
   chip.className = 'shell-chip workflows-badge';
   chip.style.cssText =
-    'display: none; align-items: center; gap: 6px; padding: 1px 8px; ' +
-    'margin: 0 4px; font: 10px ui-monospace, monospace; ' +
+    'display: none; align-items: center; gap: 5px; padding: 0 4px; ' +
+    'height: 18px; line-height: 1; box-sizing: border-box; ' +
+    'font: 10px ui-monospace, monospace; letter-spacing: 0.02em; ' +
     'color: var(--ink-dim, #8895a8); ' +
-    'border: 1px solid var(--rule, #2a3242); border-radius: 3px; cursor: pointer;';
+    'background: transparent; border: none; cursor: pointer;';
   chip.title = 'Workflows status (click for details). ' +
                'Polled every 5 minutes from each workflow.status_file.';
   host.appendChild(chip);

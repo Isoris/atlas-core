@@ -56,11 +56,29 @@ export class AtlasRouter {
     const page = manifest.pages.find(p => p.id === page_id);
     if (!page) throw new Error(`Unknown page: ${atlas_id}/${page_id}`);
 
+    // 2026-05-21 correctness: rapid tab clicks used to leave the UI
+    // broken because navigate(B) could start while navigate(A)'s mount
+    // was still awaiting. Both nav A and nav B would overwrite
+    // root.innerHTML and call module.mount, racing each other and
+    // double-unmounting `_currentModule`. The token below disambiguates:
+    // each nav captures the value of _navToken; if it changes during
+    // any await, the nav is "superseded" and bails (cleanly, after
+    // unmounting anything it managed to mount). Side-effect: the
+    // optimistic null-out of _currentModule prevents the next nav from
+    // re-unmounting the previous module that we just handled.
+    if (this._navToken == null) this._navToken = 0;
+    const token = ++this._navToken;
+    const toUnmount     = this._currentModule;
+    const toUnmountRoot = this._currentRoot;
+    this._currentModule = null;
+    this._currentRoot   = null;
+
     // Unmount previous
-    if (this._currentModule?.unmount) {
-      try { await this._currentModule.unmount(this._currentRoot); }
+    if (toUnmount && typeof toUnmount.unmount === 'function') {
+      try { await toUnmount.unmount(toUnmountRoot); }
       catch (e) { console.error('unmount threw:', e); }
     }
+    if (token !== this._navToken) return;
 
     // Load per-page stylesheet if declared. Loaded BEFORE the fragment is
     // injected so the page renders styled, not flashed-unstyled. Stylesheets
@@ -79,6 +97,8 @@ export class AtlasRouter {
       fetch(page.fragment).then(r => r.text()),
       import('/' + page.module),
     ]);
+    if (token !== this._navToken) return;   // nothing mounted yet, safe to drop
+
     const root = document.getElementById('app-root');
     root.innerHTML = fragmentHtml;
 
@@ -119,6 +139,16 @@ export class AtlasRouter {
 
     // Mount
     await module.mount(root, this.state, this.registry);
+    if (token !== this._navToken) {
+      // A newer navigate superseded us mid-mount. Best-effort cleanup:
+      // unmount what we just mounted so the next nav has a clean slate.
+      // Errors swallowed — the next nav will overwrite root.innerHTML
+      // anyway, so a failed unmount only leaks listeners, not state.
+      if (typeof module.unmount === 'function') {
+        try { await module.unmount(root); } catch (_) {}
+      }
+      return;
+    }
 
     this._currentModule = module;
     this._currentRoot = root;

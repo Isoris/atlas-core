@@ -531,7 +531,22 @@
       "Bash(grep -i \"atlas$\")",
       "Bash(grep -n \"^\\\\s\\\\{2,4\\\\}[a-zA-Z_]\\\\+\\\\\\(.*\\\\\\)\\\\s*{\" core/atlas_router.js)",
       "PowerShell(Get-ChildItem \"C:\\\\Users\\\\quent\\\\Desktop\\\\population-atlas\\\\atlases\\\\population\\\\pages\" -Recurse -File | Where-Object {$_.Extension -in '.html', '.js'} | Select-Object -ExpandProperty FullName | Sort-Object)",
-      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\quent\\\\Desktop\\\\meiosis-atlas\\\\atlases\\\\meiosis\\\\pages\\\\\" -Recurse -Include \"*.html\", \"*.js\" | Select-Object -ExpandProperty FullName | Sort-Object)"
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\quent\\\\Desktop\\\\meiosis-atlas\\\\atlases\\\\meiosis\\\\pages\\\\\" -Recurse -Include \"*.html\", \"*.js\" | Select-Object -ExpandProperty FullName | Sort-Object)",
+      "Bash(PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python3)",
+      "Bash(python /tmp/_brace_check.py)",
+      "Bash(PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python3 _dead_btn_audit.py)",
+      "Bash(python /tmp/_mendelian_check.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python /tmp/_findTrios_dryrun.py)",
+      "Bash(PYTHONIOENCODING=utf-8 python /tmp/_karyotype_dryrun.py)",
+      "Bash(git -C /c/Users/quent/Desktop/atlas-core check-ignore -v core/prewarm_scheduler.js server/atlas_server.config.yaml server/atlas_server.config.example.yaml)",
+      "Bash(git -C /c/Users/quent/Desktop/atlas-core log --oneline -- core/prewarm_scheduler.js)",
+      "Bash(grep -n \"### Pending — \\\\`specs_todo/\\\\`\\\\|Highlights:\\\\|catalogue_\" SPECS.md)",
+      "Bash(git -C /c/Users/quent/Desktop/inversion-atlas log --oneline -10)",
+      "Bash(git -C /c/Users/quent/Desktop/inversion-atlas log --oneline -- atlases/inversion/pages/discovery/local_pca_dosage/hotkeys.js)",
+      "Bash(git -C /c/Users/quent/Desktop/inversion-atlas show --stat 52e2dca)",
+      "Bash(echo '=== __TRACKED_VAR__ ===')",
+      "Bash(ls -la c:/Users/quent/Desktop/__TRACKED_VAR__/.git)",
+      "Bash(mkdir -p \"c:/Users/quent/Desktop/loads-atlas/atlases/loads/css\" \"c:/Users/quent/Desktop/loads-atlas/atlases/loads/pages\" \"c:/Users/quent/Desktop/loads-atlas/atlases/loads/registries/data\" \"c:/Users/quent/Desktop/loads-atlas/atlases/loads/registries/schemas/schema_in\" \"c:/Users/quent/Desktop/loads-atlas/atlases/loads/registries/schemas/schema_out\" \"c:/Users/quent/Desktop/loads-atlas/atlases/loads/shared\" \"c:/Users/quent/Desktop/loads-atlas/atlases/loads/server\" \"c:/Users/quent/Desktop/loads-atlas/atlases/loads/engines\" 2>&1; echo \"ok\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",
@@ -556,7 +571,8 @@
       "c:\\Users\\quent\\Desktop\\cross-species-atlas",
       "c:\\Users\\quent\\Desktop\\pods-atlas\\atlases\\pods\\pages\\scenario",
       "c:\\Users\\quent\\Desktop\\cross-species-atlas\\atlases\\cross-species\\registries\\schemas",
-      "C:\\Users\\quent\\Desktop\\atlas-core\\core"
+      "C:\\Users\\quent\\Desktop\\atlas-core\\core",
+      "c:\\Users\\quent\\Desktop\\loads-atlas\\atlases\\loads"
     ]
   }
 }

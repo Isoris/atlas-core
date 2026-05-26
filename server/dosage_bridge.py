@@ -187,24 +187,25 @@ def _open_gz_text(path: Path) -> io.TextIOWrapper:
 def _detect_dosage_header(first_line: str, n_samples_expected: int) -> bool:
     """Return True if `first_line` looks like a dosage-header row of sample IDs.
 
-    Rule (from §Source data layout): if line 1 has the same field count as
-    samples.tsv AND parses to integers, it's data; otherwise it's a header.
-    Since we only have the dosage cell-parser in this bridge, we use a
-    simpler rule: if every field after stripping is in {'', '.', 'NA',
-    integer}, it's data; if any field is a non-numeric string, treat as
-    header.
+    Rule: inspect the TRAILING n_samples_expected cells (the per-sample
+    dosage values, regardless of how many leading metadata cols ship —
+    chrom / pos / major / minor / etc.). If every trailing cell is in
+    {'', '.', 'NA', integer}, it's data; if any trailing cell is a
+    non-numeric string, treat as header.
+    2026-05-26: was matching cell count exactly, which mis-classified
+    ANGSD-style files (chrom\\tpos\\t<dosages>) as data on every row.
     """
     fields = first_line.rstrip("\n").split("\t")
-    if len(fields) != n_samples_expected:
-        # Mismatched count: treat as data and let the loader complain
-        # downstream — covering the case where samples.tsv has been
-        # updated without re-emitting the dosage TSV.
+    # When fewer cells than expected, can't be a per-sample header (no row
+    # to check). Treat as data and let the row-parser pad with NA.
+    if len(fields) < n_samples_expected:
         return False
-    for f in fields:
+    # Slice trailing N cells — same convention as _load_dosage_rows below.
+    trailing = fields[-n_samples_expected:]
+    for f in trailing:
         s = f.strip()
         if not s or s == "." or s.upper() == "NA":
             continue
-        # If we can't parse to int, it's a header field
         try:
             int(s)
         except ValueError:
@@ -341,6 +342,12 @@ def _load_sites_in_window(sites_path: Path, start: int, end: int
       - site_id column absent (we don't return it from this helper —
         the bridge renderer doesn't need it; selectTopMarkers reads
         pos_bp / missingness / diagnostic_score)
+      - 2026-05-26: TWO file layouts:
+          (a) legacy: cols = [pos, major, minor, missingness?, diagnostic?]
+          (b) ANGSD-sites: cols = [chrom, pos, major, minor, ...]
+        Auto-detected from the FIRST data row (after header) by checking
+        whether col 0 parses as int. The user's local cohort uses (b);
+        upstream test fixtures used (a). One parser handles both.
     """
     positions: List[int] = []
     missingness: List[Optional[float]] = []
@@ -348,6 +355,7 @@ def _load_sites_in_window(sites_path: Path, start: int, end: int
     line_indices: List[int] = []
 
     row_idx = -1   # Tracks logical row index (excluding comments + header)
+    pos_col = None  # 0 for legacy, 1 for ANGSD-sites; detected on first data row
     with _open_gz_text(sites_path) as f:
         for raw in f:
             if not raw or raw.startswith("#"):
@@ -356,20 +364,40 @@ def _load_sites_in_window(sites_path: Path, start: int, end: int
             cells = line.split("\t")
             if not cells or not cells[0]:
                 continue
-            # Detect a header row: first column non-numeric
-            try:
-                pos = int(cells[0])
-            except ValueError:
-                # Header — skip without bumping row_idx
-                continue
+            # Detect the position column on the first data row we see.
+            # Try col 0 first (legacy layout). If non-numeric, try col 1
+            # (ANGSD-sites layout where col 0 is the chrom id). If
+            # neither parses, treat as a header and skip.
+            if pos_col is None:
+                try:
+                    pos = int(cells[0])
+                    pos_col = 0
+                except ValueError:
+                    if len(cells) > 1:
+                        try:
+                            pos = int(cells[1])
+                            pos_col = 1
+                        except ValueError:
+                            continue  # header row, skip
+                    else:
+                        continue
+            else:
+                try:
+                    pos = int(cells[pos_col])
+                except (ValueError, IndexError):
+                    continue
             row_idx += 1
             if pos < start:
                 continue
             if pos > end:
                 # Sites are sorted by pos — we can stop early
                 break
-            miss = _maybe_float(cells[3]) if len(cells) > 3 else None
-            ds = _maybe_float(cells[4]) if len(cells) > 4 else None
+            # Column offsets for missingness/diagnostic shift by pos_col
+            # so 'pos col + 3' = legacy col 3 (missingness) under either layout.
+            mi_idx = pos_col + 3
+            ds_idx = pos_col + 4
+            miss = _maybe_float(cells[mi_idx]) if len(cells) > mi_idx else None
+            ds   = _maybe_float(cells[ds_idx]) if len(cells) > ds_idx else None
             positions.append(pos)
             missingness.append(miss)
             diagnostic.append(ds)
@@ -413,11 +441,21 @@ def _load_dosage_rows(dosage_path: Path, line_indices_sorted: List[int],
                 continue
             if row_idx == next_wanted:
                 cells = line.split("\t")
-                # Don't fail hard if the row is short — pad with -1 (NA).
+                # 2026-05-26: dosage TSV may carry leading metadata columns
+                # (chrom, pos, major, minor) before the N per-sample dosage
+                # cells. The legacy assumption "first N cells are samples"
+                # breaks for ANGSD-style emiBeagle output where the layout is
+                #   chrom\tpos\tmajor\tminor\td_s1\td_s2\t...d_sN
+                # → previously: cells[:N] kept `chrom`/`pos`/`major`/`minor`
+                # plus the first N-4 dosages, parsed `chrom` as -1 (NA),
+                # dropped the last 4 samples entirely.
+                # Fix: when len > N, slice from the END — trailing N cells
+                # are always the per-sample dosage values regardless of how
+                # many leading metadata columns ship.
                 if len(cells) < n_samples_expected:
                     cells = list(cells) + [""] * (n_samples_expected - len(cells))
                 elif len(cells) > n_samples_expected:
-                    cells = cells[:n_samples_expected]
+                    cells = cells[-n_samples_expected:]
                 rows[row_idx] = [_maybe_dosage_int(c) for c in cells]
                 next_wanted_idx += 1
                 if next_wanted_idx >= len(line_indices_sorted):

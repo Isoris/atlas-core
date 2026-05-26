@@ -2448,6 +2448,17 @@ async def dosage_manifest() -> Dict[str, Any]:
     samples_path = Path(CFG.get("dosage_samples") or
                         CFG.get("sample_list") or
                         (base / "samples.tsv"))
+    # 2026-05-26: load canonical chromosome lengths from chrom_sizes.tsv /
+    # ref.fa.fai when available. The sites file's last-SNP position is
+    # always less than the chromosome length (sites are SNP positions,
+    # not whole-chromosome bp). Quentin: "the sites file doesnt have all
+    # pos right". Resolution order:
+    #   1. CFG['chrom_sizes']  — explicit override
+    #   2. CFG['ref_fai']      — col 1 of the FASTA index
+    #   3. CFG['base']/chrom_sizes.tsv  — convention
+    #   4. last-SNP-pos        — final fallback
+    canonical_sizes = _load_canonical_chrom_sizes(base)
+
     chroms: List[Dict[str, Any]] = []
     if dosage_dir.is_dir():
         # Discover by .sites.tsv.gz; require matching .dosage.tsv.gz.
@@ -2456,15 +2467,18 @@ async def dosage_manifest() -> Dict[str, Any]:
             df = dosage_dir / f"{chrom}.dosage.tsv.gz"
             if not df.exists():
                 continue
-            # Estimate length-bp by reading the last position from the
-            # sites file. Cheap because gzip can stream forward; we only
-            # need the last numeric line. (The standalone viewer's
-            # 01_prepare_dosage_store.py records this in manifest.json
-            # instead of re-deriving it on every request.)
-            length_bp = _last_pos_in_sites(sf)
+            # Prefer the canonical chrom length; fall back to the
+            # last-SNP position when no sizes source is configured.
+            length_bp = canonical_sizes.get(chrom)
+            length_bp_source = 'canonical' if length_bp else None
+            if not length_bp:
+                length_bp = _last_pos_in_sites(sf)
+                length_bp_source = 'last_snp_pos'
             chroms.append({
                 "name": chrom,
                 "length_bp": length_bp,
+                "length_bp_source": length_bp_source,
+                "last_snp_bp": _last_pos_in_sites(sf) if length_bp_source == 'canonical' else length_bp,
                 "sites_path": str(sf.relative_to(dosage_dir)),
                 "dosage_path": str(df.relative_to(dosage_dir)),
             })
@@ -2484,26 +2498,105 @@ async def dosage_manifest() -> Dict[str, Any]:
     }
 
 
+def _load_canonical_chrom_sizes(base: Path) -> Dict[str, int]:
+    """Read canonical chromosome lengths from one of several sources.
+
+    Resolution order (first source that yields entries wins):
+      1. CFG['chrom_sizes']            — explicit TSV path
+      2. CFG['ref_fai']                — col 1 of a .fa.fai file
+      3. <base>/chrom_sizes.tsv        — convention (e.g.
+         /mnt/e/01-catfish_assembly_manuscript_CGA/01_inputs_check/chrom_sizes.tsv)
+      4. <base>/00-samples/*.fa.fai    — fall back to scanning for an FAI
+
+    chrom_sizes.tsv format: two cols, `<chrom>\\t<length_bp>` per line,
+    optional header (auto-skipped if col 1 isn't numeric).
+    FAI format: `<chrom>\\t<length_bp>\\t<offset>\\t<linebases>\\t<linewidth>`.
+    Same key (col 1 = length_bp) for both.
+
+    Returns {} when no source resolves — caller falls back to last-SNP-pos.
+    """
+    candidates: List[Path] = []
+    explicit = CFG.get("chrom_sizes")
+    if explicit:
+        candidates.append(Path(explicit))
+    fai = CFG.get("ref_fai")
+    if fai:
+        candidates.append(Path(fai))
+    candidates.append(base / "chrom_sizes.tsv")
+    # Heuristic FAI fallback
+    samples_dir = base / "00-samples"
+    if samples_dir.is_dir():
+        candidates.extend(sorted(samples_dir.glob("*.fa.fai")))
+
+    for path in candidates:
+        if not path.is_file():
+            continue
+        sizes: Dict[str, int] = {}
+        try:
+            with open(path, "rt") as f:
+                for raw in f:
+                    if not raw or raw.startswith("#"):
+                        continue
+                    cells = raw.rstrip("\n").split("\t")
+                    if len(cells) < 2:
+                        continue
+                    name = cells[0].strip()
+                    if not name:
+                        continue
+                    try:
+                        length = int(cells[1].strip())
+                    except ValueError:
+                        continue  # header / non-numeric → skip
+                    if length > 0:
+                        sizes[name] = length
+        except Exception:
+            continue
+        if sizes:
+            return sizes
+    return {}
+
+
 def _last_pos_in_sites(sites_gz: Path) -> int:
     """Read the last numeric `pos` from a sites.tsv.gz, streaming forward.
 
     Cheap (linear in file size) but only called at /api/dosage/manifest
     time, not per-region. Returns 0 if the file is empty / unreadable.
+
+    2026-05-26: tolerates TWO file layouts (same as _load_sites_in_window):
+      (a) legacy: col 0 = pos
+      (b) ANGSD-sites: col 0 = chrom, col 1 = pos
+    Auto-detects on the first data row.
     """
     try:
         last = 0
+        pos_col = None  # detected on first parseable data row
         with gzip.open(sites_gz, "rt") as f:
             for line in f:
                 if not line or line.startswith("#"):
                     continue
-                cell0 = line.split("\t", 1)[0].strip()
-                if not cell0:
+                cells = line.rstrip("\n").split("\t")
+                if not cells or not cells[0].strip():
                     continue
-                try:
-                    last = int(cell0)
-                except ValueError:
-                    # Header row; skip
-                    continue
+                if pos_col is None:
+                    # Try col 0 (legacy), fall back to col 1 (ANGSD-sites).
+                    try:
+                        last = int(cells[0].strip())
+                        pos_col = 0
+                        continue
+                    except ValueError:
+                        if len(cells) > 1:
+                            try:
+                                last = int(cells[1].strip())
+                                pos_col = 1
+                                continue
+                            except ValueError:
+                                pass
+                        continue  # header row, skip
+                else:
+                    try:
+                        last = int(cells[pos_col].strip())
+                    except (ValueError, IndexError):
+                        continue
         return last
     except Exception:
         return 0

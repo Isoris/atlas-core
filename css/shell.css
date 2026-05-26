@@ -122,15 +122,16 @@
    scopebar select) share a single 20px row centerline. */
 #topbar .atlas-switcher-select,
 #atlas-switcher-host .atlas-switcher-select {
-  background: var(--panel-2); color: var(--ink);
+  background: transparent; color: var(--ink);
   border: 1px solid var(--rule); border-radius: 2px;
   padding: 0 8px;
-  height: 20px; line-height: 1;
+  height: 18px; line-height: 1;
   box-sizing: border-box;
   font-family: var(--mono); font-size: 10px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   cursor: pointer;
   vertical-align: middle;
+  transition: background 100ms, border-color 100ms;
 }
 #topbar .atlas-switcher-select:hover,
 #atlas-switcher-host .atlas-switcher-select:hover {
@@ -365,11 +366,11 @@
  * removed. Inline flex sits between the badges and the right cluster. */
 header #scopebar {
   display: inline-flex; align-items: center;
-  gap: 12px; flex-shrink: 0;
+  gap: 6px; flex-shrink: 0;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--ink-dim);
-  margin-right: 12px;
+  margin-right: 0;
 }
 
 header #scopebar:empty {
@@ -379,7 +380,7 @@ header #scopebar:empty {
 header #scopebar .scope-picker {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 header #scopebar .scope-picker-label {
@@ -398,18 +399,19 @@ header #scopebar .scope-picker-label {
    ones sit lower than the centerline of taller ones. Locking heights
    removes that drift. */
 header #scopebar select {
-  background: var(--panel-2);
+  background: transparent;
   border: 1px solid var(--rule);
   border-radius: 2px;
   color: var(--ink);
   font-family: var(--mono);
   font-size: 10px;
   padding: 0 6px;
-  height: 20px; line-height: 1;
+  height: 18px; line-height: 1;
   box-sizing: border-box;
   cursor: pointer;
   letter-spacing: 0.02em;
   vertical-align: middle;
+  transition: background 100ms, border-color 100ms;
 }
 
 header #scopebar select:hover {

@@ -1,0 +1,58 @@
+{
+  "schema_version": "bridge_endpoint_v1",
+  "db_id": "quickgo",
+  "endpoints": [
+    {
+      "endpoint_id":  "quickgo_term",
+      "label":        "GO term lookup by id(s)",
+      "method":       "GET",
+      "path":         "/ontology/go/terms/{ids}",
+      "params": {
+        "ids": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "go_terms",
+      "cache_seconds": 604800,
+      "describes":    "GO term details by GO id(s). Comma-separated, e.g. 'GO:0008150,GO:0003674,GO:0005575' (BP, MF, CC roots)."
+    },
+    {
+      "endpoint_id":  "quickgo_term_ancestors",
+      "label":        "GO term ancestors",
+      "method":       "GET",
+      "path":         "/ontology/go/terms/{ids}/ancestors",
+      "params": {
+        "ids": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "go_term_ancestors",
+      "cache_seconds": 604800,
+      "describes":    "All ancestor terms up to the namespace root. Useful for collapsing fine-grained GO terms to broader categories for enrichment narratives."
+    },
+    {
+      "endpoint_id":  "quickgo_term_children",
+      "label":        "GO term direct children",
+      "method":       "GET",
+      "path":         "/ontology/go/terms/{ids}/children",
+      "params": {
+        "ids": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "go_term_children",
+      "cache_seconds": 604800,
+      "describes":    "Immediate child terms only (one level down). Combine repeated calls for tree walks."
+    },
+    {
+      "endpoint_id":  "quickgo_annotation_search",
+      "label":        "Annotation search (by gene product / GO id / taxon)",
+      "method":       "GET",
+      "path":         "/annotation/search",
+      "params": {
+        "geneProductId": {"required": false, "kind": "query"},
+        "goId":          {"required": false, "kind": "query"},
+        "taxonId":       {"required": false, "kind": "query"},
+        "limit":         {"required": false, "kind": "query", "default": 25},
+        "page":          {"required": false, "kind": "query", "default": 1}
+      },
+      "returns_layer": "go_annotations",
+      "cache_seconds": 86400,
+      "describes":    "Filter GO annotations by gene product id (UniProt), GO id, or NCBI taxon id. At least one filter is required; the upstream rejects empty searches. For catfish, taxonId=2787823 (Clarias gariepinus)."
+    }
+  ]
+}

@@ -343,8 +343,13 @@ async function loadChainAudit() {
 }
 
 // Layer is "ready" if any module that produces it has last_run_status=success.
-// Heuristic: walk modes → analysis_type → module_name → module.last_run_status.
+// File-sourced layers (source_kind: "file") are inherently inputs — they
+// don't need a producer; user supplies them. Treat as ready by definition.
 function layerReadiness(layerId) {
+  const L = CR.layers[layerId];
+  if (L && L.source_kind === "file") {
+    return { state: "ready", producers: [], via: { source: "file" } };
+  }
   const producers = CR.producesIdx[layerId] || [];
   if (producers.length === 0) return { state: "no_producer", producers: [] };
   for (const aid of producers) {

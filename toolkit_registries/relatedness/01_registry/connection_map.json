@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 299,
-  "n_edges": 231,
+  "n_nodes": 301,
+  "n_edges": 232,
   "warnings": [],
   "nodes": [
     {
@@ -882,6 +882,12 @@
       "status": "experimental"
     },
     {
+      "id": "gene_conversion_tracts",
+      "type": "layer",
+      "label": "Gene-conversion tracts (NCO classifications)",
+      "status": "experimental"
+    },
+    {
       "id": "ngsrelate",
       "type": "analysis",
       "label": "ngsRelate \u2014 pairwise relatedness from genotype likelihoods",
@@ -1581,6 +1587,12 @@
       "id": "copy_origin_painting",
       "type": "analysis",
       "label": "Copy-origin painting (Stage 5.6, SPEC ONLY)",
+      "status": "experimental"
+    },
+    {
+      "id": "ngstracts_step_trc_01",
+      "type": "analysis",
+      "label": "ngsTracts STEP_TRC_01 \u2014 gene-conversion tract classifier",
       "status": "experimental"
     },
     {
@@ -2618,6 +2630,11 @@
       "kind": "output"
     },
     {
+      "from": "ngstracts_step_trc_01",
+      "to": "gene_conversion_tracts",
+      "kind": "output"
+    },
+    {
       "from": "karyotype_calls",
       "to": "mendelian_page_load",
       "kind": "hook_required"
@@ -3047,7 +3064,7 @@
       "trigger_policy": "manual",
       "status": "experimental",
       "notes": "\"The pipeline runs on the comparative cohort (18 genomes + hybrid subgenomes); it produces COORDINATES that the hatchery LG01 x LG28 work consumes",
-      "_path": "analysis/cross_species_breakpoints/adapter_atlas.js"
+      "_path": "analysis/cross_species_breakpoint_detection/adapter_atlas.js"
     },
     {
       "analysis_id": "inversion_pair_incompatibility",

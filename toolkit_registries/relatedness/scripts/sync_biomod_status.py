@@ -39,13 +39,16 @@ from io_helpers import find_registry_root
 
 
 COLUMNS = [
-    "module_name", "version", "family", "atlas", "biomod_status",
+    "module_name", "version", "family", "atlas", "biomod_status", "biomod_status_detail",
     "installed", "ready", "stale", "stale_reason",
     "parent", "derivatives",
     "last_run_id", "last_run_status", "last_run_qc",
     "last_run_started", "last_run_seconds", "n_samples",
     "conda_env_path", "biomod_env", "synced_at",
 ]
+
+# Canonical biomod_status enum (v1). check_analysis_registry.py enforces.
+BIOMOD_STATUS_ENUM = {"stable", "experimental", "planned", "deprecated", "contract_only"}
 
 
 def _bool(v) -> str:

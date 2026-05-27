@@ -1,0 +1,60 @@
+{
+  "schema_version": "bridge_endpoint_v1",
+  "db_id": "ucsc",
+  "endpoints": [
+    {
+      "endpoint_id":  "ucsc_list_genomes",
+      "label":        "List UCSC genome assemblies",
+      "method":       "GET",
+      "path":         "/list/ucscGenomes",
+      "params": {},
+      "returns_layer": "ucsc_genomes",
+      "cache_seconds": 604800,
+      "describes":    "All UCSC-hosted assemblies (hg38, mm10, danRer11, …). Use to discover available reference frames + assembly names before querying tracks."
+    },
+    {
+      "endpoint_id":  "ucsc_list_tracks",
+      "label":        "List tracks for a genome",
+      "method":       "GET",
+      "path":         "/list/tracks",
+      "params": {
+        "genome":         {"required": true,  "kind": "query"},
+        "trackLeavesOnly":{"required": false, "kind": "query", "default": 1}
+      },
+      "returns_layer": "ucsc_tracks",
+      "cache_seconds": 604800,
+      "describes":    "Available tracks for an assembly. trackLeavesOnly=1 hides parent groups so the response is a flat list (phyloP, phastCons, multiz alignments, ENCODE ChIP-seq, ...)."
+    },
+    {
+      "endpoint_id":  "ucsc_track_data",
+      "label":        "Track data for a region",
+      "method":       "GET",
+      "path":         "/getData/track",
+      "params": {
+        "genome": {"required": true, "kind": "query"},
+        "track":  {"required": true, "kind": "query"},
+        "chrom":  {"required": true, "kind": "query"},
+        "start":  {"required": true, "kind": "query"},
+        "end":    {"required": true, "kind": "query"}
+      },
+      "returns_layer": "ucsc_track_data",
+      "cache_seconds": 86400,
+      "describes":    "Track values for a coordinate window. For phyloP / phastCons conservation use track=phyloP100wayAll / phastCons100way. WARNING: response size grows with end-start; cap to ≤ 1 Mb per call."
+    },
+    {
+      "endpoint_id":  "ucsc_sequence",
+      "label":        "Reference sequence for a region",
+      "method":       "GET",
+      "path":         "/getData/sequence",
+      "params": {
+        "genome": {"required": true, "kind": "query"},
+        "chrom":  {"required": true, "kind": "query"},
+        "start":  {"required": true, "kind": "query"},
+        "end":    {"required": true, "kind": "query"}
+      },
+      "returns_layer": "ucsc_sequence",
+      "cache_seconds": 2592000,
+      "describes":    "Reference sequence (FASTA-like JSON) for a coordinate window. Useful for breakpoint flank inspection in the cross_species_atlas."
+    }
+  ]
+}

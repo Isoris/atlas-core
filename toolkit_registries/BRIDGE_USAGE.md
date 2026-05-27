@@ -286,6 +286,113 @@ python3 -m lib.bridge_client --db quickgo \
 
 ---
 
+### UCSC Genome Browser — assemblies, tracks, conservation
+
+> What assemblies does UCSC host?
+
+```bash
+python3 -m lib.bridge_client --db ucsc --endpoint ucsc_list_genomes
+```
+
+> Tracks on zebrafish:
+
+```bash
+python3 -m lib.bridge_client --db ucsc --endpoint ucsc_list_tracks \
+  --params genome=danRer11 --output zfish_tracks.jsonl
+```
+
+> Conservation scores (phastCons) at a coordinate window:
+
+```bash
+python3 -m lib.bridge_client --db ucsc --endpoint ucsc_track_data \
+  --params "genome=danRer11,track=phastCons100way,chrom=chr1,start=1000000,end=1010000" \
+  --output zfish_chr1_phastcons.jsonl
+```
+
+> Reference sequence flanks for a breakpoint:
+
+```bash
+python3 -m lib.bridge_client --db ucsc --endpoint ucsc_sequence \
+  --params "genome=danRer11,chrom=chr27,start=12420000,end=12440000"
+```
+
+**Gotchas:**
+- Cap windows to **≤ 1 Mb per call**. UCSC throttles silently above that.
+- Track names are case-sensitive. Use `ucsc_list_tracks` first to confirm.
+- For Clarias gariepinus, walk via zebrafish coordinates (cross_species_atlas synteny block table) — see the catfish caveat in `bridge/ucsc/LICENSE_NOTICE.md`.
+
+---
+
+### UniBind — curated TF binding profiles
+
+> Browse available TFs:
+
+```bash
+python3 -m lib.bridge_client --db unibind --endpoint unibind_factors \
+  --output tfs.jsonl
+```
+
+> Find FoxA1 TFBS datasets in zebrafish:
+
+```bash
+python3 -m lib.bridge_client --db unibind --endpoint unibind_datasets \
+  --params "species=Danio rerio,tf_name=FOXA1" \
+  --output zfish_foxa1_datasets.jsonl
+```
+
+> Single dataset detail (with BED URL):
+
+```bash
+python3 -m lib.bridge_client --db unibind --endpoint unibind_dataset_detail \
+  --params dataset_id=EXP054321
+```
+
+**Gotchas:**
+- UniBind covers 9 species; Clarias gariepinus isn't one. Walk via zebrafish — see the caveat in `bridge/unibind/LICENSE_NOTICE.md`.
+- Each dataset record carries a BED URL for the binding sites — download separately (the API returns metadata only).
+
+---
+
+### STRING-DB — PPI networks + functional enrichment
+
+> Resolve gene names → STRING IDs (catfish, taxonId 2724128):
+
+```bash
+python3 -m lib.bridge_client --db string --endpoint string_resolve_ids \
+  --params "identifiers=tp53%0dhba1%0dmdm2,species=2724128"
+```
+
+> PPI network for a protein set:
+
+```bash
+python3 -m lib.bridge_client --db string --endpoint string_network \
+  --params "identifiers=9606.ENSP00000269305,species=9606,required_score=700" \
+  --output tp53_network.jsonl
+```
+
+> Direct interaction partners (limit per query protein):
+
+```bash
+python3 -m lib.bridge_client --db string --endpoint string_interaction_partners \
+  --params "identifiers=9606.ENSP00000269305,species=9606,limit=20"
+```
+
+> Functional enrichment over a gene list:
+
+```bash
+python3 -m lib.bridge_client --db string --endpoint string_enrichment \
+  --params "identifiers=ENSDARG00000067846%0dENSDARG00000037780,species=7955" \
+  --output zfish_enrich.jsonl
+```
+
+**Gotchas:**
+- `identifiers` is `%0d`-separated (URL-encoded newline). Most CLI shells require quoting the whole `--params` value.
+- `species` is the **NCBI taxonId** (integer). For Clarias gariepinus: `2724128`.
+- `required_score` is on the 0–1000 scale (400=medium, 700=high, 900=highest).
+- For large lists (>500 ids), batch in chunks of 100 — STRING's response time grows non-linearly above ~500.
+
+---
+
 ## Common cross-DB workflows
 
 ### A. Gene name → InterPro domain catalogue
@@ -334,7 +441,45 @@ python3 -m lib.bridge_client --db reactome \
   --params accession=<zebrafish_accession>
 ```
 
-### D. Populate references.jsonl from a manuscript draft
+### D. Catfish breakpoint → conservation + TFBS + interactors (full stack)
+
+The cross_species_atlas's headline workflow: a candidate breakpoint
+in Cgar coordinates, looked up across 5 bridge DBs in one chain.
+
+```bash
+# 1. Cgar taxonomy id (used everywhere downstream)
+python3 -m lib.bridge_client --db ncbi --endpoint ncbi_esearch \
+  --params "db=taxonomy,term=Clarias gariepinus"
+# → 2724128
+
+# 2. Map breakpoint coords → zebrafish ortholog via the cross_species
+#    synteny block table (atlas-side; not a bridge call) → danRer11 chr27:12.43Mb
+
+# 3. UCSC conservation flank for the orthologous coordinate
+python3 -m lib.bridge_client --db ucsc --endpoint ucsc_track_data \
+  --params "genome=danRer11,track=phastCons100way,chrom=chr27,start=12420000,end=12440000" \
+  --output flank_phastcons.jsonl
+
+# 4. UniBind TFBS in the same flank (zebrafish)
+python3 -m lib.bridge_client --db unibind --endpoint unibind_datasets \
+  --params "species=Danio rerio" \
+  --output zfish_tfbs.jsonl   # then filter the BED by flank coords client-side
+
+# 5. STRING PPI network for the genes nearest the breakpoint
+python3 -m lib.bridge_client --db string --endpoint string_network \
+  --params "identifiers=ENSDARG00000067846%0dENSDARG00000037780,species=7955,required_score=700"
+
+# 6. QuickGO annotations for those same genes (catfish if available, else zebrafish)
+python3 -m lib.bridge_client --db quickgo --endpoint quickgo_annotation_search \
+  --params "geneProductId=Q5VWG2,limit=50"
+```
+
+Cohort discipline: every call is by-orthology against zebrafish (UCSC,
+UniBind, STRING, QuickGO species filters all target Danio rerio).
+The methods chunk in the manuscript explicitly records this — no
+direct Clarias claims inherit from these calls.
+
+### E. Populate references.jsonl from a manuscript draft
 
 ```bash
 # 1. Find papers
@@ -400,10 +545,12 @@ response — never iterates.
 
 ## What's deferred
 
-- UCSC, UniBind, STRING adapters (registry slots reserved; planned status).
+All 10 v0 bridge adapters now ship working endpoints + LICENSE_NOTICE.md + a cookbook section. Remaining wishlist:
+
 - `scripts/refresh_references.py` — walk `references.jsonl` rows that carry a `pmid` and refresh their canonical citation from PubMed.
-- A conductor `bridge_summary_card` panel showing per-DB call counts + last status.
+- A conductor `bridge_summary_card` panel showing per-DB call counts + last status, read from `02_queue/bridge_log.jsonl`.
 - A per-call provenance handoff to the librarian (`source_kind: bridge` rows in `analysis_results.jsonl`).
+- Batched id-list helpers for adapters that need pagination workarounds (STRING above ~500 ids, NCBI EFetch above ~200 ids).
 
 ---
 

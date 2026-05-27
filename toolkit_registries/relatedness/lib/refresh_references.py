@@ -46,7 +46,15 @@ def write_jsonl(p: pathlib.Path, rows: list[dict]) -> None:
     p.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n")
 
 
+# Optional offline cassette: dict[pmid] -> docsum + dict[doi] -> pmid.
+# Set by main() when --fixture is passed; replaces bridge calls so the
+# script can run inside smoke without network access.
+FIXTURE: dict | None = None
+
+
 def resolve_doi_to_pmid(doi: str) -> str | None:
+    if FIXTURE is not None:
+        return FIXTURE.get("doi_to_pmid", {}).get(doi)
     from bridge_client import bridge_query
     try:
         hits = list(bridge_query("pubmed", "pubmed_search",
@@ -66,6 +74,8 @@ def resolve_doi_to_pmid(doi: str) -> str | None:
 
 
 def fetch_docsum(pmid: str) -> dict | None:
+    if FIXTURE is not None:
+        return FIXTURE.get("docsums", {}).get(pmid)
     from bridge_client import bridge_query
     try:
         hits = list(bridge_query("pubmed", "pubmed_summary",
@@ -142,7 +152,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--ref-id",  default="", help="Restrict to one ref_id.")
     ap.add_argument("--commit",  action="store_true",
                     help="Write back to references.jsonl (after creating .bak). Default is dry-run.")
+    ap.add_argument("--fixture", default="",
+                    help="Path to an offline JSON cassette ({docsums: {pmid: {...}}, "
+                         "doi_to_pmid: {doi: pmid}}). When set, bypasses bridge calls — "
+                         "used by smoke to exercise the citation-building path without network.")
     args = ap.parse_args(argv)
+
+    if args.fixture:
+        global FIXTURE
+        FIXTURE = json.loads(pathlib.Path(args.fixture).read_text())
 
     refs_path = REG / "references.jsonl"
     refs = load_jsonl(refs_path)

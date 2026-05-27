@@ -1,0 +1,39 @@
+{
+  "_describes": "Offline cassette for refresh_references.py --fixture mode. Lets smoke exercise the doi -> pmid -> docsum -> citation-string path without network. Two PMID DocSums are real (Manichaikul 2010 + Korneliussen 2014, KING + ANGSD) — the rest of references.jsonl skips gracefully because the doi/pmid is absent from this cassette. Add new entries here when you want smoke to cover more rows.",
+  "doi_to_pmid": {
+    "10.1093/bioinformatics/btq559": "20926424",
+    "10.1186/s12859-014-0356-4": "25420514"
+  },
+  "docsums": {
+    "20926424": {
+      "uid": "20926424",
+      "pubdate": "2010 Nov 15",
+      "source": "Bioinformatics",
+      "authors": [
+        {"name": "Manichaikul A", "authtype": "Author"},
+        {"name": "Mychaleckyj JC", "authtype": "Author"},
+        {"name": "Rich SS", "authtype": "Author"},
+        {"name": "Daly K", "authtype": "Author"},
+        {"name": "Sale M", "authtype": "Author"},
+        {"name": "Chen WM", "authtype": "Author"}
+      ],
+      "title": "Robust relationship inference in genome-wide association studies.",
+      "volume": "26",
+      "issue": "22",
+      "pages": "2867-73"
+    },
+    "25420514": {
+      "uid": "25420514",
+      "pubdate": "2014 Nov 25",
+      "source": "BMC Bioinformatics",
+      "authors": [
+        {"name": "Korneliussen TS", "authtype": "Author"},
+        {"name": "Albrechtsen A", "authtype": "Author"},
+        {"name": "Nielsen R", "authtype": "Author"}
+      ],
+      "title": "ANGSD: Analysis of Next Generation Sequencing Data.",
+      "volume": "15",
+      "pages": "356"
+    }
+  }
+}

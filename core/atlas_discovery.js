@@ -31,14 +31,26 @@
 
 export async function discover({ devMode = false } = {}) {
   const ids = await _listAtlases({ devMode });
-  const manifests = new Map();
-  for (const id of ids) {
+  // 2026-05-21 perf: was a serial `for ... await _loadManifest(id)` loop —
+  // 7 atlases × one fetch each = 7 sequential RTTs at boot. Fan out via
+  // Promise.all so every manifest downloads concurrently; iterate the
+  // settled results in original order so the manifests Map preserves
+  // declaration order (matters for the atlas switcher's display order).
+  const settled = await Promise.all(ids.map(async (id) => {
     try {
       const manifest = await _loadManifest(id);
       _validateManifest(id, manifest);
-      manifests.set(id, manifest);
+      return { ok: true, id, manifest };
     } catch (err) {
-      console.error(`atlas_discovery: failed to load atlas '${id}':`, err);
+      return { ok: false, id, err };
+    }
+  }));
+  const manifests = new Map();
+  for (const item of settled) {
+    if (item.ok) {
+      manifests.set(item.id, item.manifest);
+    } else {
+      console.error(`atlas_discovery: failed to load atlas '${item.id}':`, item.err);
       // Don't throw — let the user see the topbar with the working atlases.
     }
   }

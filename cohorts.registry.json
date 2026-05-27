@@ -1,0 +1,106 @@
+{
+  "_doc": "Atlas-core master index of cohorts + cross-atlas data flow. Aggregates the `cross_atlas` block declared in each atlas's manifest.json so the full producer/consumer graph is queryable in one place. NOT loaded by the shell at boot (each atlas registers its own block); this file is the human-readable answer to 'who reads what from whom?'. Update by re-running scripts/build_cohorts_index.py (to be written) or by hand when an atlas's cross_atlas block changes.",
+  "version": "1.0",
+  "generated_at": "2026-05-23T18:00:00Z",
+  "_revision_log": "Created 2026-05-23 as part of Phase 1a (cross-species/evolution/popstats split from inversion). Phase 1b added 6 meiosis pages migrated from relatedness + cleanup of 3 shared modules. Phase 1c spun out heterozygosity-atlas. Phase 1d promoted PODs from population to its own atlas. Lint pass that day: 57 -> 0 warnings; per-atlas exports realigned to actual declared layer names. f_roh_h_plane import target corrected from samples_roh_per_sample to cohort_froh_per_chrom 2026-05-23 PM after the linter implemented the page.",
+
+  "cohorts": {
+    "cgar_hatchery_226": {
+      "label": "Cgar 226-sample hatchery cohort",
+      "species_id": "gariepinus",
+      "reference_id": "fClaHyb_Gar_LG",
+      "sample_count": 226,
+      "primary_atlases": ["inversion", "diversity", "population", "relatedness", "meiosis", "popstats", "evolution", "genome", "heterozygosity", "pods"],
+      "_doc": "The main cohort. Single-species F1 hatchery sampling; every atlas that operates on individual fish reads this cohort."
+    },
+    "f1_hybrid_cga_cma": {
+      "label": "Cgar x Cmac F1 hybrid + 18 outgroups",
+      "species_id": "multi",
+      "reference_id": "fClaHyb_Gar_LG",
+      "primary_atlases": ["cross-species"],
+      "_doc": "Multi-species cohort for the cross-species breakpoints atlas. wfmash + BUSCO single-copy orthologs across Cgar/Cmac + 18 outgroup Siluriformes genomes."
+    }
+  },
+
+  "producers": {
+    "_doc": "Map: layer_id -> {atlas_id, used_by[]}. The atlas that 'owns' the layer is the one whose layers.registry.json declares it with produced_by. Cross-references this against each atlas's manifest.cross_atlas.exports block.",
+
+    "genome.chromosome_map":                  { "atlas_id": "genome",        "used_by": ["inversion","cross-species","evolution","popstats","relatedness","meiosis","diversity","population"] },
+    "genome.assembly_stats":                  { "atlas_id": "genome",        "used_by": ["inversion"] },
+    "genome.centromere_telomere":             { "atlas_id": "genome",        "used_by": ["inversion","meiosis"] },
+    "genome.gene_track":                      { "atlas_id": "genome",        "used_by": ["inversion","evolution"] },
+    "genome.repeat_track":                    { "atlas_id": "genome",        "used_by": ["inversion","cross-species"] },
+    "genome.te_hierarchy":                    { "atlas_id": "genome",        "used_by": ["inversion"] },
+    "genome.variant_annotations":             { "atlas_id": "genome",        "used_by": ["inversion"] },
+    "genome.conserved_elements":              { "atlas_id": "genome",        "used_by": ["inversion"] },
+    "genome.synteny_blocks":                  { "atlas_id": "genome",        "used_by": ["cross-species","evolution"] },
+    "genome.macrosynteny_orthologs":          { "atlas_id": "genome",        "used_by": ["cross-species"] },
+    "genome.synteny_oxford_grid":             { "atlas_id": "genome",        "used_by": ["cross-species"] },
+    "genome.ortholog_tables":                 { "atlas_id": "genome",        "used_by": ["cross-species","evolution"] },
+
+    "cross-species.breakpoints_consolidated_v1": { "atlas_id": "cross-species", "used_by": ["inversion","evolution"] },
+    "cross-species.bp_atlas_reciprocity_v1":  { "atlas_id": "cross-species", "used_by": ["inversion"] },
+    "cross-species.bp_atlas_arcs_v1":         { "atlas_id": "cross-species", "used_by": ["inversion"] },
+    "cross-species.atlas_data_v1":            { "atlas_id": "cross-species", "used_by": ["inversion"] },
+    "cross-species.joint_candidates_v1":      { "atlas_id": "cross-species", "used_by": ["inversion"] },
+    "cross-species.synteny_18sp_v1":          { "atlas_id": "cross-species", "used_by": ["evolution"] },
+    "cross-species.oxford_grid_panel_v1":     { "atlas_id": "cross-species", "used_by": ["genome","inversion"] },
+    "cross-species.synteny_5sp_v1":           { "atlas_id": "cross-species", "used_by": ["evolution"] },
+    "cross-species.pairwise_summary_v1":      { "atlas_id": "cross-species", "used_by": ["inversion"] },
+
+    "evolution.age_busco4d_v1":               { "atlas_id": "evolution",     "used_by": ["inversion"] },
+    "evolution.archaeology_card_v1":          { "atlas_id": "evolution",     "used_by": ["inversion","popstats"] },
+    "evolution.polarisation_synteny_vote_v1": { "atlas_id": "evolution",     "used_by": ["inversion"] },
+    "evolution.polarisation_msa_stacked_v1":  { "atlas_id": "evolution",     "used_by": ["inversion"] },
+    "evolution.haplotype_network_v1":         { "atlas_id": "evolution",     "used_by": ["inversion"] },
+
+    "popstats.groupwise_stats_v1":            { "atlas_id": "popstats",      "used_by": ["inversion","evolution"] },
+    "popstats.hobs_hexp_groupwise_v1":        { "atlas_id": "popstats",      "used_by": ["inversion"] },
+    "popstats.ancestry_per_window_v1":        { "atlas_id": "popstats",      "used_by": ["evolution","inversion"] },
+    "popstats.fish_ancestry_v1":              { "atlas_id": "popstats",      "used_by": ["evolution"] },
+
+    "inversion.candidates_v1":                { "atlas_id": "inversion",     "used_by": ["evolution","popstats","cross-species","relatedness","meiosis","diversity","population"] },
+    "inversion.scrubber_main":                { "atlas_id": "inversion",     "used_by": ["popstats","evolution"] },
+    "inversion.regime_catalogue_v1":          { "atlas_id": "inversion",     "used_by": ["popstats","relatedness","meiosis"] },
+    "inversion.candidate_lineage":            { "atlas_id": "inversion",     "used_by": ["evolution","popstats"] },
+
+    "diversity.samples_theta_pi_pestpg":      { "atlas_id": "diversity",     "used_by": ["inversion"] },
+    "diversity.samples_genomewide_het":       { "atlas_id": "diversity",     "used_by": ["inversion","population","heterozygosity"] },
+    "diversity.samples_roh_per_sample":       { "atlas_id": "diversity",     "used_by": ["population","relatedness"] },
+    "diversity.cohort_froh_per_chrom":        { "atlas_id": "diversity",     "used_by": ["heterozygosity"] },
+    "diversity.cohort_master_per_chrom":      { "atlas_id": "diversity",     "used_by": ["inversion"] },
+
+    "heterozygosity.genomewide_h_per_sample_v1": { "atlas_id": "heterozygosity", "used_by": ["population","inversion"] },
+    "heterozygosity.ancestry_stratified_h_v1":   { "atlas_id": "heterozygosity", "used_by": ["population"] },
+    "heterozygosity.single_locus_h_boxplot_v1":  { "atlas_id": "heterozygosity", "used_by": [] },
+    "heterozygosity.sfs_per_sample_v1":           { "atlas_id": "heterozygosity", "used_by": [] },
+    "heterozygosity.f_roh_h_plane_v1":             { "atlas_id": "heterozygosity", "used_by": ["population"] },
+
+    "population.pcangsd_pca":                 { "atlas_id": "population",    "used_by": ["inversion","relatedness"] },
+    "population.ngsadmix_q":                  { "atlas_id": "population",    "used_by": ["inversion","popstats","relatedness"] },
+    "population.ngsrelate_kinship":           { "atlas_id": "population",    "used_by": ["relatedness","inversion"] },
+    "population.family_clusters":             { "atlas_id": "population",    "used_by": ["relatedness","popstats"] },
+    "population.inversion_carriers":          { "atlas_id": "population",    "used_by": ["inversion","relatedness"] },
+    "population.hatchery_health_cohorts":     { "atlas_id": "population",    "used_by": ["evolution"] },
+    "pods.pods_simulations_v1":               { "atlas_id": "pods",          "used_by": [] },
+    "pods.pods_outlier_calls_v1":             { "atlas_id": "pods",          "used_by": ["inversion","diversity","relatedness"] },
+    "pods.pods_calibration_v1":               { "atlas_id": "pods",          "used_by": ["inversion","diversity","relatedness"] },
+
+    "relatedness.res_pairwise":               { "atlas_id": "relatedness",   "used_by": ["inversion","meiosis","population"] },
+    "relatedness.family_hub_roster":          { "atlas_id": "relatedness",   "used_by": ["inversion","meiosis"] },
+    "relatedness.inversion_karyotypes":       { "atlas_id": "relatedness",   "used_by": ["inversion","meiosis"] },
+    "relatedness.per_chrom_qc":               { "atlas_id": "relatedness",   "used_by": ["inversion","meiosis"] },
+    "relatedness.ancestry_q":                 { "atlas_id": "relatedness",   "used_by": ["meiosis"] },
+
+    "meiosis.crossover_track":                { "atlas_id": "meiosis",       "used_by": ["genome","inversion"] },
+    "meiosis.nco_gc_track":                   { "atlas_id": "meiosis",       "used_by": ["genome"] },
+    "meiosis.coincidence_matrix_v1":          { "atlas_id": "meiosis",       "used_by": ["inversion"] },
+    "meiosis.inversion_meiosis_effects_v1":   { "atlas_id": "meiosis",       "used_by": ["inversion","evolution"] },
+    "meiosis.chromosome_meiosis_events_v1":   { "atlas_id": "meiosis",       "used_by": ["inversion"] }
+  },
+  "_producers_note": "Producer entries match what's actually declared in each producer atlas's layers.registry.json. Layers that were earlier listed under aspirational names (e.g. relatedness.pairwise_relationship_classification, meiosis.coincidence_matrix_v1) were renamed to the existing canonical names (res_pairwise, etc.) on 2026-05-23 after the lint pass surfaced the gap. The cross_atlas.imports/exports blocks in each atlas manifest were updated in lockstep.",
+
+  "_consumer_view_doc": "To answer 'what does atlas X read?': filter `producers` for any entry where `used_by` contains X. Each atlas's manifest.cross_atlas.imports block is the authoritative declaration of that filter.",
+
+  "_writeback_protocol": "When you add a layer to one atlas's layers.registry.json AND another atlas consumes it: (1) add a `produced_by` field in the producer's layer entry; (2) add it to the producer manifest's cross_atlas.exports; (3) add it to each consumer manifest's cross_atlas.imports; (4) add the entry here in producers{}; (5) run `python atlas-core/build/_lint_atlases.py` — must return 0 warnings before the change lands. Step 4 is the index; steps 1-3 are the source of truth; step 5 enforces consistency. See atlas-core/docs/SPEC_cross_atlas_adapters.md for the full pattern."
+}

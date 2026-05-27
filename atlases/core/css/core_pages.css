@@ -859,3 +859,140 @@
 .core-page-specs .spc-md-tbl thead th { background: var(--bg); }
 .core-page-specs .spc-md-body a { color: var(--accent); text-decoration: none; }
 .core-page-specs .spc-md-body a:hover { text-decoration: underline; }
+
+
+/* ===== System Health page (system_health) — added 2026-05-23 =========== */
+#system_health { overflow-y: auto; }
+#system_health .sh-content { padding: 16px; max-width: 1600px; }
+#system_health .sh-title {
+  font-family: var(--serif); font-weight: 500; font-size: 18px;
+  color: var(--ink); margin-bottom: 4px;
+}
+#system_health .sh-subtitle {
+  font-family: var(--mono); font-size: 11.5px; color: var(--ink-dim);
+  margin-bottom: 14px; line-height: 1.6;
+}
+#system_health .sh-subtitle code,
+#system_health .sh-content code {
+  font-family: var(--mono); font-size: 0.92em;
+  background: var(--panel-2); padding: 1px 5px; border-radius: 3px;
+  border: 1px solid var(--rule); color: var(--accent);
+}
+
+/* Tab strip */
+#system_health .sh-tabs {
+  display: flex; gap: 4px; margin-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+}
+#system_health .sh-tab {
+  background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--rule); border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  padding: 6px 14px; font-family: var(--mono); font-size: 11px;
+  cursor: pointer; letter-spacing: 0.02em;
+  transition: background 120ms, color 120ms, border-color 120ms;
+}
+#system_health .sh-tab:hover { color: var(--ink); border-color: var(--accent); }
+#system_health .sh-tab.active {
+  color: var(--ink); background: var(--panel);
+  border-color: var(--accent);
+  border-bottom: 1px solid var(--panel);
+  margin-bottom: -1px;
+}
+#system_health .sh-tab-panel { display: none; }
+#system_health .sh-tab-panel-active { display: block; }
+
+/* Per-atlas summary cards */
+#system_health .sh-summary-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+#system_health .sh-card {
+  background: var(--panel); border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 3px; padding: 12px 14px;
+}
+#system_health .sh-card-title {
+  font-family: var(--mono); font-weight: 600; font-size: 12px;
+  color: var(--ink); margin-bottom: 8px;
+}
+#system_health .sh-card-stats {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  font-family: var(--mono); font-size: 10.5px; color: var(--ink-dim);
+  margin-bottom: 10px;
+}
+#system_health .sh-card-stats .sh-stat b { color: var(--ink); font-weight: 600; }
+#system_health .sh-card-ready { display: flex; flex-direction: column; gap: 4px; }
+#system_health .sh-bar {
+  height: 6px; background: var(--panel-2);
+  border: 1px solid var(--rule); border-radius: 3px; overflow: hidden;
+}
+#system_health .sh-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #3cc08a, var(--accent));
+  transition: width 240ms ease-out;
+}
+#system_health .sh-bar-label {
+  font-family: var(--mono); font-size: 9.5px; color: var(--ink-dim);
+}
+
+/* Filter controls */
+#system_health .sh-controls {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+#system_health .sh-ctrl {
+  font-family: var(--mono); font-size: 10.5px; color: var(--ink-dim);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+#system_health .sh-ctrl select,
+#system_health .sh-controls input[type="search"] {
+  font-family: var(--mono); font-size: 10.5px; padding: 3px 8px;
+  background: var(--panel-2); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: 2px;
+}
+#system_health .sh-controls input[type="search"] { min-width: 220px; }
+#system_health .sh-controls input[type="search"]:focus,
+#system_health .sh-ctrl select:focus { outline: none; border-color: var(--accent); }
+#system_health .sh-count {
+  font-family: var(--mono); font-size: 10.5px; color: var(--ink-dim);
+  margin-left: auto;
+}
+
+/* Tables */
+#system_health .sh-table-slot { border: 1px solid var(--rule); border-radius: 3px; }
+#system_health .sh-table {
+  width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11px;
+}
+#system_health .sh-table th {
+  text-align: left; padding: 6px 10px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--panel-2); color: var(--ink); font-weight: 600;
+}
+#system_health .sh-table td {
+  padding: 5px 10px; border-bottom: 1px solid var(--rule);
+  color: var(--ink); vertical-align: top;
+}
+#system_health .sh-table tbody tr:hover { background: var(--panel-2); }
+#system_health .sh-table .sh-num { text-align: right; font-variant-numeric: tabular-nums; }
+#system_health .sh-table .sh-dim { color: var(--ink-dim); }
+
+/* Status pills */
+#system_health .sh-pill {
+  display: inline-block; padding: 1px 7px; border-radius: 9px;
+  font-size: 9.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+#system_health .sh-pill-ready   { background: rgba(60, 192, 138, 0.18); color: #3cc08a; }
+#system_health .sh-pill-pending { background: rgba(232, 165, 36, 0.18); color: #e8a524; }
+#system_health .sh-pill-other   { background: rgba(138, 148, 163, 0.18); color: var(--ink-dim); }
+
+/* Consumer chips on the graph tab */
+#system_health .sh-chip {
+  display: inline-block; padding: 1px 6px; margin: 1px 2px;
+  background: var(--panel-2); border: 1px solid var(--rule); border-radius: 2px;
+  font-size: 10px; color: var(--ink);
+}
+#system_health .sh-hint {
+  display: block; padding: 12px; color: var(--ink-dim);
+  font-family: var(--mono); font-size: 11px; font-style: italic;
+}

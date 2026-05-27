@@ -199,6 +199,12 @@ roots:
     species_scoped: false
     description: "Founder waves (FPW) decomposition."
 
+  pods_results:
+    path: "/mnt/e/results_pods"
+    role: "intervals"
+    species_scoped: false
+    description: "PODs (Pseudo-Observed Datasets) — coalescent-simulated null distributions for FST/dXY/theta outlier validation. Owned by pods-atlas (promoted from population-atlas on 2026-05-23 — Phase 1d). Three subdirs: simulations/<cache_key>.tsv (per-replicate per-locus stats), outlier_calls/<cache_key>.tsv (empirical-vs-PODs p-values + significance flags per locus), calibration/<cache_key>.json (model-fit diagnostics)."
+
   genome_assembly:
     path: "/mnt/e/results_genome/01_assembly"
     role: "intervals"
@@ -215,13 +221,94 @@ roots:
     path: "/mnt/e/results_genome/03_TE_density"
     role: "intervals"
     species_scoped: false
-    description: "EDTA outputs and TE density tracks."
+    description: "EDTA outputs and TE density tracks. Reserved for a future per-window TE density layer that doesn't fit the annotation lumped folder. NB 2026-05-23: no atlas layer references it yet (genome's repeat_track + te_hierarchy live under genome_annotation root). The dir IS deliberately created by build/setup_local_dirs.sh:83 as a placeholder for the EDTA pipeline — not an orphan, just unconsumed by the JS side until a per-window TE density page lands."
 
   genome_synteny:
     path: "/mnt/e/results_genome/04_synteny"
     role: "intervals"
     species_scoped: false
-    description: "wfmash + catfish-synteny-toolkit outputs."
+    description: "wfmash + catfish-synteny-toolkit outputs. Within-Cgar collinearity blocks + Oxford grids + ortholog tables. Genome atlas's comparative pages live here; consumed by cross-species as background. The 18-genome cross-species view of similar data lives under cross_species_gene_order."
+
+  genome_conservation:
+    path: "/mnt/e/results_genome/05_conservation"
+    role: "intervals"
+    species_scoped: false
+    description: "Conserved-element pipeline outputs (Cactus / phastCons). conserved_elements.bed + downstream UCE/regulatory tracks. Distinct from genome_annotation because the producer pipeline is separate."
+
+  # ----- cross-species, evolution, popstats (Phase 1a 2026-05-23 split) ------
+  # Three atlases were split out of inversion-atlas (see docs/MIGRATION_4_ATLASES.md).
+  # Their outputs live under /mnt/e/results_cross_species, results_evolution, and
+  # results_popstats. Each root corresponds to one producer pipeline; the atlas's
+  # layers.registry.json references the root by name and supplies path_under_root
+  # for the file pattern. Until each producer physically writes here, the folder
+  # may not exist — the unified server returns 404 cleanly and the consuming
+  # page renders its no-data fallback. Move outputs into place as pipelines land.
+
+  cross_species_manifests:
+    path: "/mnt/e/results_cross_species/00_manifests"
+    role: "intervals"
+    species_scoped: false
+    description: "Haplotype manifests for cross-species runs (18-genome + 5-hap Cgar/Cmac). TSV mapping species_id -> FASTA + divergence tier. Input to bp_atlas_pipeline + gene_order_consolidation."
+
+  cross_species_bp_atlas:
+    path: "/mnt/e/results_cross_species/01_bp_atlas"
+    role: "intervals"
+    species_scoped: false
+    description: "wfmash BP_ATLAS pipeline outputs: passA/B PAFs (02_paf_passA/passB), raw + zoned breakpoints (03_breakpoints), reciprocity table, arc visualisation JSON (05_atlas_data), joint candidates (06_joint)."
+
+  cross_species_consolidated:
+    path: "/mnt/e/results_cross_species/02_consolidated"
+    role: "intervals"
+    species_scoped: false
+    description: "Consolidated breakpoint clusters across method families. Includes breakpoint_clusters.tsv (cross-method validated headlines), pairwise_summary.tsv, and the tolerance_sweep subfolder."
+
+  cross_species_gene_order:
+    path: "/mnt/e/results_cross_species/03_gene_order"
+    role: "intervals"
+    species_scoped: false
+    description: "BUSCO single-copy ortholog gene-order breakpoints (synteny_18sp_breakpoints.tsv, synteny_5sp_breakpoints.tsv). Independent method family to BP_ATLAS; used for Tier 1 cross-method validation."
+
+  evolution_age_busco4d:
+    path: "/mnt/e/results_evolution/01_age_busco_4d"
+    role: "intervals"
+    species_scoped: false
+    description: "BUSCO 4D age estimation outputs (per-inversion molecular clock). Consumed by the age divergence page + age-model suggester."
+
+  evolution_polarisation:
+    path: "/mnt/e/results_evolution/02_polarisation"
+    role: "intervals"
+    species_scoped: false
+    description: "Polarisation evidence per inversion: outgroup synteny vote tables + stacked-MSA founder consensus + doubleton SFS clusters. Read by polarize_synteny_vote.js and polarize_msa_stacked.js."
+
+  evolution_haplotype_networks:
+    path: "/mnt/e/results_evolution/03_haplotype_networks"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-inversion haplotype network JSONs. Used by the haplotype_network page (multi-genome list visualisation)."
+
+  evolution_archaeology:
+    path: "/mnt/e/results_evolution/04_archaeology"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-candidate archaeology synthesis cards (lineage + age + polarity + integrity verdict). Output of the archaeology_synthesis_card workflow."
+
+  popstats_groupwise:
+    path: "/mnt/e/results_popstats/01_groupwise"
+    role: "samples"
+    species_scoped: false
+    description: "Cohort-level group-wise statistics: pi, FST, dXY, HWE, F_IS, allele-frequency drift, private/fixed counts. Output of the popstats_groupwise + popstats_hobs_groupwise server operations."
+
+  popstats_ancestry:
+    path: "/mnt/e/results_popstats/02_ancestry_painting"
+    role: "samples"
+    species_scoped: false
+    description: "Per-window ancestry painting + per-fish ancestry scrollers. Includes Q04 ancestry-Delta12 enrichment tracks consumed by inv_internal_substructure / fish_ancestry_scroller."
+
+  heterozygosity_session:
+    path: "/mnt/e/atlas-cache/heterozygosity/sessions"
+    role: "results"
+    writable: true
+    description: "Session-level outputs from heterozygosity-atlas in-browser computes (currently: the f_roh_h_plane_v1 join). Lives under atlas-cache so it doesn't pollute the producer pipeline tree. Phase 1c (2026-05-23) split: read-only H data still comes from diversity_heterozygosity; only NEW heterozygosity-atlas derivations land here."
 
   # ----- writable evidence roots (Category 1, browser-writable) --------------
 

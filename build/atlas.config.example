@@ -20,12 +20,22 @@
 # Lines starting with # are comments. Blank lines are ignored.
 # =====================================================================
 
-# Atlas source folders (edit these to point at your git clones)
-atlas_core       = ..
-atlas_inversion  = ../../inversion-atlas
-atlas_diversity  = ../../diversity-atlas
-atlas_population = ../../population-atlas
-atlas_genome     = ../../genome-atlas
+# Atlas source folders (edit these to point at your git clones).
+# Variable names use underscores (bash variable rules); the atlas_id seen
+# by the shell comes from each repo's manifest.json (so atlas_cross_species
+# below maps to atlas_id "cross-species" with a hyphen).
+atlas_core           = ..
+atlas_inversion      = ../../inversion-atlas
+atlas_diversity      = ../../diversity-atlas
+atlas_population     = ../../population-atlas
+atlas_genome         = ../../genome-atlas
+atlas_relatedness    = ../../relatedness-atlas
+atlas_meiosis        = ../../meiosis-atlas
+atlas_cross_species  = ../../cross-species-atlas
+atlas_evolution      = ../../evolution-atlas
+atlas_popstats       = ../../popstats-atlas
+atlas_heterozygosity = ../../heterozygosity-atlas
+atlas_pods           = ../../pods-atlas
 
 # Data folder (the read-only data tree, outside any git repo)
 data             = /mnt/e

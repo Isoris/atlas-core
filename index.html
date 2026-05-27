@@ -26,63 +26,48 @@
        stays empty (no switcher dropdown). The "ATLAS:" label is
        intentionally absent — the dropdown's current value already
        names the atlas. -->
-  <div id="atlas-switcher-host"></div>
-  <!-- Chromosome (and any other) scope pickers live at the top of the
-       header per Quentin's request. The router renders pickers into
-       this <nav id="scopebar"> at navigate time. -->
-  <nav id="scopebar"></nav>
-  <!-- Per-page parameters-sidebar toggle. Previously lived in the per-atlas
-       topbar (#tabBar) as a large orange gear; promoted into the shell
-       header so it's tone-matched with the other header controls. Click
-       forwards to the active page's #sidebarToggleBtn (see shell_chrome.js). -->
-  <button id="globalSettingsBtn" type="button"
-          title="Toggle the parameters sidebar"
-          aria-label="Toggle parameters sidebar">⚙</button>
-  <span id="schemaBadge" style="display: none;"></span>
-  <span id="jsScriptsBadge" title="Loaded JavaScript modules registered as window globals.">JS · 0 scripts</span>
-  <!-- Workspace-wide Mode-B tally — mounted by core/mode_b_tally.js,
-       subscribes to the 'mode_b_badge_render' CustomEvent that every
-       per-page Mode-B badge dispatches. Stays hidden until at least
-       one badge reports state. -->
-  <span id="modeBTallyHost" class="shell-chip-host"></span>
+  <!-- LEFT GROUP — identity (atlas + scope). -->
+  <div class="header-group header-group-identity">
+    <div id="atlas-switcher-host"></div>
+    <nav id="scopebar"></nav>
+  </div>
+
+  <span class="header-divider" aria-hidden="true"></span>
+
+  <!-- MID GROUP — status badges (read-only info chips). -->
+  <div class="header-group header-group-status">
+    <span id="jsScriptsBadge" title="Loaded JavaScript modules registered as window globals.">JS · 0 scripts</span>
+    <span id="workflowsBadgeHost" class="shell-chip-host"></span>
+    <span id="chromSummaryBadge" class="shell-chip-host" style="display: none;"></span>
+  </div>
 
   <!-- Flex spacer pushes the right-side cluster to the right edge -->
   <div style="flex: 1;"></div>
 
-  <!-- BLUE folder — session / layout -->
-  <div class="header-folder" data-color="blue" title="Session and layout controls">
+  <!-- RIGHT GROUP — actions (tools + direct buttons + server + theme). -->
+  <div class="header-group header-group-actions">
+  <!-- 2026-05-26: three folders (session/mode/data) combined into one
+       "tools" folder. The internal panel keeps the three groups visually
+       separated by section dividers so the data-cmd relay
+       (CMD_TO_PAGE_ID in shell_chrome.js) keeps working unchanged. -->
+  <div class="header-folder" title="Session · mode · data controls">
     <button class="header-folder-btn" type="button">
-      <span class="dot">●</span>&nbsp;session
+      tools
       <span class="arrow">▾</span>
     </button>
-    <div class="header-folder-panel" id="sessionPanel">
+    <div class="header-folder-panel" id="toolsPanel">
+      <div class="folder-section-label">session</div>
       <button class="folder-btn" data-cmd="save-session" title="Save session JSON">💾 save</button>
       <button class="folder-btn" data-cmd="load-session" title="Load session JSON">📂 load</button>
       <button class="folder-btn" data-cmd="layout-mode" title="Toggle layout (fixed / free / compact)">📐 fixed</button>
       <button class="folder-btn" data-cmd="reset-layout" title="Reset layout to defaults">↺ reset layout</button>
-    </div>
-  </div>
-
-  <!-- GREEN folder — modes -->
-  <div class="header-folder" data-color="green" title="Working modes">
-    <button class="header-folder-btn" type="button">
-      <span class="dot">●</span>&nbsp;mode
-      <span class="arrow">▾</span>
-    </button>
-    <div class="header-folder-panel" id="modePanel">
+      <div class="folder-section-divider"></div>
+      <div class="folder-section-label">mode</div>
       <button class="folder-btn" data-cmd="candidate-mode" title="Toggle candidate drafting mode">🏗 candidate mode</button>
       <button class="folder-btn" data-cmd="auto-fill" title="Auto-fill haplotype labels">🪄 auto-fill</button>
       <button class="folder-btn" data-cmd="ig-labels" title="Toggle I·g labels strip">I·g labels: on</button>
-    </div>
-  </div>
-
-  <!-- YELLOW folder — data -->
-  <div class="header-folder" data-color="yellow" title="Data tools">
-    <button class="header-folder-btn" type="button">
-      <span class="dot">●</span>&nbsp;data
-      <span class="arrow">▾</span>
-    </button>
-    <div class="header-folder-panel" id="dataPanel">
+      <div class="folder-section-divider"></div>
+      <div class="folder-section-label">data</div>
       <button class="folder-btn" data-cmd="export-data" title="Download full atlas context as JSON">📥 export</button>
       <button class="folder-btn" data-cmd="open-matrix" title="Open candidate × candidate Cramér's V matrix">🔗 matrix</button>
       <button class="folder-btn" data-cmd="active-samples" title="Active samples subset">active: —</button>
@@ -111,6 +96,7 @@
 
   <!-- Theme toggle — cycles dark → light → academic -->
   <button id="themeToggleBtn" type="button" title="Cycle theme">☀ light</button>
+  </div><!-- /.header-group.header-group-actions -->
 </header>
 
 <nav id="topbar"></nav>
@@ -132,27 +118,49 @@
 // On any error, replace #boot with a clear error message and stop.
 // =====================================================================
 
-import { AtlasState }        from './core/atlas_state.js';
-import { Registry }          from './core/registry_core.js';
-import { PrewarmScheduler }  from './core/prewarm_scheduler.js';
-import { AtlasRouter }       from './core/atlas_router.js';
-import { discover }          from './core/atlas_discovery.js';
-import { bootstrap }         from './core/atlas_api.js';
-import { loadMasterConfig }  from './core/master_config.js';
-import { attachShellChrome } from './core/shell_chrome.js';
+import { AtlasState }            from './core/atlas_state.js';
+import { Registry }              from './core/registry_core.js';
+import { PrewarmScheduler }      from './core/prewarm_scheduler.js';
+import { ChromPrewarmScheduler } from './core/chrom_prewarm_scheduler.js';
+import { AtlasRouter }           from './core/atlas_router.js';
+import { discover }              from './core/atlas_discovery.js';
+import { bootstrap }             from './core/atlas_api.js';
+import { loadMasterConfig }      from './core/master_config.js';
+import { attachShellChrome }     from './core/shell_chrome.js';
+import { loadCohortsRegistry }   from './core/cohorts_registry.js';
+import { setStrictMode as setCrossAtlasStrict }
+                                 from './core/cross_atlas_imports.js';
 
 (async () => {
   try {
-    const SERVER_BASE_URL = window.ATLAS_SERVER_URL || 'http://localhost:5000';
+    // 2026-05-26: default to same-origin (empty base). The unified server
+    // (atlas_server.py) hosts both the static files AND /api/* — port is
+    // chosen by start.sh (default 8000). A hardcoded 'http://localhost:5000'
+    // here used to send dosage-chunk operation requests to a non-existent
+    // port and trip the browser's CORS guard, leaving the heatmap empty
+    // forever. Use window.ATLAS_SERVER_URL to override (e.g. when serving
+    // statics from one host and routing /api/* to another).
+    const SERVER_BASE_URL = window.ATLAS_SERVER_URL || '';
 
-    // Master config is OPTIONAL. When present, layers can use
-    // `root: <name>` + `path_under_root: <template>` for portable paths.
-    // When absent, layers use bare `path:` (atlas-relative). See
-    // toolkit_registries/MASTER_CONFIG.md.
-    const masterConfig = await loadMasterConfig({ baseUrl: '' }).catch(err => {
+    // 2026-05-21 perf: previously this boot block ran in three serial
+    // stages — (1) await master_config, (2) await Promise.all([cohorts,
+    // atlases_index]), (3) await discover(). Each stage burnt one RTT
+    // because each await blocked the next stage's fetch from even
+    // starting. The four network fetches are all independent, so kick
+    // them off at the top of boot and await them where each result is
+    // first consumed. Synchronous state setup (AtlasState, Registry,
+    // loadPersisted) runs in parallel with the network warm-up.
+    const masterConfigPromise = loadMasterConfig({ baseUrl: '' }).catch(err => {
       console.error('master_config load failed:', err);
       return null;
     });
+    const cohortsRegistryPromise = loadCohortsRegistry('').catch(err => {
+      console.warn('cohorts registry load failed; xref checks will be skipped:', err);
+      return null;
+    });
+    const atlasesIndexPromise = fetch('atlases/_index.json')
+      .then(r => r.ok ? r.json() : null).catch(() => null);
+    const manifestsPromise = discover({ devMode: true });
 
     const state = new AtlasState({ serverBaseUrl: SERVER_BASE_URL });
     // 2026-05-19: rehydrate persisted shared state (activeChrom, currentPage)
@@ -163,12 +171,37 @@ import { attachShellChrome } from './core/shell_chrome.js';
     // and stashes `_pendingCurrentPage` for the router's cold-boot fallback.
     try { state.loadPersisted(); } catch (e) { console.warn('loadPersisted:', e); }
 
+    // Master config is OPTIONAL. When present, layers can use
+    // `root: <name>` + `path_under_root: <template>` for portable paths.
+    // When absent, layers use bare `path:` (atlas-relative). See
+    // toolkit_registries/MASTER_CONFIG.md.
+    const masterConfig = await masterConfigPromise;
+
     const registry = new Registry({
       atlasState: state,
       serverBaseUrl: SERVER_BASE_URL,
       masterConfig,
     });
     bootstrap({ registry, atlasState: state });
+
+    // Load the global cohorts registry + atlases index for cross-validation
+    // by register_atlas(). Both are optional — when missing, the workflows
+    // and tree-layer validators fall back to schema-only mode (no
+    // cohort_id / atlas_id xref check). See SPEC_cohorts_v1, SPEC_workflows_v1.
+    const [cohortsRegistry, atlasesIndex] = await Promise.all([
+      cohortsRegistryPromise,
+      atlasesIndexPromise,
+    ]);
+    registry.setGlobalRegistries({ cohortsRegistry, atlasesIndex });
+
+    // Phase 0b strict-mode for cross_atlas_imports (SPEC_cohorts_v1 §11).
+    // Defensive: the module default is now strict (2026-05-26 flip), but
+    // we set it explicitly here so the boot path documents the intent
+    // and any future opt-out can be one comment line. No atlas-side code
+    // currently goes through cross_atlas_imports.read(), so today this is
+    // a no-op for runtime behavior — but it ratchets discipline for any
+    // future code that wires through the policer.
+    setCrossAtlasStrict(true);
 
     // Seed activeSpecies from master_config so species_scoped roots
     // resolve at first fetch. Pages can override via the scopebar.
@@ -185,7 +218,7 @@ import { attachShellChrome } from './core/shell_chrome.js';
       state.shared.activeChrom = masterConfig.atlas.active_chrom;
     }
 
-    const manifests = await discover({ devMode: true });
+    const manifests = await manifestsPromise;
     if (manifests.size === 0) {
       document.getElementById('boot').innerHTML =
         '<h2>No atlases installed</h2>' +
@@ -201,22 +234,44 @@ import { attachShellChrome } from './core/shell_chrome.js';
     // shell still boots. This matters because scaffold atlases get
     // added often, and a missing registries/data/*.json file on any
     // single atlas used to kill the entire shell.
+    // 2026-05-21 perf: was a sequential `for ... await loadAtlasConfigs`
+    // loop over ~7 atlases — each atlas's registry fetches blocked the
+    // next atlas from starting. Fan out the I/O via Promise.all so all
+    // atlas configs download concurrently, then register them in
+    // deterministic order on the shared registry/state once they've all
+    // landed. Registration is synchronous and per-atlas-keyed, so the
+    // sequential post-load loop is just for predictability, not for
+    // safety.
     const failedAtlases = [];
-    for (const [atlas_id, manifest] of [...manifests]) {
+    const manifestEntries = [...manifests];
+    const loaded = await Promise.all(manifestEntries.map(async ([atlas_id, manifest]) => {
       try {
         const configs = await loadAtlasConfigs(atlas_id, manifest);
-        registry.register_atlas(atlas_id, configs);
-        state.registerAtlasSlots(atlas_id, configs.slots.slots || {});
+        return { atlas_id, manifest, configs, ok: true };
+      } catch (err) {
+        return { atlas_id, manifest, err, ok: false };
+      }
+    }));
+    for (const item of loaded) {
+      if (!item.ok) {
+        console.error(`Atlas '${item.atlas_id}' failed to load — dropping from shell:`, item.err);
+        failedAtlases.push({ atlas_id: item.atlas_id, error: item.err.message || String(item.err) });
+        manifests.delete(item.atlas_id);
+        continue;
+      }
+      try {
+        registry.register_atlas(item.atlas_id, item.configs);
+        state.registerAtlasSlots(item.atlas_id, item.configs.slots.slots || {});
         // Load atlas-specific stylesheets if declared. Each atlas can
         // declare a `stylesheets` array in its manifest; paths are relative
         // to the workspace root (e.g. "atlases/inversion/css/widgets.css").
         // Per-page styles are not loaded here — they're loaded by the
         // router when the page mounts.
-        loadAtlasStylesheets(manifest);
+        loadAtlasStylesheets(item.manifest);
       } catch (err) {
-        console.error(`Atlas '${atlas_id}' failed to load — dropping from shell:`, err);
-        failedAtlases.push({ atlas_id, error: err.message || String(err) });
-        manifests.delete(atlas_id);
+        console.error(`Atlas '${item.atlas_id}' failed to register — dropping from shell:`, err);
+        failedAtlases.push({ atlas_id: item.atlas_id, error: err.message || String(err) });
+        manifests.delete(item.atlas_id);
       }
     }
     // Surface failures on a banner so dev knows an atlas was dropped
@@ -242,14 +297,38 @@ import { attachShellChrome } from './core/shell_chrome.js';
     const scheduler = new PrewarmScheduler({ atlasState: state, registry });
     scheduler.attach();
 
+    // Background chrom prewarmer — opt-in, off by default. When the
+    // user enables the toggle in the chrom-summary modal, this scheduler
+    // walks the chrom list neighbors-first and pre-resolves scrubber_main
+    // for each via requestIdleCallback, so subsequent chrom switches
+    // come out of the warm-tier IDB cache. Exposed on window so the
+    // shell chrome's modal can flip the toggle.
+    // 2026-05-26: include scrubber_thetapi + scrubber_ghsl in the
+    // background prewarm. These are the same shape + size class as
+    // scrubber_main and load on every chrom_change for the discovery
+    // pages (local_pca_dosage's mount fans out all three). Without them
+    // here, the background prewarm only fills scrubber_main and the
+    // user pays a fresh fetch for thetapi/ghsl on the next page mount;
+    // adding them means a complete warm-tier cache per chrom. Each
+    // extra layer is resolved on its own idle tick AFTER the main
+    // payload, so the active page never competes for bandwidth.
+    const chromPrewarm = new ChromPrewarmScheduler({
+      atlasState: state,
+      registry,
+      extraLayers: ['scrubber_thetapi', 'scrubber_ghsl'],
+    });
+    chromPrewarm.attach();
+    window.__atlasChromPrewarm = chromPrewarm;
+
     // Wire router (this also renders the topbar)
     const router = new AtlasRouter({ atlasState: state, registry, manifests });
     router.attach();
 
     // Wire shell chrome (theme toggle + folder-button command relay).
     // After the router so the header DOM elements exist by the time we
-    // bind listeners.
-    attachShellChrome();
+    // bind listeners. Pass registry + manifests so the workflows-status
+    // chip can iterate per-atlas workflow declarations.
+    attachShellChrome({ registry, manifests, atlasState: state });
 
     document.getElementById('boot')?.remove();
   } catch (err) {
@@ -274,11 +353,19 @@ async function loadAtlasConfigs(atlas_id, manifest) {
   // missing registry render their "no data" fallback instead of being
   // unreachable. Atlas-fatal errors (e.g. missing manifest.json) still
   // throw — those are handled upstream in discover().
-  for (const [name, path] of Object.entries(reg)) {
+  //
+  // 2026-05-21 perf: parallelize the per-atlas registry fetches via
+  // Promise.all. Each atlas typically has ~5 registry JSONs (atlas,
+  // layers, operations, pages, slots). Serialized, they cost 5× RTT;
+  // parallel, they cost 1× RTT. Combined with the outer-loop
+  // parallelization, cold boot shrinks from O(atlases × registries)
+  // to O(1) network round-trips.
+  const entries = Object.entries(reg);
+  const results = await Promise.all(entries.map(async ([name, path]) => {
     try {
       const resp = await fetch(path);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      out[name] = await resp.json();
+      return [name, await resp.json()];
     } catch (err) {
       console.warn(
         `atlas '${atlas_id}': missing/unreadable registry '${name}' at ${path} ` +
@@ -288,9 +375,10 @@ async function loadAtlasConfigs(atlas_id, manifest) {
       // Each registry doc nests its content under a key matching its name
       // (e.g. layers.registry.json → { layers: {...} }). Provide that
       // shape so downstream `configs.<name>.<name>` reads stay safe.
-      out[name] = { [name]: {} };
+      return [name, { [name]: {} }];
     }
-  }
+  }));
+  for (const [name, value] of results) out[name] = value;
   return out;
 }
 

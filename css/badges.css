@@ -31,155 +31,27 @@
   border-left: 3px solid var(--rule);
   border-radius: 2px;
   line-height: 1.4;
-  min-height: 1em;
+  /* 2026-05-21: pin to a fixed box so dynamic textContent updates
+     (probe-in-flight → probe-resolved, single-line → wrapped) can't
+     reflow the page grid below. Quentin reported "everything goes up
+     and down by like 5% maybe its because of the B banner" on the
+     local_pca_dosage page — the badge sits ABOVE the grid template's
+     first explicit row, so any height change in the badge pushes
+     every panel below by the delta. Fixed height + overflow:hidden
+     stops the reflow; ellipsis keeps long single-line verdicts
+     readable; the full text remains in the title tooltip. */
+  height: 26px;
+  min-height: 26px;
+  box-sizing: border-box;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* When a probe initially has nothing to say (no candidate selected, no
    probe scheduled yet), pages add `display: none` inline or via a script
    call. The default is to render so a missing badge isn't silently lost. */
 
-/* ---- workspace-wide Mode-B tally chip ----
-   Mounted in the top chrome by core/mode_b_tally.js; subscribes to the
-   `mode_b_badge_render` CustomEvent and reports a single-line count
-   across all loaded atlases.
-
-   States are rendered as Unicode glyphs (● / ⚠ / ○) so the chip stays
-   font-stack independent. Zero-count states are dimmed via opacity so
-   the chip stays visually compact when only one outcome class is
-   non-empty. */
-.mode-b-tally {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  font-size: 10.5px;
-  letter-spacing: 0.02em;
-  color: var(--ink-dim);
-  padding: 0 8px;
-  height: 20px;
-  line-height: 1;
-  box-sizing: border-box;
-  background: var(--panel-2);
-  border: 1px solid var(--rule);
-  border-radius: 2px;
-  user-select: none;
-  /* 2026-05-20: chip now clickable → opens the per-slot popover.
-     white-space + flex-shrink keep the chip on a single line even when
-     the header row is tight (otherwise "Mode B" wraps between "Mode"
-     and "B" and the chip stacks vertically, looking misaligned). */
-  cursor: pointer;
-  outline: none;
-  white-space: nowrap;
-  flex-shrink: 0;
-  vertical-align: middle;
-  align-self: center;
-}
-.mode-b-tally:hover,
-.mode-b-tally:focus-visible {
-  background: var(--panel, var(--panel-2));
-  border-color: var(--ink-dimmer, var(--rule));
-}
-.mode-b-tally[aria-expanded="true"] {
-  background: var(--panel, var(--panel-2));
-  border-color: var(--accent, var(--ink-dim));
-}
-.mode-b-tally .label { color: var(--ink-dim); font-weight: 500; }
-.mode-b-tally .count { display: inline-flex; align-items: center; gap: 2px; }
-.mode-b-tally .count.zero { opacity: 0.35; }
-.mode-b-tally .glyph-live { color: #3cc08a; }   /* match the green from pca_comparator concord */
-.mode-b-tally .glyph-drift { color: #f5a524; }
-.mode-b-tally .glyph-stub { color: var(--ink-dimmer, #6a7280); }
-
-/* ---- workspace tally popover (click-to-open from .mode-b-tally) ----
-   Mounted in document.body by mode_b_tally.js to escape any
-   overflow:hidden in the chrome. position/top/left are set inline at
-   open time so the popover anchors under the chip. */
-.mode-b-tally-popover {
-  display: none;   /* mounted hidden; opener sets display:block */
-  background: var(--panel, var(--panel-2));
-  border: 1px solid var(--rule);
-  border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  font-size: 11px;
-  color: var(--ink, var(--ink-dim));
-  max-width: 360px;
-  max-height: 420px;
-  overflow-y: auto;
-}
-.mode-b-tally-popover-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--rule);
-  background: var(--panel-2);
-}
-.mode-b-tally-popover-header .title { font-weight: 600; }
-.mode-b-tally-popover-header .counts { color: var(--ink-dim); }
-.mode-b-tally-popover-header .glyph-live  { color: #3cc08a; margin-right: 2px; }
-.mode-b-tally-popover-header .glyph-drift { color: #f5a524; margin-right: 2px; }
-.mode-b-tally-popover-header .glyph-stub  { color: var(--ink-dimmer, #6a7280); margin-right: 2px; }
-.mode-b-tally-popover-body { padding: 4px 0; }
-.mode-b-tally-popover .atlas-group { padding: 4px 0; }
-.mode-b-tally-popover .atlas-name {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--ink-dim);
-  padding: 4px 12px 2px;
-}
-.mode-b-tally-popover .slot {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 12px;
-  border-top: 1px solid transparent;
-}
-.mode-b-tally-popover .slot:hover {
-  background: var(--panel-2);
-}
-.mode-b-tally-popover .slot .glyph-live   { color: #3cc08a; }
-.mode-b-tally-popover .slot .glyph-drift  { color: #f5a524; }
-.mode-b-tally-popover .slot .glyph-stub   { color: var(--ink-dimmer, #6a7280); }
-.mode-b-tally-popover .slot .state-tag {
-  font-size: 9.5px;
-  color: var(--ink-dim);
-  margin-left: 2px;
-}
-.mode-b-tally-popover .slot .label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.mode-b-tally-popover .slot .ctx {
-  color: var(--ink-dim);
-  font-style: italic;
-}
-.mode-b-tally-popover .slot a.jump {
-  color: var(--accent, var(--ink));
-  text-decoration: none;
-  font-size: 10.5px;
-  padding: 1px 6px;
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-  background: var(--panel-2);
-}
-.mode-b-tally-popover .slot a.jump:hover {
-  background: var(--accent, var(--ink));
-  color: var(--panel, white);
-  border-color: var(--accent, var(--ink));
-}
-.mode-b-tally-popover .slot .jump.disabled {
-  color: var(--ink-dimmer, #888);
-  cursor: not-allowed;
-}
-.mode-b-tally-popover-footer {
-  padding: 6px 12px;
-  border-top: 1px solid var(--rule);
-  background: var(--panel-2);
-  color: var(--ink-dim);
-  font-size: 10px;
-}
 
 /* ---- per-badge expanded card (click .data-source-badge to toggle) ----
    Sibling div inserted immediately after the badge by mode_b_badge.js.

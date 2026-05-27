@@ -8,6 +8,16 @@ registry handles incremental growth.
 Read this AFTER `README_PAIRING.md` and BEFORE designing a new
 atlas package.
 
+> **2026-05-23 update.** This roadmap was written when the family
+> had four atlases (genome / population / diversity / inversion).
+> The family has since grown to 11 — see `README.md` for the full
+> roster. The four-atlas narrative below still describes the
+> foundational dependency chain (everything else either splits
+> out of one of these four or layers on top); newer atlases
+> (cross-species, evolution, popstats, heterozygosity, pods,
+> relatedness, meiosis) are introduced where they fit but the
+> recipe for adding atlases is unchanged.
+
 ---
 
 ## 1. The breeding-program order

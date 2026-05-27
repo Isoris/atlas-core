@@ -29,6 +29,24 @@ node tests/test_registry_get_layer_entry.js 2>&1 | tail -2
 echo '--- atlas-core JS mode_b_badge probe ---'
 node tests/test_mode_b_badge.js 2>&1 | tail -2
 
+echo '--- atlas-core JS chrom_summary (SPEC_multichrom Slice 1) ---'
+node tests/test_chrom_summary.js 2>&1 | tail -2
+
+echo '--- atlas-core JS chrom_prewarm_scheduler (SPEC_multichrom Slice 3) ---'
+node tests/test_chrom_prewarm_scheduler.js 2>&1 | tail -2
+
+echo '--- atlas-core JS chrom_bulk_loader (SPEC_multichrom Slice 2) ---'
+node tests/test_chrom_bulk_loader.js 2>&1 | tail -2
+
+echo '--- atlas-core JS sidebar_floating (shell-level wiring) ---'
+node tests/test_sidebar_floating.js 2>&1 | tail -2
+
+echo '--- atlas-core JS worker_json_parse (fallback path) ---'
+node tests/test_worker_json_parse.js 2>&1 | tail -2
+
+echo '--- atlas-core JS workflow_status_badge (parallel fan-out) ---'
+node tests/test_workflow_status_badge.mjs 2>&1 | tail -2
+
 echo '--- atlas-core inventory page (pure helpers) ---'
 node atlases/core/pages/test_inventory.js 2>&1 | tail -2
 

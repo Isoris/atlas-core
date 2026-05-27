@@ -1,0 +1,63 @@
+  <div id="system_health" class="page core-page">
+    <div class="sh-content">
+      <div class="sh-title">System health</div>
+      <div class="sh-subtitle">
+        Cross-atlas inventory + dependency graph. Reads each atlas's manifest
+        (loaded into <code>window.__atlasRegistry</code> at boot) and the master
+        <code>cohorts.registry.json</code>. Updates live as atlases register.
+      </div>
+
+      <!-- Tab strip -->
+      <div class="sh-tabs">
+        <button data-tab="summary"  class="sh-tab active">Per-atlas summary</button>
+        <button data-tab="layers"   class="sh-tab">Layer status</button>
+        <button data-tab="graph"    class="sh-tab">Cross-atlas graph</button>
+      </div>
+
+      <!-- Tab: Per-atlas summary cards -->
+      <section id="shTabSummary" class="sh-tab-panel sh-tab-panel-active">
+        <div id="shSummaryGrid" class="sh-summary-grid">
+          <span class="sh-hint">Loading...</span>
+        </div>
+      </section>
+
+      <!-- Tab: Layer status table -->
+      <section id="shTabLayers" class="sh-tab-panel">
+        <div class="sh-controls">
+          <label class="sh-ctrl">
+            atlas
+            <select id="shLayerAtlasFilter">
+              <option value="">all</option>
+            </select>
+          </label>
+          <label class="sh-ctrl">
+            status
+            <select id="shLayerStatusFilter">
+              <option value="">all</option>
+              <option value="ready">ready</option>
+              <option value="not_loaded">not_loaded</option>
+              <option value="not_implemented">not_implemented</option>
+              <option value="session_state">session_state</option>
+              <option value="other">other</option>
+            </select>
+          </label>
+          <input id="shLayerSearch" type="search" placeholder="filter by layer_id..." />
+          <span class="sh-count" id="shLayerCount"></span>
+        </div>
+        <div id="shLayerTableSlot" class="sh-table-slot">
+          <span class="sh-hint">Loading layers...</span>
+        </div>
+      </section>
+
+      <!-- Tab: Cross-atlas dependency graph -->
+      <section id="shTabGraph" class="sh-tab-panel">
+        <div class="sh-subtitle">
+          One row per producer layer. <code>used_by</code> column lists every consuming
+          atlas declared in <code>cohorts.registry.json</code>. Sortable by usage degree.
+        </div>
+        <div id="shGraphTableSlot" class="sh-table-slot">
+          <span class="sh-hint">Loading graph...</span>
+        </div>
+      </section>
+    </div>
+  </div>

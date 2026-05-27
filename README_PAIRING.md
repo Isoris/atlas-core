@@ -6,13 +6,22 @@ This project is split into two parts:
 
 1. `atlas-core/` — the generic shell, router, state, registry engine,
    cache, server bridge.
-2. one or more atlas packages, such as:
-   - `inversion-atlas/`
-   - `population-atlas/`
-   - `diversity-atlas/`
-   - `genome-atlas/`
+2. one or more atlas packages. Current roster (2026-05-23):
+   - `inversion-atlas/`        — per-candidate inversion detection
+   - `cross-species-atlas/`    — 18-genome breakpoint atlas (Phase 1a split)
+   - `evolution-atlas/`        — age + polarity + archaeology (Phase 1a split)
+   - `popstats-atlas/`         — group-wise stat compute engine (Phase 1a split)
+   - `diversity-atlas/`        — per-sample diversity / ROH / theta_pi
+   - `heterozygosity-atlas/`   — dedicated H surfaces (Phase 1c split)
+   - `population-atlas/`       — cohort identity / families / breeding
+   - `pods-atlas/`             — PODs null-distribution framework (Phase 1d)
+   - `relatedness-atlas/`      — pedigree / breeding / Mendelian distortion
+   - `meiosis-atlas/`          — CO / NCO / coincidence / interference
+   - `genome-atlas/`           — assembly + annotation + within-Cgar comparative
 
-Neither half is useful alone. They are designed to run as a pair.
+Neither half is useful alone. They are designed to run as a pair. See
+`README.md` for a one-line role description per atlas; this doc explains
+the pairing mechanism itself.
 
 ---
 

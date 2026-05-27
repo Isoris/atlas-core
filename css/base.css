@@ -40,9 +40,18 @@ main#app-root { flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden; }
    z=9999 inside this stacking context) need the header itself to sit at
    the very top of the page's compositing order so the dropdowns render
    over EVERYTHING. */
-header { padding: 3px 12px; border-bottom: 1px solid var(--rule);
-         display: flex; align-items: center; gap: 6px; min-height: 28px; height: 28px;
-         position: relative; z-index: 9999; }
+header { padding: 0 12px; border-bottom: 1px solid var(--rule);
+         display: flex; align-items: center; gap: 6px; min-height: 26px; height: 26px;
+         position: relative; z-index: 9999;
+         background: var(--panel); }
+/* Visual grouping inside the header. Groups have a tight 4px internal
+   gap; the parent <header> has 6px between groups. `.header-divider`
+   is a 1px vertical rule between groups. */
+header .header-group { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+header .header-divider {
+  display: inline-block; width: 1px; height: 14px;
+  background: var(--rule); flex-shrink: 0; opacity: 0.6;
+}
 /* Title + meta are no longer rendered (Quentin's request — top header
    shows scope + tool clusters only). Keep the dead rules as harmless
    no-ops so anything else that ever uses these classes still styles. */
@@ -65,14 +74,15 @@ header #layoutModeBtn,
 header #saveSessionBtn,
 header #loadSessionBtn {
   align-self: center;
-  background: var(--panel-2); border: 1px solid var(--rule); color: var(--ink);
-  padding: 0 9px; font-family: var(--mono); font-size: 10px;
-  height: 20px; line-height: 1;
+  background: transparent; border: 1px solid var(--rule); color: var(--ink);
+  padding: 0 8px; font-family: var(--mono); font-size: 10px;
+  height: 18px; line-height: 1;
   box-sizing: border-box;
   border-radius: 2px; cursor: pointer;
   letter-spacing: 0.02em;
   white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center;
   vertical-align: middle;
+  transition: background 100ms, border-color 100ms, color 100ms;
 }
 
 /* Settings gear, promoted from the per-atlas topbar into the shell header.
@@ -139,15 +149,17 @@ header #resetLayoutBtn:hover { background: var(--panel-3); border-color: var(--a
   header #schemaBadge { font-size: 9px; padding: 2px 5px; }
   header #jsScriptsBadge { font-size: 9px; padding: 2px 5px; }
 }
-/* 2026-05-19: 20px height pin matches the rest of the header row. */
+/* Status badges — read-only chips. Borderless, just text in dim ink, so
+   they read as inline information instead of competing with the
+   bordered buttons. */
 header #schemaBadge,
-header #jsScriptsBadge {
-  align-self: center; margin-left: 6px;
-  background: var(--panel-2); border: 1px solid var(--rule); color: var(--ink-dim);
-  padding: 0 7px; font-family: var(--mono); font-size: 10px;
-  height: 20px; line-height: 1;
+header #jsScriptsBadge,
+header #chromSummaryBadge {
+  align-self: center;
+  background: transparent; border: none; color: var(--ink-dim);
+  padding: 0 4px; font-family: var(--mono); font-size: 10px;
+  height: 18px; line-height: 1;
   box-sizing: border-box;
-  border-radius: 2px;
   letter-spacing: 0.02em;
   white-space: nowrap; flex-shrink: 0;
   display: inline-flex; align-items: center;
@@ -197,36 +209,21 @@ header .header-folder { position: relative; align-self: center; flex-shrink: 0;
    buttons, atlas dropdown, chromosome picker, and direct buttons
    (compact, reset layout, server) all line up. */
 header .header-folder-btn {
-  background: var(--panel-2); color: var(--ink);
+  background: transparent; color: var(--ink);
   border: 1px solid var(--rule);
-  border-radius: 2px; padding: 0 9px;
-  height: 20px; line-height: 1;
+  border-radius: 2px; padding: 0 8px;
+  height: 18px; line-height: 1;
   box-sizing: border-box;
   font-family: var(--mono); font-size: 10px;
   letter-spacing: 0.02em; cursor: pointer;
   white-space: nowrap; display: inline-flex; align-items: center;
   vertical-align: middle;
-  transition: background 0.1s, border-color 0.1s;
+  transition: background 100ms, border-color 100ms, color 100ms;
 }
-header .header-folder-btn .arrow { opacity: 0.5; margin-left: 4px; font-size: 8px; }
-header .header-folder[data-color="blue"]   .header-folder-btn {
-  background: transparent; border-color: rgba(64, 144, 220, 0.50);
+header .header-folder-btn:hover {
+  background: var(--panel-2); border-color: var(--accent); color: var(--ink);
 }
-header .header-folder[data-color="blue"]:hover .header-folder-btn {
-  background: rgba(64, 144, 220, 0.10); border-color: rgba(64, 144, 220, 0.80);
-}
-header .header-folder[data-color="green"]  .header-folder-btn {
-  background: transparent; border-color: rgba(72, 200, 120, 0.50);
-}
-header .header-folder[data-color="green"]:hover .header-folder-btn {
-  background: rgba(72, 200, 120, 0.10); border-color: rgba(72, 200, 120, 0.80);
-}
-header .header-folder[data-color="yellow"] .header-folder-btn {
-  background: transparent; border-color: rgba(232, 196, 76, 0.50);
-}
-header .header-folder[data-color="yellow"]:hover .header-folder-btn {
-  background: rgba(232, 196, 76, 0.10); border-color: rgba(232, 196, 76, 0.80);
-}
+header .header-folder-btn .arrow { opacity: 0.55; margin-left: 4px; font-size: 7px; }
 /* Active-state ring when a child button inside has data-active="1"
    (e.g. candidate mode). The folder button itself glows. */
 header .header-folder[data-has-active="1"][data-color="green"] .header-folder-btn {
@@ -246,10 +243,17 @@ header .header-folder-panel {
      position:fixed which create their own stacking contexts that escape
      the parent's z-index ordering and end up painted over the dropdown.
      Bump to z-index 9999 so the folder menus always paint on top.
-     Background is solid var(--panel); no transparency. */
-  padding: 4px; z-index: 9999;
+     Background is solid var(--panel); no transparency.
+
+     2026-05-23: tabs row appeared to "show through" the dropdown.
+     Added isolation:isolate + bumped z-index to 99999 so the panel
+     forces its own stacking context that wins over the sticky
+     #topbar's (z:100) context regardless of source order. */
+  padding: 4px; z-index: 99999;
   min-width: 170px;
   flex-direction: column; gap: 2px;
+  isolation: isolate;
+  opacity: 1;
 }
 /* Tinted left border on the panel matching the folder colour */
 header .header-folder[data-color="blue"]   .header-folder-panel { border-left: 3px solid rgba(64, 144, 220, 0.65); }
@@ -272,6 +276,21 @@ header .header-folder-panel .folder-btn {
 }
 header .header-folder-panel button:hover {
   background: var(--panel-3); border-color: var(--accent);
+}
+/* 2026-05-26: section labels + dividers for the combined tools folder.
+   Three logical groups (session / mode / data) inside one panel; the
+   label sits above each group, the divider separates them with a thin
+   rule. */
+header .header-folder-panel .folder-section-label {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--ink-dimmer); text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 4px 2px; margin-top: 2px;
+}
+header .header-folder-panel .folder-section-label:first-child { margin-top: 0; }
+header .header-folder-panel .folder-section-divider {
+  height: 1px; background: var(--rule);
+  margin: 4px 2px 0;
 }
 /* Active-mode highlights inside the panel — preserved from old styling */
 header .header-folder-panel #candidateModeBtn[data-active="1"] {
@@ -353,15 +372,19 @@ header .header-folder[data-color="yellow"] .header-folder-btn .dot { color: rgb(
 /* Server status standalone button — lifted out of the data folder for
    one-click visibility (per turn 145). */
 #atlasServerStandaloneBtn {
-  align-self: center; margin: 0 4px;
-  background: var(--panel-2); color: var(--ink-dim);
+  align-self: center;
+  background: transparent; color: var(--ink-dim);
   border: 1px solid var(--rule); border-radius: 2px;
-  padding: 3px 8px; font-family: var(--mono); font-size: 10px;
+  padding: 0 8px; font-family: var(--mono); font-size: 10px;
+  height: 18px; line-height: 1;
+  box-sizing: border-box;
   letter-spacing: 0.02em;
-  cursor: pointer; line-height: 1;
+  cursor: pointer;
   display: inline-flex; align-items: center;
   flex-shrink: 0;
+  transition: background 100ms, border-color 100ms, color 100ms;
 }
+#atlasServerStandaloneBtn:hover { background: var(--panel-2); color: var(--ink); }
 #atlasServerStandaloneDot {
   display: inline-block; width: 8px; height: 8px;
   border-radius: 50%; background: #6b7388; margin-right: 6px;
@@ -380,16 +403,16 @@ header .header-folder[data-color="yellow"] .header-folder-btn .dot { color: rgb(
    the others. Quentin: "the buttons are not at the same y position". */
 header .header-direct-btn {
   align-self: center; flex-shrink: 0;
-  background: var(--panel-2); color: var(--ink);
+  background: transparent; color: var(--ink);
   border: 1px solid var(--rule); border-radius: 2px;
-  padding: 0 9px; font-family: var(--mono); font-size: 10px;
-  height: 20px; line-height: 1;
+  padding: 0 8px; font-family: var(--mono); font-size: 10px;
+  height: 18px; line-height: 1;
   box-sizing: border-box;
   letter-spacing: 0.02em; cursor: pointer;
   white-space: nowrap;
   display: inline-flex; align-items: center;
   vertical-align: middle;
-  transition: background 100ms, border-color 100ms;
+  transition: background 100ms, border-color 100ms, color 100ms;
 }
 header .header-direct-btn:hover {
   background: var(--panel-3); border-color: var(--accent);

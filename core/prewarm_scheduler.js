@@ -204,13 +204,22 @@ export class PrewarmScheduler {
                       || msg.includes('AUTO_INDEX_EMPTY')
                       || msg.includes('AUTO_INDEX_MISS')
                       || msg.includes('unresolved placeholder')
-                      || msg.includes('requires args.');
+                      || msg.includes('requires args.')
+                      // 2026-05-26: TODO/missing browser-side analysis modules
+                      // (registered with source:"analysis" but the file isn't
+                      // implemented yet) produce dynamic-import failures. The
+                      // canonical fix is to mark the layer `disabled:true`,
+                      // but if a registry-author forgot, downgrade the noise.
+                      || msg.includes('error loading dynamically imported module')
+                      || msg.includes('disallowed MIME type');
       if (isExpected) {
         if (typeof console.debug === 'function') {
           const kind = msg.includes('AUTO_INDEX_EMPTY') ? 'empty root'
                      : msg.includes('AUTO_INDEX_MISS')  ? 'chrom not in index'
                      : msg.includes('unresolved placeholder') ? 'unresolved arg'
                      : msg.includes('requires args.')   ? 'missing args'
+                     : msg.includes('dynamically imported module') ? 'analysis module TODO'
+                     : msg.includes('disallowed MIME type') ? 'analysis module TODO'
                      : '404';
           console.debug(`Prewarm ${eventName}: optional layer skipped (${kind}):`, msg);
         }

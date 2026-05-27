@@ -41,14 +41,35 @@
       pointer-events: none;
       display: none;
     }
+    #atlas-preview.pinned {
+      pointer-events: auto;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.32);
+      border-color: #4a5568;
+    }
     #atlas-preview .hdr {
       font-weight: 600; font-size: 12px; color: #fff; margin-bottom: 4px;
-      display: flex; gap: 6px; align-items: baseline;
+      display: flex; gap: 6px; align-items: center;
     }
     #atlas-preview .hdr .tag {
       font-size: 10px; padding: 1px 6px; border-radius: 3px;
       background: #4a5568; color: white; text-transform: uppercase; letter-spacing: 0.04em;
     }
+    #atlas-preview .hdr .spacer { flex: 1; }
+    #atlas-preview .hdr .hint {
+      display: none; font-size: 10px; color: #a0aec0; font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+    #atlas-preview:not(.pinned) .hdr .hint { display: inline; }
+    #atlas-preview .hdr .close {
+      display: none; cursor: pointer;
+      width: 18px; height: 18px; border-radius: 3px;
+      background: transparent; color: #cbd5e0;
+      border: 1px solid #4a5568;
+      font-size: 13px; line-height: 14px; text-align: center;
+      padding: 0; user-select: none;
+    }
+    #atlas-preview .hdr .close:hover { background: #c53030; color: #fff; border-color: #c53030; }
+    #atlas-preview.pinned .hdr .close { display: inline-block; }
     #atlas-preview dl {
       display: grid; grid-template-columns: max-content 1fr;
       gap: 1px 10px; margin: 6px 0 0;
@@ -73,6 +94,27 @@
   let currentKey = null;
   let lastPath = "";
   let pathCache = new Map();   // url → preview HTML
+  let pinned = false;          // §clicked-to-pin; ignores mouseout
+  let pinnedRect = null;       // anchor position when pinned (no follow-cursor)
+
+  function unpin() {
+    pinned = false;
+    pinnedRect = null;
+    popover.classList.remove("pinned");
+    popover.style.display = "none";
+    currentKey = null;
+  }
+
+  function pin(anchorEl) {
+    pinned = true;
+    popover.classList.add("pinned");
+    const r = anchorEl.getBoundingClientRect();
+    // anchor under the trigger, left-aligned
+    pinnedRect = { x: r.left, y: r.bottom + 6 };
+    popover.style.left = pinnedRect.x + "px";
+    popover.style.top  = pinnedRect.y + "px";
+    popover.style.display = "block";
+  }
 
   // ---------- table key helpers --------------------------------------- //
   const TABLE_PK = {
@@ -185,16 +227,26 @@
     module_registry:  ["module_name", "version", "family", "biomod_status", "installed", "ready", "stale", "last_run_status", "last_run_qc", "last_run_id", "conda_env_path"],
   };
 
+  function hdr(table, id) {
+    return `<div class="hdr">
+      <span class="tag">${escapeHtml(table)}</span>
+      <span>${escapeHtml(id)}</span>
+      <span class="spacer"></span>
+      <span class="hint">click to pin · Esc to close</span>
+      <button class="close" type="button" title="Close (Esc)" aria-label="Close">✕</button>
+    </div>`;
+  }
+
   async function show(el, table, id) {
     const row = findRow(table, id);
     if (!row) {
-      popover.innerHTML = `<div class="hdr"><span class="tag">${table}</span><span>${escapeHtml(id)}</span></div>
-        <div class="err">row not found in window.DB.${table}</div>`;
+      popover.innerHTML = hdr(table, id) +
+        `<div class="err">row not found in window.DB.${table}</div>`;
       popover.style.display = "block";
       return;
     }
     const fields = FIELDS_BY_TABLE[table] || Object.keys(row);
-    let html = `<div class="hdr"><span class="tag">${table}</span><span>${escapeHtml(id)}</span></div>`;
+    let html = hdr(table, id);
     html += renderRowDl(row, fields);
 
     if (row.path) {
@@ -232,6 +284,7 @@
 
   // ---------- event wiring -------------------------------------------- //
   document.addEventListener("mouseover", (ev) => {
+    if (pinned) return;                            // pinned popover ignores hover
     const el = ev.target.closest("[data-preview-id]");
     if (!el) return;
     const table = el.dataset.previewTable;
@@ -245,9 +298,11 @@
     position(ev);
   });
   document.addEventListener("mousemove", (ev) => {
+    if (pinned) return;                            // don't track cursor when pinned
     if (popover.style.display === "block") position(ev);
   });
   document.addEventListener("mouseout", (ev) => {
+    if (pinned) return;                            // pinned stays open until X / Esc
     const el = ev.target.closest("[data-preview-id]");
     if (!el) return;
     const to = ev.relatedTarget && ev.relatedTarget.closest("[data-preview-id]");
@@ -257,6 +312,35 @@
     }
     currentKey = null;
     popover.style.display = "none";
+  });
+  // click on a previewed cell → pin (or unpin if it's the same one already pinned)
+  document.addEventListener("click", (ev) => {
+    // close button inside the popover
+    const closeBtn = ev.target.closest("#atlas-preview .close");
+    if (closeBtn) { ev.preventDefault(); ev.stopPropagation(); unpin(); return; }
+    // click on the popover itself when pinned → leave it alone
+    if (pinned && popover.contains(ev.target)) return;
+    // click on a previewed cell → pin
+    const el = ev.target.closest("[data-preview-id]");
+    if (el) {
+      ev.preventDefault();
+      const table = el.dataset.previewTable;
+      const id    = el.dataset.previewId;
+      if (!table || !id) return;
+      const key = `${table}:${id}`;
+      if (pinned && key === currentKey) { unpin(); return; }  // toggle
+      currentKey = key;
+      lastPath = "";
+      show(el, table, id);
+      pin(el);
+      return;
+    }
+    // click anywhere else while pinned → close
+    if (pinned) unpin();
+  });
+  // Escape closes a pinned popover
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape" && pinned) { unpin(); }
   });
 
   // ---------- helper for page render functions ------------------------ //

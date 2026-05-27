@@ -287,6 +287,8 @@ row:
   "files":          ["bridge/<db>/endpoints.json", "..."],
   "renderers":      ["renderMyPanelCard"],
   "depends_on":     ["<other_addon_id>"],
+  "extends_page":   "<page_id>",     // required when kind=page_extension
+  "adds_slot":      "<slot_name>",   // required when kind=page_extension
   "describes":      "<freeform>"
 }
 ```
@@ -303,11 +305,54 @@ Field semantics:
 | `files`          | relative paths under `toolkit_registries/` | each must exist on disk |
 | `renderers`      | conductor.js dispatch entries (advisory) | not enforced (lax — runtime would show the dashed TODO placeholder anyway) |
 | `depends_on`     | other `addon_id`s | must resolve to another row |
+| `extends_page`   | page_id this addon adds a slot to (page_extension kind only) | required when `kind=page_extension`; must resolve to a row in `pages.jsonl` |
+| `adds_slot`      | slot name added to the host page (page_extension kind only) | required when `kind=page_extension`; the slot must appear in the host page's `slots` field after the HTML edit |
 
 The validator catches the addon-author bug classes that the spec's
 §7 "no invented kinds / data_sources / when keys" rule is designed
 to surface — but at audit time, not at runtime when the conductor
 silently drops the spawn.
+
+### Worked example: `kind=page_extension`
+
+The simplest demonstration of a page-extension addon lives in
+`workspace_health_footer_extension`:
+
+```jsonl
+{"addon_id": "workspace_health_footer_extension",
+ "schema_version": "addon_manifest_v1",
+ "kind": "page_extension",
+ "extends_page": "workspace_health",
+ "adds_slot": "footer-row",
+ "claims": {
+   "panels.jsonl":      ["registry_health_strip"],
+   "spawn_rules.jsonl": ["registry_health_strip_on_workspace_health"]},
+ "files":     ["relatedness/page/workspace_health.html"],
+ "renderers": ["renderRegistryHealthStrip"],
+ "describes": "..."}
+```
+
+It ships four coordinated changes:
+
+1. **HTML**: `workspace_health.html` gains
+   `<div data-slot="footer-row" ...>` at the bottom.
+2. **Registry**: the `workspace_health` row in `pages.jsonl` gets
+   `"slots": ["conductor-demo", "footer-row"]`.
+3. **Panel**: `registry_health_strip` lands in `panels.jsonl` with
+   `slot_affinity: ["footer-row"]`.
+4. **Spawn rule**: `registry_health_strip_on_workspace_health`
+   targets the `workspace_health` page with priority 30.
+
+`check_addons` enforces all four pieces are consistent. If the
+extension forgets to update `pages.jsonl`, the validator fails with:
+
+```
+workspace_health_footer_extension.adds_slot: slot 'footer-row' not
+in pages.jsonl row for 'workspace_health' (slots: ['conductor-demo'])
+```
+
+(Audit-time visibility for what would otherwise be a silent
+conductor.pickSlot mismatch at runtime.)
 
 ---
 

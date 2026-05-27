@@ -394,6 +394,29 @@
       </table>`);
   }
 
+  async function renderRegistryHealthStrip(panel, _ctx) {
+    const [atlases, addons, dbs] = await Promise.all([
+      window.atlasFetchJsonl("../01_registry/atlases.jsonl"),
+      window.atlasFetchJsonl("../01_registry/addons.jsonl"),
+      window.atlasFetchJsonl("../01_registry/external_databases.jsonl"),
+    ]);
+    const pill = (n, label) =>
+      `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#3a4250">
+         <strong style="font-family:ui-monospace,Menlo,monospace;font-size:12px">${n}</strong>
+         <span style="color:#6c727f">${label}</span>
+       </span>`;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:24px;font-size:11.5px">
+      <div style="display:flex;gap:18px">
+        ${pill(atlases.length, "atlases")}
+        ${pill(addons.length, "addons")}
+        ${pill(dbs.length, "bridges")}
+      </div>
+      <span style="color:#a0aec0;font-size:10.5px;font-style:italic">
+        worked example: kind=page_extension adds the footer-row slot
+      </span>
+    </div>`;
+  }
+
   // Renderer dispatch by panel_id (each registered panel has its own renderer)
   const RENDERERS = {
     atlas_summary_card:              renderAtlasSummaryCard,
@@ -402,6 +425,7 @@
     manuscript_chunks_summary_card:  renderManuscriptChunksSummaryCard,
     plans_summary_card:              renderPlansSummaryCard,
     addons_summary_card:             renderAddonsSummaryCard,
+    registry_health_strip:           renderRegistryHealthStrip,
     bridge_summary_card:             renderBridgeSummaryCard,
   };
 

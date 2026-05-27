@@ -1,8 +1,8 @@
 {
   "schema_version": "panel_coverage_graph_v1",
-  "rewritten_at": "2026-05-27T16:52:32Z",
-  "n_nodes": 146,
-  "n_edges": 189,
+  "rewritten_at": "2026-05-27T16:57:30Z",
+  "n_nodes": 147,
+  "n_edges": 190,
   "nodes": [
     {
       "id": "atlas_core",
@@ -879,6 +879,12 @@
       "kind": "panel",
       "label": "Addons \u2014 per-kind summary",
       "atlas": "atlas_core"
+    },
+    {
+      "id": "registry_health_strip",
+      "kind": "panel",
+      "label": "Registry health (footer strip)",
+      "atlas": "atlas_core"
     }
   ],
   "edges": [
@@ -914,6 +920,11 @@
     },
     {
       "from": "addons_summary_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "registry_health_strip",
       "to": "atlas_core",
       "kind": "panel_in_atlas"
     },
@@ -1976,7 +1987,7 @@
       "evolution_atlas": 11
     },
     "panels_per_atlas": {
-      "atlas_core": 7
+      "atlas_core": 8
     }
   }
 }

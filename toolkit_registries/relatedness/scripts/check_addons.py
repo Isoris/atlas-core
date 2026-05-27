@@ -96,6 +96,24 @@ def check() -> list[str]:
             if dep not in addon_ids:
                 errs.append(f"{aid}.depends_on: addon_id {dep!r} not in addons.jsonl")
 
+        # page_extension kind: must declare which page it extends + which slot
+        # it adds, and that slot must appear in the target page's pages.jsonl
+        # row. Catches "I shipped HTML but forgot to update the registry."
+        if a.get("kind") == "page_extension":
+            ep = a.get("extends_page")
+            asl = a.get("adds_slot")
+            if not ep:
+                errs.append(f"{aid}: kind=page_extension requires `extends_page`")
+            if not asl:
+                errs.append(f"{aid}: kind=page_extension requires `adds_slot`")
+            if ep and asl:
+                pages = load_jsonl(REG / "pages.jsonl")
+                page_row = next((pg for pg in pages if pg.get("page_id") == ep), None)
+                if not page_row:
+                    errs.append(f"{aid}.extends_page: {ep!r} not in pages.jsonl")
+                elif asl not in (page_row.get("slots") or []):
+                    errs.append(f"{aid}.adds_slot: slot {asl!r} not in pages.jsonl row for {ep!r} (slots: {page_row.get('slots') or []})")
+
     return errs
 
 

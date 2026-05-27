@@ -7,7 +7,7 @@
 {"page_id": "graph_builder",     "schema_version": "page_v1", "label": "Graph builder",     "nav_order": 7,  "hook_id": "",                       "panels": [], "slots": [],                  "status": "active"}
 {"page_id": "readiness",         "schema_version": "page_v1", "label": "Readiness",         "nav_order": 8,  "hook_id": "",                       "panels": [], "slots": ["conductor-demo"],  "status": "active"}
 {"page_id": "layer_connector",   "schema_version": "page_v1", "label": "Layer connector",   "nav_order": 9,  "hook_id": "",                       "panels": [], "slots": [],                  "status": "active"}
-{"page_id": "workspace_health",  "schema_version": "page_v1", "label": "Workspace health",  "nav_order": 10, "hook_id": "",                       "panels": [], "slots": ["conductor-demo"],  "status": "active"}
+{"page_id": "workspace_health",  "schema_version": "page_v1", "label": "Workspace health",  "nav_order": 10, "hook_id": "",                       "panels": [], "slots": ["conductor-demo", "footer-row"],  "status": "active"}
 {"page_id": "queue",             "schema_version": "page_v1", "label": "Queue",             "nav_order": 11, "hook_id": "",                       "panels": [], "slots": [],                  "status": "active"}
 {"page_id": "manuscript",        "schema_version": "page_v1", "label": "Manuscript",        "nav_order": 12, "hook_id": "",                       "panels": [], "slots": ["conductor-demo"],  "status": "active"}
 {"page_id": "adapters",          "schema_version": "page_v1", "label": "Adapters",          "nav_order": 13, "hook_id": "",                       "panels": [], "slots": ["conductor-demo"],  "status": "active"}

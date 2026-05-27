@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 319,
-  "n_edges": 246,
+  "n_nodes": 320,
+  "n_edges": 249,
   "warnings": [],
   "nodes": [
     {
@@ -1736,6 +1736,13 @@
       "layer_id": null
     },
     {
+      "id": "registry_health_strip",
+      "type": "panel",
+      "label": "Registry health (footer strip)",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
       "id": "conversation",
       "type": "page",
       "label": "Conversation",
@@ -2979,6 +2986,21 @@
     {
       "from": "addons.jsonl",
       "to": "addons_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "atlases.jsonl",
+      "to": "registry_health_strip",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "addons.jsonl",
+      "to": "registry_health_strip",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "external_databases.jsonl",
+      "to": "registry_health_strip",
       "kind": "panel_reads"
     },
     {

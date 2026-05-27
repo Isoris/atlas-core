@@ -17,7 +17,10 @@
 export class OperationRunner {
 
   constructor({ serverBaseUrl } = {}) {
-    this.baseUrl = serverBaseUrl || 'http://localhost:8765';
+    // 2026-05-26: empty string is a valid value (means "same origin" — boot
+    // sets this to '' so dosage-chunk operations resolve to /api/... rather
+    // than http://localhost:5000/api/...). Only undefined/null falls back.
+    this.baseUrl = (typeof serverBaseUrl === 'string') ? serverBaseUrl : 'http://localhost:8765';
     this._schemaCache = new Map();
   }
 

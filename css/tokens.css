@@ -45,6 +45,15 @@
   --rule: #2a3242;
   --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  /* Ancestry palette — K=20, kept in sync with core/ancestry_palette.js.
+     Positions 1-8 are the original K=8 atlas defaults (Tailwind-500 family);
+     9-20 extend it for NGSadmix sweeps up to K=20. Use CSS vars when styling
+     static layouts; for JS-driven bars, import core/ancestry_palette.js. */
+  --anc-1:  #3b82f6;  --anc-2:  #f97316;  --anc-3:  #10b981;  --anc-4:  #8b5cf6;
+  --anc-5:  #ec4899;  --anc-6:  #f59e0b;  --anc-7:  #06b6d4;  --anc-8:  #94a3b8;
+  --anc-9:  #f43f5e;  --anc-10: #14b8a6;  --anc-11: #84cc16;  --anc-12: #6366f1;
+  --anc-13: #d946ef;  --anc-14: #eab308;  --anc-15: #0ea5e9;  --anc-16: #a855f7;
+  --anc-17: #22c55e;  --anc-18: #ef4444;  --anc-19: #64748b;  --anc-20: #78716c;
 }
 /* Light theme — applied via <html data-theme="light"> */
 html[data-theme="light"] {

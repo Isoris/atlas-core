@@ -1,0 +1,70 @@
+{
+  "schema_version": "bridge_endpoint_v1",
+  "db_id": "string",
+  "endpoints": [
+    {
+      "endpoint_id":  "string_resolve_ids",
+      "label":        "Resolve identifiers to STRING IDs",
+      "method":       "GET",
+      "path":         "/json/get_string_ids",
+      "params": {
+        "identifiers":     {"required": true,  "kind": "query"},
+        "species":         {"required": false, "kind": "query"},
+        "limit":           {"required": false, "kind": "query", "default": 1},
+        "echo_query":      {"required": false, "kind": "query", "default": 1},
+        "caller_identity": {"required": false, "kind": "query", "default": "atlas-core"}
+      },
+      "returns_layer": "string_id_map",
+      "cache_seconds": 604800,
+      "describes":    "Map external identifiers (gene names, UniProt, Ensembl) → STRING IDs. identifiers is %0d-separated (newline-encoded). species is NCBI taxonId."
+    },
+    {
+      "endpoint_id":  "string_network",
+      "label":        "Protein-protein interaction network",
+      "method":       "GET",
+      "path":         "/json/network",
+      "params": {
+        "identifiers":         {"required": true,  "kind": "query"},
+        "species":             {"required": false, "kind": "query"},
+        "required_score":      {"required": false, "kind": "query", "default": 400},
+        "network_type":        {"required": false, "kind": "query", "default": "functional"},
+        "add_nodes":           {"required": false, "kind": "query"},
+        "caller_identity":     {"required": false, "kind": "query", "default": "atlas-core"}
+      },
+      "returns_layer": "string_network",
+      "cache_seconds": 86400,
+      "describes":    "Functional or physical PPI network rooted at the given identifiers. required_score is 0-1000 (400=medium; 700=high; 900=highest). add_nodes pulls N additional neighbors."
+    },
+    {
+      "endpoint_id":  "string_interaction_partners",
+      "label":        "Direct interaction partners",
+      "method":       "GET",
+      "path":         "/json/interaction_partners",
+      "params": {
+        "identifiers":     {"required": true,  "kind": "query"},
+        "species":         {"required": false, "kind": "query"},
+        "required_score":  {"required": false, "kind": "query", "default": 400},
+        "limit":           {"required": false, "kind": "query"},
+        "caller_identity": {"required": false, "kind": "query", "default": "atlas-core"}
+      },
+      "returns_layer": "string_interaction_partners",
+      "cache_seconds": 86400,
+      "describes":    "All direct interaction partners of the given proteins, with their confidence scores. limit caps the returned partner count per query protein."
+    },
+    {
+      "endpoint_id":  "string_enrichment",
+      "label":        "Functional enrichment",
+      "method":       "GET",
+      "path":         "/json/enrichment",
+      "params": {
+        "identifiers":      {"required": true,  "kind": "query"},
+        "species":          {"required": false, "kind": "query"},
+        "background_string_identifiers": {"required": false, "kind": "query"},
+        "caller_identity":  {"required": false, "kind": "query", "default": "atlas-core"}
+      },
+      "returns_layer": "string_enrichment",
+      "cache_seconds": 86400,
+      "describes":    "GO / KEGG / Reactome / InterPro enrichment for a list of proteins against the species' proteome (or a custom background)."
+    }
+  ]
+}

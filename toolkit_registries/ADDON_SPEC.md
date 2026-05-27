@@ -135,10 +135,20 @@ except for `<div data-slot="conductor-demo">`.
 | `conductor-demo`| anything the conductor spawns generically (the catch-all) |
 | `footer-row`    | sticky footer panels (queue counts, etc.) |
 
-Slots are declared by the page HTML (`<div data-slot="...">`); the
-conductor finds them at runtime. A future PR extends `pages.jsonl`
-to formally declare slots (per DYNAMIC_PANELS_SPEC §3), making the
-slot inventory queryable from the registry without a DOM probe.
+Slots are declared two ways and must agree:
+
+1. **At runtime**, by the page HTML — `<div data-slot="...">`. The
+   conductor finds them on DOM load and uses them to place spawned
+   panels.
+2. **At audit time**, by `pages.jsonl` — each row carries
+   `"slots": [...]`. `check_panels` reads this inventory and rejects
+   any spawn rule whose target page declares slots that don't
+   intersect the spawned panel's `slot_affinity` (otherwise the
+   conductor would silently drop the spawn).
+
+When you add a new slot to a page, update both the HTML AND the
+page's `pages.jsonl` row — out-of-sync is the addon-author bug class
+that `check_panels` is designed to catch.
 
 ---
 
@@ -232,11 +242,20 @@ The §refusals enforced across the spec docs:
 No registry rows. No code. Pure documentation.
 
 Future amendments:
-- A formal `pages.jsonl` schema with slot inventory per page (per
-  DYNAMIC_PANELS_SPEC §3) — would replace step 4 of §5 with a
-  registry row instead of a `conductor.js` map edit.
 - A `check_addons.py` validator that walks an addon's manifest and
-  verifies every claimed row resolves cleanly.
+  verifies every claimed row resolves cleanly. (Requires first
+  defining `addon_manifest_v1` — the addon's claim list.)
+
+Landed since v0:
+- ~~A formal `pages.jsonl` schema with slot inventory per page~~ —
+  shipped: pages.jsonl carries `slots: [...]` on every row, derived
+  from each page's `<div data-slot="...">` declarations, and
+  `check_panels` rejects spawn rules whose slot_affinity has no
+  overlap with the target page's slots. The `KNOWN_PAGE_IDS` enum
+  inside `check_panels` is no longer hardcoded — it's derived from
+  pages.jsonl directly. Step 4 of §5 (the `pageIdFromDoc()` map
+  edit) is still required for the runtime page identifier, but the
+  audit chain is registry-driven end-to-end.
 
 ---
 

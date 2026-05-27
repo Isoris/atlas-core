@@ -479,7 +479,33 @@ UniBind, STRING, QuickGO species filters all target Danio rerio).
 The methods chunk in the manuscript explicitly records this — no
 direct Clarias claims inherit from these calls.
 
-### E. Populate references.jsonl from a manuscript draft
+### E. Refresh existing references.jsonl from PubMed
+
+For every row in `references.jsonl` that carries a `pmid` or `doi`, fetch the canonical citation from PubMed:
+
+```bash
+# Dry-run (default — shows the diff per row, writes nothing)
+python3 -m toolkit_registries.relatedness.lib.refresh_references
+
+# One specific row
+python3 -m toolkit_registries.relatedness.lib.refresh_references --ref-id Manichaikul2010
+
+# Commit (writes references.jsonl in place; backup at references.jsonl.bak)
+python3 -m toolkit_registries.relatedness.lib.refresh_references --commit
+```
+
+Per row:
+1. Resolve to a PMID — from the row's `pmid` field, or via `pubmed_search` `term=<doi>[doi]` if only a DOI is present.
+2. Fetch DocSum via `pubmed_summary`.
+3. Build canonical citation from authors + pubdate + title + source + volume + issue + pages.
+4. Print diff against existing citation. With `--commit`, write back + record the resolved `pmid` field on the row.
+
+§refusals:
+- No writes without `--commit`.
+- Skips rows where the DOI lookup is ambiguous (>1 PMID match) — manual disambiguation only.
+- Network failures degrade gracefully (printed as warning, row left untouched, exit OK).
+
+### F. Populate references.jsonl from a manuscript draft
 
 ```bash
 # 1. Find papers
@@ -547,7 +573,6 @@ response — never iterates.
 
 All 10 v0 bridge adapters now ship working endpoints + LICENSE_NOTICE.md + a cookbook section. Remaining wishlist:
 
-- `scripts/refresh_references.py` — walk `references.jsonl` rows that carry a `pmid` and refresh their canonical citation from PubMed.
 - A conductor `bridge_summary_card` panel showing per-DB call counts + last status, read from `02_queue/bridge_log.jsonl`.
 - A per-call provenance handoff to the librarian (`source_kind: bridge` rows in `analysis_results.jsonl`).
 - Batched id-list helpers for adapters that need pagination workarounds (STRING above ~500 ids, NCBI EFetch above ~200 ids).

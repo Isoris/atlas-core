@@ -1,0 +1,19 @@
+{
+  "schema_version": "queue_plan_index_v1",
+  "plans_dir":      "../02_queue/plans/",
+  "rewritten_at":   "2026-05-23T14:00:00Z",
+  "n":              1,
+  "entries": [
+    {
+      "plan_id":      "plan_1779495013_lg28_mendelian",
+      "goal":         "Validate Mendelian inheritance of inv_LG28_INV_001",
+      "generated_at": "2026-05-23T14:00:00Z",
+      "n_steps":      4,
+      "n_ready":      2,
+      "n_blocked":    1,
+      "atlas":        "inversion_atlas",
+      "cohort":       "cgar_hatchery_226",
+      "file":         "plan_1779495013_lg28_mendelian.example.json"
+    }
+  ]
+}

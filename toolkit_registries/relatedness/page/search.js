@@ -38,7 +38,7 @@
   async function loadDB() {
     async function jsonl(p) {
       try {
-        const r = await fetch(p, { cache: "no-store" });
+        const r = await fetch(p, { cache: "default" });
         if (!r.ok) return [];
         return r.text().then(t => t.split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse));
       } catch { return []; }

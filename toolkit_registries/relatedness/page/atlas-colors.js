@@ -14,7 +14,7 @@
   async function loadAtlasColors() {
     async function jsonl(p) {
       try {
-        const r = await fetch(p, { cache: "no-store" });
+        const r = await fetch(p, { cache: "default" });
         if (!r.ok) return [];
         return (await r.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
       } catch { return []; }

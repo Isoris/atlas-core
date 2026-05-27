@@ -305,7 +305,7 @@ function isChain(reg) {
 
 async function _crFetchJsonl(rel) {
   try {
-    const r = await fetch(rel, { cache: "no-store" });
+    const r = await fetch(rel, { cache: "default" });
     if (!r.ok) return [];
     return (await r.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
   } catch { return []; }
@@ -503,7 +503,7 @@ function parseTSV(text) {
 }
 
 async function fetchTsv(rel) {
-  const resp = await fetch(rel, { cache: "no-store" });
+  const resp = await fetch(rel, { cache: "default" });
   if (!resp.ok) throw new Error(`${rel} → HTTP ${resp.status}`);
   return parseTSV(await resp.text());
 }
@@ -980,6 +980,7 @@ function resolveAndRender() {
 
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="registry-cache.js"></script>
 <script defer src="loader.js"></script>
 <script defer src="filters.js"></script>
 <script defer src="scope.js"></script>

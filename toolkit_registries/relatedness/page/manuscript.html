@@ -206,8 +206,9 @@ let SECTION = "methods";
 // ---- load ---------------------------------------------------------------- //
 
 async function fetchJsonl(rel) {
+  if (typeof window.atlasFetchJsonl === "function") return await window.atlasFetchJsonl(rel);
   try {
-    const r = await fetch(rel, { cache: "no-store" });
+    const r = await fetch(rel, { cache: "default" });
     if (!r.ok) return [];
     return (await r.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
   } catch { return []; }
@@ -648,6 +649,7 @@ if (typeof window.onScopeChange === "function") {
 
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="registry-cache.js"></script>
 <script defer src="loader.js"></script>
 <script defer src="filters.js"></script>
 <script defer src="scope.js"></script>

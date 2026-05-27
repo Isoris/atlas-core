@@ -164,7 +164,7 @@ function parseTSV(text) {
 
 async function fetchTsv(rel, optional = false) {
   try {
-    const resp = await fetch(rel, { cache: "no-store" });
+    const resp = await fetch(rel, { cache: "default" });
     if (!resp.ok) throw new Error(`${rel} → HTTP ${resp.status}`);
     return parseTSV(await resp.text());
   } catch (e) {
@@ -176,14 +176,12 @@ async function fetchTsv(rel, optional = false) {
 let DB = { modules: [], modes: [], moduleBy: {}, atlases: [], atlasBy: {} };
 
 async function fetchJsonl(rel, optional = false) {
+  if (typeof window.atlasFetchJsonl === "function") return await window.atlasFetchJsonl(rel);
   try {
-    const resp = await fetch(rel, { cache: "no-store" });
-    if (!resp.ok) throw new Error(`${rel} → HTTP ${resp.status}`);
-    return (await resp.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
-  } catch (e) {
-    if (optional) return [];
-    throw e;
-  }
+    const r = await fetch(rel, { cache: "default" });
+    if (!r.ok) { if (optional) return []; throw new Error(`HTTP ${r.status}`); }
+    return (await r.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
+  } catch (e) { if (optional) return []; throw e; }
 }
 
 async function loadAll() {
@@ -438,6 +436,7 @@ document.getElementById("filter").addEventListener("input", applyFilter);
 
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="registry-cache.js"></script>
 <script defer src="loader.js"></script>
 <script defer src="filters.js"></script>
 <script defer src="scope.js"></script>

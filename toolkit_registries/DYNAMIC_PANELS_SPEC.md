@@ -1,7 +1,9 @@
 # DYNAMIC_PANELS_SPEC — the UI composes itself from the registry
 
-Status: **v0 (frozen).**  Schema version: `panel_v1`, `spawn_rule_v1`,
-`layout_policy_v1`.
+Status: **v0.1 (frozen contracts).**
+Schema versions: `panel_v1`, `spawn_rule_v1`, `layout_policy_v1`,
+`fluidity_v1` (added §17), `graph_gate_v1` (added §18), `panel_event_v1`
+(added §19).
 
 > The librarian resolves layer state.
 > The manager classifies product readiness + estimability.
@@ -464,4 +466,411 @@ The conductor does NOT replace these tiers.  It composes them.
 
 ---
 
-_End of DYNAMIC_PANELS_SPEC.md (v0)._
+---
+
+## §17 Fluidity & resize policy (`fluidity_v1`)
+
+Panels are **size-class adaptive**, not pixel-fixed. Every `panel_v1`
+row carries a `fluidity` block:
+
+```jsonc
+"fluidity": {
+  "size_classes":  ["compact", "comfortable", "expanded"],
+  "min_width_px":   { "compact": 220, "comfortable": 320, "expanded": 520 },
+  "preferred_px":   { "compact": 260, "comfortable": 380, "expanded": 720 },
+  "max_width_px":   { "compact": 320, "comfortable": 520, "expanded": 9999 },
+  "min_height_px":  120,
+  "collapsible":    true,         // can fold to a single-line summary
+  "tearoff":        false,        // can leave its slot and float as overlay
+  "reflow_policy":  "soft_wrap"   // soft_wrap | hard_wrap | tabify | dismiss
+}
+```
+
+### §17.1 Breakpoint adaptation
+
+The conductor watches viewport + slot width (debounced 120 ms) and
+picks the **largest** size_class a panel fits into. If the slot
+narrows below `min_width_px.compact`, the conductor consults
+`reflow_policy`:
+
+| `reflow_policy` | What happens at sub-compact width |
+|---|---|
+| `soft_wrap` | Panel collapses to a single-line summary (label + key stat); click expands |
+| `hard_wrap` | Panel jumps to the next slot down (if any) |
+| `tabify`    | Panel joins a `tab_group` panel sharing the same slot; user picks which tab is active |
+| `dismiss`   | Panel is auto-dismissed (logged); re-spawns when width recovers |
+
+Reflow is **never** a re-render of the panel from scratch — the same
+`panel_id` instance is preserved across size_class transitions so
+in-panel state (form input, scroll position, selected row) survives.
+
+### §17.2 Slot flow policy
+
+Each slot in `pages.jsonl` declares a `flow_policy`:
+
+| `flow_policy` | Arrangement |
+|---|---|
+| `row`     | Panels side-by-side, wrap to next row at slot-width overflow |
+| `column`  | Panels stacked top-to-bottom (default for rails) |
+| `grid`    | CSS grid with `auto-fill, minmax(min_width_px.compact, 1fr)` |
+| `tabs`    | Only one panel visible; tab strip lists the rest |
+| `stack`   | Z-axis overlay; useful for modals / takeovers |
+
+The slot's `flow_policy` and each panel's `reflow_policy` compose:
+the slot owns the *between*-panel rules, the panel owns the
+*within*-panel adaptation.
+
+### §17.3 Stable invariants
+
+Even under resize storms, three invariants hold:
+
+1. **Identity preserved** — a panel keeps its `panel_id` across all
+   reflows; in-panel state survives.
+2. **Order preserved** — a slot's panel ordering doesn't shuffle on
+   resize. New panels can land; existing panels stay in their relative
+   position.
+3. **No reflow loops** — the conductor's diff loop is single-pass per
+   trigger; a resize that causes one reflow does not retrigger another
+   resize event. (Achieved by computing the size_class **after** the
+   reflow has settled, against the *post-reflow* slot width.)
+
+---
+
+## §18 Multi-graph gating (`graph_gate_v1`)
+
+The conductor reasons over **five registered graphs**. Each graph is a
+precondition layer that gates which panels can spawn and which actions
+panels can offer. A spawn_rule or an in-panel action can declare
+`gates: [...]` — ALL gates must be satisfied for the rule to fire / the
+action to enable.
+
+### §18.1 The five graphs (v0.1)
+
+| `graph_id`              | Nodes | Edges | Built from |
+|---|---|---|---|
+| `vocab_graph`           | domains / concepts / registry-vocab targets / instances (4-layer; from `LLM_FUNNEL_SPEC.md`) | `alias / is_a / requires / belongs_to` | `vocabulary/*.tsv` + `vocabulary/edges.tsv` |
+| `layer_graph`           | layer_ids | `consumed_by / produced_by` | `layer_registry.jsonl` + `analysis_modes.jsonl` (`required_dimensions` / `produces`) |
+| `chain_graph`           | analysis_ids flagged as chains | required → producer edges | derived from chain audit (§14 of MANAGER_SPEC) |
+| `scope_graph`           | atlas → cohort → sample_set → interval_set → candidate_id | `contains / scoped_to` | `atlases.jsonl` + `sample_sets.jsonl` + `interval_sets.jsonl` + scope ribbon |
+| `atlas_dependency_graph`| atlas_ids | `depends_on_atlases` | `atlases.jsonl` |
+
+Graphs are **declared**, not derived ad-hoc — each has a
+`01_registry/graphs/<graph_id>.json` cache (rebuilt by a librarian
+sub-task on registry reload). The conductor never walks the underlying
+JSONL itself; it walks the cached graphs.
+
+### §18.2 The `graph_gate_v1` shape
+
+```jsonc
+"gates": [
+  {
+    "graph":    "layer_graph",
+    "node":     "karyotype_calls",
+    "state":    "ready",          // ready | producer_not_run | no_producer
+    "describes":"don't spawn the burden panel until karyotype calls exist"
+  },
+  {
+    "graph":    "vocab_graph",
+    "level":    "concept",        // domain | concept | registry-vocab | instance
+    "any_of":   ["mendelian", "inheritance", "burden"],
+    "describes":"only when the user has activated an inheritance-flavored concept on page 1"
+  },
+  {
+    "graph":    "scope_graph",
+    "path":     "atlas/cohort/candidate_id",
+    "state":    "all_set",
+    "describes":"a fully-specified scope chain"
+  },
+  {
+    "graph":    "chain_graph",
+    "node":     "inversion_groupwise_popstats",
+    "tier":     ["one", "ready"],
+    "describes":"chain is at most one step from running"
+  },
+  {
+    "graph":    "atlas_dependency_graph",
+    "from":     "evolution_atlas",
+    "to":       "cross_species_atlas",
+    "state":    "satisfied"
+  }
+]
+```
+
+### §18.3 Gate evaluator semantics
+
+- All gates are AND-ed. No `or:` at gate level; use repeated rules for
+  alternatives.
+- A gate over a graph the conductor does NOT know is a **hard fail**
+  (logged, the rule does not fire). No silent pass-through.
+- Gate evaluation is **pure**: same graph state + same gate spec →
+  same verdict. No randomness, no time-dependent predicates.
+- Gates can be **negated** by appending `"negate": true` (rare; reserved
+  for explicit dismiss rules).
+
+### §18.4 Why graph gating, not free predicates
+
+Earlier (§6.1) the `when` clause used named registered predicates.
+Multi-graph gating is the **typed** evolution of that pattern: instead
+of opaque predicate names like `has_one_step_chains`, gates name a
+graph + node + expected state. The conductor can show the user
+*exactly* which gate failed and which graph said so — a debuggable
+spawn decision, not a black-box yes/no.
+
+---
+
+## §19 Event triggers & action gating (`panel_event_v1`)
+
+The conductor's diff loop is driven by a fixed set of events. Each
+event is typed; no `kind: "other"`, no free-form payload.
+
+### §19.1 The v0.1 event catalogue
+
+| `event_kind`              | Emitted by | Payload |
+|---|---|---|
+| `scope_change`            | scope ribbon | `{from, to, changed_keys[]}` |
+| `page_load`               | page chrome | `{page_id}` |
+| `registry_reload`         | registry watcher | `{files[], registry_version}` |
+| `chain_audit_refresh`     | chain audit | `{summary, per_chain_tier{}}` |
+| `vocab_concept_picked`    | LLM funnel stage 3 | `{level, concept_ids[], domain_ids[]}` |
+| `goal_set`                | LLM funnel stage 1 | `{goal, targets[], exclusions[]}` |
+| `manifest_ready`          | LLM funnel stage 5 | `{action_id, manifest}` |
+| `analysis_proposed`       | dispatcher | `{action_id, analysis_id, expected_outputs[]}` |
+| `analysis_started`        | runner | `{action_id, started_at}` |
+| `analysis_succeeded`      | runner | `{action_id, produced_layers[]}` |
+| `analysis_failed`         | runner | `{action_id, reason, retryable}` |
+| `layer_landed`            | librarian | `{layer_id, registered_at}` |
+| `user_dismissed_panel`    | UI | `{panel_id, scope_snapshot}` |
+| `user_pinned_panel`       | UI | `{panel_id, scope_snapshot}` |
+| `resize`                  | page chrome | `{viewport_px, per_slot_px{}}` |
+
+New event_kinds require a `panel_event_v2` bump.
+
+### §19.2 How events feed the diff loop
+
+```
+event → conductor.handle(event)
+            │
+            ▼
+        re-evaluate ALL spawn_rules
+            │
+            ▼
+        compute desired panel set
+            │
+            ▼
+        diff vs current → spawn / dismiss / reflow
+```
+
+The conductor never does anything event-specific in `handle()`. Every
+event takes the same path: **mark state dirty, re-evaluate rules**.
+This guarantees that a rule that *could* react to event X but also to
+event Y will react identically to both — no "rule registered for
+event_kind" coupling.
+
+### §19.3 Actions gated on graphs
+
+A `panel_v1` row can declare `actions: [...]` — the set of buttons /
+menu items the panel offers. Each action carries its own gates:
+
+```jsonc
+"actions": [
+  {
+    "action_id": "queue_chain",
+    "label":     "Queue chain manifest",
+    "kind":      "dispatch",
+    "gates": [
+      { "graph": "chain_graph",
+        "node":  "{{this_panel.chain_id}}",
+        "tier":  ["one", "ready"] },
+      { "graph": "scope_graph",
+        "path":  "atlas/cohort",
+        "state": "all_set" }
+    ],
+    "describes": "Enabled only when the chain is one-step-or-ready AND a cohort is locked in the scope."
+  },
+  {
+    "action_id": "copy_to_manuscript",
+    "label":     "Copy to manuscript chunk",
+    "kind":      "local",
+    "gates": [
+      { "graph": "vocab_graph",
+        "level": "concept",
+        "any_of": ["results", "interpretation", "burden"] }
+    ]
+  }
+]
+```
+
+Actions render in all three states:
+
+| State | Render |
+|---|---|
+| Allowed (all gates pass) | clickable button |
+| Blocked (≥1 gate fails)  | grayed button + tooltip: "blocked by gate `<graph>:<node>` (current state: `<state>`)" |
+| Hidden                   | only when the `kind` itself isn't supported on this page (rare) |
+
+The conductor NEVER silently strips a blocked action — the user must
+be able to see *what is possible in principle*, and *why it isn't
+available right now*. This is the same discipline as the unfilled
+manuscript placeholder rendering yellow on page 12: visible failure
+beats invisible omission.
+
+### §19.4 Conditional spawn = gate at rule level + gate at action level
+
+The two-level gating is intentional:
+
+- **Rule-level gates** decide IF a panel spawns at all.
+- **Action-level gates** decide WHICH buttons the panel offers once it's
+  spawned.
+
+So a panel can spawn (because the chain is registered) yet present a
+disabled "Queue manifest" button (because the chain is multi-step,
+not one-step). The user sees the panel, understands the gap, can
+remediate (run a producer) and watches the button enable.
+
+---
+
+## §20 LLM funnel integration (page 1 → conductor)
+
+The page-1 funnel (specified in `LLM_FUNNEL_SPEC.md`) has 5 stages.
+Each emits a typed artifact; the conductor consumes those artifacts via
+named events (§19.1), never via free-text.
+
+### §20.1 Per-stage event map
+
+| Funnel stage | Output | Event the conductor receives |
+|---|---|---|
+| 1. Decompose          | `funnel_stage_1_decomposition`  | `goal_set`               |
+| 2. Domain selection   | `funnel_stage_2_domain_selection` | `vocab_concept_picked` at `level: domain` |
+| 3. Keyword mapping    | `funnel_stage_3_keyword_mapping` | `vocab_concept_picked` at `level: concept` + at `level: registry-vocab` |
+| 4. Refinement Q&A     | `funnel_stage_4_refinement_*`   | `scope_change` (proposed scope edits) |
+| 5. Resolution         | `funnel_stage_5_contract_resolution` | `manifest_ready` |
+
+### §20.2 Multi-level vocabulary gating in practice
+
+The vocab_graph (§18.1) has four levels. The conductor uses level as a
+**resolution filter** for spawn rules — a rule that only makes sense
+once the user has narrowed to a specific registry-vocab term should
+gate at `level: registry-vocab`, not at `level: domain`.
+
+Example progression for the question *"Does this LG28 inversion
+follow Mendelian inheritance?"*:
+
+```
+Stage 1 → goal_set { targets:[LG28, inversion candidate], goal: validation }
+   ↓
+Stage 2 → vocab_concept_picked { level: domain,
+                                  domain_ids: [inheritance, structural_variation] }
+   ↓ Conductor: rules gated at level: domain may fire
+   ↓ → Spawns: inheritance_domain_overview_card
+              structural_variation_domain_overview_card
+   ↓
+Stage 3 → vocab_concept_picked { level: concept,
+                                  concept_ids: [mendelian, karyotype, inversion_candidate] }
+   ↓ Conductor: rules gated at level: concept may now fire
+   ↓ → Spawns: candidate_evidence_card (was waiting on this concept)
+              chain_readiness_panel filtered to inheritance chains
+   ↓ vocab_concept_picked { level: registry-vocab,
+                             concepts: [analysis_id:mendelian,
+                                        entity_type:inversion_candidate,
+                                        set_id_pattern:*LG28*] }
+   ↓ Conductor: rules gated at level: registry-vocab may now fire
+   ↓ → Spawns: mendelian_burden_card (needs analysis_id:mendelian binding)
+              hpp_kbc_crosscheck_card (needs entity_type:inversion_candidate)
+   ↓
+Stage 4 → scope_change { candidate_id: inv_LG28_INV_001 }
+   ↓ Conductor: scope_graph fully satisfied for the candidate path
+   ↓ → existing panels re-hydrate with the locked candidate
+   ↓ → "Queue manifest" actions on chain panels become enabled
+       (chain_graph + scope_graph gates both pass)
+   ↓
+Stage 5 → manifest_ready { action_id, manifest }
+   ↓ → Spawns: manifest_review_card (priority 95, slot:main, takeover)
+   ↓ → Shows the dispatcher proposal; user reviews → confirms → dispatch
+```
+
+Every spawn here is the conductor reacting to a typed event against
+typed gates against typed graphs. The LLM **never** chooses panels.
+It chooses **vocabulary**; the vocab choice activates gate nodes;
+gate-passing rules fire deterministic spawns.
+
+### §20.3 Why this preserves the §refusals
+
+The LLM is, in this architecture:
+
+- a **classifier** (free text → registered vocab nodes)
+- a **dialogue manager** (refinement Q&A in stage 4)
+- a **renderer** (the final manuscript-sentence paraphrase in stage 5,
+  if exposed)
+
+The LLM is NOT:
+
+- a panel chooser
+- a rule writer
+- an action runner
+- a vocabulary inventor (stage 3 maps to existing nodes; unknown
+  free-text goes to a `low_confidence` bucket and triggers stage-4
+  Q&A, not a registry write)
+
+This is the same discipline at the UI tier as the
+`LLM_FUNNEL_SPEC.md` §9 refusals at the funnel tier: the LLM proposes,
+deterministic registries dispose.
+
+---
+
+## §21 What §17–§20 add to the §11 refusals
+
+Carried + extended:
+
+9. **No reflow-loop instability.** §17.3 invariants hold; resize never
+   destabilizes the diff loop.
+10. **No untyped events.** Every `panel_event_v1` event has a fixed
+    schema in §19.1. Anything outside the catalogue is dropped, logged.
+11. **No unnamed graphs in gates.** §18.3: a gate over an unknown
+    graph is a hard fail. The five graphs in §18.1 are the v0.1
+    universe; new ones require a `graph_gate_v2` bump.
+12. **No silently-stripped actions.** §19.3: blocked actions render
+    as disabled with a tooltip naming the failed gate. The user
+    always sees what is possible in principle.
+13. **No LLM-driven rendering.** §20.3: the LLM picks vocabulary; the
+    vocab activates graph nodes; graph gates pass; rules fire; panels
+    spawn. Four indirections between free text and any pixel.
+
+---
+
+## §22 Files added in v0.1 (still spec-only)
+
+| File | Schema | Role |
+|---|---|---|
+| `01_registry/graphs/vocab_graph.json`            | derived cache | nodes + edges from `vocabulary/*.tsv` |
+| `01_registry/graphs/layer_graph.json`            | derived cache | from `layer_registry.jsonl` + `analysis_modes.jsonl` |
+| `01_registry/graphs/chain_graph.json`            | derived cache | from chain audit |
+| `01_registry/graphs/scope_graph.json`            | derived cache | from atlases + sample_sets + interval_sets |
+| `01_registry/graphs/atlas_dependency_graph.json` | derived cache | from `atlases.jsonl` |
+| `01_registry/events.example.jsonl`               | `panel_event_v1` examples | one valid event per kind, for tests |
+
+All caches are produced by a librarian sub-task on registry reload —
+they're not authored by hand. The conductor reads only the caches.
+
+---
+
+## §23 What's deferred (after v0.1)
+
+Carried forward from §16, plus new:
+
+- **Conductor runtime** — `lib/conductor.py` + `page/conductor.js`.
+- **Panel registry seed** — initial ~30 panels.
+- **Graph builders** — `lib/graphs/build_*.py`, one per `graph_id`
+  in §18.1.
+- **Event bus runtime** — a small in-browser pub/sub plus a server-side
+  webhook receiver for runner events (`analysis_succeeded` etc).
+- **LLM stage 3 → vocab_graph integration** — the conductor needs to
+  receive `vocab_concept_picked` events; today the funnel doesn't yet
+  emit those typed events (only the stage artifacts in spec form). PR
+  pending in funnel.
+- **Resize debounce tuning** — the 120 ms in §17.1 is a default; later
+  may be slot-class-specific.
+- **Cross-page panel migration** (still deferred from §16).
+
+---
+
+_End of DYNAMIC_PANELS_SPEC.md (v0.1)._

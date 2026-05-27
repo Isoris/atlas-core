@@ -1,8 +1,8 @@
 {
   "schema_version": "atlas_dependency_graph_v1",
-  "rewritten_at": "2026-05-27T14:02:06Z",
-  "n_nodes": 11,
-  "n_edges": 9,
+  "rewritten_at": "2026-05-27T16:46:09Z",
+  "n_nodes": 13,
+  "n_edges": 15,
   "nodes": [
     {
       "id": "atlas_core",
@@ -80,6 +80,20 @@
       "label": "Genome Atlas",
       "status": "experimental",
       "color": "#4a5d7e"
+    },
+    {
+      "id": "heterozygosity_atlas",
+      "kind": "atlas",
+      "label": "Heterozygosity Atlas",
+      "status": "experimental",
+      "color": "#5fa86b"
+    },
+    {
+      "id": "pods_atlas",
+      "kind": "atlas",
+      "label": "PODs Atlas",
+      "status": "experimental",
+      "color": "#a64ca6"
     }
   ],
   "edges": [
@@ -136,6 +150,42 @@
       "to": "meiosis_atlas",
       "kind": "depends_on",
       "satisfied": true
+    },
+    {
+      "from": "heterozygosity_atlas",
+      "to": "diversity_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "heterozygosity_atlas",
+      "to": "population_atlas",
+      "kind": "depends_on",
+      "satisfied": false
+    },
+    {
+      "from": "heterozygosity_atlas",
+      "to": "inversion_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "pods_atlas",
+      "to": "popstats_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "pods_atlas",
+      "to": "inversion_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "pods_atlas",
+      "to": "population_atlas",
+      "kind": "depends_on",
+      "satisfied": false
     }
   ]
 }

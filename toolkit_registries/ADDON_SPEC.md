@@ -242,9 +242,7 @@ The §refusals enforced across the spec docs:
 No registry rows. No code. Pure documentation.
 
 Future amendments:
-- A `check_addons.py` validator that walks an addon's manifest and
-  verifies every claimed row resolves cleanly. (Requires first
-  defining `addon_manifest_v1` — the addon's claim list.)
+- (none currently outstanding)
 
 Landed since v0:
 - ~~A formal `pages.jsonl` schema with slot inventory per page~~ —
@@ -256,6 +254,60 @@ Landed since v0:
   pages.jsonl directly. Step 4 of §5 (the `pageIdFromDoc()` map
   edit) is still required for the runtime page identifier, but the
   audit chain is registry-driven end-to-end.
+- ~~`check_addons.py` validator~~ — shipped: `addon_manifest_v1`
+  schema lands in `addons.jsonl`; each row enumerates `claims`
+  (registry filename → list of row ids it lands), `files` (relative
+  paths the addon ships under `toolkit_registries/`), `renderers`
+  (conductor.js dispatch entries), and `depends_on` (other
+  addon_ids). `check_addons` validates every claim against the
+  target registry's canonical id field (see `ID_FIELD_BY_FILE` in
+  the script), every file path, every dep. Wired into smoke
+  (22/22). See §10 below.
+
+---
+
+## §10 `addon_manifest_v1` — the row shape
+
+Each addon registers itself in `01_registry/addons.jsonl` with this
+row:
+
+```json
+{
+  "addon_id":       "<unique id>",
+  "schema_version": "addon_manifest_v1",
+  "label":          "<human-readable>",
+  "kind":           "<one of §1's six>",
+  "owner":          "<attribution string>",
+  "status":         "experimental | active | deprecated",
+  "claims": {
+    "panels.jsonl":      ["panel_id_a", "panel_id_b"],
+    "spawn_rules.jsonl": ["rule_id_x"],
+    "...":               ["..."]
+  },
+  "files":          ["bridge/<db>/endpoints.json", "..."],
+  "renderers":      ["renderMyPanelCard"],
+  "depends_on":     ["<other_addon_id>"],
+  "describes":      "<freeform>"
+}
+```
+
+Field semantics:
+
+| field | meaning | validated by `check_addons` |
+|---|---|---|
+| `addon_id`       | unique row key | duplicate detection |
+| `schema_version` | pin to `addon_manifest_v1` | exact match |
+| `kind`           | one of §1's six | enum check |
+| `status`         | lifecycle | enum check |
+| `claims`         | registry filename → row ids landed | each id must exist in the target registry; registry filename must be known (see `ID_FIELD_BY_FILE` in `check_addons.py`) |
+| `files`          | relative paths under `toolkit_registries/` | each must exist on disk |
+| `renderers`      | conductor.js dispatch entries (advisory) | not enforced (lax — runtime would show the dashed TODO placeholder anyway) |
+| `depends_on`     | other `addon_id`s | must resolve to another row |
+
+The validator catches the addon-author bug classes that the spec's
+§7 "no invented kinds / data_sources / when keys" rule is designed
+to surface — but at audit time, not at runtime when the conductor
+silently drops the spawn.
 
 ---
 

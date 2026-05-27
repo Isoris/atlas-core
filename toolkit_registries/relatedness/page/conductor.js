@@ -269,17 +269,23 @@
     // Reads external_databases.jsonl (in ctx via atlasFetchJsonl) and the
     // runtime 02_queue/bridge_log.jsonl (newline JSONL of {ts, db_id,
     // endpoint_id, url, ok, elapsed_ms}).
-    async function getLog() {
+    async function getLog(url) {
       try {
-        const r = await fetch("../02_queue/bridge_log.jsonl", { cache: "no-store" });
-        if (!r.ok) return [];
-        return (await r.text()).split("\n").filter(Boolean).map(l => {
+        const r = await fetch(url, { cache: "no-store" });
+        if (!r.ok) return null;
+        const rows = (await r.text()).split("\n").filter(Boolean).map(l => {
           try { return JSON.parse(l); } catch { return null; }
         }).filter(Boolean);
-      } catch { return []; }
+        return rows.length ? rows : null;
+      } catch { return null; }
     }
     const dbs = await window.atlasFetchJsonl("../01_registry/external_databases.jsonl");
-    const log = await getLog();
+    let log = await getLog("../02_queue/bridge_log.jsonl");
+    let isExample = false;
+    if (!log) {
+      log = await getLog("../02_queue/bridge_log.example.jsonl") || [];
+      isExample = log.length > 0;
+    }
     // Per-db roll-ups
     const perDb = {};
     for (const db of dbs) {
@@ -320,7 +326,8 @@
       <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
         ${dbs.length} external DBs registered · ${totalCalls} call${totalCalls === 1 ? "" : "s"} logged
         ${totalCalls > 0 ? ` · ${totalOk}/${totalCalls} ok` : ""}
-        · log: <code style="font-size:11px">02_queue/bridge_log.jsonl</code>
+        · log: <code style="font-size:11px">02_queue/bridge_log${isExample ? ".example" : ""}.jsonl</code>
+        ${isExample ? ` · <span style="background:#d69e2e;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase">example</span>` : ""}
       </div>
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead><tr>

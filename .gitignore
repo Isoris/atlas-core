@@ -20,5 +20,6 @@ Thumbs.db
 # something to render in a fresh checkout.
 toolkit_registries/relatedness/02_queue/*
 !toolkit_registries/relatedness/02_queue/plans/
+!toolkit_registries/relatedness/02_queue/*.example.*
 toolkit_registries/relatedness/02_queue/plans/*
 !toolkit_registries/relatedness/02_queue/plans/*.example.*

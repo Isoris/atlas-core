@@ -79,6 +79,8 @@ silent no-op (logged, never rendered).
 
 ### `kind` enum
 
+The 10 registered panel kinds, mirrored across both specs:
+
 | `kind`         | What it renders                                   |
 |---|---|
 | `card`         | A small summary block with key/value rows         |
@@ -92,7 +94,16 @@ silent no-op (logged, never rendered).
 | `bibliography` | A reference list (numbered, DOI-linked)           |
 | `empty`        | An explanatory empty state (no data yet)          |
 
-New `kind`s require a new spec version bump (`panel_v2`).
+The **canonical live catalogue** — including the typical
+`data_source.kind` for each kind, registered example panels, and
+the 3-step promotion process for adding a new kind — lives in
+[`ADDON_SPEC.md`](ADDON_SPEC.md) §2. This table is the kind-enum
+contract; ADDON_SPEC §2 is the operator's reference. Both must
+agree; when adding a new kind, update ADDON_SPEC §2 first (with
+the worked example), then mirror the row here. **No `panel_v2`
+spec bump is required** — adding a kind is additive within
+`panel_v1` so long as it lands in both tables and a renderer
+exists in `page/conductor.js`'s `RENDERERS` dispatch map.
 
 ---
 

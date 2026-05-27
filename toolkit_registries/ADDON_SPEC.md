@@ -40,12 +40,18 @@ contributes data + (optionally) a renderer if its panel kind is new.
 
 ---
 
-## §2 Panel kinds (DYNAMIC_PANELS_SPEC §2 + this v0 catalogue)
+## §2 Panel kinds — canonical live catalogue
 
 These are the `kind` values an addon can declare on a `panel_v1` row.
 Each has a registered renderer (or a documented fallback) — using a
 kind not on this list lands the "no renderer registered (TODO)"
-dashed placeholder per spec §11.
+dashed placeholder per DYNAMIC_PANELS_SPEC §11.
+
+This table is the **operator's source-of-truth**. DYNAMIC_PANELS_SPEC
+§2 mirrors the bare kind-enum but defers to this section for the
+typical `data_source.kind`, registered examples, and the in-place
+promotion process below — no `panel_v2` spec bump is required to
+add a new kind.
 
 | `kind` | what it renders | typical `data_source.kind` | example |
 |---|---|---|---|

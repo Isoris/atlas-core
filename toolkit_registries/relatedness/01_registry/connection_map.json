@@ -933,13 +933,13 @@
       "id": "karyotype_auto_caller",
       "type": "analysis",
       "label": "Karyotype auto caller",
-      "status": "stub"
+      "status": "experimental"
     },
     {
       "id": "karyotype_polarizer",
       "type": "analysis",
       "label": "Karyotype polarizer",
-      "status": "stub"
+      "status": "experimental"
     },
     {
       "id": "inversion_pair_incompatibility",
@@ -1836,7 +1836,7 @@
       "id": "karyotype_auto_caller_adapter",
       "type": "adapter",
       "label": "Karyotype auto caller",
-      "status": "stub",
+      "status": "experimental",
       "input_layer_types": [
         "candidate_registry",
         "chain_evidence",
@@ -1851,7 +1851,7 @@
       "id": "karyotype_polarizer_adapter",
       "type": "adapter",
       "label": "Karyotype polarizer",
-      "status": "stub",
+      "status": "experimental",
       "input_layer_types": [
         "unpolarized_karyotype_calls",
         "reference_genome_layer"
@@ -3104,7 +3104,7 @@
       "atlas_id": "inversion_atlas",
       "schema_version": "adapter_atlas_v1",
       "label": "Karyotype auto caller",
-      "description": "Calls per-sample karyotype (0/1/2) for each candidate from dosage + window-band signals + the candidate_registry.",
+      "description": "\"Calls per-sample karyotype (0/1/2) for each candidate from dosage + window-band signals + the candidate_registry. v0 uses fixed dosage_breaks + a (chain_score",
       "input_layer_types": [
         "candidate_registry",
         "chain_evidence",
@@ -3120,7 +3120,7 @@
       "example_input": "./example_input.json",
       "example_output": "./example_output.json",
       "trigger_policy": "manual",
-      "status": "stub",
+      "status": "experimental",
       "_path": "analysis/karyotype_auto_caller/adapter_atlas.js"
     },
     {
@@ -3129,7 +3129,8 @@
       "atlas_id": "inversion_atlas",
       "schema_version": "adapter_atlas_v1",
       "label": "Karyotype polarizer",
-      "description": "Polarises unpolarized_karyotype_calls against a reference / ancestral comparison so 0/1/2 carries direction.",
+      "description": "\"Polarises unpolarized_karyotype_calls so 0/1/2 carries direction (0 = reference-like",
+      "2 = derived/inverted-like). Decision tree": "reference_match (ref_dosage) / outgroup_vote / majority_allele / force_unchanged. Heterozygotes (class 1) are symmetric and never flip; NA propagates.\"",
       "input_layer_types": [
         "unpolarized_karyotype_calls",
         "reference_genome_layer"
@@ -3143,7 +3144,7 @@
       "example_input": "./example_input.json",
       "example_output": "./example_output.json",
       "trigger_policy": "manual",
-      "status": "stub",
+      "status": "experimental",
       "_path": "analysis/karyotype_polarizer/adapter_atlas.js"
     }
   ],

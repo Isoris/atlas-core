@@ -1,0 +1,39 @@
+{
+  "$id": "adapter_out_karyotype_polarizer_v0",
+  "schema_version": "adapter_out_v1",
+  "produces": {
+    "polarized_karyotype_calls": {
+      "type": "array",
+      "description": "One row per (sample, candidate) — same shape as unpolarized_karyotype_calls but the 0/1/2 axis now carries direction: 0 = reference-like, 2 = derived/inverted-like. Confidence + method are propagated; original_karyotype preserved.",
+      "items": {
+        "type": "object",
+        "required": ["sample_id","candidate_id","karyotype","original_karyotype","polarity","confidence","method"],
+        "properties": {
+          "sample_id":           { "type": "string" },
+          "candidate_id":        { "type": "string" },
+          "karyotype":           { "type": "string", "enum": ["0","1","2","NA"] },
+          "original_karyotype":  { "type": "string", "enum": ["0","1","2","NA"], "description": "The pre-polarization class from unpolarized_karyotype_calls — kept for audit." },
+          "polarity":            { "type": "string", "enum": ["unchanged","flipped","unknown"], "description": "`flipped` when polarization swapped 0 ↔ 2; `unchanged` when reference already matched class 0; `unknown` when polarity_source couldn't resolve." },
+          "confidence":          { "type": "string", "enum": ["low","medium","high"] },
+          "method":              { "type": "string" }
+        }
+      }
+    },
+    "polarity_summary": {
+      "type": "object",
+      "description": "Per-candidate polarity outcome — what the polarizer decided and why. Always emitted.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "candidate_id":     { "type": "string" },
+          "polarity":         { "type": "string", "enum": ["unchanged","flipped","unknown"] },
+          "polarity_source":  { "type": "string" },
+          "ref_dosage":       { "type": ["string","null"], "description": "Reference dosage that decided the call, when polarity_source = reference_match." },
+          "n_flipped_calls":  { "type": "integer" },
+          "n_unchanged_calls":{ "type": "integer" },
+          "n_na_calls":       { "type": "integer" }
+        }
+      }
+    }
+  }
+}

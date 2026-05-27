@@ -1,0 +1,39 @@
+{
+  "$id": "adapter_out_karyotype_auto_caller_v0",
+  "schema_version": "adapter_out_v1",
+  "produces": {
+    "unpolarized_karyotype_calls": {
+      "type": "array",
+      "description": "One row per (sample, candidate). Karyotype is on the 0/1/2 axis without polarity (the polarizer decides which direction is reference vs derived).",
+      "items": {
+        "type": "object",
+        "required": ["sample_id", "candidate_id", "karyotype", "confidence", "method"],
+        "properties": {
+          "sample_id":      { "type": "string" },
+          "candidate_id":   { "type": "string" },
+          "karyotype":      { "type": "string", "enum": ["0","1","2","NA"], "description": "Allele dosage class; NA when no call could be made above confidence_floor." },
+          "dosage":         { "type": "number", "description": "Underlying continuous dosage that produced the call (∈ [0, 2])." },
+          "chain_score":    { "type": "number", "description": "Aggregated chain_evidence support inside the candidate span (0–1)." },
+          "band_fraction":  { "type": "number", "description": "Fraction of windows in the candidate span whose window_band agrees with the called class (0–1)." },
+          "confidence":     { "type": "string", "enum": ["low","medium","high"] },
+          "method":         { "type": "string", "description": "Provenance tag (e.g. auto_v0)." }
+        }
+      }
+    },
+    "caller_summary": {
+      "type": "object",
+      "description": "Per-candidate roll-up (counts per class, n_NA, mean chain_score). Always emitted; small.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "n_total":           { "type": "integer" },
+          "n_class_0":         { "type": "integer" },
+          "n_class_1":         { "type": "integer" },
+          "n_class_2":         { "type": "integer" },
+          "n_na":              { "type": "integer" },
+          "mean_chain_score":  { "type": "number" }
+        }
+      }
+    }
+  }
+}

@@ -222,17 +222,61 @@
       </table>`);
   }
 
+  async function renderPlansSummaryCard(panel, _ctx) {
+    // Reads 02_queue/plans/index.json directly; falls back to the example
+    // seed if no live index exists. Not run through atlasFetchJsonl because
+    // the file is JSON, not JSONL.
+    async function getJson(url) {
+      try { const r = await fetch(url, { cache: "default" }); return r.ok ? r.json() : null; }
+      catch { return null; }
+    }
+    const idx = (await getJson("../02_queue/plans/index.json"))
+             || (await getJson("../02_queue/plans/index.example.json"));
+    if (!idx) {
+      return cardShell(panel, `
+        <div style="font-size:12px;color:var(--muted);font-style:italic;padding:6px 0">
+          No plan index. Run <code>python3 -m toolkit_registries.relatedness.lib.plan_generator</code> to populate.
+        </div>`);
+    }
+    const entries = idx.entries || [];
+    let ready = 0, oneStep = 0, blocked = 0;
+    for (const e of entries) {
+      const b = e.n_blocked || 0;
+      if (b === 0) ready++;
+      else if (b === 1) oneStep++;
+      else blocked++;
+    }
+    const stat = (n, lbl, color) =>
+      `<div style="flex:1;padding:8px 10px;background:${color}18;border-radius:4px;text-align:center">
+         <div style="font-size:18px;font-weight:600;color:${color}">${n}</div>
+         <div style="font-size:10.5px;color:#6c727f;text-transform:uppercase;letter-spacing:0.04em">${lbl}</div>
+       </div>`;
+    return cardShell(panel, `
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
+        ${entries.length} plan${entries.length === 1 ? "" : "s"} indexed · source: <code style="font-size:11px">02_queue/plans/</code>
+      </div>
+      <div style="display:flex;gap:6px">
+        ${stat(ready,   "ready",     "#2f855a")}
+        ${stat(oneStep, "one step",  "#2b6cb0")}
+        ${stat(blocked, "blocked",   "#c53030")}
+      </div>
+      <div style="margin-top:8px;font-size:11.5px">
+        <a href="plans.html" style="color:#2b6cb0;text-decoration:none">→ review on page 14</a>
+      </div>`);
+  }
+
   // Renderer dispatch by panel_id (each registered panel has its own renderer)
   const RENDERERS = {
     atlas_summary_card:              renderAtlasSummaryCard,
     cohort_summary_card:             renderCohortSummaryCard,
     adapter_completeness_card:       renderAdapterCompletenessCard,
     manuscript_chunks_summary_card:  renderManuscriptChunksSummaryCard,
+    plans_summary_card:              renderPlansSummaryCard,
   };
 
   // ---- diff & spawn ---- //
 
-  function diffAndSpawn(panels, rules, ctx) {
+  async function diffAndSpawn(panels, rules, ctx) {
     const pageId = pageIdFromDoc();
     const desired = new Map();   // panel_id → priority
     for (const r of rules) {
@@ -258,7 +302,7 @@
       const slot = pickSlot(panel);
       if (!slot) continue;
       const renderer = RENDERERS[pid];
-      const html = renderer
+      const rendered = renderer
         ? renderer(panel, ctx)
         : `<div class="conductor-panel" data-panel-id="${pid}"
                 style="background:#fff;border:1px dashed #d8dce3;border-radius:6px;padding:12px 14px;margin-bottom:12px">
@@ -267,6 +311,7 @@
                conductor: no renderer registered for kind "${panel.kind || "?"}" (TODO)
              </div>
            </div>`;
+      const html = (rendered && typeof rendered.then === "function") ? await rendered : rendered;
       const tmp = document.createElement("div");
       tmp.innerHTML = html;
       const el = tmp.firstElementChild;
@@ -289,7 +334,7 @@
 
   async function tick() {
     const [panels, rules, atlases, modules, modes, registry, cohorts, chunks, refs] = await load();
-    diffAndSpawn(panels, rules, { atlases, modules, modes, registry, cohorts, chunks, refs });
+    await diffAndSpawn(panels, rules, { atlases, modules, modes, registry, cohorts, chunks, refs });
   }
 
   // Trigger on load + on scope change + on cache refresh

@@ -81,6 +81,8 @@ def main():
              check_stdout=["OK"]),
         _run("check_plans", [sys.executable, "scripts/check_plans.py"], rel,
              check_stdout=["OK"]),
+        _run("check_chunks", [sys.executable, "scripts/check_chunks.py"], rel,
+             check_stdout=["OK"]),
         _run("resolve_layer (one layer)",
              [sys.executable, "scripts/resolve_layer.py", "--layer", "karyotype_calls"], rel,
              check_stdout=["RESOLVED"]),

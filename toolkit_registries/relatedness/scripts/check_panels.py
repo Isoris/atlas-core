@@ -20,9 +20,14 @@ panels + spawn rules and verifies:
   spawn_rules.jsonl:
     1. rule_id unique
     2. schema_version == 'spawn_rule_v1'
-    3. when.page[*] ∈ the known 14 page_ids
+    3. when.page[*] ∈ pages.jsonl (derived; no hardcoded enum)
     4. then.spawn[*].panel_id ∈ panels.jsonl
     5. then.dismiss[*].panel_id ∈ panels.jsonl
+    6. then.spawn[*]: when the target page declares a non-empty `slots`
+       inventory AND the panel declares `slot_affinity`, the
+       intersection must be non-empty (otherwise the conductor would
+       silently skip the spawn at runtime — surface it as an error
+       instead of a debug-only console line)
 
 Exit 0 / 1 like the rest of the suite.
 """
@@ -38,11 +43,6 @@ ALLOWED_DATA_SOURCE_KINDS = {
     "registry", "scope", "layer", "analysis_result",
     "chain_audit", "manuscript_chunk", "scope+registry", "file",
 }
-KNOWN_PAGE_IDS = {
-    "conversation","action","registries","catalogue","layers",
-    "candidate_review","graph_builder","readiness","layer_connector",
-    "workspace_health","queue","manuscript","adapters","plans",
-}
 
 
 def load_jsonl(p: pathlib.Path) -> list[dict]:
@@ -56,7 +56,15 @@ def check() -> list[str]:
     rules   = load_jsonl(REG / "spawn_rules.jsonl")
     atlases = {a["atlas_id"] for a in load_jsonl(REG / "atlases.jsonl")}
     layers  = {L["layer_id"] for L in load_jsonl(REG / "layer_registry.jsonl")}
+    pages   = load_jsonl(REG / "pages.jsonl")
     panel_ids = {p["panel_id"] for p in panels}
+    page_slots: dict[str, list[str]] = {
+        pg["page_id"]: (pg.get("slots") or []) for pg in pages if pg.get("page_id")
+    }
+    panel_slot_affinity: dict[str, list[str]] = {
+        p["panel_id"]: (p.get("slot_affinity") or []) for p in panels if p.get("panel_id")
+    }
+    known_page_ids = set(page_slots)
 
     # --- panels ---
     seen: set[str] = set()
@@ -96,12 +104,27 @@ def check() -> list[str]:
         if r.get("schema_version") != "spawn_rule_v1":
             errs.append(f"{rid}: schema_version != 'spawn_rule_v1' (got {r.get('schema_version')!r})")
         when = r.get("when") or {}
-        for pg in (when.get("page") or []):
-            if pg not in KNOWN_PAGE_IDS:
-                errs.append(f"{rid}.when.page: {pg!r} not in {sorted(KNOWN_PAGE_IDS)}")
+        target_pages = list(when.get("page") or [])
+        for pg in target_pages:
+            if pg not in known_page_ids:
+                errs.append(f"{rid}.when.page: {pg!r} not in pages.jsonl ({sorted(known_page_ids)})")
         for s in ((r.get("then") or {}).get("spawn") or []):
-            if s.get("panel_id") not in panel_ids:
-                errs.append(f"{rid}.then.spawn: panel_id {s.get('panel_id')!r} not in panels.jsonl")
+            sp_pid = s.get("panel_id")
+            if sp_pid not in panel_ids:
+                errs.append(f"{rid}.then.spawn: panel_id {sp_pid!r} not in panels.jsonl")
+                continue
+            affinity = panel_slot_affinity.get(sp_pid, [])
+            if not affinity:
+                continue
+            for pg in target_pages:
+                slots = page_slots.get(pg, [])
+                if not slots:
+                    continue
+                if not (set(slots) & set(affinity)):
+                    errs.append(
+                        f"{rid}.then.spawn: panel {sp_pid!r} slot_affinity {affinity} "
+                        f"has no overlap with page {pg!r} slots {slots}"
+                    )
         for s in ((r.get("then") or {}).get("dismiss") or []):
             if s.get("panel_id") not in panel_ids:
                 errs.append(f"{rid}.then.dismiss: panel_id {s.get('panel_id')!r} not in panels.jsonl")

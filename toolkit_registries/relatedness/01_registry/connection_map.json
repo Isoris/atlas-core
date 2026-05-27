@@ -1,7 +1,7 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 309,
+  "n_nodes": 316,
   "n_edges": 245,
   "warnings": [],
   "nodes": [
@@ -1769,6 +1769,48 @@
       "type": "page",
       "label": "Graph builder",
       "status": "active"
+    },
+    {
+      "id": "readiness",
+      "type": "page",
+      "label": "Readiness",
+      "status": "active"
+    },
+    {
+      "id": "layer_connector",
+      "type": "page",
+      "label": "Layer connector",
+      "status": "active"
+    },
+    {
+      "id": "workspace_health",
+      "type": "page",
+      "label": "Workspace health",
+      "status": "active"
+    },
+    {
+      "id": "queue",
+      "type": "page",
+      "label": "Queue",
+      "status": "active"
+    },
+    {
+      "id": "manuscript",
+      "type": "page",
+      "label": "Manuscript",
+      "status": "active"
+    },
+    {
+      "id": "adapters",
+      "type": "page",
+      "label": "Adapters",
+      "status": "active"
+    },
+    {
+      "id": "plans",
+      "type": "page",
+      "label": "Plans",
+      "status": "experimental"
     },
     {
       "id": "discovery_karyotype_package",

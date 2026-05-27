@@ -1,8 +1,8 @@
 {
   "schema_version": "panel_coverage_graph_v1",
-  "rewritten_at": "2026-05-27T13:47:48Z",
-  "n_nodes": 142,
-  "n_edges": 187,
+  "rewritten_at": "2026-05-27T13:49:55Z",
+  "n_nodes": 143,
+  "n_edges": 188,
   "nodes": [
     {
       "id": "atlas_core",
@@ -855,6 +855,12 @@
       "kind": "panel",
       "label": "Plans \u2014 actionable count",
       "atlas": "atlas_core"
+    },
+    {
+      "id": "bridge_summary_card",
+      "kind": "panel",
+      "label": "Bridge \u2014 per-DB call summary",
+      "atlas": "atlas_core"
     }
   ],
   "edges": [
@@ -880,6 +886,11 @@
     },
     {
       "from": "plans_summary_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "bridge_summary_card",
       "to": "atlas_core",
       "kind": "panel_in_atlas"
     },
@@ -1942,7 +1953,7 @@
       "evolution_atlas": 11
     },
     "panels_per_atlas": {
-      "atlas_core": 5
+      "atlas_core": 6
     }
   }
 }

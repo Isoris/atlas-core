@@ -1,9 +1,9 @@
 # DYNAMIC_PANELS_SPEC — the UI composes itself from the registry
 
-Status: **v0.1 (frozen contracts).**
+Status: **v0.2 (frozen contracts).**
 Schema versions: `panel_v1`, `spawn_rule_v1`, `layout_policy_v1`,
-`fluidity_v1` (added §17), `graph_gate_v1` (added §18), `panel_event_v1`
-(added §19).
+`fluidity_v1`, `graph_gate_v1`, `panel_event_v1`,
+`panel_requirement_v1` (added §24), `panel_plan_v1` (added §27).
 
 > The librarian resolves layer state.
 > The manager classifies product readiness + estimability.
@@ -873,4 +873,386 @@ Carried forward from §16, plus new:
 
 ---
 
-_End of DYNAMIC_PANELS_SPEC.md (v0.1)._
+---
+
+## §24 Per-analysis panel requirements (`panel_requirement_v1`)
+
+Every chain and every atomic analysis can declare a `panel_requirements`
+block on its `analysis_registry` row (additive — old rows without the
+block remain valid; the conductor treats absence as "no declared
+requirements", same as today).
+
+The block names the panels the analysis needs to **stage** inputs,
+**render** outputs, **propose** actions, and **narrate** results.
+This makes the analysis the source of truth for "what UI does this
+analysis want?" — not a separate spawn rule.
+
+### §24.1 The shape
+
+```jsonc
+"panel_requirements": {
+  "schema_version": "panel_requirement_v1",
+  "stage": [
+    { "panel_id": "candidate_picker",
+      "role": "scope_input",
+      "required": true,
+      "gates": [ {"graph":"scope_graph","path":"atlas/cohort","state":"all_set"} ] }
+  ],
+  "render": [
+    { "panel_id": "mendelian_burden_card",
+      "role": "primary_result",
+      "required": true,
+      "expects_layers": ["hpp_offspring_gene_status"] },
+    { "panel_id": "contradiction_table",
+      "role": "drill_down",
+      "required": false }
+  ],
+  "propose": [
+    { "panel_id": "next_action_proposal",
+      "role": "action",
+      "required": false,
+      "gates": [ {"graph":"chain_graph","node":"{{self}}","tier":["one","ready"]} ] }
+  ],
+  "narrate": [
+    { "panel_id": "manuscript_chunks_panel",
+      "role": "writeup",
+      "required": false,
+      "filter": { "manuscript_chunks.analysis_id": "{{self}}" } }
+  ],
+  "notes": "{{self}} is substituted with this analysis_id at evaluation time."
+}
+```
+
+### §24.2 The four roles
+
+| `role`            | When the panel matters |
+|---|---|
+| `scope_input`     | Before the analysis can run — gathers the parameters / scope it needs |
+| `primary_result`  | The headline output rendering once the analysis has run |
+| `drill_down`      | Optional secondary views (contradictions, per-sample tables, residuals) |
+| `action`          | "What can the user DO next" — dispatch a follow-up, copy a sentence, queue a manifest |
+| `writeup`         | Manuscript chunks tied to this analysis (page-12-style) |
+
+The roles are descriptive (helps the conductor's layout policy decide
+slot affinity) — not a hard contract on what the panel renders.
+
+### §24.3 Why declare requirements on the analysis, not in a separate spawn rule
+
+Three reasons:
+
+1. **Single source of truth.** A new analysis lands → its row declares
+   the panels it wants. No second JSONL to update, no risk of drift
+   between "what the analysis produces" and "what the UI knows to show".
+2. **Composable plans.** A chain that runs analyses A → B → C can union
+   the panel_requirements of A, B, and C automatically. The conductor
+   builds the spawn plan from the analysis-side declarations.
+3. **Audit-friendly.** "Why did this panel spawn?" → walk back to the
+   analysis that declared it. The provenance is one hop, not a
+   debugging session through generic spawn rules.
+
+Spawn rules (§6) still exist for **page-level** spawn decisions
+(dismiss-on-no-scope, default panels per page). Analysis-level panel
+requirements handle the **what-does-this-analysis-need** dimension.
+
+---
+
+## §25 The panel coverage graph (`panel_coverage_graph`)
+
+A sixth registered graph, derived from §24 declarations:
+
+| Node kind | Edges |
+|---|---|
+| `analysis` (analysis_id)     | `requires →` panels (per §24 stage/render/propose/narrate role) |
+| `panel` (panel_id)           | `serves ←` analyses; `belongs_to →` atlas |
+| `chain` (analysis_id, chain) | `composes →` member analyses |
+
+The graph answers four questions:
+
+| Question | Walk |
+|---|---|
+| "What panels does analysis X need?" | from `analysis:X` outward |
+| "What analyses does panel Y serve?" | from `panel:Y` inward |
+| "What's the union of panels for chain Z?" | from `chain:Z` → composed analyses → unioned panel set |
+| "Which atlases share panel Y?" | from `panel:Y` via `belongs_to` |
+
+This is the bridge between the **operation registry** and the **UI
+registry**. The conductor reads it for pre-flight planning (§27);
+page 4 (Catalogue) reads it to show which panels back each module
+card; page 12 (Manuscript) reads it to filter chunks per atlas.
+
+Like all graphs in §18, this one is a CACHE — rebuilt by a librarian
+sub-task on registry reload. The conductor never walks the analysis
+JSONL directly.
+
+---
+
+## §26 Vocabulary-level panel routing
+
+The vocab_graph (§18.1) has four levels. Panel requirements can be
+declared at **any level** — the conductor matches them against the
+LLM funnel's stage-3 activation events.
+
+| vocab level         | Example panel binding                       |
+|---|---|
+| `domain`            | `panel:inheritance_domain_overview`         |
+| `concept`           | `panel:mendelian_burden_card`               |
+| `registry-vocab`    | `panel:mendelian_per_candidate_card` (binds analysis_id=mendelian) |
+| `instance`          | `panel:trio_F042_F043_F088_detail` (binds specific samples) |
+
+A `panel_requirement_v1` row can carry an optional
+`vocab_binding` field:
+
+```jsonc
+{ "panel_id": "mendelian_burden_card",
+  "role": "primary_result",
+  "vocab_binding": {
+    "level": "concept",
+    "concept_ids": ["mendelian", "burden", "transmission"]
+  }
+}
+```
+
+The panel becomes spawn-eligible once **any** of those concept_ids
+appears in a `vocab_concept_picked` event (§19.1). This is the
+mechanism that gives the LLM funnel a **progressive panel surface**:
+domain-level panels spawn early (stage 2), concept-level panels join
+in (stage 3), registry-vocab-level panels narrow further (still
+stage 3), and instance-level panels lock in at stage 4 once the user
+confirms a specific candidate / sample / trio.
+
+§20.2's worked example walks all four levels for the
+"Does LG28 follow Mendelian inheritance?" question; §26 is the
+formalisation that lets the same logic apply to any future question
+without writing new spawn rules.
+
+---
+
+## §27 Research plans (`panel_plan_v1`)
+
+Pre-flight orchestration. Before any analysis runs, the conductor can
+produce a **panel plan** — the ordered, gated set of panels that
+will spawn as the plan executes. The plan is reviewable, dismissable,
+diffable; it's the UI equivalent of `dispatcher_plan_v1` (see
+DISPATCHER_SPEC §2).
+
+### §27.1 Plan generation
+
+```
+research goal (text or chain selection)
+        │
+        ▼
+LLM funnel resolves to a chain or analysis set
+        │
+        ▼
+Conductor walks panel_coverage_graph from each analysis
+        │
+        ▼
+Unions panel_requirements (stage / render / propose / narrate)
+        │
+        ▼
+Sorts by role: scope_input first, render next, propose last
+        │
+        ▼
+Annotates each panel with: gates status, required scope keys,
+                            expected_layers, atlas
+        │
+        ▼
+Emits panel_plan_v1
+```
+
+### §27.2 The shape
+
+```jsonc
+{
+  "schema_version": "panel_plan_v1",
+  "plan_id":        "plan_1779495013_lg28_mendelian",
+  "generated_at":   "2026-05-23T14:00:00Z",
+  "goal":           "Validate Mendelian inheritance of inv_LG28_INV_001",
+  "source": {
+    "kind":         "funnel",                            // funnel | chain_pick | manual
+    "funnel_session": "fnl_…",
+    "vocab_activated": [
+      {"level": "domain",  "id": "inheritance"},
+      {"level": "concept", "id": "mendelian"},
+      {"level": "registry-vocab", "kind": "analysis_id", "id": "mendelian"},
+      {"level": "instance", "kind": "candidate_id", "id": "inv_LG28_INV_001"}
+    ]
+  },
+  "scope_required": {
+    "atlas":         "inversion_atlas",
+    "cohort":        "cgar_hatchery_226",
+    "sample_set":    "qcpass_226",
+    "candidate_id":  "inv_LG28_INV_001"
+  },
+  "steps": [
+    {
+      "phase":      "stage",
+      "panel_id":   "candidate_picker",
+      "role":       "scope_input",
+      "from_analysis": "mendelian",
+      "gates_status": [ {"graph":"scope_graph","node":"candidate_id","state":"all_set","passes":true} ]
+    },
+    {
+      "phase":      "render",
+      "panel_id":   "mendelian_burden_card",
+      "role":       "primary_result",
+      "from_analysis": "mendelian",
+      "expects_layers": ["mendelian_result"],
+      "gates_status": [ {"graph":"layer_graph","node":"mendelian_result","state":"producer_not_run","passes":false} ]
+    },
+    {
+      "phase":      "propose",
+      "panel_id":   "next_action_proposal",
+      "role":       "action",
+      "from_analysis": "mendelian",
+      "actions": [
+        { "action_id": "queue_chain",
+          "gates_status": [ {"graph":"chain_graph","node":"mendelian","tier":"one","passes":true} ],
+          "enabled": true }
+      ]
+    },
+    {
+      "phase":      "narrate",
+      "panel_id":   "manuscript_chunks_panel",
+      "role":       "writeup",
+      "from_analysis": "mendelian",
+      "filter": { "manuscript_chunks.analysis_id": "mendelian" }
+    }
+  ],
+  "summary": {
+    "n_steps":          4,
+    "n_ready":          1,
+    "n_gated_blocked":  1,
+    "n_actions_enabled":1,
+    "first_unblocking_action": "run_mendelian_module"
+  },
+  "_provenance": {
+    "from_dispatcher_plan_id": "disp_plan_…",
+    "atlas":                    "inversion_atlas",
+    "cohort":                   "cgar_hatchery_226"
+  }
+}
+```
+
+### §27.3 What the plan is for
+
+1. **Pre-flight review.** User sees, before any analysis runs,
+   exactly which panels will spawn and which actions will be
+   available. No surprise UI.
+2. **Bottleneck surfacing.** `n_gated_blocked` + `first_unblocking_action`
+   answer "what's the cheapest move to make this plan executable?" —
+   same as chain audit, but at the *plan* (multi-chain) granularity.
+3. **Manuscript pre-population.** The `narrate` phase steps list the
+   manuscript chunks tied to the analyses in the plan; page 12 can
+   pre-select them so the writeup grows alongside the analysis run.
+4. **Diff-against-current.** A plan can be diffed against the current
+   panel state to know which spawns are pending vs already present —
+   useful for "resume" affordances after a refresh.
+
+### §27.4 Plan lifecycle
+
+```
+generate → review → (edit | accept | dismiss) → execute
+   │           │            │           │
+   │           │            │           ▼
+   │           │            │     spawn the steps as gates clear
+   │           │            │     emit panel_event for each spawn
+   │           │            │     update plan.summary live
+   │           │            ▼
+   │           │     plan is discarded; no panel state changed
+   │           ▼
+   │     user can pin / unpin individual steps before accept;
+   │     edits are recorded as a delta on the plan
+   ▼
+   plan is persisted as 02_queue/plans/<plan_id>.json
+   (mirrors the dispatcher's 02_queue/<action_id>.json convention)
+```
+
+Plans live alongside dispatcher manifests in `02_queue/plans/`.
+Same browser-readable index pattern (`02_queue/plans/index.json`).
+Same runtime-state directory: gitignored, conductor writes, page UI
+reads.
+
+### §27.5 Why plans, not just rules
+
+Spawn rules are **reactive** — they fire on an event. Plans are
+**deliberative** — they pre-compute the full panel arc for a chosen
+goal. Both coexist:
+
+| | Spawn rules (§6) | Panel plans (§27) |
+|---|---|---|
+| Trigger | event (scope change, vocab pick, …) | explicit goal / chain selection / funnel resolution |
+| Granularity | one rule, zero-or-more panels | one plan, ordered multi-phase arc |
+| Visible to user before fire? | no (panels appear) | yes (review before execute) |
+| Persisted? | no (rule lives in registry) | yes (02_queue/plans/<id>.json) |
+| Idempotent? | yes, on every re-eval | yes, accept-once; re-accept re-spawns |
+
+A typical session: spawn rules carry the moment-to-moment UI; a panel
+plan handles the "I want to validate this candidate end-to-end"
+moments.
+
+---
+
+## §28 §refusals extended again (+5 → 18 total)
+
+Carrying forward §11 (1-8) and §21 (9-13):
+
+14. **No panel requirement on the panel side.** A panel CANNOT
+    declare "I should spawn for analysis X" — only the analysis can
+    declare "I need panel X". Prevents reverse dependencies and
+    keeps the operation registry as the single source of truth for
+    coverage (§24.3).
+15. **No plan execution without scope satisfaction.** Plans require
+    `scope_required` to be satisfied before any non-`stage` step
+    spawns. A plan cannot rush through scope by guessing.
+16. **No silent plan rewrites.** Once accepted, a plan is immutable
+    in `02_queue/plans/<plan_id>.json`. Updates produce a NEW
+    plan_id; the old one's state is preserved for audit.
+17. **No vocab_binding above the resolution it claims.** A
+    requirement bound at `level: registry-vocab` cannot spawn from a
+    domain-level activation. The conductor verifies the level chain
+    matches before granting eligibility.
+18. **No analysis-side panel that mutates the analysis.** Panels
+    surfaced for an analysis can NEVER edit that analysis's
+    registry row, parameters, or results. Edits go through the
+    dispatcher (params) or the librarian (registration) — not via
+    the panel.
+
+---
+
+## §29 Files added in v0.2 (still spec-only)
+
+Carried from §22, plus:
+
+| File | Schema | Role |
+|---|---|---|
+| `01_registry/graphs/panel_coverage_graph.json` | derived cache | sixth graph; analysis↔panel edges (§25) |
+| `02_queue/plans/<plan_id>.json`                | `panel_plan_v1` | one per accepted plan (§27) |
+| `02_queue/plans/index.json`                    | derived index | browser-readable plan list, mirrors `02_queue/index.json` |
+
+Plus the analysis_registry rows pick up an optional `panel_requirements`
+block (additive — old rows still validate).
+
+---
+
+## §30 What's deferred (after v0.2)
+
+Carried from §23, plus:
+
+- **panel_requirements seed** — concrete blocks for the 17 currently
+  registered chains. A "panel-requirement-seed" PR will land them
+  once the runtime conductor can read them.
+- **Plan UI** — page 13 (or a panel kind `plan_review`) that renders
+  a `panel_plan_v1` with phase strips, gate status pills, and
+  Accept / Edit / Dismiss buttons.
+- **Plan diff renderer** — visualises a plan diffed against the
+  current panel state (which steps will spawn, which are already
+  there, which need an upstream run first).
+- **Chain → plan auto-promotion** — if the chain audit reports a
+  `one-step` chain and the user opens that chain's page, the
+  conductor can auto-generate a `panel_plan_v1` and present it for
+  review. Same diff loop as today, just with a plan object on top.
+
+---
+
+_End of DYNAMIC_PANELS_SPEC.md (v0.2)._

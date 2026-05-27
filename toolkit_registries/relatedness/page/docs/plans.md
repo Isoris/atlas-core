@@ -44,7 +44,15 @@ Accept does NOT execute the plan on its own (no runtime conductor for plans yet)
 
 ## What to edit fast
 
-- New plan to review? Drop a `panel_plan_v1` JSON under `02_queue/plans/` and add an entry to `02_queue/plans/index.json`.
+- **Regenerate all plans from the live registry:**
+  ```
+  python3 -m toolkit_registries.relatedness.lib.plan_generator
+  ```
+  Walks every registered chain, infers panel_plan_v1 stage/render/propose/narrate steps from required_dimensions + produces + manuscript chunks, writes one `plan_auto_<chain>.json` per chain to `02_queue/plans/` and rewrites `index.json`. The example seed (`plan_*.example.json`) is preserved.
+
+- Dry-run first: `--list` prints what would be written.
+- Clear auto-plans: `--clear` removes everything except `*.example.*`.
+- New manual plan? Drop a `panel_plan_v1` JSON under `02_queue/plans/` and re-run the generator (it rebuilds the index over every `plan_*.json` present).
 - Reset acceptance state? `localStorage.removeItem('atlas_plan_accepted_v1')` in devtools.
 
 ## §refusals

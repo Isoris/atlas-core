@@ -1,0 +1,70 @@
+{
+  "schema_version": "bridge_endpoint_v1",
+  "db_id": "ncbi",
+  "endpoints": [
+    {
+      "endpoint_id":  "ncbi_esearch",
+      "label":        "Entrez search (any Entrez database)",
+      "method":       "GET",
+      "path":         "/esearch.fcgi",
+      "params": {
+        "db":       {"required": true,  "kind": "query"},
+        "term":     {"required": true,  "kind": "query"},
+        "retmax":   {"required": false, "kind": "query", "default": 20},
+        "retstart": {"required": false, "kind": "query", "default": 0},
+        "retmode":  {"required": false, "kind": "query", "default": "json"},
+        "api_key":  {"required": false, "kind": "query"}
+      },
+      "returns_layer": "ncbi_esearch_hits",
+      "cache_seconds": 3600,
+      "describes":    "Entrez search. db ∈ {gene, nucleotide, protein, taxonomy, assembly, biosample, bioproject, ...}. Returns idlist[] which efetch / esummary consume."
+    },
+    {
+      "endpoint_id":  "ncbi_esummary",
+      "label":        "Entrez summary (compact records by uid)",
+      "method":       "GET",
+      "path":         "/esummary.fcgi",
+      "params": {
+        "db":      {"required": true,  "kind": "query"},
+        "id":      {"required": true,  "kind": "query"},
+        "retmode": {"required": false, "kind": "query", "default": "json"},
+        "api_key": {"required": false, "kind": "query"}
+      },
+      "returns_layer": "ncbi_esummary",
+      "cache_seconds": 604800,
+      "describes":    "DocSum records by uid. id is comma-separated. Fast metadata lookup; use efetch when full records are needed."
+    },
+    {
+      "endpoint_id":  "ncbi_efetch",
+      "label":        "Entrez fetch (full records by uid)",
+      "method":       "GET",
+      "path":         "/efetch.fcgi",
+      "params": {
+        "db":       {"required": true,  "kind": "query"},
+        "id":       {"required": true,  "kind": "query"},
+        "rettype":  {"required": false, "kind": "query"},
+        "retmode":  {"required": false, "kind": "query", "default": "xml"},
+        "api_key":  {"required": false, "kind": "query"}
+      },
+      "returns_layer": "ncbi_efetch_records",
+      "cache_seconds": 2592000,
+      "describes":    "Full Entrez records. rettype examples: 'gb' for nucleotide GenBank, 'fasta' for sequence, 'native' for taxonomy. xml is most general; passthrough as text."
+    },
+    {
+      "endpoint_id":  "ncbi_elink",
+      "label":        "Entrez linked records across databases",
+      "method":       "GET",
+      "path":         "/elink.fcgi",
+      "params": {
+        "dbfrom":   {"required": true,  "kind": "query"},
+        "db":       {"required": true,  "kind": "query"},
+        "id":       {"required": true,  "kind": "query"},
+        "retmode":  {"required": false, "kind": "query", "default": "json"},
+        "api_key":  {"required": false, "kind": "query"}
+      },
+      "returns_layer": "ncbi_elink_records",
+      "cache_seconds": 604800,
+      "describes":    "Walk cross-database links (e.g. dbfrom=gene db=nucleotide). Useful for gene → genome assembly hops without local mapping tables."
+    }
+  ]
+}

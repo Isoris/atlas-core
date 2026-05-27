@@ -1,0 +1,43 @@
+{
+  "schema_version": "bridge_endpoint_v1",
+  "db_id": "pdb",
+  "endpoints": [
+    {
+      "endpoint_id":  "pdb_entry",
+      "label":        "PDB entry by id",
+      "method":       "GET",
+      "path":         "/core/entry/{entry_id}",
+      "params": {
+        "entry_id": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "pdb_entries",
+      "cache_seconds": 604800,
+      "describes":    "Full RCSB entry core record (e.g. 1ATP) — title, authors, experimental method, resolution, polymer entity ids."
+    },
+    {
+      "endpoint_id":  "pdb_polymer_entity",
+      "label":        "PDB polymer entity (chain) within an entry",
+      "method":       "GET",
+      "path":         "/core/polymer_entity/{entry_id}/{entity_id}",
+      "params": {
+        "entry_id":  {"required": true, "kind": "path"},
+        "entity_id": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "pdb_polymer_entities",
+      "cache_seconds": 604800,
+      "describes":    "Per-chain record: sequence, UniProt cross-refs, length, organism. Cross-walk PDB ↔ UniProt without local mapping."
+    },
+    {
+      "endpoint_id":  "pdb_uniprot_xref",
+      "label":        "PDB entries linked to a UniProt accession",
+      "method":       "GET",
+      "path":         "/core/uniprot/{accession}",
+      "params": {
+        "accession": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "pdb_uniprot_xrefs",
+      "cache_seconds": 604800,
+      "describes":    "Find all PDB structures that contain a given UniProt protein. Direct UniProt → PDB hop."
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id":     "tree_layer.schema.json",
+  "title":   "tree-layer entry per SPEC_tree_layers_v1",
+  "description": "Validates a single tree-layer entry within an atlas's layers.registry.json. Tree-layers declare a directory of artifacts (vs the existing scalar layer family which declares one URL). See atlas-core/docs/SPEC_tree_layers_v1.md for the full specification.",
+  "type": "object",
+  "required": ["layer_id", "kind", "label", "root", "tree"],
+  "additionalProperties": true,
+  "properties": {
+    "$schema": { "type": "string" },
+    "_doc":    { "type": "string" },
+    "layer_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+      "description": "Stable slug. Unique within the atlas's layers.registry.json. Allows mixed case so established bioinformatics conventions (passA, passB, etc.) round-trip; cohort_ids stay strict-lowercase (cohorts.schema.json) because they're a smaller, curated set."
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["tree"],
+      "description": "Discriminator. Always 'tree' for tree-layers; scalar layers omit this field."
+    },
+    "label": { "type": "string", "minLength": 1 },
+    "version": {
+      "type": ["integer", "number"],
+      "minimum": 1,
+      "description": "Per-layer version. Independent of the tree_layer SCHEMA version."
+    },
+    "cohort_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Cohort this layer's data belongs to. Cross-validated against cohorts.registry.json."
+    },
+    "reference_id": {
+      "type": "string",
+      "description": "Reference assembly id (e.g. fClaHyb_Gar_LG)."
+    },
+    "produced_by": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "workflow_id (from workflows.registry.json) that emits this tree. Tree-layer staleness is the workflow's status."
+    },
+    "root": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Root directory path (relative to atlas root) for the tree."
+    },
+    "tree": {
+      "type": "object",
+      "description": "Tree structure. Keys are child names, values are nodes ({dir} or {leaf}).",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/definitions/node" }
+    }
+  },
+  "definitions": {
+    "node": {
+      "oneOf": [
+        { "$ref": "#/definitions/dir_explicit" },
+        { "$ref": "#/definitions/dir_pattern" },
+        { "$ref": "#/definitions/leaf" }
+      ]
+    },
+    "dir_explicit": {
+      "type": "object",
+      "required": ["kind", "children"],
+      "additionalProperties": false,
+      "properties": {
+        "kind":  { "const": "dir" },
+        "label": { "type": "string" },
+        "children": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/definitions/node" }
+        }
+      }
+    },
+    "dir_pattern": {
+      "type": "object",
+      "required": ["kind", "children_pattern", "leaf_kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind":             { "const": "dir" },
+        "label":            { "type": "string" },
+        "children_pattern": { "type": "string", "minLength": 1 },
+        "leaf_kind":        { "$ref": "#/definitions/leaf_kind" }
+      }
+    },
+    "leaf": {
+      "type": "object",
+      "required": ["kind", "leaf_kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind":      { "const": "leaf" },
+        "label":     { "type": "string" },
+        "leaf_kind": { "$ref": "#/definitions/leaf_kind" }
+      }
+    },
+    "leaf_kind": {
+      "type": "string",
+      "enum": ["tsv", "csv", "json", "jsonl", "paf", "bed", "fasta", "fai", "vcf", "vcfgz", "gff", "bin"],
+      "description": "Canonical leaf parsers registered with the resolver. SPEC §5 lists the parsing semantics. New kinds require resolver work, not just schema additions."
+    }
+  }
+}

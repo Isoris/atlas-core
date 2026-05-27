@@ -164,10 +164,16 @@ discovers it on next reload. That's it.
 - **Editability.** No file in the codebase exceeds ~500 LOC. AI-
   assisted editing works because the unit of work is small.
 
-- **Independent atlas development.** The four atlases (inversion,
-  diversity, genome, population) live in four repos. They share
-  only the contract pinned by the meta-schema — no code dependencies
-  in either direction.
+- **Independent atlas development.** The (now 11) atlases each live
+  in their own repo — `inversion-atlas`, `diversity-atlas`,
+  `genome-atlas`, `population-atlas`, `relatedness-atlas`,
+  `meiosis-atlas`, `cross-species-atlas`, `evolution-atlas`,
+  `popstats-atlas`, `heterozygosity-atlas`, `pods-atlas` — picked up
+  by `build/assemble.sh` into one workspace. They share only the
+  contract pinned by the meta-schema + the cross_atlas adapter
+  convention (`docs/SPEC_cross_atlas_adapters.md`) — no code
+  dependencies in either direction beyond the registry's dotted
+  namespace lookup.
 
 ## What this architecture does NOT do
 

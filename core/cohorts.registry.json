@@ -1,0 +1,47 @@
+{
+  "$schema": "./schemas/cohorts.schema.json",
+  "version": "1.0",
+  "_doc": "Global cohort registry per SPEC_cohorts_v1.md. One row per cohort (which atlases use it, which reference assembly, scope statement). One row per cross_reference_handoff (legitimate cross-cohort coordinate flow). cross_atlas_imports.js consults this at every cross-atlas read to enforce cohort discipline.",
+  "cohorts": [
+    {
+      "cohort_id":         "f1_hybrid_cga_cma",
+      "label":             "F1 hybrid (Clarias gariepinus × Clarias macrocephalus)",
+      "species":           ["Clarias gariepinus", "Clarias macrocephalus"],
+      "reference_id":      "fClaHyb_Gar_LG",
+      "n_samples_approx":  18,
+      "scope":             "assembly_paper_only",
+      "atlases":           ["cross-species", "genome"],
+      "notes":             "18-genome comparative cohort used by the BP_ATLAS workflow. Never claims about individual variation. Genome atlas surfaces the assembly QC for the same hybrid."
+    },
+    {
+      "cohort_id":         "cgar_hatchery_226",
+      "label":             "226-sample pure C. gariepinus hatchery",
+      "species":           ["Clarias gariepinus"],
+      "reference_id":      "fClaHyb_Gar_LG",
+      "n_samples_approx":  226,
+      "scope":             "inversion_atlas_main_cohort",
+      "atlases":           ["inversion", "diversity", "population", "relatedness", "meiosis", "popstats", "evolution"],
+      "notes":             "MS_Inversions_North_african_catfish. K = broodline. The primary cohort for per-individual claims. Shared verbatim across inversion / diversity / population / relatedness / meiosis (all population-level cohort lenses)."
+    },
+    {
+      "cohort_id":         "cmac_wild_future",
+      "label":             "Pure C. macrocephalus wild",
+      "species":           ["Clarias macrocephalus"],
+      "reference_id":      "fClaHyb_Mac_LG",
+      "n_samples_approx":  null,
+      "scope":             "future_paper",
+      "atlases":           [],
+      "notes":             "Not yet in any atlas. Layers tagged with this cohort_id are reserved for a future paper. Listed here so producer-side pipelines can already emit the tag without a registry edit."
+    }
+  ],
+  "cross_reference_handoffs": [
+    {
+      "handoff_id":        "bp_atlas_to_hatchery_join",
+      "from_cohort":       "f1_hybrid_cga_cma",
+      "to_cohort":         "cgar_hatchery_226",
+      "via_layer_pattern": "^cross-species\\.(breakpoints_consolidated|bp_atlas_reciprocity|synteny_18sp|gene_order_catalog|atlas_paf_arcs)_v\\d+$",
+      "handoff_kind":      "coordinate_handoff",
+      "rationale":         "Cross-species BP_ATLAS produces breakpoint coordinates on the fClaHyb_Gar_LG reference; the hatchery atlas reads those coordinates to test population-level overlap (BP4). Coordinates only — never inherit cohort claims."
+    }
+  ]
+}

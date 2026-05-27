@@ -56,11 +56,29 @@ export class AtlasRouter {
     const page = manifest.pages.find(p => p.id === page_id);
     if (!page) throw new Error(`Unknown page: ${atlas_id}/${page_id}`);
 
+    // 2026-05-21 correctness: rapid tab clicks used to leave the UI
+    // broken because navigate(B) could start while navigate(A)'s mount
+    // was still awaiting. Both nav A and nav B would overwrite
+    // root.innerHTML and call module.mount, racing each other and
+    // double-unmounting `_currentModule`. The token below disambiguates:
+    // each nav captures the value of _navToken; if it changes during
+    // any await, the nav is "superseded" and bails (cleanly, after
+    // unmounting anything it managed to mount). Side-effect: the
+    // optimistic null-out of _currentModule prevents the next nav from
+    // re-unmounting the previous module that we just handled.
+    if (this._navToken == null) this._navToken = 0;
+    const token = ++this._navToken;
+    const toUnmount     = this._currentModule;
+    const toUnmountRoot = this._currentRoot;
+    this._currentModule = null;
+    this._currentRoot   = null;
+
     // Unmount previous
-    if (this._currentModule?.unmount) {
-      try { await this._currentModule.unmount(this._currentRoot); }
+    if (toUnmount && typeof toUnmount.unmount === 'function') {
+      try { await toUnmount.unmount(toUnmountRoot); }
       catch (e) { console.error('unmount threw:', e); }
     }
+    if (token !== this._navToken) return;
 
     // Load per-page stylesheet if declared. Loaded BEFORE the fragment is
     // injected so the page renders styled, not flashed-unstyled. Stylesheets
@@ -69,12 +87,21 @@ export class AtlasRouter {
       this._ensureStylesheet(page.stylesheet, atlas_id);
     }
 
-    // Fetch fragment + import module
-    const fragmentHtml = await fetch(page.fragment).then(r => r.text());
+    // Fetch fragment + import module. 2026-05-21 perf: was two sequential
+    // awaits (fragmentHtml, then module import). They're independent —
+    // the module doesn't read the HTML and the HTML doesn't need the
+    // module — so fan them out via Promise.all. Saves one RTT per page
+    // navigation. The browser's module cache means repeat navigates to
+    // the same page only pay the fragment fetch.
+    const [fragmentHtml, module] = await Promise.all([
+      fetch(page.fragment).then(r => r.text()),
+      import('/' + page.module),
+    ]);
+    if (token !== this._navToken) return;   // nothing mounted yet, safe to drop
+
     const root = document.getElementById('app-root');
     root.innerHTML = fragmentHtml;
 
-    const module = await import('/' + page.module);
     if (typeof module.mount !== 'function') {
       throw new Error(`Page ${atlas_id}/${page_id}: module has no mount() export`);
     }
@@ -112,6 +139,16 @@ export class AtlasRouter {
 
     // Mount
     await module.mount(root, this.state, this.registry);
+    if (token !== this._navToken) {
+      // A newer navigate superseded us mid-mount. Best-effort cleanup:
+      // unmount what we just mounted so the next nav has a clean slate.
+      // Errors swallowed — the next nav will overwrite root.innerHTML
+      // anyway, so a failed unmount only leaks listeners, not state.
+      if (typeof module.unmount === 'function') {
+        try { await module.unmount(root); } catch (_) {}
+      }
+      return;
+    }
 
     this._currentModule = module;
     this._currentRoot = root;
@@ -213,6 +250,40 @@ export class AtlasRouter {
   _renderScopebar(currentAtlas) {
     const bar = document.getElementById('scopebar');
     if (!bar) return;
+
+    // 2026-05-21 perf: skip the rebuild when the active atlas hasn't
+    // changed. The pickers are stable per atlas; only the selected
+    // values may shift (and those track shared state via change events
+    // anyway). Just re-sync the values to the current state so a
+    // re-mount after a scope change in a different tab reflects the
+    // current truth, then return early.
+    if (this._scopebarBuiltFor === currentAtlas && currentAtlas) {
+      const manifest = this.manifests.get(currentAtlas);
+      const pickers = (manifest && Array.isArray(manifest.scope_pickers))
+        ? manifest.scope_pickers : [];
+      for (const picker of pickers) {
+        if (!picker || !picker.slot) continue;
+        const wrap = bar.querySelector(
+          `.scope-picker[data-atlas="${currentAtlas}"][data-slot="${picker.slot}"]`);
+        if (!wrap) continue;
+        const sel = wrap.querySelector('select');
+        if (!sel) continue;
+        const isShared = picker.shared !== false;
+        const cur = isShared
+          ? this.state.shared[picker.slot]
+          : (this.state[currentAtlas] || {})[picker.slot];
+        sel.value = (cur != null) ? String(cur) : '';
+      }
+      // Re-run auto-options too — it's dedup'd via _autoOptionsCache so
+      // a hit is cheap. Needed in case auto options arrived AFTER the
+      // last full render (race-free this way).
+      this._populateAutoOptions(currentAtlas).catch(err => {
+        console.warn('scope-picker auto_options_from failed:', err);
+      });
+      return;
+    }
+    this._scopebarBuiltFor = currentAtlas;
+
     bar.innerHTML = '';
 
     // Only render pickers for the currently-active atlas. Pickers from
@@ -451,6 +522,49 @@ export class AtlasRouter {
   _renderTopbar(currentAtlas, currentPage) {
     const bar = document.getElementById('topbar');
     if (!bar) return;
+
+    // 2026-05-21 perf: skip the full rebuild when only the active PAGE
+    // changed within the same atlas. The topbar structure (atlas
+    // switcher, stage pills, tab buttons) is identical for two pages
+    // under the same atlas; only the .active class on one button shifts.
+    // Pre-fix every tab click rebuilt the entire topbar (10-20ms with
+    // multi-atlas + many stages); post-fix only the active class moves.
+    if (this._topbarBuiltFor === currentAtlas) {
+      bar.querySelectorAll('button.active').forEach(b => {
+        if (!b.classList.contains('tab-stage-pill')) b.classList.remove('active');
+      });
+      if (currentAtlas && currentPage) {
+        // Match by data-page-id (stamped at build time below). O(1)
+        // querySelector instead of walking + text-matching all buttons.
+        const target = bar.querySelector(`button[data-page-id="${currentPage}"]`);
+        if (target) target.classList.add('active');
+      }
+      // Stage may have changed (different page → different stage). Update
+      // data-active-stage + per-button .stage-hidden. Also clear
+      // data-collapsed so a previously-collapsed pill state doesn't
+      // hide every tab in the new stage.
+      let newStage = null;
+      if (currentAtlas && currentPage) {
+        const mf = this.manifests.get(currentAtlas);
+        const p = mf && mf.pages && mf.pages.find(x => x.id === currentPage);
+        if (p && p.stage) newStage = p.stage;
+      }
+      if (newStage && (bar.dataset.activeStage !== newStage
+                       || bar.dataset.collapsed === '1')) {
+        bar.dataset.activeStage = newStage;
+        delete bar.dataset.collapsed;
+        bar.querySelectorAll('button[data-stage]:not(.tab-stage-pill)').forEach(b => {
+          if (b.dataset.stage === newStage) b.classList.remove('stage-hidden');
+          else                              b.classList.add('stage-hidden');
+        });
+        bar.querySelectorAll('.tab-stage-pill').forEach(p => {
+          p.dataset.expanded = (p.dataset.stage === newStage) ? '1' : '0';
+        });
+      }
+      return;
+    }
+    this._topbarBuiltFor = currentAtlas;
+
     bar.innerHTML = '';
 
     // The settings gear (#globalSettingsBtn) used to live here at the
@@ -513,7 +627,19 @@ export class AtlasRouter {
       sel.className = 'atlas-switcher-select';
       sel.setAttribute('aria-label', 'Active atlas');
       sel.title = 'Switch atlas';
-      for (const [aid, mf] of this.manifests) {
+      // 2026-05-23: sort the dropdown alphabetically by atlas_name (the
+      // user-visible label) instead of by atlas_id insertion order. Earlier
+      // the order was atlas_id-alphabetical via the assembled _index.json,
+      // which put 'popstats' (Population Statistics Atlas) BEFORE
+      // 'population' (Population Atlas) because 's' < 'u'. Sorting by
+      // atlas_name fixes that — and keeps the bundled 'core' atlas first
+      // because "Atlas Core" sorts before everything else alphabetically.
+      const sorted = [...this.manifests.entries()].sort(([aidA, mfA], [aidB, mfB]) => {
+        const a = (mfA.atlas_name || aidA).toLocaleLowerCase();
+        const b = (mfB.atlas_name || aidB).toLocaleLowerCase();
+        return a < b ? -1 : a > b ? 1 : 0;
+      });
+      for (const [aid, mf] of sorted) {
         const opt = document.createElement('option');
         opt.value = aid;
         opt.textContent = mf.atlas_name || aid;
@@ -651,6 +777,10 @@ export class AtlasRouter {
           }
           btn.appendChild(document.createTextNode(' ' + (page.label || page.id)));
           if (page.tooltip) btn.title = page.tooltip;
+          // 2026-05-21 perf: stamp data-page-id so the partial-update
+          // path in _renderTopbar can locate the right tab by id, not
+          // by text (which would mismatch on label-suffix collisions).
+          btn.dataset.pageId = page.id;
           if (atlas_id === currentAtlas && page.id === currentPage) {
             btn.classList.add('active');
           }
@@ -697,7 +827,13 @@ export class AtlasRouter {
     wrap.dataset.color = activeColor;
 
     drop.innerHTML = '';
-    for (const [aid, mf] of this.manifests) {
+    // 2026-05-23: same alphabetical-by-atlas_name sort as the topbar select.
+    const sortedRows = [...this.manifests.entries()].sort(([aidA, mfA], [aidB, mfB]) => {
+      const a = (mfA.atlas_name || aidA).toLocaleLowerCase();
+      const b = (mfB.atlas_name || aidB).toLocaleLowerCase();
+      return a < b ? -1 : a > b ? 1 : 0;
+    });
+    for (const [aid, mf] of sortedRows) {
       const row = document.createElement('button');
       row.type = 'button';
       row.className = 'atlas-row';

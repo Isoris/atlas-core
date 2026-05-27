@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 308,
-  "n_edges": 243,
+  "n_nodes": 309,
+  "n_edges": 245,
   "warnings": [],
   "nodes": [
     {
@@ -1722,6 +1722,13 @@
       "layer_id": null
     },
     {
+      "id": "bridge_summary_card",
+      "type": "panel",
+      "label": "Bridge \u2014 per-DB call summary",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
       "id": "conversation",
       "type": "page",
       "label": "Conversation",
@@ -2894,6 +2901,16 @@
     {
       "from": "02_queue/plans/index.json",
       "to": "plans_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "external_databases.jsonl",
+      "to": "bridge_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "02_queue/bridge_log.jsonl",
+      "to": "bridge_summary_card",
       "kind": "panel_reads"
     },
     {

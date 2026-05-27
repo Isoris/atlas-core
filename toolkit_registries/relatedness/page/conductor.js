@@ -265,6 +265,75 @@
       </div>`);
   }
 
+  async function renderBridgeSummaryCard(panel, ctx) {
+    // Reads external_databases.jsonl (in ctx via atlasFetchJsonl) and the
+    // runtime 02_queue/bridge_log.jsonl (newline JSONL of {ts, db_id,
+    // endpoint_id, url, ok, elapsed_ms}).
+    async function getLog() {
+      try {
+        const r = await fetch("../02_queue/bridge_log.jsonl", { cache: "no-store" });
+        if (!r.ok) return [];
+        return (await r.text()).split("\n").filter(Boolean).map(l => {
+          try { return JSON.parse(l); } catch { return null; }
+        }).filter(Boolean);
+      } catch { return []; }
+    }
+    const dbs = await window.atlasFetchJsonl("../01_registry/external_databases.jsonl");
+    const log = await getLog();
+    // Per-db roll-ups
+    const perDb = {};
+    for (const db of dbs) {
+      perDb[db.db_id] = { db, n: 0, ok: 0, fail: 0, last: null, median_ms: null, samples: [] };
+    }
+    for (const e of log) {
+      const r = perDb[e.db_id];
+      if (!r) continue;
+      r.n += 1;
+      if (e.ok) r.ok += 1; else r.fail += 1;
+      if (!r.last || e.ts > r.last.ts) r.last = e;
+      if (typeof e.elapsed_ms === "number") r.samples.push(e.elapsed_ms);
+    }
+    for (const k of Object.keys(perDb)) {
+      const s = perDb[k].samples.slice().sort((a, b) => a - b);
+      perDb[k].median_ms = s.length ? s[Math.floor(s.length / 2)] : null;
+    }
+    const rows = Object.values(perDb).map(r => {
+      const db = r.db;
+      const ts = r.last ? r.last.ts.slice(0, 19).replace("T", " ") : "—";
+      const statusPill = r.n === 0
+        ? `<span style="font-size:10px;color:#a0aec0;font-style:italic">no calls yet</span>`
+        : r.last && r.last.ok
+          ? `<span style="background:#2f855a;color:white;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase">ok</span>`
+          : `<span style="background:#c53030;color:white;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase">fail</span>`;
+      const med = r.median_ms != null ? `${r.median_ms} ms` : "—";
+      return `<tr>
+        <td style="padding:3px 8px"><code style="font-weight:600">${db.db_id}</code></td>
+        <td style="padding:3px 8px;text-align:right;font-family:ui-monospace,Menlo,monospace">${r.n}</td>
+        <td style="padding:3px 8px;text-align:right;font-family:ui-monospace,Menlo,monospace">${med}</td>
+        <td style="padding:3px 8px">${statusPill}</td>
+        <td style="padding:3px 8px;font-size:10.5px;color:#6c727f;font-family:ui-monospace,Menlo,monospace">${ts}</td>
+      </tr>`;
+    }).join("");
+    const totalCalls = log.length;
+    const totalOk    = log.filter(e => e.ok).length;
+    return cardShell(panel, `
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
+        ${dbs.length} external DBs registered · ${totalCalls} call${totalCalls === 1 ? "" : "s"} logged
+        ${totalCalls > 0 ? ` · ${totalOk}/${totalCalls} ok` : ""}
+        · log: <code style="font-size:11px">02_queue/bridge_log.jsonl</code>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">db</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">calls</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">median</th>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">last</th>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">when</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`);
+  }
+
   // Renderer dispatch by panel_id (each registered panel has its own renderer)
   const RENDERERS = {
     atlas_summary_card:              renderAtlasSummaryCard,
@@ -272,6 +341,7 @@
     adapter_completeness_card:       renderAdapterCompletenessCard,
     manuscript_chunks_summary_card:  renderManuscriptChunksSummaryCard,
     plans_summary_card:              renderPlansSummaryCard,
+    bridge_summary_card:             renderBridgeSummaryCard,
   };
 
   // ---- diff & spawn ---- //

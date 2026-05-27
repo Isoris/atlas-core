@@ -1,8 +1,8 @@
 {
   "schema_version": "panel_coverage_graph_v1",
-  "rewritten_at": "2026-05-27T17:04:43Z",
-  "n_nodes": 147,
-  "n_edges": 190,
+  "rewritten_at": "2026-05-27T17:06:44Z",
+  "n_nodes": 148,
+  "n_edges": 191,
   "nodes": [
     {
       "id": "atlas_core",
@@ -885,6 +885,12 @@
       "kind": "panel",
       "label": "Registry health (footer strip)",
       "atlas": "atlas_core"
+    },
+    {
+      "id": "panel_coverage_card",
+      "kind": "panel",
+      "label": "Panel coverage by page",
+      "atlas": "atlas_core"
     }
   ],
   "edges": [
@@ -925,6 +931,11 @@
     },
     {
       "from": "registry_health_strip",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "panel_coverage_card",
       "to": "atlas_core",
       "kind": "panel_in_atlas"
     },
@@ -1987,7 +1998,7 @@
       "evolution_atlas": 11
     },
     "panels_per_atlas": {
-      "atlas_core": 8
+      "atlas_core": 9
     }
   }
 }

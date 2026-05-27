@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 320,
-  "n_edges": 249,
+  "n_nodes": 321,
+  "n_edges": 252,
   "warnings": [],
   "nodes": [
     {
@@ -1743,6 +1743,13 @@
       "layer_id": null
     },
     {
+      "id": "panel_coverage_card",
+      "type": "panel",
+      "label": "Panel coverage by page",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
       "id": "conversation",
       "type": "page",
       "label": "Conversation",
@@ -3001,6 +3008,21 @@
     {
       "from": "external_databases.jsonl",
       "to": "registry_health_strip",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "panels.jsonl",
+      "to": "panel_coverage_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "spawn_rules.jsonl",
+      "to": "panel_coverage_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "pages.jsonl",
+      "to": "panel_coverage_card",
       "kind": "panel_reads"
     },
     {

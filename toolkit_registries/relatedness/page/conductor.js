@@ -394,6 +394,56 @@
       </table>`);
   }
 
+  async function renderPanelCoverageCard(panel, _ctx) {
+    const [panels, rules, pages] = await Promise.all([
+      window.atlasFetchJsonl("../01_registry/panels.jsonl"),
+      window.atlasFetchJsonl("../01_registry/spawn_rules.jsonl"),
+      window.atlasFetchJsonl("../01_registry/pages.jsonl"),
+    ]);
+    const panelIds = new Set(panels.map(p => p.panel_id));
+    const perPage = new Map();
+    for (const r of rules) {
+      const pgs = (r.when || {}).page || [];
+      const spawns = ((r.then || {}).spawn || []).filter(s => panelIds.has(s.panel_id));
+      for (const pg of pgs) perPage.set(pg, (perPage.get(pg) || 0) + spawns.length);
+    }
+    let nGap = 0, nCovered = 0, nNoSlot = 0;
+    const rows = pages.slice()
+      .sort((a, b) => (a.nav_order || 0) - (b.nav_order || 0))
+      .map(pg => {
+        const n = perPage.get(pg.page_id) || 0;
+        const slots = pg.slots || [];
+        let pill;
+        if (slots.length === 0) {
+          nNoSlot += 1;
+          pill = `<span style="background:#e2e8f0;color:#4a5568;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600">no slot</span>`;
+        } else if (n === 0) {
+          nGap += 1;
+          pill = `<span style="background:#c53030;color:white;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600">gap</span>`;
+        } else {
+          nCovered += 1;
+          pill = `<span style="background:#2f855a;color:white;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600">${n}</span>`;
+        }
+        return `<tr>
+          <td style="padding:3px 8px"><code style="font-weight:600">${pg.page_id}</code></td>
+          <td style="padding:3px 8px;text-align:right;font-family:ui-monospace,Menlo,monospace">${n}</td>
+          <td style="padding:3px 8px">${pill}</td>
+        </tr>`;
+      }).join("");
+    return cardShell(panel, `
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
+        ${pages.length} pages · ${nCovered} covered · <span style="color:#c53030;font-weight:600">${nGap} gap${nGap === 1 ? "" : "s"}</span> · ${nNoSlot} no-slot
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">page</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">n</th>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`);
+  }
+
   async function renderRegistryHealthStrip(panel, _ctx) {
     const [atlases, addons, dbs] = await Promise.all([
       window.atlasFetchJsonl("../01_registry/atlases.jsonl"),
@@ -425,6 +475,7 @@
     manuscript_chunks_summary_card:  renderManuscriptChunksSummaryCard,
     plans_summary_card:              renderPlansSummaryCard,
     addons_summary_card:             renderAddonsSummaryCard,
+    panel_coverage_card:             renderPanelCoverageCard,
     registry_health_strip:           renderRegistryHealthStrip,
     bridge_summary_card:             renderBridgeSummaryCard,
   };

@@ -228,7 +228,7 @@
       <h2>Products <span class="n" id="count-products">0</span></h2>
       <div class="filter-bar">
         filter
-        <input type="text" id="filter-product" placeholder="substring…" size="20">
+        <input type="text" id="filter-product" placeholder="substring…" size="20" data-clear="true">
         <select id="filter-status">
           <option value="">any status</option>
           <option value="ready">ready</option>
@@ -732,6 +732,7 @@ function openQuestionDetail(qid) { state.detail = { kind: "question", id: qid };
 </script>
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="filters.js"></script>
 <script defer src="scope.js"></script>
 <script defer src="atlas-colors.js"></script>
 </body>

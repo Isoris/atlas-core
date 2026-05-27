@@ -190,10 +190,10 @@
       </select>
     </label>
     <label>Filter layer
-      <input type="text" id="filter-layer" placeholder="substring…" size="14">
+      <input type="text" id="filter-layer" placeholder="substring…" size="14" data-clear="true">
     </label>
     <label>Filter analysis
-      <input type="text" id="filter-analysis" placeholder="substring…" size="14">
+      <input type="text" id="filter-analysis" placeholder="substring…" size="14" data-clear="true">
     </label>
     <button class="btn" id="btn-import">Import JSON</button>
     <input type="file" id="file-import" accept="application/json" style="display:none">
@@ -527,6 +527,7 @@ function clearManual() {
 </script>
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="filters.js"></script>
 <script defer src="scope.js"></script>
 </body>
 </html>

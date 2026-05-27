@@ -145,10 +145,10 @@
 
   <div class="toolbar">
     <label>filter type
-      <input type="text" id="filter-type" placeholder="substring…" size="22">
+      <input type="text" id="filter-type" placeholder="substring…" size="22" data-clear="true">
     </label>
     <label>filter question
-      <input type="text" id="filter-q" placeholder="substring…" size="22">
+      <input type="text" id="filter-q" placeholder="substring…" size="22" data-clear="true">
     </label>
     <button class="btn" id="btn-refresh">Refresh</button>
     <button class="btn btn-danger" id="btn-clear-claims">Clear local claims</button>
@@ -292,6 +292,7 @@ function escapeJSON(obj) {
 </script>
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="filters.js"></script>
 <script defer src="scope.js"></script>
 </body>
 </html>

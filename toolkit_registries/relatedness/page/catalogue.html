@@ -130,7 +130,7 @@
 </nav>
 
 <div class="controls">
-  <label>filter <input id="filter" type="text" placeholder="match name / family / atlas / mode…" autocomplete="off"></label>
+  <label>filter <input id="filter" type="text" placeholder="match name / family / atlas / mode…" autocomplete="off" data-clear="true"></label>
   <span class="stat" id="stat"></span>
 </div>
 
@@ -432,6 +432,7 @@ document.getElementById("filter").addEventListener("input", applyFilter);
 
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="filters.js"></script>
 <script defer src="scope.js"></script>
 </body>
 </html>

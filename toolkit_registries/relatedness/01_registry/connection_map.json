@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 302,
-  "n_edges": 234,
+  "n_nodes": 304,
+  "n_edges": 237,
   "warnings": [],
   "nodes": [
     {
@@ -888,6 +888,12 @@
       "status": "experimental"
     },
     {
+      "id": "cross_species_226_overlap",
+      "type": "layer",
+      "label": "Cross-species \u00d7 226-cohort haploblock overlap",
+      "status": "planned"
+    },
+    {
       "id": "ngsrelate",
       "type": "analysis",
       "label": "ngsRelate \u2014 pairwise relatedness from genotype likelihoods",
@@ -1593,6 +1599,12 @@
       "id": "ngstracts_step_trc_01",
       "type": "analysis",
       "label": "ngsTracts STEP_TRC_01 \u2014 gene-conversion tract classifier",
+      "status": "experimental"
+    },
+    {
+      "id": "bp4_population_overlap",
+      "type": "analysis",
+      "label": "BP4 \u2014 cross-species \u00d7 226-cohort haploblock overlap",
       "status": "experimental"
     },
     {
@@ -2639,6 +2651,21 @@
     {
       "from": "ngstracts_step_trc_01",
       "to": "gene_conversion_tracts",
+      "kind": "output"
+    },
+    {
+      "from": "breakpoint_clusters",
+      "to": "bp4_population_overlap",
+      "kind": "input"
+    },
+    {
+      "from": "long_range_haplotype_regime",
+      "to": "bp4_population_overlap",
+      "kind": "input"
+    },
+    {
+      "from": "bp4_population_overlap",
+      "to": "cross_species_226_overlap",
       "kind": "output"
     },
     {

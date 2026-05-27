@@ -153,8 +153,12 @@ atlas boundary; claims do not.
 
 ## §8 What's deferred
 
-- **BP4 population overlap** (intersect with 226-cohort haploblocks) —
-  next chat, scoped to the hatchery cohort with strict cohort boundary.
+- **BP4 population overlap** — chain is now REGISTERED (analysis_id
+  `bp4_population_overlap`, status `experimental`, runner not yet
+  wired). Chain audit + page 13 surface it as a planned chain whose
+  inputs (`breakpoint_clusters` + `long_range_haplotype_regime`) are
+  declared and discoverable. Real run happens once
+  `STEP_BP4_overlap_population.py` is wired through the dispatcher.
 - **BP5 figures** (R ribbons, dotplots, montages) — figure chat.
 - **C. macrocephalus wild cohort** — future paper.
 

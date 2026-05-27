@@ -39,6 +39,7 @@ ALL_COLS = [
     "status", "requires", "intended_use", "definition_path",
 ]
 ALLOWED_STATUS = {"active", "experimental", "deprecated", "stub"}
+BIOMOD_STATUS_ENUM = {"stable", "experimental", "planned", "deprecated", "contract_only"}
 
 
 def _find_root(start: pathlib.Path) -> pathlib.Path:
@@ -122,14 +123,23 @@ def main() -> int:
                 f"{atype!r} (declared: {sorted(declared)})"
             )
 
-    # 5. module_name FK
+    # 5. module_name FK + biomod_status enum check
     mod_path = reg_dir / "module_registry.tsv"
-    if mod_path.is_file() and mode_rows:
-        modules = {r.get("module_name", "") for r in _read_tsv(mod_path) if r.get("module_name")}
-        for i, m in enumerate(mode_rows, start=2):
-            mn = m.get("module_name", "")
-            if mn and mn not in modules:
-                errors.append(f"{modes_path.name}:{i}: module_name {mn!r} not in module_registry.tsv")
+    if mod_path.is_file():
+        mod_rows = _read_tsv(mod_path)
+        modules = {r.get("module_name", "") for r in mod_rows if r.get("module_name")}
+        if mode_rows:
+            for i, m in enumerate(mode_rows, start=2):
+                mn = m.get("module_name", "")
+                if mn and mn not in modules:
+                    errors.append(f"{modes_path.name}:{i}: module_name {mn!r} not in module_registry.tsv")
+        for i, m in enumerate(mod_rows, start=2):
+            s = (m.get("biomod_status", "") or "").strip()
+            if s and s not in BIOMOD_STATUS_ENUM:
+                errors.append(
+                    f"{mod_path.name}:{i}: biomod_status {s!r} not in {sorted(BIOMOD_STATUS_ENUM)} "
+                    f"on module {m.get('module_name')!r} (granular form goes in biomod_status_detail)"
+                )
 
     # 3. analysis_results FK
     results_path = reg_dir / "analysis_results.tsv"

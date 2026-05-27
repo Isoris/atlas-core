@@ -1,96 +1,96 @@
-module_name	version	family	atlas	biomod_status	installed	ready	stale	stale_reason	parent	derivatives	last_run_id	last_run_status	last_run_qc	last_run_started	last_run_seconds	n_samples	conda_env_path	biomod_env	synced_at
-ngsrelate_pairwise_v2	2.0.0	relatedness	relatedness_atlas	stable	true	true	false			ngsrelate_pairwise_v2_strict	a1b2c3d4-5678-90ab-cdef-1234567890ab	success	pass	2026-05-12T10:00:00Z	2400	6	~/.biomod/envs/default/conda/ngsrelate_pairwise_v2/	default	2026-05-13T21:20:29Z
-ngspedigree_v1	1.0.0	pedigree	relatedness_atlas	stable	true	true	false				b2c3d4e5-6789-01bc-def0-2345678901bc	success	pass	2026-05-12T11:00:00Z	180	6	~/.biomod/envs/default/conda/ngspedigree_v1/	default	2026-05-13T21:20:29Z
-mendelian_trio_v1	1.0.0	inheritance	relatedness_atlas	experimental	true	false	false			mendelian_trio_v1_strict	c3d4e5f6-789a-12cd-ef01-3456789012cd	failed		2026-05-12T11:30:00Z	22		~/.biomod/envs/default/conda/mendelian_trio_v1/	default	2026-05-13T21:20:29Z
-region_popstats_v0_4	0.4.1	popstats	popstats_atlas	stable	true	true	false				d4e5f6a7-89ab-23de-f012-456789013def	success	pass	2026-05-12T13:00:00Z	480	6	~/.biomod/envs/default/conda/region_popstats_v0_4/	default	2026-05-13T21:20:29Z
-wfmash_v0_13	0.13.0	comparative_alignment	cross_species_atlas	experimental	true	true	false										~/.biomod/envs/default/conda/wfmash_v0_13/	default	2026-05-23T00:00:00Z
-busco_v5	5.5.0	comparative_orthology	cross_species_atlas	stable	true	true	false										~/.biomod/envs/default/conda/busco_v5/	default	2026-05-23T00:00:00Z
-macrosyntr_v1	1.0.0	comparative_orthology	cross_species_atlas	experimental	false	false	false	wide ortholog tables exported manually from .RData; R wrapper not yet packaged									~/.biomod/envs/default/conda/macrosyntr_v1/	default	2026-05-23T00:00:00Z
-cs_extract_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental	true	true	false		wfmash_v0_13								~/.biomod/envs/default/conda/cs_extract_v0/	default	2026-05-23T00:00:00Z
-bp_atlas_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental	true	true	false		wfmash_v0_13	bp_atlas_v0_laptop,bp_atlas_v0_slurm						5	~/.biomod/envs/default/conda/bp_atlas_v0/	default	2026-05-23T00:00:00Z
-bp_reciprocity_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental	true	true	false		bp_atlas_v0								~/.biomod/envs/default/conda/bp_reciprocity_v0/	default	2026-05-23T00:00:00Z
-cluster_breakpoints_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental	true	true	false										~/.biomod/envs/default/conda/cluster_breakpoints_v0/	default	2026-05-23T00:00:00Z
-ngstracts_classifier	v1.0.0	meiosis	meiosis_atlas	external_producer	true	true				tract_classifications_v1						226		ngsTracts	
-ngstracts_traversal_breakpoints	v1.0.0	meiosis	meiosis_atlas	external_producer	true	true			ngstracts_classifier	tract_classifications_v1						226		ngsTracts	
-chromosome_meiosis_events_builder	v1.0.0	meiosis	meiosis_atlas	experimental	true	true			ngstracts_classifier	chromosome_meiosis_events_v1						226		meiosis_atlas	
-coincidence_matrix_builder	v1.0.0	meiosis	meiosis_atlas	experimental	true	true			chromosome_meiosis_events_builder	coincidence_matrix_v1						226		meiosis_atlas	
-local_inv_controls_builder	v1.0.0	meiosis	meiosis_atlas	experimental	true	true				local_inv_controls_v1						226		meiosis_atlas	
-family_aware_permutation_design_builder	v1.0.0	meiosis	meiosis_atlas	experimental	true	true				family_aware_permutation_design_v1						226		meiosis_atlas	
-meiosis_nco_enrichment_test	v0.1.0	meiosis	meiosis_atlas	experimental	true	true			ngstracts_classifier	nco_enrichment_result						226		meiosis_atlas	
-meiosis_intrachromosomal_co_test	v0.1.0	meiosis	meiosis_atlas	experimental	true	true			chromosome_meiosis_events_builder	intrachromosomal_co_effect						226		meiosis_atlas	
-meiosis_interchromosomal_effect_test	v0.1.0	meiosis	meiosis_atlas	experimental	true	true	promotion_from_browser_js	currently inlined in atlases/meiosis/pages/hub/interchromosomal/_stats.js; needs server-side wrap before catalogue compute lookup works end-to-end	coincidence_matrix_builder	inversion_meiosis_effects_v1						226		meiosis_atlas	
-per_candidate_co_track_builder	v0.1.0	meiosis	meiosis_atlas	contract_only	false	false	missing_builder	per-candidate crossover_track JSON not yet emitted by any pedigree pipeline; layer is CONTRACT-ONLY	ngstracts_classifier	crossover_track						226		meiosis_atlas	
-per_candidate_nco_gc_track_builder	v0.1.0	meiosis	meiosis_atlas	contract_only	false	false	missing_builder	per-candidate nco_gc_track JSON not yet emitted by any pedigree pipeline; layer is CONTRACT-ONLY	ngstracts_classifier	nco_gc_track						226		meiosis_atlas	
-prdm9_motif_finder	v0.1.0	meiosis	meiosis_atlas	contract_only	false	false	missing_builder	MEME/STREME wrapper on CO ±2kb hotspots; optional layer, page hides logo card when pwm null	per_candidate_co_track_builder	prdm9_motif						226		meiosis_atlas	
-region_popstats	v3	popstats	popstats_atlas	installed	true	true				inversion_groupwise_popstats						226			2026-05-23
-fhom	v2	popstats	popstats_atlas	installed	true	true										226			2026-05-23
-fdM	v1	introgression	popstats_atlas	installed	true	true										226			2026-05-23
-iHS	v1	selection	popstats_atlas	installed	true	true										226			2026-05-23
-xpehh	v1	selection	popstats_atlas	installed	true	true										226			2026-05-23
-pi_NS	v2	selection	popstats_atlas	installed	true	true										226			2026-05-23
-codon_stats	v2	selection	popstats_atlas	installed	true	true										226			2026-05-23
-hobs_windower	v1	popstats	popstats_atlas	installed	true	true										226			2026-05-23
-rare_sfs_pairwise	v1	popstats	popstats_atlas	installed	true	true										226			2026-05-23
-outlier_scan	v1	popstats	popstats_atlas	installed	true	true				candidate_validation						226			2026-05-23
-candidate_vs_flanks	v1	popstats	popstats_atlas	installed	true	true										226			2026-05-23
-export_q_residual_dosage	v1	ancestry_prep	popstats_atlas	installed	true	true				karyotype_resolution						226			2026-05-23
-snp_q_support	v1	ancestry_chain	popstats_atlas	installed	true	true				inversion_candidate_classifier						226			2026-05-23
-internal_ancestry_composition	v1	ancestry_chain	popstats_atlas	installed	true	true				inversion_candidate_classifier						226			2026-05-23
-inversion_candidate_classifier	v1	inversion_chain	popstats_atlas	installed	true	true			snp_q_support;internal_ancestry_composition							226			2026-05-23
-hobs_hwe_pipeline	v1	popstats_chain	popstats_atlas	installed	true	true				hobs_hwe_candidate_overlay						226			2026-05-23
-hobs_hwe_candidate_overlay	v1	inversion_chain	popstats_atlas	installed	true	true			hobs_hwe_pipeline	karyotype_resolution						226			2026-05-23
-karyotype_resolution	v1	inversion_chain	popstats_atlas	installed	true	true			export_q_residual_dosage;hobs_hwe_candidate_overlay	inversion_groupwise_popstats						226			2026-05-23
-instant_q_boundary_scan	v1	inversion_chain	popstats_atlas	installed	true	true				inversion_candidate_classifier;karyotype_resolution						226			2026-05-23
-inversion_groupwise_popstats	v1	popstats_chain	popstats_atlas	installed	true	true			region_popstats;karyotype_resolution							226			2026-05-23
-ngsrelate_fast	1.0.0	relatedness	relatedness_atlas	installed	true	true	false			ngsrelate_adaptive_scheduler						226		assembly	
-ngsrelate_adaptive_scheduler	1.0.0	relatedness	relatedness_atlas	experimental	true	true	false	awaiting Phase 9 calibration on LG12 — config.py defaults still placeholders	ngsrelate_fast							226		assembly	
-import_table	1.0.0	file_io	genome_atlas	file_io_only	yes	yes													2026-05-19
-runners.import_slot	v1.0	capture	diversity_atlas	production	true	true				staging_diversity_slot_v0									2026-05-20
-runners.harvest_file	v1.0	capture	diversity_atlas	production	true	true													2026-05-20
-runners.run_realsfs	v1.0	sfs	diversity_atlas	planned				runner module not yet written; SAF binaries (.saf.idx/.saf.gz/.saf.pos.gz) not mirrored to compute host — see _handoff_docs/MISSING_DATA.md §1		sample_sfs									2026-05-20
-runners.run_thetastat	v1.0	theta	diversity_atlas	planned				runner module not yet written; per-sample .thetas.idx + .thetas.gz from angsd -doThetas required		samples_theta_pi_pestpg									2026-05-20
-runners.aggregate_pi	v1.0	theta	diversity_atlas	planned				runner module not yet written; pure-Python aggregator; targets 05_aggregated/ which is empty on disk — see MISSING_DATA.md §3		theta_pi_aggregate_cohort									2026-05-20
-extractors.diversity_slot	v0.1	extract	diversity_atlas	production	true	true			runners.import_slot	staging_diversity_slot_v0									2026-05-20
-extractors.genomewide_het	v1.0	extract	diversity_atlas	production	true	true			runners.harvest_file	samples_genomewide_het_v1						226			2026-05-20
-extractors.sfs_ml	v1.0	extract	diversity_atlas	production	true	true			runners.harvest_file	sample_sfs_v1						226			2026-05-20
-extractors.pestpg	v1.0	extract	diversity_atlas	production	true	true			runners.harvest_file	theta_pi_pestpg_v1						226			2026-05-20
-extractors.tsv_table	v1.0	extract	diversity_atlas	production	true	true			runners.harvest_file	tsv_table_v1,ancestry_het_kruskal_v1									2026-05-20
-extractors.roh_per_sample	v0.1	extract	diversity_atlas	stub				parser stub; pipeline output (per-sample ROH segment table) empty on disk — see MISSING_DATA.md §2	runners.harvest_file	samples_roh_per_sample_v1									2026-05-20
-ngspedigree_hpp	0.5.0-mvp1	haplotype_projection	relatedness_atlas	experimental	true			awaiting_stage3_real_schema_and_spec_audit	ngspedigree_stage3							226			
-_reserved	0.0.0	reserved	genome_atlas	reserved	false	false	false	placeholder slot — server-side runner not yet implemented											2026-05-23T00:00:00Z
-STEP_BP1_pairwise_wfmash	1.0	breakpoint_detection	cross_species_atlas	installed	true	true										18		wfmash_2024	2026-05-23T00:00:00Z
-STEP_BP2_call_breakpoints	1.0	breakpoint_detection	cross_species_atlas	installed	true	true			STEP_BP1_pairwise_wfmash							18		python_3_11	2026-05-23T00:00:00Z
-STEP_BP3_cluster_zones	1.0	breakpoint_detection	cross_species_atlas	installed	true	true			STEP_BP2_call_breakpoints							18		python_3_11	2026-05-23T00:00:00Z
-STEP_BP3c_reciprocity	1.0	breakpoint_detection	cross_species_atlas	installed	true	true			STEP_BP3_cluster_zones							18		python_3_11	2026-05-23T00:00:00Z
-STEP_BP5_prep_atlas_data	1.0	breakpoint_detection	cross_species_atlas	installed	true	true			STEP_BP3_cluster_zones							18		python_3_11	2026-05-23T00:00:00Z
-STEP_BP6_joint_classify	1.0	breakpoint_detection	cross_species_atlas	installed	true	true			STEP_BP3c_reciprocity							18		python_3_11	2026-05-23T00:00:00Z
-wide_orthologs_to_breakpoints	1.0	breakpoint_gene_order	cross_species_atlas	installed	true	true										18		python_3_11	2026-05-23T00:00:00Z
-csbp_json_to_breakpoints	1.0	breakpoint_gene_order	cross_species_atlas	installed	true	true										18		python_3_11	2026-05-23T00:00:00Z
-cluster_breakpoints	1.0	breakpoint_consolidation	cross_species_atlas	installed	true	true			wide_orthologs_to_breakpoints							18		python_3_11	2026-05-23T00:00:00Z
-popstats_server	1.0	popstats	popstats_atlas	installed	true	true										226		popstats_server	2026-05-23T00:00:00Z
-regime_mendelian	1.0	popstats_inversion	popstats_atlas	installed	true	true										226		node_22	2026-05-23T00:00:00Z
-regime_pedigree	1.0	popstats_inversion	popstats_atlas	installed	true	true										226		node_22	2026-05-23T00:00:00Z
-msmc_per_founder_background	0.1	demography	popstats_atlas	spec_only				awaiting producer implementation per specs_todo/SPEC_msmc_per_founder_background.md	regime_pedigree							226		msmc2	2026-05-23T00:00:00Z
-per_l2_cluster	1.0	local_pca	inversion_atlas	in_browser	true	true		runs as atlas-side JS module in the browser; not a cluster-side producer								226		node_22_browser	2026-05-23T00:00:00Z
-band_quality	1.0	local_pca	inversion_atlas	in_browser	true	true		atlas-side JS	per_l2_cluster							226		node_22_browser	2026-05-23T00:00:00Z
-seed_discovery	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS	band_quality							226		node_22_browser	2026-05-23T00:00:00Z
-het_skeleton	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS	per_l2_cluster							226		node_22_browser	2026-05-23T00:00:00Z
-cramers_v_merge	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS	het_skeleton							226		node_22_browser	2026-05-23T00:00:00Z
-breadth_voting	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS (projection + vote_evidence + band_voters + partition_enumerate + partition_consensus orchestrator)	seed_discovery							226		node_22_browser	2026-05-23T00:00:00Z
-haplotype_regime_refine	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS (haplotype_regime.refineRegimesFromIntervals — arrangement identity)	breadth_voting							226		node_22_browser	2026-05-23T00:00:00Z
-regime_topology	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS	haplotype_regime_refine							226		node_22_browser	2026-05-23T00:00:00Z
-genome_scale	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS (per-chromosome aggregation + cross-chrom CHAINED links; relatedness exports forwarded to popstats)	regime_topology							226		node_22_browser	2026-05-23T00:00:00Z
-regime_catalogue	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS (catalogue serializer — emits manifest + knobs + catalogue JSON triple, cross-page contract)	genome_scale							226		node_22_browser	2026-05-23T00:00:00Z
-banding_pipeline	1.0	haplotype_regimes	inversion_atlas	in_browser	true	true		atlas-side JS (orchestrator for Cluster 1 V-walker → Cluster 2 voting → Cluster 3 refinement)		haplotype_regime_refine,regime_topology,genome_scale,regime_catalogue						226		node_22_browser	2026-05-23T00:00:00Z
-busco_4d_age	1.0	age_estimation	evolution_atlas	in_browser	true	true		atlas-side JS								226		node_22_browser	2026-05-23T00:00:00Z
-age_model_suggester	1.0	age_estimation	evolution_atlas	in_browser	true	true		atlas-side JS (3 frozen μ values, dxy→age_my, block builder)	busco_4d_age							226		node_22_browser	2026-05-23T00:00:00Z
-mgl_inversion_divergence	1.0	age_estimation	evolution_atlas	in_browser	true	true		atlas-side JS (per-candidate divergence compute for age_divergence page)								226		node_22_browser	2026-05-23T00:00:00Z
-mgl_outgroup_synteny	1.0	polarization	evolution_atlas	in_browser	true	true		atlas-side JS (outgroup synteny vote)								226		node_22_browser	2026-05-23T00:00:00Z
-mgl_founder_consensus	1.0	polarization	evolution_atlas	in_browser	true	true		atlas-side JS (founder consensus for polarize_msa_stacked)								226		node_22_browser	2026-05-23T00:00:00Z
-mgl_doubleton_sfs_clusters	1.0	polarization	evolution_atlas	in_browser	true	true		atlas-side JS (2D-SFS doubleton hierarchical clustering)								226		node_22_browser	2026-05-23T00:00:00Z
-mgl_haplotype_network	1.0	haplotype_network	evolution_atlas	in_browser	true	true		atlas-side JS (minimum-spanning haplotype network)								226		node_22_browser	2026-05-23T00:00:00Z
-mgl_event_tree	1.0	event_ordering	evolution_atlas	in_browser	true	true		atlas-side JS								226		node_22_browser	2026-05-23T00:00:00Z
-mgl_archaeology_classifier	1.0	archaeology	evolution_atlas	in_browser	true	true		atlas-side JS (per-candidate archaeology synthesis)								226		node_22_browser	2026-05-23T00:00:00Z
-mgl_mosaicism_detector	1.0	mosaicism	evolution_atlas	in_browser	true	true		atlas-side JS (per-window leakage + integrity verdict)								226		node_22_browser	2026-05-23T00:00:00Z
-mgl_kinship_downweight	1.0	ancestry	evolution_atlas	in_browser	true	true		atlas-side JS (ancestry-layer cleaning)								226		node_22_browser	2026-05-23T00:00:00Z
-copy_origin_painting	1.0	polarization	evolution_atlas	spec_only				Stage 5.6 of v3.4 pipeline — explicit SPEC ONLY per specs_todo/SPEC_copy_origin_painting.md (awaiting audit before implementation).								226		node_22_browser	2026-05-23T00:00:00Z
+module_name	version	family	atlas	biomod_status	biomod_status_detail	installed	ready	stale	stale_reason	parent	derivatives	last_run_id	last_run_status	last_run_qc	last_run_started	last_run_seconds	n_samples	conda_env_path	biomod_env	synced_at
+ngsrelate_pairwise_v2	2.0.0	relatedness	relatedness_atlas	stable		true	true	false			ngsrelate_pairwise_v2_strict	a1b2c3d4-5678-90ab-cdef-1234567890ab	success	pass	2026-05-12T10:00:00Z	2400	6	~/.biomod/envs/default/conda/ngsrelate_pairwise_v2/	default	2026-05-13T21:20:29Z
+ngspedigree_v1	1.0.0	pedigree	relatedness_atlas	stable		true	true	false				b2c3d4e5-6789-01bc-def0-2345678901bc	success	pass	2026-05-12T11:00:00Z	180	6	~/.biomod/envs/default/conda/ngspedigree_v1/	default	2026-05-13T21:20:29Z
+mendelian_trio_v1	1.0.0	inheritance	relatedness_atlas	experimental		true	false	false			mendelian_trio_v1_strict	c3d4e5f6-789a-12cd-ef01-3456789012cd	failed		2026-05-12T11:30:00Z	22		~/.biomod/envs/default/conda/mendelian_trio_v1/	default	2026-05-13T21:20:29Z
+region_popstats_v0_4	0.4.1	popstats	popstats_atlas	stable		true	true	false				d4e5f6a7-89ab-23de-f012-456789013def	success	pass	2026-05-12T13:00:00Z	480	6	~/.biomod/envs/default/conda/region_popstats_v0_4/	default	2026-05-13T21:20:29Z
+wfmash_v0_13	0.13.0	comparative_alignment	cross_species_atlas	experimental		true	true	false										~/.biomod/envs/default/conda/wfmash_v0_13/	default	2026-05-23T00:00:00Z
+busco_v5	5.5.0	comparative_orthology	cross_species_atlas	stable		true	true	false										~/.biomod/envs/default/conda/busco_v5/	default	2026-05-23T00:00:00Z
+macrosyntr_v1	1.0.0	comparative_orthology	cross_species_atlas	experimental		false	false	false	wide ortholog tables exported manually from .RData; R wrapper not yet packaged									~/.biomod/envs/default/conda/macrosyntr_v1/	default	2026-05-23T00:00:00Z
+cs_extract_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental		true	true	false		wfmash_v0_13								~/.biomod/envs/default/conda/cs_extract_v0/	default	2026-05-23T00:00:00Z
+bp_atlas_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental		true	true	false		wfmash_v0_13	bp_atlas_v0_laptop,bp_atlas_v0_slurm						5	~/.biomod/envs/default/conda/bp_atlas_v0/	default	2026-05-23T00:00:00Z
+bp_reciprocity_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental		true	true	false		bp_atlas_v0								~/.biomod/envs/default/conda/bp_reciprocity_v0/	default	2026-05-23T00:00:00Z
+cluster_breakpoints_v0	0.1.0	comparative_breakpoints	cross_species_atlas	experimental		true	true	false										~/.biomod/envs/default/conda/cluster_breakpoints_v0/	default	2026-05-23T00:00:00Z
+ngstracts_classifier	v1.0.0	meiosis	meiosis_atlas	contract_only	external_producer	true	true				tract_classifications_v1						226		ngsTracts	
+ngstracts_traversal_breakpoints	v1.0.0	meiosis	meiosis_atlas	contract_only	external_producer	true	true			ngstracts_classifier	tract_classifications_v1						226		ngsTracts	
+chromosome_meiosis_events_builder	v1.0.0	meiosis	meiosis_atlas	experimental		true	true			ngstracts_classifier	chromosome_meiosis_events_v1						226		meiosis_atlas	
+coincidence_matrix_builder	v1.0.0	meiosis	meiosis_atlas	experimental		true	true			chromosome_meiosis_events_builder	coincidence_matrix_v1						226		meiosis_atlas	
+local_inv_controls_builder	v1.0.0	meiosis	meiosis_atlas	experimental		true	true				local_inv_controls_v1						226		meiosis_atlas	
+family_aware_permutation_design_builder	v1.0.0	meiosis	meiosis_atlas	experimental		true	true				family_aware_permutation_design_v1						226		meiosis_atlas	
+meiosis_nco_enrichment_test	v0.1.0	meiosis	meiosis_atlas	experimental		true	true			ngstracts_classifier	nco_enrichment_result						226		meiosis_atlas	
+meiosis_intrachromosomal_co_test	v0.1.0	meiosis	meiosis_atlas	experimental		true	true			chromosome_meiosis_events_builder	intrachromosomal_co_effect						226		meiosis_atlas	
+meiosis_interchromosomal_effect_test	v0.1.0	meiosis	meiosis_atlas	experimental		true	true	promotion_from_browser_js	currently inlined in atlases/meiosis/pages/hub/interchromosomal/_stats.js; needs server-side wrap before catalogue compute lookup works end-to-end	coincidence_matrix_builder	inversion_meiosis_effects_v1						226		meiosis_atlas	
+per_candidate_co_track_builder	v0.1.0	meiosis	meiosis_atlas	contract_only		false	false	missing_builder	per-candidate crossover_track JSON not yet emitted by any pedigree pipeline; layer is CONTRACT-ONLY	ngstracts_classifier	crossover_track						226		meiosis_atlas	
+per_candidate_nco_gc_track_builder	v0.1.0	meiosis	meiosis_atlas	contract_only		false	false	missing_builder	per-candidate nco_gc_track JSON not yet emitted by any pedigree pipeline; layer is CONTRACT-ONLY	ngstracts_classifier	nco_gc_track						226		meiosis_atlas	
+prdm9_motif_finder	v0.1.0	meiosis	meiosis_atlas	contract_only		false	false	missing_builder	MEME/STREME wrapper on CO ±2kb hotspots; optional layer, page hides logo card when pwm null	per_candidate_co_track_builder	prdm9_motif						226		meiosis_atlas	
+region_popstats	v3	popstats	popstats_atlas	stable	installed	true	true				inversion_groupwise_popstats						226			2026-05-23
+fhom	v2	popstats	popstats_atlas	stable	installed	true	true										226			2026-05-23
+fdM	v1	introgression	popstats_atlas	stable	installed	true	true										226			2026-05-23
+iHS	v1	selection	popstats_atlas	stable	installed	true	true										226			2026-05-23
+xpehh	v1	selection	popstats_atlas	stable	installed	true	true										226			2026-05-23
+pi_NS	v2	selection	popstats_atlas	stable	installed	true	true										226			2026-05-23
+codon_stats	v2	selection	popstats_atlas	stable	installed	true	true										226			2026-05-23
+hobs_windower	v1	popstats	popstats_atlas	stable	installed	true	true										226			2026-05-23
+rare_sfs_pairwise	v1	popstats	popstats_atlas	stable	installed	true	true										226			2026-05-23
+outlier_scan	v1	popstats	popstats_atlas	stable	installed	true	true				candidate_validation						226			2026-05-23
+candidate_vs_flanks	v1	popstats	popstats_atlas	stable	installed	true	true										226			2026-05-23
+export_q_residual_dosage	v1	ancestry_prep	popstats_atlas	stable	installed	true	true				karyotype_resolution						226			2026-05-23
+snp_q_support	v1	ancestry_chain	popstats_atlas	stable	installed	true	true				inversion_candidate_classifier						226			2026-05-23
+internal_ancestry_composition	v1	ancestry_chain	popstats_atlas	stable	installed	true	true				inversion_candidate_classifier						226			2026-05-23
+inversion_candidate_classifier	v1	inversion_chain	popstats_atlas	stable	installed	true	true			snp_q_support;internal_ancestry_composition							226			2026-05-23
+hobs_hwe_pipeline	v1	popstats_chain	popstats_atlas	stable	installed	true	true				hobs_hwe_candidate_overlay						226			2026-05-23
+hobs_hwe_candidate_overlay	v1	inversion_chain	popstats_atlas	stable	installed	true	true			hobs_hwe_pipeline	karyotype_resolution						226			2026-05-23
+karyotype_resolution	v1	inversion_chain	popstats_atlas	stable	installed	true	true			export_q_residual_dosage;hobs_hwe_candidate_overlay	inversion_groupwise_popstats						226			2026-05-23
+instant_q_boundary_scan	v1	inversion_chain	popstats_atlas	stable	installed	true	true				inversion_candidate_classifier;karyotype_resolution						226			2026-05-23
+inversion_groupwise_popstats	v1	popstats_chain	popstats_atlas	stable	installed	true	true			region_popstats;karyotype_resolution							226			2026-05-23
+ngsrelate_fast	1.0.0	relatedness	relatedness_atlas	stable	installed	true	true	false			ngsrelate_adaptive_scheduler						226		assembly	
+ngsrelate_adaptive_scheduler	1.0.0	relatedness	relatedness_atlas	experimental		true	true	false	awaiting Phase 9 calibration on LG12 — config.py defaults still placeholders	ngsrelate_fast							226		assembly	
+import_table	1.0.0	file_io	genome_atlas	contract_only	file_io_only	true	true													2026-05-19
+runners.import_slot	v1.0	capture	diversity_atlas	stable	production	true	true				staging_diversity_slot_v0									2026-05-20
+runners.harvest_file	v1.0	capture	diversity_atlas	stable	production	true	true													2026-05-20
+runners.run_realsfs	v1.0	sfs	diversity_atlas	planned					runner module not yet written; SAF binaries (.saf.idx/.saf.gz/.saf.pos.gz) not mirrored to compute host — see _handoff_docs/MISSING_DATA.md §1		sample_sfs									2026-05-20
+runners.run_thetastat	v1.0	theta	diversity_atlas	planned					runner module not yet written; per-sample .thetas.idx + .thetas.gz from angsd -doThetas required		samples_theta_pi_pestpg									2026-05-20
+runners.aggregate_pi	v1.0	theta	diversity_atlas	planned					runner module not yet written; pure-Python aggregator; targets 05_aggregated/ which is empty on disk — see MISSING_DATA.md §3		theta_pi_aggregate_cohort									2026-05-20
+extractors.diversity_slot	v0.1	extract	diversity_atlas	stable	production	true	true			runners.import_slot	staging_diversity_slot_v0									2026-05-20
+extractors.genomewide_het	v1.0	extract	diversity_atlas	stable	production	true	true			runners.harvest_file	samples_genomewide_het_v1						226			2026-05-20
+extractors.sfs_ml	v1.0	extract	diversity_atlas	stable	production	true	true			runners.harvest_file	sample_sfs_v1						226			2026-05-20
+extractors.pestpg	v1.0	extract	diversity_atlas	stable	production	true	true			runners.harvest_file	theta_pi_pestpg_v1						226			2026-05-20
+extractors.tsv_table	v1.0	extract	diversity_atlas	stable	production	true	true			runners.harvest_file	tsv_table_v1,ancestry_het_kruskal_v1									2026-05-20
+extractors.roh_per_sample	v0.1	extract	diversity_atlas	planned	stub				parser stub; pipeline output (per-sample ROH segment table) empty on disk — see MISSING_DATA.md §2	runners.harvest_file	samples_roh_per_sample_v1									2026-05-20
+ngspedigree_hpp	0.5.0-mvp1	haplotype_projection	relatedness_atlas	experimental		true			awaiting_stage3_real_schema_and_spec_audit	ngspedigree_stage3							226			
+_reserved	0.0.0	reserved	genome_atlas	planned	reserved	false	false	false	placeholder slot — server-side runner not yet implemented											2026-05-23T00:00:00Z
+STEP_BP1_pairwise_wfmash	1.0	breakpoint_detection	cross_species_atlas	stable	installed	true	true										18		wfmash_2024	2026-05-23T00:00:00Z
+STEP_BP2_call_breakpoints	1.0	breakpoint_detection	cross_species_atlas	stable	installed	true	true			STEP_BP1_pairwise_wfmash							18		python_3_11	2026-05-23T00:00:00Z
+STEP_BP3_cluster_zones	1.0	breakpoint_detection	cross_species_atlas	stable	installed	true	true			STEP_BP2_call_breakpoints							18		python_3_11	2026-05-23T00:00:00Z
+STEP_BP3c_reciprocity	1.0	breakpoint_detection	cross_species_atlas	stable	installed	true	true			STEP_BP3_cluster_zones							18		python_3_11	2026-05-23T00:00:00Z
+STEP_BP5_prep_atlas_data	1.0	breakpoint_detection	cross_species_atlas	stable	installed	true	true			STEP_BP3_cluster_zones							18		python_3_11	2026-05-23T00:00:00Z
+STEP_BP6_joint_classify	1.0	breakpoint_detection	cross_species_atlas	stable	installed	true	true			STEP_BP3c_reciprocity							18		python_3_11	2026-05-23T00:00:00Z
+wide_orthologs_to_breakpoints	1.0	breakpoint_gene_order	cross_species_atlas	stable	installed	true	true										18		python_3_11	2026-05-23T00:00:00Z
+csbp_json_to_breakpoints	1.0	breakpoint_gene_order	cross_species_atlas	stable	installed	true	true										18		python_3_11	2026-05-23T00:00:00Z
+cluster_breakpoints	1.0	breakpoint_consolidation	cross_species_atlas	stable	installed	true	true			wide_orthologs_to_breakpoints							18		python_3_11	2026-05-23T00:00:00Z
+popstats_server	1.0	popstats	popstats_atlas	stable	installed	true	true										226		popstats_server	2026-05-23T00:00:00Z
+regime_mendelian	1.0	popstats_inversion	popstats_atlas	stable	installed	true	true										226		node_22	2026-05-23T00:00:00Z
+regime_pedigree	1.0	popstats_inversion	popstats_atlas	stable	installed	true	true										226		node_22	2026-05-23T00:00:00Z
+msmc_per_founder_background	0.1	demography	popstats_atlas	planned	spec_only				awaiting producer implementation per specs_todo/SPEC_msmc_per_founder_background.md	regime_pedigree							226		msmc2	2026-05-23T00:00:00Z
+per_l2_cluster	1.0	local_pca	inversion_atlas	contract_only	in_browser	true	true		runs as atlas-side JS module in the browser; not a cluster-side producer								226		node_22_browser	2026-05-23T00:00:00Z
+band_quality	1.0	local_pca	inversion_atlas	contract_only	in_browser	true	true		atlas-side JS	per_l2_cluster							226		node_22_browser	2026-05-23T00:00:00Z
+seed_discovery	1.0	haplotype_regimes	inversion_atlas	contract_only	in_browser	true	true		atlas-side JS	band_quality							226		node_22_browser	2026-05-23T00:00:00Z
+het_skeleton	1.0	haplotype_regimes	inversion_atlas	contract_only	in_browser	true	true		atlas-side JS	per_l2_cluster							226		node_22_browser	2026-05-23T00:00:00Z
+cramers_v_merge	1.0	haplotype_regimes	inversion_atlas	contract_only	in_browser	true	true		atlas-side JS	het_skeleton							226		node_22_browser	2026-05-23T00:00:00Z
+breadth_voting	1.0	haplotype_regimes	inversion_atlas	contract_only	in_browser	true	true		atlas-side JS (projection + vote_evidence + band_voters + partition_enumerate + partition_consensus orchestrator)	seed_discovery							226		node_22_browser	2026-05-23T00:00:00Z
+haplotype_regime_refine	1.0	haplotype_regimes	inversion_atlas	contract_only	in_browser	true	true		atlas-side JS (haplotype_regime.refineRegimesFromIntervals — arrangement identity)	breadth_voting							226		node_22_browser	2026-05-23T00:00:00Z
+regime_topology	1.0	haplotype_regimes	inversion_atlas	contract_only	in_browser	true	true		atlas-side JS	haplotype_regime_refine							226		node_22_browser	2026-05-23T00:00:00Z
+genome_scale	1.0	haplotype_regimes	inversion_atlas	contract_only	in_browser	true	true		atlas-side JS (per-chromosome aggregation + cross-chrom CHAINED links; relatedness exports forwarded to popstats)	regime_topology							226		node_22_browser	2026-05-23T00:00:00Z
+regime_catalogue	1.0	haplotype_regimes	inversion_atlas	contract_only	in_browser	true	true		atlas-side JS (catalogue serializer — emits manifest + knobs + catalogue JSON triple, cross-page contract)	genome_scale							226		node_22_browser	2026-05-23T00:00:00Z
+banding_pipeline	1.0	haplotype_regimes	inversion_atlas	contract_only	in_browser	true	true		atlas-side JS (orchestrator for Cluster 1 V-walker → Cluster 2 voting → Cluster 3 refinement)		haplotype_regime_refine,regime_topology,genome_scale,regime_catalogue						226		node_22_browser	2026-05-23T00:00:00Z
+busco_4d_age	1.0	age_estimation	evolution_atlas	contract_only	in_browser	true	true		atlas-side JS								226		node_22_browser	2026-05-23T00:00:00Z
+age_model_suggester	1.0	age_estimation	evolution_atlas	contract_only	in_browser	true	true		atlas-side JS (3 frozen μ values, dxy→age_my, block builder)	busco_4d_age							226		node_22_browser	2026-05-23T00:00:00Z
+mgl_inversion_divergence	1.0	age_estimation	evolution_atlas	contract_only	in_browser	true	true		atlas-side JS (per-candidate divergence compute for age_divergence page)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_outgroup_synteny	1.0	polarization	evolution_atlas	contract_only	in_browser	true	true		atlas-side JS (outgroup synteny vote)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_founder_consensus	1.0	polarization	evolution_atlas	contract_only	in_browser	true	true		atlas-side JS (founder consensus for polarize_msa_stacked)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_doubleton_sfs_clusters	1.0	polarization	evolution_atlas	contract_only	in_browser	true	true		atlas-side JS (2D-SFS doubleton hierarchical clustering)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_haplotype_network	1.0	haplotype_network	evolution_atlas	contract_only	in_browser	true	true		atlas-side JS (minimum-spanning haplotype network)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_event_tree	1.0	event_ordering	evolution_atlas	contract_only	in_browser	true	true		atlas-side JS								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_archaeology_classifier	1.0	archaeology	evolution_atlas	contract_only	in_browser	true	true		atlas-side JS (per-candidate archaeology synthesis)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_mosaicism_detector	1.0	mosaicism	evolution_atlas	contract_only	in_browser	true	true		atlas-side JS (per-window leakage + integrity verdict)								226		node_22_browser	2026-05-23T00:00:00Z
+mgl_kinship_downweight	1.0	ancestry	evolution_atlas	contract_only	in_browser	true	true		atlas-side JS (ancestry-layer cleaning)								226		node_22_browser	2026-05-23T00:00:00Z
+copy_origin_painting	1.0	polarization	evolution_atlas	planned	spec_only				Stage 5.6 of v3.4 pipeline — explicit SPEC ONLY per specs_todo/SPEC_copy_origin_painting.md (awaiting audit before implementation).								226		node_22_browser	2026-05-23T00:00:00Z

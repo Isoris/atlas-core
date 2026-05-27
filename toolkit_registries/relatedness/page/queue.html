@@ -197,7 +197,7 @@ function saveClaims() { localStorage.setItem(LS_KEY, JSON.stringify(state.claims
 async function loadIndex() {
   const meta = document.getElementById("meta-line");
   try {
-    const r = await fetch("../02_queue/index.json", { cache: "no-store" });
+    const r = await fetch("../02_queue/index.json", { cache: "default" });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     state.index = await r.json();
     meta.textContent = `index rewritten ${state.index.rewritten_at || "?"} · ${state.index.n || 0} entries`;
@@ -317,6 +317,7 @@ function escapeJSON(obj) {
 </script>
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="registry-cache.js"></script>
 <script defer src="loader.js"></script>
 <script defer src="filters.js"></script>
 <script defer src="scope.js"></script>

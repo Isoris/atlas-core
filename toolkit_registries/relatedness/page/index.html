@@ -323,7 +323,7 @@ function parseTSV(text) {
 }
 
 async function fetchTsv(rel) {
-  const resp = await fetch(rel, { cache: "no-store" });
+  const resp = await fetch(rel, { cache: "default" });
   if (!resp.ok) throw new Error(`${rel} → HTTP ${resp.status}`);
   return parseTSV(await resp.text());
 }
@@ -871,6 +871,7 @@ document.addEventListener("keydown", (e) => {
 
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="registry-cache.js"></script>
 <script defer src="loader.js"></script>
 <script defer src="filters.js"></script>
 <script defer src="scope.js"></script>

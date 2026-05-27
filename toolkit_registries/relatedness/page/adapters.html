@@ -146,8 +146,9 @@
 const ADAPTERS_DIR = "../../analysis/";   // toolkit_registries/relatedness/page/ → analysis/
 
 async function fetchJsonl(rel) {
+  if (typeof window.atlasFetchJsonl === "function") return await window.atlasFetchJsonl(rel);
   try {
-    const r = await fetch(rel, { cache: "no-store" });
+    const r = await fetch(rel, { cache: "default" });
     if (!r.ok) return [];
     return (await r.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
   } catch { return []; }
@@ -155,13 +156,13 @@ async function fetchJsonl(rel) {
 
 async function fetchJsonOrNull(rel) {
   try {
-    const r = await fetch(rel, { cache: "no-store" });
+    const r = await fetch(rel, { cache: "default" });
     if (!r.ok) return null;
     return await r.json();
   } catch { return null; }
 }
 async function probeFile(rel) {
-  try { const r = await fetch(rel, { method: "HEAD", cache: "no-store" });
+  try { const r = await fetch(rel, { method: "HEAD", cache: "default" });
         return r.ok; } catch { return false; }
 }
 
@@ -374,6 +375,7 @@ function escapeHtml(s) {
 
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="registry-cache.js"></script>
 <script defer src="loader.js"></script>
 <script defer src="filters.js"></script>
 <script defer src="scope.js"></script>

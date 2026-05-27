@@ -198,7 +198,7 @@ function tokens(s) {
 
 const DB = {};
 async function loadDB() {
-  async function jsonl(p) { try { return parseJSONL(await (await fetch(p, { cache: "no-store" })).text()); } catch { return []; } }
+  async function jsonl(p) { try { return parseJSONL(await (await fetch(p, { cache: "default" })).text()); } catch { return []; } }
   const base = "../01_registry/";
   const [products, questions, atlases, estimands] = await Promise.all([
     jsonl(base + "products.jsonl"),
@@ -319,6 +319,7 @@ function render(qToks) {
 </script>
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="registry-cache.js"></script>
 <script defer src="loader.js"></script>
 <script defer src="filters.js"></script>
 <script defer src="scope.js"></script>

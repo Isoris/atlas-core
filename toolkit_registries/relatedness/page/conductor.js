@@ -49,7 +49,9 @@
           .then(t => (t || "").split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse));
     return Promise.all([j(REG + "panels.jsonl"), j(REG + "spawn_rules.jsonl"),
                         j(REG + "atlases.jsonl"), j(REG + "module_registry.jsonl"),
-                        j(REG + "analysis_modes.jsonl")]);
+                        j(REG + "analysis_modes.jsonl"), j(REG + "analysis_registry.jsonl"),
+                        j(REG + "cohorts.jsonl"), j(REG + "manuscript_chunks.jsonl"),
+                        j(REG + "references.jsonl")]);
   }
 
   function pickSlot(panel) {
@@ -68,7 +70,30 @@
     return `<span style="display:inline-block;padding:1px 6px;border-radius:3px;font-size:10.5px;font-weight:600;color:white;background:${bg}">${a.icon || ""} ${a.label || atlasId}</span>`;
   }
 
-  function renderAtlasSummaryCard(panel, atlases, modules, modes) {
+  // ---- Card shell (shared chrome) ---- //
+  function cardShell(panel, bodyHtml) {
+    return `
+      <div class="conductor-panel" data-panel-id="${panel.panel_id}"
+           style="background:#fff;border:1px solid #d8dce3;border-radius:6px;
+                  padding:12px 14px;margin-bottom:12px;min-width:${panel.fluidity.min_width_px.comfortable}px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;
+                    padding-bottom:8px;border-bottom:1px solid #d8dce3">
+          <strong style="font-size:13px">${panel.label}</strong>
+          <span style="margin-left:auto;font-size:10px;color:#6c727f;text-transform:uppercase;letter-spacing:0.04em">conductor-spawned</span>
+          ${panel.dismissable !== false
+            ? `<button data-act="dismiss" title="Dismiss"
+                       style="cursor:pointer;border:1px solid #d8dce3;background:transparent;color:#6c727f;
+                              border-radius:3px;width:18px;height:18px;line-height:14px;font-size:13px;padding:0">✕</button>`
+            : ""}
+        </div>
+        ${bodyHtml}
+      </div>`;
+  }
+
+  // ---- Renderers ---- //
+
+  function renderAtlasSummaryCard(panel, ctx) {
+    const { atlases, modules, modes } = ctx;
     const modBy = {}, modeBy = {};
     for (const m of modules)  (modBy[m.atlas]  = modBy[m.atlas]  || []).push(m);
     for (const m of modes) {
@@ -87,34 +112,127 @@
           <td style="padding:3px 8px;text-align:right;font-family:ui-monospace,Menlo,monospace">${md}</td>
         </tr>`;
       }).join("");
-    return `
-      <div class="conductor-panel" data-panel-id="${panel.panel_id}"
-           style="background:#fff;border:1px solid #d8dce3;border-radius:6px;
-                  padding:12px 14px;margin-bottom:12px;min-width:${panel.fluidity.min_width_px.comfortable}px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;
-                    padding-bottom:8px;border-bottom:1px solid #d8dce3">
-          <strong style="font-size:13px">${panel.label}</strong>
-          <span style="margin-left:auto;font-size:10px;color:#6c727f;text-transform:uppercase;letter-spacing:0.04em">conductor-spawned</span>
-          ${panel.dismissable !== false
-            ? `<button data-act="dismiss" title="Dismiss"
-                       style="cursor:pointer;border:1px solid #d8dce3;background:transparent;color:#6c727f;
-                              border-radius:3px;width:18px;height:18px;line-height:14px;font-size:13px;padding:0">✕</button>`
-            : ""}
-        </div>
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr>
-            <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">atlas</th>
-            <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">modules</th>
-            <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">modes</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
+    return cardShell(panel, `
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">atlas</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">modules</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">modes</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`);
   }
+
+  function renderCohortSummaryCard(panel, ctx) {
+    const { cohorts, atlases } = ctx;
+    const byId = Object.fromEntries(cohorts.map(c => [c.cohort_id, c]));
+    // Hierarchy: render roots first, then children indented one level
+    const roots = cohorts.filter(c => !c.parent_cohort);
+    const children = (rid) => cohorts.filter(c => c.parent_cohort === rid);
+    const ownerBadges = (ows) => (ows || []).map(o => atlasBadge(o, atlases)).join(" ");
+    const row = (c, depth) => `<tr>
+      <td style="padding:3px 8px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px">
+        ${"&nbsp;".repeat(depth * 4)}${depth > 0 ? "└─ " : ""}<code style="font-weight:600">${c.cohort_id}</code>
+      </td>
+      <td style="padding:3px 8px;text-align:right;font-family:ui-monospace,Menlo,monospace">${c.n_samples}</td>
+      <td style="padding:3px 8px;font-size:11px">${ownerBadges(c.owner_atlases)}</td>
+    </tr>`;
+    const rows = roots.flatMap(r => [row(r, 0), ...children(r.cohort_id).map(c => row(c, 1))]).join("");
+    return cardShell(panel, `
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">cohort</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">n</th>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">owners</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`);
+  }
+
+  function renderAdapterCompletenessCard(panel, ctx) {
+    const { registry } = ctx;
+    // Filter to analysis_registry rows that have a definition_path under analysis/
+    const adap = registry.filter(r => (r.definition_path || "").startsWith("analysis/")
+                                    || (r.default_runner || "").startsWith("analysis."));
+    // The conductor doesn't probe the filesystem; we report the registered surface
+    // and tag each as "shipped" vs "pending" by inspecting status.
+    const rows = adap.map(r => {
+      const tag = r.status === "experimental" || r.status === "active" ? "ok" : "warn";
+      const color = tag === "ok" ? "#2f855a" : "#b7791f";
+      return `<tr>
+        <td style="padding:3px 8px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px"><code>${r.analysis_id}</code></td>
+        <td style="padding:3px 8px;font-size:11px;color:#6c727f">${r.engine || "?"}</td>
+        <td style="padding:3px 8px"><span style="background:${color};color:#fff;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase">${r.status || "?"}</span></td>
+      </tr>`;
+    }).join("");
+    const total = adap.length;
+    return cardShell(panel, `
+      <div style="font-size:11.5px;color:#6c727f;margin-bottom:6px">
+        ${total} registered adapter${total === 1 ? "" : "s"} · open page 13 for the 6/6 file-shipping detail
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">adapter</th>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">engine</th>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`);
+  }
+
+  function renderManuscriptChunksSummaryCard(panel, ctx) {
+    const { chunks, refs, atlases } = ctx;
+    // Per-(atlas, section) counts
+    const grid = {};
+    for (const c of chunks) {
+      const a = c.atlas, s = c.section;
+      grid[a] = grid[a] || { methods: 0, results: 0, discussion: 0 };
+      grid[a][s] = (grid[a][s] || 0) + 1;
+    }
+    const atlasOrder = atlases.map(x => x.atlas_id).filter(a => grid[a]);
+    const rows = atlasOrder.map(aid => {
+      const g = grid[aid];
+      return `<tr>
+        <td style="padding:3px 8px">${atlasBadge(aid, atlases)}</td>
+        <td style="padding:3px 8px;text-align:right;font-family:ui-monospace,Menlo,monospace">${g.methods || 0}</td>
+        <td style="padding:3px 8px;text-align:right;font-family:ui-monospace,Menlo,monospace">${g.results || 0}</td>
+        <td style="padding:3px 8px;text-align:right;font-family:ui-monospace,Menlo,monospace">${g.discussion || 0}</td>
+      </tr>`;
+    }).join("");
+    // Orphan ref count (refs not cited by any chunk)
+    const cited = new Set();
+    for (const c of chunks) {
+      for (const r of (c.references || [])) cited.add(r);
+      const re = /\[@([A-Za-z][A-Za-z0-9_]*)\]/g; let m;
+      while ((m = re.exec(c.template || "")) !== null) cited.add(m[1]);
+    }
+    const orphans = (refs || []).filter(r => !cited.has(r.ref_id)).length;
+    return cardShell(panel, `
+      <div style="font-size:11.5px;color:#6c727f;margin-bottom:6px">
+        ${chunks.length} chunks · ${refs.length} references · <strong style="color:${orphans ? '#b7791f' : '#2f855a'}">${orphans}</strong> orphan ref${orphans === 1 ? "" : "s"}
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">atlas</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">methods</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">results</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">discussion</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`);
+  }
+
+  // Renderer dispatch by panel_id (each registered panel has its own renderer)
+  const RENDERERS = {
+    atlas_summary_card:              renderAtlasSummaryCard,
+    cohort_summary_card:             renderCohortSummaryCard,
+    adapter_completeness_card:       renderAdapterCompletenessCard,
+    manuscript_chunks_summary_card:  renderManuscriptChunksSummaryCard,
+  };
 
   // ---- diff & spawn ---- //
 
-  function diffAndSpawn(panels, rules, atlases, modules, modes) {
+  function diffAndSpawn(panels, rules, ctx) {
     const pageId = pageIdFromDoc();
     const desired = new Map();   // panel_id → priority
     for (const r of rules) {
@@ -131,23 +249,24 @@
     const scopeKey = pageId;   // simple v0; full scope-aware key lands later
     for (const pid of Object.keys(dismissals[scopeKey] || {})) desired.delete(pid);
 
-    // Spawn diff
-    for (const [pid, _prio] of desired) {
+    // Spawn diff (ordered by priority — higher first into each slot)
+    const desiredList = [...desired].sort((a, b) => b[1] - a[1]);
+    for (const [pid, _prio] of desiredList) {
       if (CURRENT_PANELS.has(pid)) continue;
       const panel = panels.find(p => p.panel_id === pid);
       if (!panel) continue;
       const slot = pickSlot(panel);
       if (!slot) continue;
-      const html =
-        panel.panel_id === "atlas_summary_card"
-          ? renderAtlasSummaryCard(panel, atlases, modules, modes)
-          : `<div class="conductor-panel" data-panel-id="${pid}"
-                  style="background:#fff;border:1px dashed #d8dce3;border-radius:6px;padding:12px 14px;margin-bottom:12px">
-               <strong>${panel.label || pid}</strong>
-               <div style="margin-top:6px;color:#6c727f;font-size:11.5px;font-style:italic">
-                 conductor: no renderer registered for kind "${panel.kind || "?"}" (TODO)
-               </div>
-             </div>`;
+      const renderer = RENDERERS[pid];
+      const html = renderer
+        ? renderer(panel, ctx)
+        : `<div class="conductor-panel" data-panel-id="${pid}"
+                style="background:#fff;border:1px dashed #d8dce3;border-radius:6px;padding:12px 14px;margin-bottom:12px">
+             <strong>${panel.label || pid}</strong>
+             <div style="margin-top:6px;color:#6c727f;font-size:11.5px;font-style:italic">
+               conductor: no renderer registered for kind "${panel.kind || "?"}" (TODO)
+             </div>
+           </div>`;
       const tmp = document.createElement("div");
       tmp.innerHTML = html;
       const el = tmp.firstElementChild;
@@ -169,8 +288,8 @@
   }
 
   async function tick() {
-    const [panels, rules, atlases, modules, modes] = await load();
-    diffAndSpawn(panels, rules, atlases, modules, modes);
+    const [panels, rules, atlases, modules, modes, registry, cohorts, chunks, refs] = await load();
+    diffAndSpawn(panels, rules, { atlases, modules, modes, registry, cohorts, chunks, refs });
   }
 
   // Trigger on load + on scope change + on cache refresh

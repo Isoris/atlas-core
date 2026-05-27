@@ -3047,7 +3047,7 @@
       "trigger_policy": "manual",
       "status": "experimental",
       "notes": "\"The pipeline runs on the comparative cohort (18 genomes + hybrid subgenomes); it produces COORDINATES that the hatchery LG01 x LG28 work consumes",
-      "_path": "analysis/cross_species_breakpoints/adapter_atlas.js"
+      "_path": "analysis/cross_species_breakpoint_detection/adapter_atlas.js"
     },
     {
       "analysis_id": "inversion_pair_incompatibility",

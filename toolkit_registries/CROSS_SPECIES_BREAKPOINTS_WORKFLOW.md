@@ -108,12 +108,12 @@ layers (cross_species_atlas)
 
 analysis_registry
 └── cross_species_breakpoint_detection      // engine=subprocess
-                                            // adapter: analysis/cross_species_breakpoints/
+                                            // adapter: analysis/cross_species_breakpoint_detection/
 ```
 
 The adapter's `compute.js` does NOT reimplement the pipeline. It
 returns a SUBPROCESS recipe: scripts + args. The real pipeline lives in
-`analysis/cross_species_breakpoints/legacy_scripts/` and is the user's
+`analysis/cross_species_breakpoint_detection/legacy_scripts/` and is the user's
 hand-tuned chain (preserved as-is).
 
 ---

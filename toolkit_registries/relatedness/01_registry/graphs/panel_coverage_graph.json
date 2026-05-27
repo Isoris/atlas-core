@@ -1,0 +1,1948 @@
+{
+  "schema_version": "panel_coverage_graph_v1",
+  "rewritten_at": "2026-05-27T13:22:31Z",
+  "n_nodes": 142,
+  "n_edges": 187,
+  "nodes": [
+    {
+      "id": "atlas_core",
+      "kind": "atlas",
+      "label": "Atlas Core",
+      "color": "#1a2540"
+    },
+    {
+      "id": "inversion_atlas",
+      "kind": "atlas",
+      "label": "Inversion Atlas",
+      "color": "#2d6cb6"
+    },
+    {
+      "id": "relatedness_atlas",
+      "kind": "atlas",
+      "label": "Relatedness Atlas",
+      "color": "#2f7d8d"
+    },
+    {
+      "id": "meiosis_atlas",
+      "kind": "atlas",
+      "label": "Meiosis Atlas",
+      "color": "#b87a14"
+    },
+    {
+      "id": "cross_species_atlas",
+      "kind": "atlas",
+      "label": "Cross-Species Atlas",
+      "color": "#e67e22"
+    },
+    {
+      "id": "popstats_atlas",
+      "kind": "atlas",
+      "label": "Popstats Atlas",
+      "color": "#b13030"
+    },
+    {
+      "id": "evolution_atlas",
+      "kind": "atlas",
+      "label": "Evolution Atlas",
+      "color": "#6b3aa6"
+    },
+    {
+      "id": "genome_synteny_atlas",
+      "kind": "atlas",
+      "label": "Genome / Synteny Atlas (deprecated)",
+      "color": "#888888"
+    },
+    {
+      "id": "marker_design",
+      "kind": "atlas",
+      "label": "Marker Design",
+      "color": "#e89c2a"
+    },
+    {
+      "id": "diversity_atlas",
+      "kind": "atlas",
+      "label": "Diversity Atlas",
+      "color": "#3aa6c0"
+    },
+    {
+      "id": "genome_atlas",
+      "kind": "atlas",
+      "label": "Genome Atlas",
+      "color": "#4a5d7e"
+    },
+    {
+      "id": "ngsrelate",
+      "kind": "analysis",
+      "label": "ngsRelate \u2014 pairwise relatedness from genotype likelihoods",
+      "status": "active"
+    },
+    {
+      "id": "ngspedigree",
+      "kind": "analysis",
+      "label": "ngsPedigree \u2014 pedigree reconstruction from a relatedness matrix",
+      "status": "active"
+    },
+    {
+      "id": "mendelian",
+      "kind": "analysis",
+      "label": "Mendelian inheritance \u2014 per-trio error rate",
+      "status": "active"
+    },
+    {
+      "id": "popstats",
+      "kind": "analysis",
+      "label": "Population statistics \u2014 windowed FST / dxy / piN / piS (composite)",
+      "status": "active"
+    },
+    {
+      "id": "fst_pairwise",
+      "kind": "analysis",
+      "label": "Pairwise FST in windows",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_pi",
+      "kind": "analysis",
+      "label": "Nucleotide diversity \u03b8\u03c0 in windows",
+      "status": "experimental"
+    },
+    {
+      "id": "dxy",
+      "kind": "analysis",
+      "label": "Between-group divergence dxy in windows",
+      "status": "experimental"
+    },
+    {
+      "id": "iv_candidate_promoter",
+      "kind": "analysis",
+      "label": "Inversion candidate promoter",
+      "status": "experimental"
+    },
+    {
+      "id": "karyotype_auto_caller",
+      "kind": "analysis",
+      "label": "Karyotype auto caller",
+      "status": "experimental"
+    },
+    {
+      "id": "karyotype_polarizer",
+      "kind": "analysis",
+      "label": "Karyotype polarizer",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_pair_incompatibility",
+      "kind": "analysis",
+      "label": "Inversion pair incompatibility test",
+      "status": "experimental"
+    },
+    {
+      "id": "cross_species_breakpoint_detection",
+      "kind": "analysis",
+      "label": "Cross-species breakpoint detection",
+      "status": "experimental"
+    },
+    {
+      "id": "wfmash_pairwise_alignment",
+      "kind": "analysis",
+      "label": "wfmash pairwise whole-genome alignment",
+      "status": "experimental"
+    },
+    {
+      "id": "busco_ortholog_extraction",
+      "kind": "analysis",
+      "label": "BUSCO single-copy ortholog table extraction",
+      "status": "experimental"
+    },
+    {
+      "id": "tract_classifications",
+      "kind": "analysis",
+      "label": "ngsTracts CO/NCO/DCO/MOSAIC classifier",
+      "status": "experimental"
+    },
+    {
+      "id": "chromosome_meiosis_events",
+      "kind": "analysis",
+      "label": "per-(chrom \u00d7 dyad) CO/DCO/NCO counts",
+      "status": "experimental"
+    },
+    {
+      "id": "coincidence_matrix",
+      "kind": "analysis",
+      "label": "per-(chrom \u00d7 interval_a \u00d7 interval_b) c-coincidence",
+      "status": "experimental"
+    },
+    {
+      "id": "local_inv_controls",
+      "kind": "analysis",
+      "label": "per-(tested chrom \u00d7 local inversion) covariate matrix",
+      "status": "experimental"
+    },
+    {
+      "id": "family_aware_permutation_design",
+      "kind": "analysis",
+      "label": "per-(focal_inv \u00d7 parent) null-model assignment",
+      "status": "experimental"
+    },
+    {
+      "id": "crossover_track",
+      "kind": "analysis",
+      "label": "per-candidate sex-specific CO ideogram + telomere curve",
+      "status": "experimental"
+    },
+    {
+      "id": "nco_gc_track",
+      "kind": "analysis",
+      "label": "per-candidate NCO/GC tract ideogram + telomere curve",
+      "status": "experimental"
+    },
+    {
+      "id": "prdm9_motif",
+      "kind": "analysis",
+      "label": "PRDM9 PWM from CO \u00b12kb hotspots",
+      "status": "experimental"
+    },
+    {
+      "id": "nco_inside_vs_outside_inversion",
+      "kind": "analysis",
+      "label": "NCO enrichment inside vs outside inversion candidate",
+      "status": "experimental"
+    },
+    {
+      "id": "intrachromosomal_co_karyotype_effect",
+      "kind": "analysis",
+      "label": "CO_rate(het) vs CO_rate(non-het) per focal inversion \u00d7 tested chrom",
+      "status": "experimental"
+    },
+    {
+      "id": "interchromosomal_inversion_effect",
+      "kind": "analysis",
+      "label": "HEADLINE: focal inversion karyotype \u2192 meiosis on OTHER chromosomes",
+      "status": "experimental"
+    },
+    {
+      "id": "tajimas_d",
+      "kind": "analysis",
+      "label": "tajimas_d",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_w",
+      "kind": "analysis",
+      "label": "theta_w",
+      "status": "experimental"
+    },
+    {
+      "id": "hp",
+      "kind": "analysis",
+      "label": "hp",
+      "status": "experimental"
+    },
+    {
+      "id": "da",
+      "kind": "analysis",
+      "label": "da",
+      "status": "experimental"
+    },
+    {
+      "id": "fhom",
+      "kind": "analysis",
+      "label": "fhom",
+      "status": "experimental"
+    },
+    {
+      "id": "fdm",
+      "kind": "analysis",
+      "label": "fdm",
+      "status": "experimental"
+    },
+    {
+      "id": "ihs",
+      "kind": "analysis",
+      "label": "ihs",
+      "status": "experimental"
+    },
+    {
+      "id": "xpehh",
+      "kind": "analysis",
+      "label": "xpehh",
+      "status": "experimental"
+    },
+    {
+      "id": "pi_ns",
+      "kind": "analysis",
+      "label": "pi_ns",
+      "status": "experimental"
+    },
+    {
+      "id": "pi_0fold_4fold",
+      "kind": "analysis",
+      "label": "pi_0fold_4fold",
+      "status": "experimental"
+    },
+    {
+      "id": "dn_ds",
+      "kind": "analysis",
+      "label": "dn_ds",
+      "status": "experimental"
+    },
+    {
+      "id": "hobs_per_group",
+      "kind": "analysis",
+      "label": "hobs_per_group",
+      "status": "experimental"
+    },
+    {
+      "id": "rare_sfs_pairwise",
+      "kind": "analysis",
+      "label": "rare_sfs_pairwise",
+      "status": "experimental"
+    },
+    {
+      "id": "outlier_scan",
+      "kind": "analysis",
+      "label": "outlier_scan",
+      "status": "experimental"
+    },
+    {
+      "id": "candidate_vs_flanks",
+      "kind": "analysis",
+      "label": "candidate_vs_flanks",
+      "status": "experimental"
+    },
+    {
+      "id": "q_residual_dosage",
+      "kind": "analysis",
+      "label": "q_residual_dosage",
+      "status": "experimental"
+    },
+    {
+      "id": "snp_q_support",
+      "kind": "analysis",
+      "label": "snp_q_support",
+      "status": "experimental"
+    },
+    {
+      "id": "internal_ancestry_composition",
+      "kind": "analysis",
+      "label": "internal_ancestry_composition",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_candidate_classifier",
+      "kind": "analysis",
+      "label": "inversion_candidate_classifier",
+      "status": "experimental"
+    },
+    {
+      "id": "hobs_hwe_pipeline",
+      "kind": "analysis",
+      "label": "hobs_hwe_pipeline",
+      "status": "experimental"
+    },
+    {
+      "id": "hobs_hwe_candidate_overlay",
+      "kind": "analysis",
+      "label": "hobs_hwe_candidate_overlay",
+      "status": "experimental"
+    },
+    {
+      "id": "karyotype_resolution",
+      "kind": "analysis",
+      "label": "karyotype_resolution",
+      "status": "experimental"
+    },
+    {
+      "id": "instant_q_boundary_scan",
+      "kind": "analysis",
+      "label": "instant_q_boundary_scan",
+      "status": "experimental"
+    },
+    {
+      "id": "inversion_groupwise_popstats",
+      "kind": "analysis",
+      "label": "inversion_groupwise_popstats",
+      "status": "experimental"
+    },
+    {
+      "id": "kinship_theta",
+      "kind": "analysis",
+      "label": "kinship_theta",
+      "status": "experimental"
+    },
+    {
+      "id": "king_robust_kinship",
+      "kind": "analysis",
+      "label": "king_robust_kinship",
+      "status": "experimental"
+    },
+    {
+      "id": "jacquard_coefficients_9",
+      "kind": "analysis",
+      "label": "jacquard_coefficients_9",
+      "status": "experimental"
+    },
+    {
+      "id": "ibs_counts",
+      "kind": "analysis",
+      "label": "ibs_counts",
+      "status": "experimental"
+    },
+    {
+      "id": "inbreeding_F",
+      "kind": "analysis",
+      "label": "inbreeding_F",
+      "status": "experimental"
+    },
+    {
+      "id": "relatedness_per_chrom_adaptive",
+      "kind": "analysis",
+      "label": "relatedness_per_chrom_adaptive",
+      "status": "experimental"
+    },
+    {
+      "id": "relatedness_adaptive_validation",
+      "kind": "analysis",
+      "label": "relatedness_adaptive_validation",
+      "status": "experimental"
+    },
+    {
+      "id": "import_table",
+      "kind": "analysis",
+      "label": "Import table",
+      "status": "experimental"
+    },
+    {
+      "id": "cactus_pairwise_align",
+      "kind": "analysis",
+      "label": "Cactus pairwise alignment",
+      "status": "experimental"
+    },
+    {
+      "id": "wgdi_ancestral_karyotype",
+      "kind": "analysis",
+      "label": "WGDI ancestral karyotype reconstruction",
+      "status": "experimental"
+    },
+    {
+      "id": "oxford_grid_reorder",
+      "kind": "analysis",
+      "label": "macrosyntR-style Oxford-grid reordering",
+      "status": "experimental"
+    },
+    {
+      "id": "orthologue_pair_lookup",
+      "kind": "analysis",
+      "label": "Per-pair orthologue lookup",
+      "status": "experimental"
+    },
+    {
+      "id": "genomewide_heterozygosity",
+      "kind": "analysis",
+      "label": "genomewide_heterozygosity",
+      "status": "experimental"
+    },
+    {
+      "id": "sfs_folded_1d",
+      "kind": "analysis",
+      "label": "sfs_folded_1d",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_pi_windows",
+      "kind": "analysis",
+      "label": "theta_pi_windows",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_w_windows",
+      "kind": "analysis",
+      "label": "theta_w_windows",
+      "status": "experimental"
+    },
+    {
+      "id": "tajimas_d_windows",
+      "kind": "analysis",
+      "label": "tajimas_d_windows",
+      "status": "experimental"
+    },
+    {
+      "id": "theta_pi_aggregate_cohort",
+      "kind": "analysis",
+      "label": "theta_pi_aggregate_cohort",
+      "status": "experimental"
+    },
+    {
+      "id": "roh_per_sample",
+      "kind": "analysis",
+      "label": "roh_per_sample",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_kruskal",
+      "kind": "analysis",
+      "label": "ancestry_het_kruskal",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_anova",
+      "kind": "analysis",
+      "label": "ancestry_het_anova",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_pairwise_wilcox",
+      "kind": "analysis",
+      "label": "ancestry_het_pairwise_wilcox",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_pairwise_ttest",
+      "kind": "analysis",
+      "label": "ancestry_het_pairwise_ttest",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_q_correlations",
+      "kind": "analysis",
+      "label": "ancestry_q_correlations",
+      "status": "experimental"
+    },
+    {
+      "id": "import_slot",
+      "kind": "analysis",
+      "label": "import_slot",
+      "status": "experimental"
+    },
+    {
+      "id": "per_sample_diversity_assembly",
+      "kind": "analysis",
+      "label": "per_sample_diversity_assembly",
+      "status": "experimental"
+    },
+    {
+      "id": "ancestry_het_test_battery",
+      "kind": "analysis",
+      "label": "ancestry_het_test_battery",
+      "status": "experimental"
+    },
+    {
+      "id": "cohort_master_assembly",
+      "kind": "analysis",
+      "label": "cohort_master_assembly",
+      "status": "experimental"
+    },
+    {
+      "id": "haplotype_projection",
+      "kind": "analysis",
+      "label": "haplotype_projection",
+      "status": "experimental"
+    },
+    {
+      "id": "offspring_gene_status",
+      "kind": "analysis",
+      "label": "offspring_gene_status",
+      "status": "experimental"
+    },
+    {
+      "id": "transmission_summary",
+      "kind": "analysis",
+      "label": "transmission_summary",
+      "status": "experimental"
+    },
+    {
+      "id": "hpp_kbc_arrangement_crosscheck",
+      "kind": "analysis",
+      "label": "hpp_kbc_arrangement_crosscheck",
+      "status": "experimental"
+    },
+    {
+      "id": "hpp_offspring_pipeline",
+      "kind": "analysis",
+      "label": "hpp_offspring_pipeline",
+      "status": "experimental"
+    },
+    {
+      "id": "pairwise_wfmash_two_pass",
+      "kind": "analysis",
+      "label": "Pairwise wfmash (two-pass)",
+      "status": "experimental"
+    },
+    {
+      "id": "breakpoint_events",
+      "kind": "analysis",
+      "label": "Per-PAF breakpoint event extraction",
+      "status": "experimental"
+    },
+    {
+      "id": "breakpoint_zones",
+      "kind": "analysis",
+      "label": "Cluster events into zones per anchor",
+      "status": "experimental"
+    },
+    {
+      "id": "breakpoint_reciprocity",
+      "kind": "analysis",
+      "label": "Both-anchor reciprocity (BP3c)",
+      "status": "experimental"
+    },
+    {
+      "id": "breakpoint_paf_arcs",
+      "kind": "analysis",
+      "label": "BP5 atlas data + PAF arcs (figure prep)",
+      "status": "experimental"
+    },
+    {
+      "id": "breakpoint_joint_classify",
+      "kind": "analysis",
+      "label": "BP6 joint A-E classification",
+      "status": "experimental"
+    },
+    {
+      "id": "gene_order_breakpoints",
+      "kind": "analysis",
+      "label": "Gene-order breakpoint extraction",
+      "status": "experimental"
+    },
+    {
+      "id": "gene_order_cluster_consolidation",
+      "kind": "analysis",
+      "label": "Tolerance-cluster consolidation + cross-method flag",
+      "status": "experimental"
+    },
+    {
+      "id": "bp_atlas_pipeline",
+      "kind": "analysis",
+      "label": "BP_ATLAS chain (sequence method, full)",
+      "status": "experimental"
+    },
+    {
+      "id": "gene_order_consolidation",
+      "kind": "analysis",
+      "label": "Gene-order + cross-method chain",
+      "status": "experimental"
+    },
+    {
+      "id": "regime_mendelian_annotation",
+      "kind": "analysis",
+      "label": "Per-regime Mendelian annotation (trios + families)",
+      "status": "experimental"
+    },
+    {
+      "id": "regime_pedigree_inference",
+      "kind": "analysis",
+      "label": "Inverse pedigree from regime co-membership",
+      "status": "experimental"
+    },
+    {
+      "id": "msmc_per_founder_background",
+      "kind": "analysis",
+      "label": "MSMC2 per founder-like ancestry background",
+      "status": "experimental"
+    },
+    {
+      "id": "local_pca_kmeans",
+      "kind": "analysis",
+      "label": "Per-window K-means on local PCA",
+      "status": "experimental"
+    },
+    {
+      "id": "band_quality_scoring",
+      "kind": "analysis",
+      "label": "Per-window band-quality scorer",
+      "status": "experimental"
+    },
+    {
+      "id": "seed_discovery_v_walker",
+      "kind": "analysis",
+      "label": "Stage 1 V-walker seed discovery",
+      "status": "experimental"
+    },
+    {
+      "id": "het_skeleton_detection",
+      "kind": "analysis",
+      "label": "Het-skeleton seed detection",
+      "status": "experimental"
+    },
+    {
+      "id": "breadth_voting",
+      "kind": "analysis",
+      "label": "Cluster 2 voting orchestrator",
+      "status": "experimental"
+    },
+    {
+      "id": "haplotype_regime_refine",
+      "kind": "analysis",
+      "label": "Within-regime arrangement-identity refinement",
+      "status": "experimental"
+    },
+    {
+      "id": "regime_topology",
+      "kind": "analysis",
+      "label": "Cross-regime topology",
+      "status": "experimental"
+    },
+    {
+      "id": "genome_scale_aggregation",
+      "kind": "analysis",
+      "label": "Genome-scale regime aggregation",
+      "status": "experimental"
+    },
+    {
+      "id": "regime_catalogue_serialize",
+      "kind": "analysis",
+      "label": "Catalogue serializer (cross-page contract)",
+      "status": "experimental"
+    },
+    {
+      "id": "banding_pipeline_full",
+      "kind": "analysis",
+      "label": "Haplotype-regimes full pipeline (chain)",
+      "status": "experimental"
+    },
+    {
+      "id": "haplotype_regimes_het_mode",
+      "kind": "analysis",
+      "label": "Haplotype regimes via het-skeleton (chain)",
+      "status": "experimental"
+    },
+    {
+      "id": "age_estimation_busco_4d",
+      "kind": "analysis",
+      "label": "Per-candidate age estimation (BUSCO 4D)",
+      "status": "experimental"
+    },
+    {
+      "id": "age_model_suggest",
+      "kind": "analysis",
+      "label": "Age-model suggester",
+      "status": "experimental"
+    },
+    {
+      "id": "polarize_synteny_vote",
+      "kind": "analysis",
+      "label": "Outgroup synteny polarization",
+      "status": "experimental"
+    },
+    {
+      "id": "polarize_msa_stacked",
+      "kind": "analysis",
+      "label": "Stacked MSA polarization (founder + doubleton)",
+      "status": "experimental"
+    },
+    {
+      "id": "inv_internal_substructure",
+      "kind": "analysis",
+      "label": "Sub-PCA on derived-only samples",
+      "status": "experimental"
+    },
+    {
+      "id": "haplotype_network_build",
+      "kind": "analysis",
+      "label": "Minimum-spanning haplotype network",
+      "status": "experimental"
+    },
+    {
+      "id": "mosaicism_leakage",
+      "kind": "analysis",
+      "label": "Recombinant-tract / polarity-switch detector",
+      "status": "experimental"
+    },
+    {
+      "id": "layer_cleaning_kinship",
+      "kind": "analysis",
+      "label": "Layer 0/1 noise removal (kinship downweight)",
+      "status": "experimental"
+    },
+    {
+      "id": "event_tree_order",
+      "kind": "analysis",
+      "label": "Relative-ordering of inversions on a chromosome",
+      "status": "experimental"
+    },
+    {
+      "id": "archaeology_synthesis",
+      "kind": "analysis",
+      "label": "Per-candidate archaeology synthesis card",
+      "status": "experimental"
+    },
+    {
+      "id": "copy_origin_painting",
+      "kind": "analysis",
+      "label": "Copy-origin painting (Stage 5.6, SPEC ONLY)",
+      "status": "experimental"
+    },
+    {
+      "id": "ngstracts_step_trc_01",
+      "kind": "analysis",
+      "label": "ngsTracts STEP_TRC_01 \u2014 gene-conversion tract classifier",
+      "status": "experimental"
+    },
+    {
+      "id": "bp4_population_overlap",
+      "kind": "analysis",
+      "label": "BP4 \u2014 cross-species \u00d7 226-cohort haploblock overlap",
+      "status": "experimental"
+    },
+    {
+      "id": "candidate_overview_panel",
+      "kind": "panel",
+      "label": "Candidate overview",
+      "atlas": ""
+    },
+    {
+      "id": "candidate_review_panel",
+      "kind": "panel",
+      "label": "Candidate review composite",
+      "atlas": ""
+    },
+    {
+      "id": "karyotype_panel",
+      "kind": "panel",
+      "label": "Karyotype panel",
+      "atlas": ""
+    },
+    {
+      "id": "long_range_regime_panel",
+      "kind": "panel",
+      "label": "Long-range haplotype regimes",
+      "atlas": ""
+    },
+    {
+      "id": "popstats_panel",
+      "kind": "panel",
+      "label": "Popstats (FST / dxy / piN / piS)",
+      "atlas": ""
+    },
+    {
+      "id": "mendelian_panel",
+      "kind": "panel",
+      "label": "Mendelian per-trio rate",
+      "atlas": ""
+    },
+    {
+      "id": "fst_panel",
+      "kind": "panel",
+      "label": "Pairwise FST windows",
+      "atlas": ""
+    },
+    {
+      "id": "atlas_summary_card",
+      "kind": "panel",
+      "label": "Atlas summary (conductor-spawned)",
+      "atlas": "atlas_core"
+    },
+    {
+      "id": "cohort_summary_card",
+      "kind": "panel",
+      "label": "Cohort hierarchy",
+      "atlas": "atlas_core"
+    },
+    {
+      "id": "adapter_completeness_card",
+      "kind": "panel",
+      "label": "Adapter completeness",
+      "atlas": "atlas_core"
+    },
+    {
+      "id": "manuscript_chunks_summary_card",
+      "kind": "panel",
+      "label": "Manuscript chunks coverage",
+      "atlas": "atlas_core"
+    },
+    {
+      "id": "plans_summary_card",
+      "kind": "panel",
+      "label": "Plans \u2014 actionable count",
+      "atlas": "atlas_core"
+    }
+  ],
+  "edges": [
+    {
+      "from": "atlas_summary_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "cohort_summary_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "adapter_completeness_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "manuscript_chunks_summary_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "plans_summary_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "ngsrelate",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "ngspedigree",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "mendelian",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "popstats",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "fst_pairwise",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "theta_pi",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "dxy",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "cross_species_breakpoint_detection",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "wfmash_pairwise_alignment",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "busco_ortholog_extraction",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "tract_classifications",
+      "to": "meiosis_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "chromosome_meiosis_events",
+      "to": "meiosis_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "coincidence_matrix",
+      "to": "meiosis_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "local_inv_controls",
+      "to": "meiosis_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "family_aware_permutation_design",
+      "to": "meiosis_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "crossover_track",
+      "to": "meiosis_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "nco_gc_track",
+      "to": "meiosis_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "prdm9_motif",
+      "to": "meiosis_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "nco_inside_vs_outside_inversion",
+      "to": "meiosis_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "intrachromosomal_co_karyotype_effect",
+      "to": "meiosis_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "interchromosomal_inversion_effect",
+      "to": "meiosis_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "tajimas_d",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "theta_w",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "hp",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "da",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "fhom",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "fdm",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "ihs",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "xpehh",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "pi_ns",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "pi_0fold_4fold",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "dn_ds",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "hobs_per_group",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "rare_sfs_pairwise",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "outlier_scan",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "candidate_vs_flanks",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "q_residual_dosage",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "snp_q_support",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "internal_ancestry_composition",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "inversion_candidate_classifier",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "hobs_hwe_pipeline",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "hobs_hwe_candidate_overlay",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "karyotype_resolution",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "instant_q_boundary_scan",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "inversion_groupwise_popstats",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "kinship_theta",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "king_robust_kinship",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "jacquard_coefficients_9",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "ibs_counts",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "inbreeding_F",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "relatedness_per_chrom_adaptive",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "relatedness_adaptive_validation",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "import_table",
+      "to": "genome_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "cactus_pairwise_align",
+      "to": "genome_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "wgdi_ancestral_karyotype",
+      "to": "genome_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "oxford_grid_reorder",
+      "to": "genome_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "orthologue_pair_lookup",
+      "to": "genome_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "genomewide_heterozygosity",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "sfs_folded_1d",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "theta_pi_windows",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "theta_w_windows",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "tajimas_d_windows",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "theta_pi_aggregate_cohort",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "roh_per_sample",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "ancestry_het_kruskal",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "ancestry_het_anova",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "ancestry_het_pairwise_wilcox",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "ancestry_het_pairwise_ttest",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "ancestry_q_correlations",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "import_slot",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "per_sample_diversity_assembly",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "ancestry_het_test_battery",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "cohort_master_assembly",
+      "to": "diversity_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "haplotype_projection",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "offspring_gene_status",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "transmission_summary",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "hpp_kbc_arrangement_crosscheck",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "hpp_offspring_pipeline",
+      "to": "relatedness_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "pairwise_wfmash_two_pass",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "breakpoint_events",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "breakpoint_zones",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "breakpoint_reciprocity",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "breakpoint_paf_arcs",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "breakpoint_joint_classify",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "gene_order_breakpoints",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "gene_order_cluster_consolidation",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "bp_atlas_pipeline",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "gene_order_consolidation",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "regime_mendelian_annotation",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "regime_pedigree_inference",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "msmc_per_founder_background",
+      "to": "popstats_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "local_pca_kmeans",
+      "to": "inversion_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "band_quality_scoring",
+      "to": "inversion_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "seed_discovery_v_walker",
+      "to": "inversion_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "het_skeleton_detection",
+      "to": "inversion_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "breadth_voting",
+      "to": "inversion_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "haplotype_regime_refine",
+      "to": "inversion_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "regime_topology",
+      "to": "inversion_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "genome_scale_aggregation",
+      "to": "inversion_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "regime_catalogue_serialize",
+      "to": "inversion_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "banding_pipeline_full",
+      "to": "inversion_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "haplotype_regimes_het_mode",
+      "to": "inversion_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "age_estimation_busco_4d",
+      "to": "evolution_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "age_model_suggest",
+      "to": "evolution_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "polarize_synteny_vote",
+      "to": "evolution_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "polarize_msa_stacked",
+      "to": "evolution_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "inv_internal_substructure",
+      "to": "evolution_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "haplotype_network_build",
+      "to": "evolution_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "mosaicism_leakage",
+      "to": "evolution_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "layer_cleaning_kinship",
+      "to": "evolution_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "event_tree_order",
+      "to": "evolution_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "archaeology_synthesis",
+      "to": "evolution_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "copy_origin_painting",
+      "to": "evolution_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "bp4_population_overlap",
+      "to": "cross_species_atlas",
+      "kind": "analysis_in_atlas"
+    },
+    {
+      "from": "mendelian",
+      "to": "candidate_picker",
+      "kind": "analysis_produces_panel",
+      "phase": "stage",
+      "role": "scope_input"
+    },
+    {
+      "from": "mendelian",
+      "to": "mendelian_burden_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "mendelian",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "mendelian",
+      "to": "manuscript_chunks_panel",
+      "kind": "analysis_produces_panel",
+      "phase": "narrate",
+      "role": "writeup"
+    },
+    {
+      "from": "ancestry_het_test_battery",
+      "to": "ancestry_het_battery_envelope_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "ancestry_het_test_battery",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "archaeology_synthesis",
+      "to": "archaeology_synthesis_v1_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "archaeology_synthesis",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "banding_pipeline_full",
+      "to": "regime_catalogue_v1_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "banding_pipeline_full",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "bp4_population_overlap",
+      "to": "cross_species_226_overlap_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "bp4_population_overlap",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "bp_atlas_pipeline",
+      "to": "joint_candidates_v1_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "bp_atlas_pipeline",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "cohort_master_assembly",
+      "to": "cohort_master_samples_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "cohort_master_assembly",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "gene_order_consolidation",
+      "to": "breakpoints_consolidated_v1_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "gene_order_consolidation",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "haplotype_regimes_het_mode",
+      "to": "regime_catalogue_v1_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "haplotype_regimes_het_mode",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "hobs_hwe_candidate_overlay",
+      "to": "hobs_hwe_candidate_overlay_table_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "hobs_hwe_candidate_overlay",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "hobs_hwe_pipeline",
+      "to": "sample_set_picker",
+      "kind": "analysis_produces_panel",
+      "phase": "stage",
+      "role": "scope_input"
+    },
+    {
+      "from": "hobs_hwe_pipeline",
+      "to": "hobs_hwe_windows_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "hobs_hwe_pipeline",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "hpp_offspring_pipeline",
+      "to": "hpp_offspring_gene_status_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "hpp_offspring_pipeline",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "hpp_offspring_pipeline",
+      "to": "manuscript_chunks_panel",
+      "kind": "analysis_produces_panel",
+      "phase": "narrate",
+      "role": "writeup"
+    },
+    {
+      "from": "instant_q_boundary_scan",
+      "to": "sample_set_picker",
+      "kind": "analysis_produces_panel",
+      "phase": "stage",
+      "role": "scope_input"
+    },
+    {
+      "from": "instant_q_boundary_scan",
+      "to": "inversion_boundary_candidates_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "instant_q_boundary_scan",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "interchromosomal_inversion_effect",
+      "to": "karyotype_calls_picker",
+      "kind": "analysis_produces_panel",
+      "phase": "stage",
+      "role": "scope_input"
+    },
+    {
+      "from": "interchromosomal_inversion_effect",
+      "to": "inversion_meiosis_effects_v1_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "interchromosomal_inversion_effect",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "interchromosomal_inversion_effect",
+      "to": "manuscript_chunks_panel",
+      "kind": "analysis_produces_panel",
+      "phase": "narrate",
+      "role": "writeup"
+    },
+    {
+      "from": "internal_ancestry_composition",
+      "to": "sample_set_picker",
+      "kind": "analysis_produces_panel",
+      "phase": "stage",
+      "role": "scope_input"
+    },
+    {
+      "from": "internal_ancestry_composition",
+      "to": "internal_composition_classification_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "internal_ancestry_composition",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "intrachromosomal_co_karyotype_effect",
+      "to": "karyotype_calls_picker",
+      "kind": "analysis_produces_panel",
+      "phase": "stage",
+      "role": "scope_input"
+    },
+    {
+      "from": "intrachromosomal_co_karyotype_effect",
+      "to": "intrachromosomal_co_effect_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "intrachromosomal_co_karyotype_effect",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "inversion_candidate_classifier",
+      "to": "candidate_classification_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "inversion_candidate_classifier",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "inversion_groupwise_popstats",
+      "to": "karyotype_calls_picker",
+      "kind": "analysis_produces_panel",
+      "phase": "stage",
+      "role": "scope_input"
+    },
+    {
+      "from": "inversion_groupwise_popstats",
+      "to": "popstats_result_groupwise_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "inversion_groupwise_popstats",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "inversion_groupwise_popstats",
+      "to": "manuscript_chunks_panel",
+      "kind": "analysis_produces_panel",
+      "phase": "narrate",
+      "role": "writeup"
+    },
+    {
+      "from": "karyotype_resolution",
+      "to": "karyotype_calls_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "karyotype_resolution",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "msmc_per_founder_background",
+      "to": "msmc_per_group_v1_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "msmc_per_founder_background",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "msmc_per_founder_background",
+      "to": "manuscript_chunks_panel",
+      "kind": "analysis_produces_panel",
+      "phase": "narrate",
+      "role": "writeup"
+    },
+    {
+      "from": "nco_inside_vs_outside_inversion",
+      "to": "nco_enrichment_result_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "nco_inside_vs_outside_inversion",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "per_sample_diversity_assembly",
+      "to": "per_sample_diversity_envelope_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "per_sample_diversity_assembly",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "regime_mendelian_annotation",
+      "to": "regime_mendelian_v1_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "regime_mendelian_annotation",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "regime_pedigree_inference",
+      "to": "regime_pedigree_v1_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "regime_pedigree_inference",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "regime_topology",
+      "to": "regime_topology_v1_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "regime_topology",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "relatedness_per_chrom_adaptive",
+      "to": "sample_set_picker",
+      "kind": "analysis_produces_panel",
+      "phase": "stage",
+      "role": "scope_input"
+    },
+    {
+      "from": "relatedness_per_chrom_adaptive",
+      "to": "relatedness_res_perchrom_adaptive_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "relatedness_per_chrom_adaptive",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    },
+    {
+      "from": "snp_q_support",
+      "to": "sample_set_picker",
+      "kind": "analysis_produces_panel",
+      "phase": "stage",
+      "role": "scope_input"
+    },
+    {
+      "from": "snp_q_support",
+      "to": "q_support_windows_card",
+      "kind": "analysis_produces_panel",
+      "phase": "render",
+      "role": "primary_result"
+    },
+    {
+      "from": "snp_q_support",
+      "to": "next_action_proposal",
+      "kind": "analysis_produces_panel",
+      "phase": "propose",
+      "role": "action"
+    }
+  ],
+  "rollups": {
+    "analyses_per_atlas": {
+      "relatedness_atlas": 15,
+      "popstats_atlas": 31,
+      "cross_species_atlas": 14,
+      "meiosis_atlas": 11,
+      "genome_atlas": 5,
+      "diversity_atlas": 16,
+      "inversion_atlas": 11,
+      "evolution_atlas": 11
+    },
+    "panels_per_atlas": {
+      "atlas_core": 5
+    }
+  }
+}

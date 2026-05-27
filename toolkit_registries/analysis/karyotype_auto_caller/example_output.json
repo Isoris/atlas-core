@@ -1,0 +1,21 @@
+{
+  "unpolarized_karyotype_calls": [
+    { "sample_id": "GAR001", "candidate_id": "inv_LG28_INV_001", "karyotype": "0",  "dosage": 0.12, "chain_score": 0.82, "band_fraction": 0.89, "confidence": "high",   "method": "auto_v0" },
+    { "sample_id": "GAR002", "candidate_id": "inv_LG28_INV_001", "karyotype": "0",  "dosage": 0.09, "chain_score": 0.91, "band_fraction": 0.92, "confidence": "high",   "method": "auto_v0" },
+    { "sample_id": "GAR003", "candidate_id": "inv_LG28_INV_001", "karyotype": "1",  "dosage": 1.04, "chain_score": 0.74, "band_fraction": 0.71, "confidence": "medium", "method": "auto_v0" },
+    { "sample_id": "GAR004", "candidate_id": "inv_LG28_INV_001", "karyotype": "1",  "dosage": 0.97, "chain_score": 0.66, "band_fraction": 0.65, "confidence": "medium", "method": "auto_v0" },
+    { "sample_id": "GAR005", "candidate_id": "inv_LG28_INV_001", "karyotype": "2",  "dosage": 1.91, "chain_score": 0.88, "band_fraction": 0.84, "confidence": "high",   "method": "auto_v0" },
+    { "sample_id": "GAR006", "candidate_id": "inv_LG28_INV_001", "karyotype": "NA", "dosage": 1.75, "chain_score": 0.41, "band_fraction": 0.42, "confidence": "low",    "method": "auto_v0",
+      "note": "dropped: chain_score < min_chain_score (0.50) AND band_fraction < min_band_fraction (0.60)" }
+  ],
+  "caller_summary": {
+    "inv_LG28_INV_001": {
+      "n_total":          6,
+      "n_class_0":        2,
+      "n_class_1":        2,
+      "n_class_2":        1,
+      "n_na":             1,
+      "mean_chain_score": 0.74
+    }
+  }
+}

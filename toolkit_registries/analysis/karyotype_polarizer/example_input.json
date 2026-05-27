@@ -1,0 +1,24 @@
+{
+  "params": {
+    "candidate_id": "inv_LG28_INV_001",
+    "polarity_source": "reference_match",
+    "outgroup_sample_ids": [],
+    "method_tag": "polarize_v0"
+  },
+  "unpolarized_karyotype_calls": [
+    { "sample_id": "GAR001", "candidate_id": "inv_LG28_INV_001", "karyotype": "0",  "confidence": "high",   "method": "auto_v0" },
+    { "sample_id": "GAR002", "candidate_id": "inv_LG28_INV_001", "karyotype": "0",  "confidence": "high",   "method": "auto_v0" },
+    { "sample_id": "GAR003", "candidate_id": "inv_LG28_INV_001", "karyotype": "1",  "confidence": "medium", "method": "auto_v0" },
+    { "sample_id": "GAR004", "candidate_id": "inv_LG28_INV_001", "karyotype": "1",  "confidence": "medium", "method": "auto_v0" },
+    { "sample_id": "GAR005", "candidate_id": "inv_LG28_INV_001", "karyotype": "2",  "confidence": "high",   "method": "auto_v0" },
+    { "sample_id": "GAR006", "candidate_id": "inv_LG28_INV_001", "karyotype": "NA", "confidence": "low",    "method": "auto_v0" }
+  ],
+  "reference_genome_layer": [
+    {
+      "candidate_id":  "inv_LG28_INV_001",
+      "ref_dosage":    "2",
+      "source":        "fClaHyb_Gar_LG (haplotype-resolved F1 assembly)",
+      "notes":         "Reference carries the derived/inverted allele; therefore caller's class 2 = reference-like → polarizer must flip."
+    }
+  ]
+}

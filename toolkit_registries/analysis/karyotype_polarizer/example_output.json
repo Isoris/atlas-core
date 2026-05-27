@@ -1,0 +1,21 @@
+{
+  "polarized_karyotype_calls": [
+    { "sample_id": "GAR001", "candidate_id": "inv_LG28_INV_001", "karyotype": "2",  "original_karyotype": "0",  "polarity": "flipped",   "confidence": "high",   "method": "polarize_v0" },
+    { "sample_id": "GAR002", "candidate_id": "inv_LG28_INV_001", "karyotype": "2",  "original_karyotype": "0",  "polarity": "flipped",   "confidence": "high",   "method": "polarize_v0" },
+    { "sample_id": "GAR003", "candidate_id": "inv_LG28_INV_001", "karyotype": "1",  "original_karyotype": "1",  "polarity": "unchanged", "confidence": "medium", "method": "polarize_v0" },
+    { "sample_id": "GAR004", "candidate_id": "inv_LG28_INV_001", "karyotype": "1",  "original_karyotype": "1",  "polarity": "unchanged", "confidence": "medium", "method": "polarize_v0" },
+    { "sample_id": "GAR005", "candidate_id": "inv_LG28_INV_001", "karyotype": "0",  "original_karyotype": "2",  "polarity": "flipped",   "confidence": "high",   "method": "polarize_v0" },
+    { "sample_id": "GAR006", "candidate_id": "inv_LG28_INV_001", "karyotype": "NA", "original_karyotype": "NA", "polarity": "unknown",   "confidence": "low",    "method": "polarize_v0" }
+  ],
+  "polarity_summary": {
+    "inv_LG28_INV_001": {
+      "candidate_id":      "inv_LG28_INV_001",
+      "polarity":          "flipped",
+      "polarity_source":   "reference_match",
+      "ref_dosage":        "2",
+      "n_flipped_calls":   3,
+      "n_unchanged_calls": 2,
+      "n_na_calls":        1
+    }
+  }
+}

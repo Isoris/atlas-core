@@ -1,0 +1,44 @@
+{
+  "params": {
+    "candidate_id": "inv_LG28_INV_001",
+    "min_chain_score": 0.50,
+    "min_band_fraction": 0.60,
+    "dosage_breaks": [0.5, 1.5],
+    "confidence_floor": "low",
+    "method_tag": "auto_v0"
+  },
+  "candidate_registry": [
+    {
+      "candidate_id": "inv_LG28_INV_001",
+      "chrom": "C_gar_LG28",
+      "start": "1200000",
+      "end":   "8400000",
+      "karyotype_axis": "0_1_2",
+      "confidence": "high"
+    }
+  ],
+  "chain_evidence": [
+    { "sample_id": "GAR001", "candidate_id": "inv_LG28_INV_001", "chain_score": 0.82 },
+    { "sample_id": "GAR002", "candidate_id": "inv_LG28_INV_001", "chain_score": 0.91 },
+    { "sample_id": "GAR003", "candidate_id": "inv_LG28_INV_001", "chain_score": 0.74 },
+    { "sample_id": "GAR004", "candidate_id": "inv_LG28_INV_001", "chain_score": 0.66 },
+    { "sample_id": "GAR005", "candidate_id": "inv_LG28_INV_001", "chain_score": 0.88 },
+    { "sample_id": "GAR006", "candidate_id": "inv_LG28_INV_001", "chain_score": 0.41 }
+  ],
+  "dosage_summary": [
+    { "sample_id": "GAR001", "candidate_id": "inv_LG28_INV_001", "dosage": 0.12 },
+    { "sample_id": "GAR002", "candidate_id": "inv_LG28_INV_001", "dosage": 0.09 },
+    { "sample_id": "GAR003", "candidate_id": "inv_LG28_INV_001", "dosage": 1.04 },
+    { "sample_id": "GAR004", "candidate_id": "inv_LG28_INV_001", "dosage": 0.97 },
+    { "sample_id": "GAR005", "candidate_id": "inv_LG28_INV_001", "dosage": 1.91 },
+    { "sample_id": "GAR006", "candidate_id": "inv_LG28_INV_001", "dosage": 1.75 }
+  ],
+  "window_band_calls": [
+    { "sample_id": "GAR001", "candidate_id": "inv_LG28_INV_001", "band_fraction": 0.89 },
+    { "sample_id": "GAR002", "candidate_id": "inv_LG28_INV_001", "band_fraction": 0.92 },
+    { "sample_id": "GAR003", "candidate_id": "inv_LG28_INV_001", "band_fraction": 0.71 },
+    { "sample_id": "GAR004", "candidate_id": "inv_LG28_INV_001", "band_fraction": 0.65 },
+    { "sample_id": "GAR005", "candidate_id": "inv_LG28_INV_001", "band_fraction": 0.84 },
+    { "sample_id": "GAR006", "candidate_id": "inv_LG28_INV_001", "band_fraction": 0.42 }
+  ]
+}

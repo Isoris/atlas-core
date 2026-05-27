@@ -1,0 +1,22 @@
+{
+  "$id": "adapter_in_karyotype_auto_caller_v0",
+  "schema_version": "adapter_in_v1",
+  "params": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "candidate_id":     { "type": "string", "description": "Restrict to this candidate; omit for all candidates in the registry." },
+      "min_chain_score":  { "type": "number", "default": 0.50, "description": "Minimum chain_evidence.chain_score required for a sample's dosage to count toward the cluster." },
+      "min_band_fraction":{ "type": "number", "default": 0.60, "description": "Minimum fraction of windows inside the candidate span carrying a consistent window_band_call for the sample to receive a high-confidence call." },
+      "dosage_breaks":    { "type": "array", "items": {"type":"number"}, "default": [0.5, 1.5], "description": "Decision thresholds on dosage; defaults split [0, 0.5)→0, [0.5, 1.5)→1, [1.5, ∞)→2." },
+      "confidence_floor": { "type": "string", "enum": ["low","medium","high"], "default": "low", "description": "Calls below this confidence are dropped (not emitted)." },
+      "method_tag":       { "type": "string", "default": "auto_v0", "description": "String written into karyotype_calls[].method for provenance." }
+    }
+  },
+  "inputs": {
+    "candidate_registry":  { "description": "Promoted candidate intervals; one row per candidate_id with chrom/start/end and karyotype_axis.", "required": true },
+    "chain_evidence":      { "description": "Per (sample × candidate × window) chain scores supporting the candidate; aggregates into chain_score per (sample, candidate).", "required": true },
+    "dosage_summary":      { "description": "Per (sample, candidate) summarised dosage on the [0, 2] axis (mean / median per-window dosage inside the candidate span).", "required": true },
+    "window_band_calls":   { "description": "Per (sample × window) discretised band label; used to compute the band_fraction inside the candidate span.", "required": true }
+  }
+}

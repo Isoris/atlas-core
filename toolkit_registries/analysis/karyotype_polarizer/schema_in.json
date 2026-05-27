@@ -1,0 +1,18 @@
+{
+  "$id": "adapter_in_karyotype_polarizer_v0",
+  "schema_version": "adapter_in_v1",
+  "params": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "candidate_id":      { "type": "string", "description": "Restrict to this candidate; omit for all candidates present in the input." },
+      "polarity_source":   { "type": "string", "enum": ["reference_match","outgroup_vote","majority_allele","force_unchanged"], "default": "reference_match", "description": "How direction is decided. `reference_match` reads ref_dosage from the reference_genome_layer row; `outgroup_vote` uses one or more outgroup samples; `majority_allele` polarizes against the cohort's modal class; `force_unchanged` is a passthrough (useful for the 1st run before a reference is registered)." },
+      "outgroup_sample_ids":{ "type": "array", "items": { "type": "string" }, "default": [], "description": "Used when polarity_source = outgroup_vote. Outgroup samples whose karyotype defines class 0 (reference-like)." },
+      "method_tag":        { "type": "string", "default": "polarize_v0", "description": "Written into polarized_karyotype_calls[].method." }
+    }
+  },
+  "inputs": {
+    "unpolarized_karyotype_calls": { "description": "Per (sample, candidate) calls on the 0/1/2 axis without polarity. Produced by karyotype_auto_caller.", "required": true },
+    "reference_genome_layer":      { "description": "Per-candidate reference annotation. Required when polarity_source = reference_match. Each row: { candidate_id, ref_dosage ∈ {0,1,2}, source }.", "required": false }
+  }
+}

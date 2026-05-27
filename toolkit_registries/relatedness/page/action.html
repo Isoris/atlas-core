@@ -54,11 +54,22 @@
   /* Chain readiness panel */
   .chain-readiness { background: var(--bg-card); border: 1px solid var(--border);
                      border-radius: 6px; padding: 12px 16px; margin-bottom: 14px; }
-  .chain-readiness h2 { margin-top: 0; }
+  .chain-readiness h2 { margin-top: 0;
+                        display: flex; align-items: center; gap: 8px; cursor: pointer;
+                        user-select: none; }
+  .chain-readiness h2 .chev { font-size: 11px; color: var(--muted); transition: transform 120ms linear; }
+  .chain-readiness.collapsed h2 .chev { transform: rotate(-90deg); }
+  .chain-readiness.collapsed .summary,
+  .chain-readiness.collapsed .filter-bar,
+  .chain-readiness.collapsed .cr-table-wrap { display: none; }
   .chain-readiness .summary { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+  .chain-readiness .cr-table-wrap {
+    max-height: 460px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px;
+  }
   .chain-readiness table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .chain-readiness th { text-align: left; padding: 6px 8px; color: var(--muted);
-                        font-weight: 500; border-bottom: 1px solid var(--border); }
+                        font-weight: 500; border-bottom: 1px solid var(--border);
+                        position: sticky; top: 0; background: var(--bg-card); z-index: 1; }
   .chain-readiness td { padding: 6px 8px; border-bottom: 1px solid #edf0f4; vertical-align: top; }
   .chain-readiness td.chain code { font-weight: 600; }
   .chain-readiness td.missing { color: #8a6a00; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -173,6 +184,7 @@
   <a href="workspace_health.html"><span class="num">10.</span> Workspace Health</a>
   <a href="queue.html"><span class="num">11.</span> Queue</a>
   <a href="manuscript.html"><span class="num">12.</span> Manuscript</a>
+  <a href="adapters.html"><span class="num">13.</span> Adapters</a>
   <span class="tag">atlas-core dashboard</span>
 </nav>
 
@@ -218,10 +230,10 @@
 
 <section>
   <div class="chain-readiness" id="chain-readiness">
-    <h2>Chain readiness — what's one step from running</h2>
+    <h2 id="cr-toggle"><span class="chev">▼</span>Chain readiness — what's one step from running</h2>
     <div class="summary" id="cr-summary">Loading…</div>
     <div class="filter-bar">
-      <label>filter <input id="cr-filter" type="text" placeholder="chain id / atlas / missing input…"></label>
+      <label>filter <input id="cr-filter" type="text" placeholder="chain id / atlas / missing input…" data-clear="true"></label>
       <span style="margin-left:14px">tiers:
         <span class="tier-pill ready">ready</span>
         <span class="tier-pill one">one step</span>
@@ -229,11 +241,25 @@
         <span class="tier-pill blocked">blocked</span>
       </span>
     </div>
-    <table>
-      <thead><tr><th style="width:28%">chain</th><th>missing inputs</th><th style="width:30%">next-best-action</th><th style="width:80px">tier</th></tr></thead>
-      <tbody id="cr-body"></tbody>
-    </table>
+    <div class="cr-table-wrap">
+      <table>
+        <thead><tr><th style="width:28%">chain</th><th>missing inputs</th><th style="width:30%">next-best-action</th><th style="width:80px">tier</th></tr></thead>
+        <tbody id="cr-body"></tbody>
+      </table>
+    </div>
   </div>
+  <script>
+    (function(){
+      const root = document.getElementById("chain-readiness");
+      const tog  = document.getElementById("cr-toggle");
+      const KEY = "atlas_chain_readiness_collapsed_v1";
+      if (localStorage.getItem(KEY) === "1") root.classList.add("collapsed");
+      tog.addEventListener("click", () => {
+        root.classList.toggle("collapsed");
+        localStorage.setItem(KEY, root.classList.contains("collapsed") ? "1" : "0");
+      });
+    })();
+  </script>
   <div id="steps"></div>
 </section>
 
@@ -427,7 +453,7 @@ function paintChainRows(rows, filter) {
   );
   const body = document.getElementById("cr-body");
   if (filtered.length === 0) {
-    body.innerHTML = `<tr><td colspan="4" style="color:var(--muted);padding:18px;text-align:center">No chains match.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="4">${(window.emptyStateHtml && window.emptyStateHtml("cr-filter", "No chains match the current filter.")) || 'No chains match.'}</td></tr>`;
     return;
   }
   body.innerHTML = filtered.map(r => {
@@ -949,6 +975,8 @@ function resolveAndRender() {
 
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="loader.js"></script>
+<script defer src="filters.js"></script>
 <script defer src="scope.js"></script>
 </body>
 </html>

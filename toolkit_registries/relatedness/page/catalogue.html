@@ -64,7 +64,12 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px;
     font-weight: 600;
   }
-  .card .head .meta { color: var(--muted); font-size: 12px; }
+  /* explicit cues: clickable (preview pin) vs not */
+  .card .head .name[data-preview-id],
+  .card code[data-preview-id]            { cursor: pointer; }
+  .card .head .name[data-preview-id]:hover,
+  .card code[data-preview-id]:hover      { text-decoration: underline; text-decoration-color: #cbd5e0; }
+  .card .head .meta { color: var(--muted); font-size: 12px; cursor: default; }
   .card .pill {
     display: inline-block; padding: 2px 8px; border-radius: 3px;
     font-size: 10.5px; font-weight: 600; text-transform: uppercase;
@@ -339,7 +344,7 @@ function renderModules(filter) {
   }
   const q = (filter || "").toLowerCase();
   const ms = DB.modules.filter(m => !q || (m.module_name + " " + m.family + " " + m.biomod_status + " " + (m.atlas || "")).toLowerCase().includes(q));
-  if (ms.length === 0) { root.innerHTML = `<div class="empty">No modules match the filter.</div>`; return; }
+  if (ms.length === 0) { root.innerHTML = (window.emptyStateHtml && window.emptyStateHtml("filter", "No modules match the current filter.")) || `<div class="empty">No modules match the filter.</div>`; return; }
   root.innerHTML = ms.map(renderModuleCard).join("");
 }
 
@@ -380,7 +385,7 @@ function renderAnalyses(filter) {
   const root = document.getElementById("analyses");
   const q = (filter || "").toLowerCase();
   const ms = DB.modes.filter(m => !q || (`${m.analysis_type}/${m.mode} ${m.label} ${m.module_name} ${modeAtlas(m)}`).toLowerCase().includes(q));
-  if (ms.length === 0) { root.innerHTML = `<div class="empty">No analyses match the filter.</div>`; return; }
+  if (ms.length === 0) { root.innerHTML = (window.emptyStateHtml && window.emptyStateHtml("filter", "No analyses match the current filter.")) || `<div class="empty">No analyses match the filter.</div>`; return; }
   root.innerHTML = ms.map(renderAnalysisCard).join("");
 }
 

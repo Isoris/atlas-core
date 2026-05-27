@@ -150,6 +150,19 @@
     <label>filter question
       <input type="text" id="filter-q" placeholder="substring…" size="22" data-clear="true">
     </label>
+    <label>show
+      <select id="filter-claimed">
+        <option value="all" selected>all</option>
+        <option value="unclaimed">unclaimed only</option>
+        <option value="claimed">claimed only</option>
+      </select>
+    </label>
+    <label>sort
+      <select id="sort-claimed">
+        <option value="default" selected>queued first</option>
+        <option value="claimed-first">claimed first</option>
+      </select>
+    </label>
     <button class="btn" id="btn-refresh">Refresh</button>
     <button class="btn btn-danger" id="btn-clear-claims">Clear local claims</button>
     <span style="margin-left:auto; color: var(--muted); font-size: 11.5px" id="meta-line"></span>
@@ -165,9 +178,11 @@ const LS_KEY = "atlas_queue_claims_v1";
 
 const state = {
   index: null,
-  filterType: "",
-  filterQ:    "",
-  claims:     loadClaims(),
+  filterType:    "",
+  filterQ:       "",
+  filterClaimed: "all",         // all | unclaimed | claimed
+  sortClaimed:   "default",     // default | claimed-first
+  claims:        loadClaims(),
 };
 
 function loadClaims() {
@@ -203,10 +218,17 @@ function rerender() {
     </div>`;
     return;
   }
-  const entries = state.index.entries.filter(e =>
+  let entries = state.index.entries.filter(e =>
     (!state.filterType || (e.type || "").toLowerCase().includes(state.filterType.toLowerCase())) &&
     (!state.filterQ    || ((e._dispatch || {}).question_id || "").toLowerCase().includes(state.filterQ.toLowerCase()))
   );
+  if (state.filterClaimed === "unclaimed") entries = entries.filter(e => !state.claims[e.action_id]);
+  if (state.filterClaimed === "claimed")   entries = entries.filter(e =>  state.claims[e.action_id]);
+  if (state.sortClaimed === "claimed-first") {
+    entries = entries.slice().sort((a, b) => (state.claims[b.action_id] ? 1 : 0) - (state.claims[a.action_id] ? 1 : 0));
+  } else {
+    entries = entries.slice().sort((a, b) => (state.claims[a.action_id] ? 1 : 0) - (state.claims[b.action_id] ? 1 : 0));
+  }
   const nClaimed = entries.filter(e => state.claims[e.action_id]).length;
   summary.innerHTML = `
     <div><span class="k">Queued</span><div class="v">${state.index.n || 0}</div></div>
@@ -280,6 +302,8 @@ function escapeJSON(obj) {
 (async () => {
   document.getElementById("filter-type").addEventListener("input", e => { state.filterType = e.target.value; rerender(); });
   document.getElementById("filter-q").addEventListener("input",    e => { state.filterQ    = e.target.value; rerender(); });
+  document.getElementById("filter-claimed").addEventListener("change", e => { state.filterClaimed = e.target.value; rerender(); });
+  document.getElementById("sort-claimed").addEventListener("change",   e => { state.sortClaimed   = e.target.value; rerender(); });
   document.getElementById("btn-refresh").addEventListener("click", async () => { await loadIndex(); rerender(); });
   document.getElementById("btn-clear-claims").addEventListener("click", () => {
     if (!Object.keys(state.claims).length) return;

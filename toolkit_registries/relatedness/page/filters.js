@@ -93,6 +93,31 @@
   }
   window.attachAllClearButtons = autoAttachAll;
 
+  // window.clearFilter(inputId) — programmatic clear, used by inline
+  // "Clear filter" links inside empty-state messages.
+  window.clearFilter = function (inputId) {
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    inp.value = "";
+    inp.dispatchEvent(new Event("input", { bubbles: true }));
+    inp.dispatchEvent(new Event("change", { bubbles: true }));
+    inp.focus();
+  };
+
+  // window.emptyStateHtml(inputId, message?) — canonical empty-state
+  // markup with an inline "✕ Clear filter" link.
+  window.emptyStateHtml = function (inputId, message) {
+    const msg = message || "No results match the current filter.";
+    return `<div class="empty" style="padding:18px;color:#6c727f;text-align:center">
+      ${msg}
+      <a href="javascript:void(0)" onclick="window.clearFilter('${inputId}')"
+         style="display:inline-block;margin-left:8px;color:#2b6cb0;text-decoration:none;
+                border:1px solid #cfe2f7;border-radius:3px;padding:1px 7px;font-size:11.5px">
+        ✕ Clear filter
+      </a>
+    </div>`;
+  };
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => autoAttachAll());
   } else {

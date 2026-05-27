@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 304,
-  "n_edges": 237,
+  "n_nodes": 307,
+  "n_edges": 242,
   "warnings": [],
   "nodes": [
     {
@@ -1694,6 +1694,27 @@
       "layer_id": null
     },
     {
+      "id": "cohort_summary_card",
+      "type": "panel",
+      "label": "Cohort hierarchy",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "adapter_completeness_card",
+      "type": "panel",
+      "label": "Adapter completeness",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "manuscript_chunks_summary_card",
+      "type": "panel",
+      "label": "Manuscript chunks coverage",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
       "id": "conversation",
       "type": "page",
       "label": "Conversation",
@@ -2836,6 +2857,31 @@
     {
       "from": "module_registry.jsonl",
       "to": "atlas_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "cohorts.jsonl",
+      "to": "cohort_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "atlases.jsonl",
+      "to": "cohort_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "analysis_registry.jsonl",
+      "to": "adapter_completeness_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "manuscript_chunks.jsonl",
+      "to": "manuscript_chunks_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "references.jsonl",
+      "to": "manuscript_chunks_summary_card",
       "kind": "panel_reads"
     },
     {

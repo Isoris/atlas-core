@@ -1,8 +1,8 @@
 {
   "schema_version": "panel_coverage_graph_v1",
-  "rewritten_at": "2026-05-27T16:50:29Z",
-  "n_nodes": 145,
-  "n_edges": 188,
+  "rewritten_at": "2026-05-27T16:52:32Z",
+  "n_nodes": 146,
+  "n_edges": 189,
   "nodes": [
     {
       "id": "atlas_core",
@@ -873,6 +873,12 @@
       "kind": "panel",
       "label": "Bridge \u2014 per-DB call summary",
       "atlas": "atlas_core"
+    },
+    {
+      "id": "addons_summary_card",
+      "kind": "panel",
+      "label": "Addons \u2014 per-kind summary",
+      "atlas": "atlas_core"
     }
   ],
   "edges": [
@@ -903,6 +909,11 @@
     },
     {
       "from": "bridge_summary_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "addons_summary_card",
       "to": "atlas_core",
       "kind": "panel_in_atlas"
     },
@@ -1965,7 +1976,7 @@
       "evolution_atlas": 11
     },
     "panels_per_atlas": {
-      "atlas_core": 6
+      "atlas_core": 7
     }
   }
 }

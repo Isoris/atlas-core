@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 318,
-  "n_edges": 245,
+  "n_nodes": 319,
+  "n_edges": 246,
   "warnings": [],
   "nodes": [
     {
@@ -1729,6 +1729,13 @@
       "layer_id": null
     },
     {
+      "id": "addons_summary_card",
+      "type": "panel",
+      "label": "Addons \u2014 per-kind summary",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
       "id": "conversation",
       "type": "page",
       "label": "Conversation",
@@ -2967,6 +2974,11 @@
     {
       "from": "02_queue/bridge_log.jsonl",
       "to": "bridge_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "addons.jsonl",
+      "to": "addons_summary_card",
       "kind": "panel_reads"
     },
     {

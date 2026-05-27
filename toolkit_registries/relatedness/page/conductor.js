@@ -341,6 +341,59 @@
       </table>`);
   }
 
+  async function renderAddonsSummaryCard(panel, _ctx) {
+    const addons = await window.atlasFetchJsonl("../01_registry/addons.jsonl");
+    if (!addons.length) {
+      return cardShell(panel, `
+        <div style="font-size:12px;color:var(--muted);font-style:italic;padding:6px 0">
+          addons.jsonl is empty.
+        </div>`);
+    }
+    const KINDS = ["panel", "page", "page_extension", "analysis", "bridge", "validator"];
+    const perKind = {};
+    for (const k of KINDS) perKind[k] = { n: 0, active: 0, experimental: 0, deprecated: 0, ids: [] };
+    const unknownKind = { n: 0, ids: [] };
+    for (const a of addons) {
+      const k = a.kind;
+      const tgt = perKind[k] || unknownKind;
+      tgt.n += 1;
+      tgt.ids.push(a.addon_id);
+      if (k in perKind) {
+        const s = a.status;
+        if (s === "active") tgt.active += 1;
+        else if (s === "experimental") tgt.experimental += 1;
+        else if (s === "deprecated") tgt.deprecated += 1;
+      }
+    }
+    const rows = KINDS.map(k => {
+      const r = perKind[k];
+      if (!r.n) return "";
+      const statusBlock = [
+        r.active        ? `<span style="background:#2f855a;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600">${r.active} active</span>` : "",
+        r.experimental  ? `<span style="background:#d69e2e;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600">${r.experimental} exp</span>`    : "",
+        r.deprecated    ? `<span style="background:#6c727f;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600">${r.deprecated} dep</span>`      : "",
+      ].filter(Boolean).join(" ");
+      return `<tr>
+        <td style="padding:3px 8px"><code style="font-weight:600">${k}</code></td>
+        <td style="padding:3px 8px;text-align:right;font-family:ui-monospace,Menlo,monospace">${r.n}</td>
+        <td style="padding:3px 8px">${statusBlock}</td>
+      </tr>`;
+    }).filter(Boolean).join("");
+    return cardShell(panel, `
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
+        ${addons.length} addon${addons.length === 1 ? "" : "s"} registered across ${Object.values(perKind).filter(r => r.n).length} kind${Object.values(perKind).filter(r => r.n).length === 1 ? "" : "s"}
+        · per ADDON_SPEC §10
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">kind</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">n</th>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`);
+  }
+
   // Renderer dispatch by panel_id (each registered panel has its own renderer)
   const RENDERERS = {
     atlas_summary_card:              renderAtlasSummaryCard,
@@ -348,6 +401,7 @@
     adapter_completeness_card:       renderAdapterCompletenessCard,
     manuscript_chunks_summary_card:  renderManuscriptChunksSummaryCard,
     plans_summary_card:              renderPlansSummaryCard,
+    addons_summary_card:             renderAddonsSummaryCard,
     bridge_summary_card:             renderBridgeSummaryCard,
   };
 

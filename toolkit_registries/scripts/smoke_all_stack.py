@@ -79,6 +79,8 @@ def main():
              check_stdout=["0 warnings"]),
         _run("check_analysis_registry", [sys.executable, "scripts/check_analysis_registry.py"], rel,
              check_stdout=["OK"]),
+        _run("check_plans", [sys.executable, "scripts/check_plans.py"], rel,
+             check_stdout=["OK"]),
         _run("resolve_layer (one layer)",
              [sys.executable, "scripts/resolve_layer.py", "--layer", "karyotype_calls"], rel,
              check_stdout=["RESOLVED"]),

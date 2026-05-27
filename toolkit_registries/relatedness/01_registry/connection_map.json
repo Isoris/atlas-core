@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 301,
-  "n_edges": 232,
+  "n_nodes": 302,
+  "n_edges": 234,
   "warnings": [],
   "nodes": [
     {
@@ -1675,6 +1675,13 @@
       "layer_id": "fst_windows"
     },
     {
+      "id": "atlas_summary_card",
+      "type": "panel",
+      "label": "Atlas summary (conductor-spawned)",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
       "id": "conversation",
       "type": "page",
       "label": "Conversation",
@@ -2793,6 +2800,16 @@
       "from": "fst_windows",
       "to": "fst_panel",
       "kind": "panel_renders"
+    },
+    {
+      "from": "atlases.jsonl",
+      "to": "atlas_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "module_registry.jsonl",
+      "to": "atlas_summary_card",
+      "kind": "panel_reads"
     },
     {
       "from": "relatedness_chain_view",

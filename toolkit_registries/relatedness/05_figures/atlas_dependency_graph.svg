@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="893" height="477" viewBox="0 0 893 478" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="893" height="478" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#9aa3af"/></marker></defs>
+<text x="44" y="66" font-size="22" font-weight="700" fill="#1a202c">atlas dependency graph</text>
+<text x="44" y="88" font-size="13" fill="#4a5568">14 nodes · 15 edges</text>
+<path d="M596.6,248.0 C642.6,248.0 642.6,269.0 688.6,269.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M596.6,248.0 C642.6,248.0 642.6,227.0 688.6,227.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M596.6,290.0 C642.6,290.0 642.6,227.0 688.6,227.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,164.0 C509.1,164.0 509.1,227.0 688.6,227.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,164.0 C375.5,164.0 375.5,248.0 421.5,248.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,164.0 C375.5,164.0 375.5,164.0 421.5,164.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,206.0 C375.5,206.0 375.5,164.0 421.5,164.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,332.0 C509.1,332.0 509.1,227.0 688.6,227.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,332.0 C375.5,332.0 375.5,248.0 421.5,248.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,290.0 C375.5,290.0 375.5,206.0 421.5,206.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,290.0 C375.5,290.0 375.5,332.0 421.5,332.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,290.0 C509.1,290.0 509.1,227.0 688.6,227.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,374.0 C375.5,374.0 375.5,290.0 421.5,290.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,374.0 C509.1,374.0 509.1,227.0 688.6,227.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M329.5,374.0 C375.5,374.0 375.5,332.0 421.5,332.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="44.0" y="108.0" width="285.5" height="28" rx="6" fill="#1a2540" stroke="#2d3748" stroke-width="1"/>
+<text x="186.8" y="126.5" font-size="13" fill="#ffffff" text-anchor="middle">Atlas Core</text>
+<rect x="688.6" y="213.0" width="161.3" height="28" rx="6" fill="#2d6cb6" stroke="#2d3748" stroke-width="1"/>
+<text x="769.2" y="231.5" font-size="13" fill="#ffffff" text-anchor="middle">Inversion Atlas</text>
+<rect x="688.6" y="255.0" width="161.3" height="28" rx="6" fill="#2f7d8d" stroke="#2d3748" stroke-width="1"/>
+<text x="769.2" y="273.5" font-size="13" fill="#ffffff" text-anchor="middle">Relatedness Atlas</text>
+<rect x="421.5" y="234.0" width="175.1" height="28" rx="6" fill="#b87a14" stroke="#2d3748" stroke-width="1"/>
+<text x="509.1" y="252.5" font-size="13" fill="#ffffff" text-anchor="middle">Meiosis Atlas</text>
+<rect x="421.5" y="150.0" width="175.1" height="28" rx="6" fill="#e67e22" stroke="#2d3748" stroke-width="1"/>
+<text x="509.1" y="168.5" font-size="13" fill="#ffffff" text-anchor="middle">Cross-Species Atlas</text>
+<rect x="421.5" y="276.0" width="175.1" height="28" rx="6" fill="#b13030" stroke="#2d3748" stroke-width="1"/>
+<text x="509.1" y="294.5" font-size="13" fill="#ffffff" text-anchor="middle">Popstats Atlas</text>
+<rect x="44.0" y="150.0" width="285.5" height="28" rx="6" fill="#6b3aa6" stroke="#2d3748" stroke-width="1"/>
+<text x="186.8" y="168.5" font-size="13" fill="#ffffff" text-anchor="middle">Evolution Atlas</text>
+<rect x="44.0" y="192.0" width="285.5" height="28" rx="6" fill="#888888" stroke="#2d3748" stroke-width="1"/>
+<text x="186.8" y="210.5" font-size="13" fill="#ffffff" text-anchor="middle">Genome / Synteny Atlas (deprecated)</text>
+<rect x="44.0" y="318.0" width="285.5" height="28" rx="6" fill="#e89c2a" stroke="#2d3748" stroke-width="1"/>
+<text x="186.8" y="336.5" font-size="13" fill="#ffffff" text-anchor="middle">Marker Design</text>
+<rect x="421.5" y="192.0" width="175.1" height="28" rx="6" fill="#3aa6c0" stroke="#2d3748" stroke-width="1"/>
+<text x="509.1" y="210.5" font-size="13" fill="#ffffff" text-anchor="middle">Diversity Atlas</text>
+<rect x="44.0" y="234.0" width="285.5" height="28" rx="6" fill="#4a5d7e" stroke="#2d3748" stroke-width="1"/>
+<text x="186.8" y="252.5" font-size="13" fill="#ffffff" text-anchor="middle">Genome Atlas</text>
+<rect x="44.0" y="276.0" width="285.5" height="28" rx="6" fill="#5fa86b" stroke="#2d3748" stroke-width="1"/>
+<text x="186.8" y="294.5" font-size="13" fill="#ffffff" text-anchor="middle">Heterozygosity Atlas</text>
+<rect x="44.0" y="360.0" width="285.5" height="28" rx="6" fill="#a64ca6" stroke="#2d3748" stroke-width="1"/>
+<text x="186.8" y="378.5" font-size="13" fill="#ffffff" text-anchor="middle">PODs Atlas</text>
+<rect x="421.5" y="318.0" width="175.1" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="509.1" y="336.5" font-size="13" fill="#4a5568" text-anchor="middle">population_atlas</text>
+<text x="44" y="450" font-size="11" fill="#718096">kind:</text>
+<rect x="90" y="442" width="12" height="12" rx="2" fill="#1a2540" stroke="#2d3748" stroke-width="0.8"/>
+<text x="107" y="452" font-size="11" fill="#4a5568">atlas</text>
+<rect x="155" y="442" width="12" height="12" rx="2" fill="#ffffff" stroke="#a0aec0" stroke-dasharray="2 2" stroke-width="0.8"/>
+<text x="172" y="452" font-size="11" fill="#4a5568">referenced</text>
+</svg>

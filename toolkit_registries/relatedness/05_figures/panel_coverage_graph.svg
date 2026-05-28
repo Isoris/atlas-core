@@ -1,0 +1,570 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="861" height="6103" viewBox="0 0 861 6106" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="861" height="6106" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#9aa3af"/></marker></defs>
+<text x="44" y="66" font-size="22" font-weight="700" fill="#1a202c">panel coverage graph</text>
+<text x="44" y="88" font-size="13" fill="#4a5568">181 nodes · 193 edges</text>
+<path d="M405.4,500.0 C451.4,500.0 451.4,2327.0 497.4,2327.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1256.0 C451.4,1256.0 451.4,2327.0 497.4,2327.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,122.0 C451.4,122.0 451.4,2327.0 497.4,2327.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3272.0 C451.4,3272.0 451.4,2327.0 497.4,2327.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4742.0 C451.4,4742.0 451.4,2327.0 497.4,2327.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,794.0 C451.4,794.0 451.4,2327.0 497.4,2327.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,164.0 C451.4,164.0 451.4,2327.0 497.4,2327.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5120.0 C451.4,5120.0 451.4,2327.0 497.4,2327.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4028.0 C451.4,4028.0 451.4,2327.0 497.4,2327.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,920.0 C451.4,920.0 451.4,2327.0 497.4,2327.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5078.0 C451.4,5078.0 451.4,2327.0 497.4,2327.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3608.0 C451.4,3608.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3566.0 C451.4,3566.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3356.0 C451.4,3356.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4868.0 C451.4,4868.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3902.0 C451.4,3902.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3734.0 C451.4,3734.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,542.0 C451.4,542.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1424.0 C451.4,1424.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5876.0 C451.4,5876.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,836.0 C451.4,836.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3650.0 C451.4,3650.0 451.4,3251.0 497.4,3251.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4070.0 C451.4,4070.0 451.4,3251.0 497.4,3251.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4112.0 C451.4,4112.0 451.4,3251.0 497.4,3251.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4196.0 C451.4,4196.0 451.4,3251.0 497.4,3251.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4154.0 C451.4,4154.0 451.4,3251.0 497.4,3251.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4364.0 C451.4,4364.0 451.4,3251.0 497.4,3251.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4322.0 C451.4,4322.0 451.4,3251.0 497.4,3251.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4910.0 C451.4,4910.0 451.4,3251.0 497.4,3251.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3524.0 C451.4,3524.0 451.4,3251.0 497.4,3251.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1214.0 C451.4,1214.0 451.4,3251.0 497.4,3251.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1970.0 C451.4,1970.0 451.4,3251.0 497.4,3251.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5540.0 C451.4,5540.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5708.0 C451.4,5708.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2222.0 C451.4,2222.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1466.0 C451.4,1466.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1592.0 C451.4,1592.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1550.0 C451.4,1550.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2390.0 C451.4,2390.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,6002.0 C451.4,6002.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4700.0 C451.4,4700.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4658.0 C451.4,4658.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1508.0 C451.4,1508.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2180.0 C451.4,2180.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4994.0 C451.4,4994.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3860.0 C451.4,3860.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1046.0 C451.4,1046.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4952.0 C451.4,4952.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5372.0 C451.4,5372.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2600.0 C451.4,2600.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2768.0 C451.4,2768.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2138.0 C451.4,2138.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2096.0 C451.4,2096.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3020.0 C451.4,3020.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2558.0 C451.4,2558.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2810.0 C451.4,2810.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3104.0 C451.4,3104.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3062.0 C451.4,3062.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2852.0 C451.4,2852.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2348.0 C451.4,2348.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2516.0 C451.4,2516.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5204.0 C451.4,5204.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5162.0 C451.4,5162.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2432.0 C451.4,2432.0 451.4,2705.0 497.4,2705.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,878.0 C451.4,878.0 451.4,2705.0 497.4,2705.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5918.0 C451.4,5918.0 451.4,2705.0 497.4,2705.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3230.0 C451.4,3230.0 451.4,2705.0 497.4,2705.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4448.0 C451.4,4448.0 451.4,2705.0 497.4,2705.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1802.0 C451.4,1802.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5330.0 C451.4,5330.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5666.0 C451.4,5666.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5750.0 C451.4,5750.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5582.0 C451.4,5582.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5624.0 C451.4,5624.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5288.0 C451.4,5288.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,290.0 C451.4,290.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,248.0 C451.4,248.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,374.0 C451.4,374.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,332.0 C451.4,332.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,458.0 C451.4,458.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2474.0 C451.4,2474.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4616.0 C451.4,4616.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,416.0 C451.4,416.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1298.0 C451.4,1298.0 451.4,2621.0 497.4,2621.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1928.0 C451.4,1928.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3776.0 C451.4,3776.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5834.0 C451.4,5834.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2264.0 C451.4,2264.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2306.0 C451.4,2306.0 451.4,3797.0 497.4,3797.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3986.0 C451.4,3986.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4406.0 C451.4,4406.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1172.0 C451.4,1172.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,584.0 C451.4,584.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,668.0 C451.4,668.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,710.0 C451.4,710.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1676.0 C451.4,1676.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5792.0 C451.4,5792.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,752.0 C451.4,752.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1634.0 C451.4,1634.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4490.0 C451.4,4490.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2642.0 C451.4,2642.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3482.0 C451.4,3482.0 451.4,3503.0 497.4,3503.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4574.0 C451.4,4574.0 451.4,2957.0 497.4,2957.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4532.0 C451.4,4532.0 451.4,2957.0 497.4,2957.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5456.0 C451.4,5456.0 451.4,2957.0 497.4,2957.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2012.0 C451.4,2012.0 451.4,2957.0 497.4,2957.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1130.0 C451.4,1130.0 451.4,2957.0 497.4,2957.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5960.0 C451.4,5960.0 451.4,2957.0 497.4,2957.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1382.0 C451.4,1382.0 451.4,2957.0 497.4,2957.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1760.0 C451.4,1760.0 451.4,2957.0 497.4,2957.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1088.0 C451.4,1088.0 451.4,2957.0 497.4,2957.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1886.0 C451.4,1886.0 451.4,2957.0 497.4,2957.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1844.0 C451.4,1844.0 451.4,2957.0 497.4,2957.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4238.0 C451.4,4238.0 451.4,2663.0 497.4,2663.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,206.0 C451.4,206.0 451.4,2663.0 497.4,2663.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3818.0 C451.4,3818.0 451.4,2663.0 497.4,2663.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5414.0 C451.4,5414.0 451.4,2663.0 497.4,2663.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5498.0 C451.4,5498.0 451.4,2663.0 497.4,2663.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3440.0 C451.4,3440.0 451.4,2663.0 497.4,2663.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5036.0 C451.4,5036.0 451.4,2663.0 497.4,2663.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3146.0 C451.4,3146.0 451.4,2663.0 497.4,2663.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5246.0 C451.4,5246.0 451.4,2663.0 497.4,2663.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4280.0 C451.4,4280.0 451.4,2663.0 497.4,2663.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1340.0 C451.4,1340.0 451.4,2663.0 497.4,2663.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,626.0 C451.4,626.0 451.4,2537.0 497.4,2537.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3356.0 C451.4,3356.0 451.4,2453.0 497.4,2453.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3356.0 C451.4,3356.0 451.4,3293.0 497.4,3293.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3356.0 C451.4,3356.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3356.0 C451.4,3356.0 451.4,3209.0 497.4,3209.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,416.0 C451.4,416.0 451.4,2243.0 497.4,2243.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,416.0 C451.4,416.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4280.0 C451.4,4280.0 451.4,2285.0 497.4,2285.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4280.0 C451.4,4280.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1886.0 C451.4,1886.0 451.4,3629.0 497.4,3629.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1886.0 C451.4,1886.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,626.0 C451.4,626.0 451.4,2579.0 497.4,2579.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,626.0 C451.4,626.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,752.0 C451.4,752.0 451.4,3083.0 497.4,3083.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,752.0 C451.4,752.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1298.0 C451.4,1298.0 451.4,2495.0 497.4,2495.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1298.0 C451.4,1298.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1634.0 C451.4,1634.0 451.4,2369.0 497.4,2369.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1634.0 C451.4,1634.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1844.0 C451.4,1844.0 451.4,3629.0 497.4,3629.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1844.0 C451.4,1844.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2096.0 C451.4,2096.0 451.4,2747.0 497.4,2747.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2096.0 C451.4,2096.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2138.0 C451.4,2138.0 451.4,3881.0 497.4,3881.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2138.0 C451.4,2138.0 451.4,2789.0 497.4,2789.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2138.0 C451.4,2138.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2306.0 C451.4,2306.0 451.4,2831.0 497.4,2831.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2306.0 C451.4,2306.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2306.0 C451.4,2306.0 451.4,3209.0 497.4,3209.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2558.0 C451.4,2558.0 451.4,3881.0 497.4,3881.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2558.0 C451.4,2558.0 451.4,2999.0 497.4,2999.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2558.0 C451.4,2558.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1970.0 C451.4,1970.0 451.4,3167.0 497.4,3167.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1970.0 C451.4,1970.0 451.4,3041.0 497.4,3041.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1970.0 C451.4,1970.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1970.0 C451.4,1970.0 451.4,3209.0 497.4,3209.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2600.0 C451.4,2600.0 451.4,3881.0 497.4,3881.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2600.0 C451.4,2600.0 451.4,2873.0 497.4,2873.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2600.0 C451.4,2600.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1214.0 C451.4,1214.0 451.4,3167.0 497.4,3167.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1214.0 C451.4,1214.0 451.4,2915.0 497.4,2915.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1214.0 C451.4,1214.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2768.0 C451.4,2768.0 451.4,2411.0 497.4,2411.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2768.0 C451.4,2768.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2810.0 C451.4,2810.0 451.4,3167.0 497.4,3167.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2810.0 C451.4,2810.0 451.4,3545.0 497.4,3545.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2810.0 C451.4,2810.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2810.0 C451.4,2810.0 451.4,3209.0 497.4,3209.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3020.0 C451.4,3020.0 451.4,3125.0 497.4,3125.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3020.0 C451.4,3020.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3482.0 C451.4,3482.0 451.4,3335.0 497.4,3335.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3482.0 C451.4,3482.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3482.0 C451.4,3482.0 451.4,3209.0 497.4,3209.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3524.0 C451.4,3524.0 451.4,3377.0 497.4,3377.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,3524.0 C451.4,3524.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4616.0 C451.4,4616.0 451.4,3461.0 497.4,3461.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4616.0 C451.4,4616.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4490.0 C451.4,4490.0 451.4,3671.0 497.4,3671.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,4490.0 C451.4,4490.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2642.0 C451.4,2642.0 451.4,3713.0 497.4,3713.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,2642.0 C451.4,2642.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1382.0 C451.4,1382.0 451.4,3755.0 497.4,3755.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1382.0 C451.4,1382.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5204.0 C451.4,5204.0 451.4,3881.0 497.4,3881.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5204.0 C451.4,5204.0 451.4,3839.0 497.4,3839.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5204.0 C451.4,5204.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5372.0 C451.4,5372.0 451.4,3881.0 497.4,3881.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5372.0 C451.4,5372.0 451.4,3587.0 497.4,3587.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,5372.0 C451.4,5372.0 451.4,3419.0 497.4,3419.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="497.4" y="2313.0" width="320.0" height="28" rx="6" fill="#1a2540" stroke="#2d3748" stroke-width="1"/>
+<text x="657.4" y="2331.5" font-size="13" fill="#ffffff" text-anchor="middle">Atlas Core</text>
+<rect x="497.4" y="2943.0" width="320.0" height="28" rx="6" fill="#2d6cb6" stroke="#2d3748" stroke-width="1"/>
+<text x="657.4" y="2961.5" font-size="13" fill="#ffffff" text-anchor="middle">Inversion Atlas</text>
+<rect x="497.4" y="3783.0" width="320.0" height="28" rx="6" fill="#2f7d8d" stroke="#2d3748" stroke-width="1"/>
+<text x="657.4" y="3801.5" font-size="13" fill="#ffffff" text-anchor="middle">Relatedness Atlas</text>
+<rect x="497.4" y="3237.0" width="320.0" height="28" rx="6" fill="#b87a14" stroke="#2d3748" stroke-width="1"/>
+<text x="657.4" y="3255.5" font-size="13" fill="#ffffff" text-anchor="middle">Meiosis Atlas</text>
+<rect x="497.4" y="2523.0" width="320.0" height="28" rx="6" fill="#e67e22" stroke="#2d3748" stroke-width="1"/>
+<text x="657.4" y="2541.5" font-size="13" fill="#ffffff" text-anchor="middle">Cross-Species Atlas</text>
+<rect x="497.4" y="3489.0" width="320.0" height="28" rx="6" fill="#b13030" stroke="#2d3748" stroke-width="1"/>
+<text x="657.4" y="3507.5" font-size="13" fill="#ffffff" text-anchor="middle">Popstats Atlas</text>
+<rect x="497.4" y="2649.0" width="320.0" height="28" rx="6" fill="#6b3aa6" stroke="#2d3748" stroke-width="1"/>
+<text x="657.4" y="2667.5" font-size="13" fill="#ffffff" text-anchor="middle">Evolution Atlas</text>
+<rect x="44.0" y="1704.0" width="361.4" height="28" rx="6" fill="#888888" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1722.5" font-size="13" fill="#ffffff" text-anchor="middle">Genome / Synteny Atlas (deprecated)</text>
+<rect x="44.0" y="3300.0" width="361.4" height="28" rx="6" fill="#e89c2a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3318.5" font-size="13" fill="#ffffff" text-anchor="middle">Marker Design</text>
+<rect x="497.4" y="2607.0" width="320.0" height="28" rx="6" fill="#3aa6c0" stroke="#2d3748" stroke-width="1"/>
+<text x="657.4" y="2625.5" font-size="13" fill="#ffffff" text-anchor="middle">Diversity Atlas</text>
+<rect x="497.4" y="2691.0" width="320.0" height="28" rx="6" fill="#4a5d7e" stroke="#2d3748" stroke-width="1"/>
+<text x="657.4" y="2709.5" font-size="13" fill="#ffffff" text-anchor="middle">Genome Atlas</text>
+<rect x="44.0" y="2040.0" width="361.4" height="28" rx="6" fill="#5fa86b" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2058.5" font-size="13" fill="#ffffff" text-anchor="middle">Heterozygosity Atlas</text>
+<rect x="44.0" y="4770.0" width="361.4" height="28" rx="6" fill="#a64ca6" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4788.5" font-size="13" fill="#ffffff" text-anchor="middle">PODs Atlas</text>
+<rect x="44.0" y="3594.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3612.5" font-size="13" fill="#ffffff" text-anchor="middle">ngsRelate — pairwise relatedness from genotyp…</text>
+<rect x="44.0" y="3552.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3570.5" font-size="13" fill="#ffffff" text-anchor="middle">ngsPedigree — pedigree reconstruction from a …</text>
+<rect x="44.0" y="3342.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3360.5" font-size="13" fill="#ffffff" text-anchor="middle">Mendelian inheritance — per-trio error rate</text>
+<rect x="44.0" y="4854.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4872.5" font-size="13" fill="#ffffff" text-anchor="middle">Population statistics — windowed FST / dxy / …</text>
+<rect x="44.0" y="3888.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3906.5" font-size="13" fill="#ffffff" text-anchor="middle">Pairwise FST in windows</text>
+<rect x="44.0" y="3720.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3738.5" font-size="13" fill="#ffffff" text-anchor="middle">Nucleotide diversity θπ in windows</text>
+<rect x="44.0" y="528.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="546.5" font-size="13" fill="#ffffff" text-anchor="middle">Between-group divergence dxy in windows</text>
+<rect x="44.0" y="2670.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2688.5" font-size="13" fill="#ffffff" text-anchor="middle">Inversion candidate promoter</text>
+<rect x="44.0" y="2880.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2898.5" font-size="13" fill="#ffffff" text-anchor="middle">Karyotype auto caller</text>
+<rect x="44.0" y="2964.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2982.5" font-size="13" fill="#ffffff" text-anchor="middle">Karyotype polarizer</text>
+<rect x="44.0" y="2712.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2730.5" font-size="13" fill="#ffffff" text-anchor="middle">Inversion pair incompatibility test</text>
+<rect x="44.0" y="1410.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1428.5" font-size="13" fill="#ffffff" text-anchor="middle">Cross-species breakpoint detection</text>
+<rect x="44.0" y="5862.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5880.5" font-size="13" fill="#ffffff" text-anchor="middle">wfmash pairwise whole-genome alignment</text>
+<rect x="44.0" y="822.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="840.5" font-size="13" fill="#ffffff" text-anchor="middle">BUSCO single-copy ortholog table extraction</text>
+<rect x="44.0" y="3636.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3654.5" font-size="13" fill="#ffffff" text-anchor="middle">ngsTracts CO/NCO/DCO/MOSAIC classifier</text>
+<rect x="44.0" y="4056.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4074.5" font-size="13" fill="#ffffff" text-anchor="middle">per-(chrom × dyad) CO/DCO/NCO counts</text>
+<rect x="44.0" y="4098.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4116.5" font-size="13" fill="#ffffff" text-anchor="middle">per-(chrom × interval_a × interval_b) c-coinc…</text>
+<rect x="44.0" y="4182.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4200.5" font-size="13" fill="#ffffff" text-anchor="middle">per-(tested chrom × local inversion) covariat…</text>
+<rect x="44.0" y="4140.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4158.5" font-size="13" fill="#ffffff" text-anchor="middle">per-(focal_inv × parent) null-model assignment</text>
+<rect x="44.0" y="4350.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4368.5" font-size="13" fill="#ffffff" text-anchor="middle">per-candidate sex-specific CO ideogram + telo…</text>
+<rect x="44.0" y="4308.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4326.5" font-size="13" fill="#ffffff" text-anchor="middle">per-candidate NCO/GC tract ideogram + telomer…</text>
+<rect x="44.0" y="4896.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4914.5" font-size="13" fill="#ffffff" text-anchor="middle">PRDM9 PWM from CO ±2kb hotspots</text>
+<rect x="44.0" y="3510.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3528.5" font-size="13" fill="#ffffff" text-anchor="middle">NCO enrichment inside vs outside inversion ca…</text>
+<rect x="44.0" y="1200.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1218.5" font-size="13" fill="#ffffff" text-anchor="middle">CO_rate(het) vs CO_rate(non-het) per focal in…</text>
+<rect x="44.0" y="1956.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1974.5" font-size="13" fill="#ffffff" text-anchor="middle">HEADLINE: focal inversion karyotype → meiosis…</text>
+<rect x="44.0" y="5526.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5544.5" font-size="13" fill="#ffffff" text-anchor="middle">tajimas_d</text>
+<rect x="44.0" y="5694.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5712.5" font-size="13" fill="#ffffff" text-anchor="middle">theta_w</text>
+<rect x="44.0" y="2208.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2226.5" font-size="13" fill="#ffffff" text-anchor="middle">hp</text>
+<rect x="44.0" y="1452.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1470.5" font-size="13" fill="#ffffff" text-anchor="middle">da</text>
+<rect x="44.0" y="1578.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1596.5" font-size="13" fill="#ffffff" text-anchor="middle">fhom</text>
+<rect x="44.0" y="1536.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1554.5" font-size="13" fill="#ffffff" text-anchor="middle">fdm</text>
+<rect x="44.0" y="2376.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2394.5" font-size="13" fill="#ffffff" text-anchor="middle">ihs</text>
+<rect x="44.0" y="5988.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="6006.5" font-size="13" fill="#ffffff" text-anchor="middle">xpehh</text>
+<rect x="44.0" y="4686.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4704.5" font-size="13" fill="#ffffff" text-anchor="middle">pi_ns</text>
+<rect x="44.0" y="4644.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4662.5" font-size="13" fill="#ffffff" text-anchor="middle">pi_0fold_4fold</text>
+<rect x="44.0" y="1494.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1512.5" font-size="13" fill="#ffffff" text-anchor="middle">dn_ds</text>
+<rect x="44.0" y="2166.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2184.5" font-size="13" fill="#ffffff" text-anchor="middle">hobs_per_group</text>
+<rect x="44.0" y="4980.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4998.5" font-size="13" fill="#ffffff" text-anchor="middle">rare_sfs_pairwise</text>
+<rect x="44.0" y="3846.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3864.5" font-size="13" fill="#ffffff" text-anchor="middle">outlier_scan</text>
+<rect x="44.0" y="1032.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1050.5" font-size="13" fill="#ffffff" text-anchor="middle">candidate_vs_flanks</text>
+<rect x="44.0" y="4938.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4956.5" font-size="13" fill="#ffffff" text-anchor="middle">q_residual_dosage</text>
+<rect x="44.0" y="5358.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5376.5" font-size="13" fill="#ffffff" text-anchor="middle">snp_q_support</text>
+<rect x="44.0" y="2586.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2604.5" font-size="13" fill="#ffffff" text-anchor="middle">internal_ancestry_composition</text>
+<rect x="44.0" y="2754.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2772.5" font-size="13" fill="#ffffff" text-anchor="middle">inversion_candidate_classifier</text>
+<rect x="44.0" y="2124.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2142.5" font-size="13" fill="#ffffff" text-anchor="middle">hobs_hwe_pipeline</text>
+<rect x="44.0" y="2082.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2100.5" font-size="13" fill="#ffffff" text-anchor="middle">hobs_hwe_candidate_overlay</text>
+<rect x="44.0" y="3006.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3024.5" font-size="13" fill="#ffffff" text-anchor="middle">karyotype_resolution</text>
+<rect x="44.0" y="2544.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2562.5" font-size="13" fill="#ffffff" text-anchor="middle">instant_q_boundary_scan</text>
+<rect x="44.0" y="2796.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2814.5" font-size="13" fill="#ffffff" text-anchor="middle">inversion_groupwise_popstats</text>
+<rect x="44.0" y="3090.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3108.5" font-size="13" fill="#ffffff" text-anchor="middle">kinship_theta</text>
+<rect x="44.0" y="3048.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3066.5" font-size="13" fill="#ffffff" text-anchor="middle">king_robust_kinship</text>
+<rect x="44.0" y="2838.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2856.5" font-size="13" fill="#ffffff" text-anchor="middle">jacquard_coefficients_9</text>
+<rect x="44.0" y="2334.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2352.5" font-size="13" fill="#ffffff" text-anchor="middle">ibs_counts</text>
+<rect x="44.0" y="2502.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2520.5" font-size="13" fill="#ffffff" text-anchor="middle">inbreeding_F</text>
+<rect x="44.0" y="5190.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5208.5" font-size="13" fill="#ffffff" text-anchor="middle">relatedness_per_chrom_adaptive</text>
+<rect x="44.0" y="5148.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5166.5" font-size="13" fill="#ffffff" text-anchor="middle">relatedness_adaptive_validation</text>
+<rect x="44.0" y="2418.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2436.5" font-size="13" fill="#ffffff" text-anchor="middle">Import table</text>
+<rect x="44.0" y="864.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="882.5" font-size="13" fill="#ffffff" text-anchor="middle">Cactus pairwise alignment</text>
+<rect x="44.0" y="5904.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5922.5" font-size="13" fill="#ffffff" text-anchor="middle">WGDI ancestral karyotype reconstruction</text>
+<rect x="44.0" y="3216.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3234.5" font-size="13" fill="#ffffff" text-anchor="middle">macrosyntR-style Oxford-grid reordering</text>
+<rect x="44.0" y="4434.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4452.5" font-size="13" fill="#ffffff" text-anchor="middle">Per-pair orthologue lookup</text>
+<rect x="44.0" y="1788.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1806.5" font-size="13" fill="#ffffff" text-anchor="middle">genomewide_heterozygosity</text>
+<rect x="44.0" y="5316.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5334.5" font-size="13" fill="#ffffff" text-anchor="middle">sfs_folded_1d</text>
+<rect x="44.0" y="5652.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5670.5" font-size="13" fill="#ffffff" text-anchor="middle">theta_pi_windows</text>
+<rect x="44.0" y="5736.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5754.5" font-size="13" fill="#ffffff" text-anchor="middle">theta_w_windows</text>
+<rect x="44.0" y="5568.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5586.5" font-size="13" fill="#ffffff" text-anchor="middle">tajimas_d_windows</text>
+<rect x="44.0" y="5610.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5628.5" font-size="13" fill="#ffffff" text-anchor="middle">theta_pi_aggregate_cohort</text>
+<rect x="44.0" y="5274.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5292.5" font-size="13" fill="#ffffff" text-anchor="middle">roh_per_sample</text>
+<rect x="44.0" y="276.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="294.5" font-size="13" fill="#ffffff" text-anchor="middle">ancestry_het_kruskal</text>
+<rect x="44.0" y="234.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="252.5" font-size="13" fill="#ffffff" text-anchor="middle">ancestry_het_anova</text>
+<rect x="44.0" y="360.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="378.5" font-size="13" fill="#ffffff" text-anchor="middle">ancestry_het_pairwise_wilcox</text>
+<rect x="44.0" y="318.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="336.5" font-size="13" fill="#ffffff" text-anchor="middle">ancestry_het_pairwise_ttest</text>
+<rect x="44.0" y="444.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="462.5" font-size="13" fill="#ffffff" text-anchor="middle">ancestry_q_correlations</text>
+<rect x="44.0" y="2460.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2478.5" font-size="13" fill="#ffffff" text-anchor="middle">import_slot</text>
+<rect x="44.0" y="4602.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4620.5" font-size="13" fill="#ffffff" text-anchor="middle">per_sample_diversity_assembly</text>
+<rect x="44.0" y="402.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="420.5" font-size="13" fill="#ffffff" text-anchor="middle">ancestry_het_test_battery</text>
+<rect x="44.0" y="1284.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1302.5" font-size="13" fill="#ffffff" text-anchor="middle">cohort_master_assembly</text>
+<rect x="44.0" y="1914.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1932.5" font-size="13" fill="#ffffff" text-anchor="middle">haplotype_projection</text>
+<rect x="44.0" y="3762.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3780.5" font-size="13" fill="#ffffff" text-anchor="middle">offspring_gene_status</text>
+<rect x="44.0" y="5820.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5838.5" font-size="13" fill="#ffffff" text-anchor="middle">transmission_summary</text>
+<rect x="44.0" y="2250.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2268.5" font-size="13" fill="#ffffff" text-anchor="middle">hpp_kbc_arrangement_crosscheck</text>
+<rect x="44.0" y="2292.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2310.5" font-size="13" fill="#ffffff" text-anchor="middle">hpp_offspring_pipeline</text>
+<rect x="44.0" y="3972.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3990.5" font-size="13" fill="#ffffff" text-anchor="middle">Pairwise wfmash (two-pass)</text>
+<rect x="44.0" y="4392.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4410.5" font-size="13" fill="#ffffff" text-anchor="middle">Per-PAF breakpoint event extraction</text>
+<rect x="44.0" y="1158.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1176.5" font-size="13" fill="#ffffff" text-anchor="middle">Cluster events into zones per anchor</text>
+<rect x="44.0" y="570.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="588.5" font-size="13" fill="#ffffff" text-anchor="middle">Both-anchor reciprocity (BP3c)</text>
+<rect x="44.0" y="654.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="672.5" font-size="13" fill="#ffffff" text-anchor="middle">BP5 atlas data + PAF arcs (figure prep)</text>
+<rect x="44.0" y="696.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="714.5" font-size="13" fill="#ffffff" text-anchor="middle">BP6 joint A-E classification</text>
+<rect x="44.0" y="1662.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1680.5" font-size="13" fill="#ffffff" text-anchor="middle">Gene-order breakpoint extraction</text>
+<rect x="44.0" y="5778.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5796.5" font-size="13" fill="#ffffff" text-anchor="middle">Tolerance-cluster consolidation + cross-metho…</text>
+<rect x="44.0" y="738.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="756.5" font-size="13" fill="#ffffff" text-anchor="middle">BP_ATLAS chain (sequence method, full)</text>
+<rect x="44.0" y="1620.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1638.5" font-size="13" fill="#ffffff" text-anchor="middle">Gene-order + cross-method chain</text>
+<rect x="44.0" y="4476.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4494.5" font-size="13" fill="#ffffff" text-anchor="middle">Per-regime Mendelian annotation (trios + fami…</text>
+<rect x="44.0" y="2628.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2646.5" font-size="13" fill="#ffffff" text-anchor="middle">Inverse pedigree from regime co-membership</text>
+<rect x="44.0" y="3468.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3486.5" font-size="13" fill="#ffffff" text-anchor="middle">MSMC2 per founder-like ancestry background</text>
+<rect x="44.0" y="4560.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4578.5" font-size="13" fill="#ffffff" text-anchor="middle">Per-window K-means on local PCA</text>
+<rect x="44.0" y="4518.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4536.5" font-size="13" fill="#ffffff" text-anchor="middle">Per-window band-quality scorer</text>
+<rect x="44.0" y="5442.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5460.5" font-size="13" fill="#ffffff" text-anchor="middle">Stage 1 V-walker seed discovery</text>
+<rect x="44.0" y="1998.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2016.5" font-size="13" fill="#ffffff" text-anchor="middle">Het-skeleton seed detection</text>
+<rect x="44.0" y="1116.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1134.5" font-size="13" fill="#ffffff" text-anchor="middle">Cluster 2 voting orchestrator</text>
+<rect x="44.0" y="5946.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5964.5" font-size="13" fill="#ffffff" text-anchor="middle">Within-regime arrangement-identity refinement</text>
+<rect x="44.0" y="1368.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1386.5" font-size="13" fill="#ffffff" text-anchor="middle">Cross-regime topology</text>
+<rect x="44.0" y="1746.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1764.5" font-size="13" fill="#ffffff" text-anchor="middle">Genome-scale regime aggregation</text>
+<rect x="44.0" y="1074.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1092.5" font-size="13" fill="#ffffff" text-anchor="middle">Catalogue serializer (cross-page contract)</text>
+<rect x="44.0" y="1872.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1890.5" font-size="13" fill="#ffffff" text-anchor="middle">Haplotype-regimes full pipeline (chain)</text>
+<rect x="44.0" y="1830.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1848.5" font-size="13" fill="#ffffff" text-anchor="middle">Haplotype regimes via het-skeleton (chain)</text>
+<rect x="44.0" y="4224.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4242.5" font-size="13" fill="#ffffff" text-anchor="middle">Per-candidate age estimation (BUSCO 4D)</text>
+<rect x="44.0" y="192.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="210.5" font-size="13" fill="#ffffff" text-anchor="middle">Age-model suggester</text>
+<rect x="44.0" y="3804.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3822.5" font-size="13" fill="#ffffff" text-anchor="middle">Outgroup synteny polarization</text>
+<rect x="44.0" y="5400.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5418.5" font-size="13" fill="#ffffff" text-anchor="middle">Stacked MSA polarization (founder + doubleton)</text>
+<rect x="44.0" y="5484.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5502.5" font-size="13" fill="#ffffff" text-anchor="middle">Sub-PCA on derived-only samples</text>
+<rect x="44.0" y="3426.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3444.5" font-size="13" fill="#ffffff" text-anchor="middle">Minimum-spanning haplotype network</text>
+<rect x="44.0" y="5022.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5040.5" font-size="13" fill="#ffffff" text-anchor="middle">Recombinant-tract / polarity-switch detector</text>
+<rect x="44.0" y="3132.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3150.5" font-size="13" fill="#ffffff" text-anchor="middle">Layer 0/1 noise removal (kinship downweight)</text>
+<rect x="44.0" y="5232.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5250.5" font-size="13" fill="#ffffff" text-anchor="middle">Relative-ordering of inversions on a chromoso…</text>
+<rect x="44.0" y="4266.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4284.5" font-size="13" fill="#ffffff" text-anchor="middle">Per-candidate archaeology synthesis card</text>
+<rect x="44.0" y="1326.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1344.5" font-size="13" fill="#ffffff" text-anchor="middle">Copy-origin painting (Stage 5.6, SPEC ONLY)</text>
+<rect x="44.0" y="3678.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3696.5" font-size="13" fill="#ffffff" text-anchor="middle">ngsTracts STEP_TRC_01 — gene-conversion tract…</text>
+<rect x="44.0" y="612.0" width="361.4" height="28" rx="6" fill="#2f855a" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="630.5" font-size="13" fill="#ffffff" text-anchor="middle">BP4 — cross-species × 226-cohort haploblock o…</text>
+<rect x="44.0" y="948.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="966.5" font-size="13" fill="#ffffff" text-anchor="middle">Candidate overview</text>
+<rect x="44.0" y="990.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1008.5" font-size="13" fill="#ffffff" text-anchor="middle">Candidate review composite</text>
+<rect x="44.0" y="2922.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="2940.5" font-size="13" fill="#ffffff" text-anchor="middle">Karyotype panel</text>
+<rect x="44.0" y="3174.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3192.5" font-size="13" fill="#ffffff" text-anchor="middle">Long-range haplotype regimes</text>
+<rect x="44.0" y="4812.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4830.5" font-size="13" fill="#ffffff" text-anchor="middle">Popstats (FST / dxy / piN / piS)</text>
+<rect x="44.0" y="3384.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3402.5" font-size="13" fill="#ffffff" text-anchor="middle">Mendelian per-trio rate</text>
+<rect x="44.0" y="3930.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3948.5" font-size="13" fill="#ffffff" text-anchor="middle">Pairwise FST windows</text>
+<rect x="44.0" y="486.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="504.5" font-size="13" fill="#ffffff" text-anchor="middle">Atlas summary (conductor-spawned)</text>
+<rect x="44.0" y="1242.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1260.5" font-size="13" fill="#ffffff" text-anchor="middle">Cohort hierarchy</text>
+<rect x="44.0" y="108.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="126.5" font-size="13" fill="#ffffff" text-anchor="middle">Adapter completeness</text>
+<rect x="44.0" y="3258.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="3276.5" font-size="13" fill="#ffffff" text-anchor="middle">Manuscript chunks coverage</text>
+<rect x="44.0" y="4728.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4746.5" font-size="13" fill="#ffffff" text-anchor="middle">Plans — actionable count</text>
+<rect x="44.0" y="780.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="798.5" font-size="13" fill="#ffffff" text-anchor="middle">Bridge — per-DB call summary</text>
+<rect x="44.0" y="150.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="168.5" font-size="13" fill="#ffffff" text-anchor="middle">Addons — per-kind summary</text>
+<rect x="44.0" y="5106.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5124.5" font-size="13" fill="#ffffff" text-anchor="middle">Registry health (footer strip)</text>
+<rect x="44.0" y="4014.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="4032.5" font-size="13" fill="#ffffff" text-anchor="middle">Panel coverage by page</text>
+<rect x="44.0" y="906.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="924.5" font-size="13" fill="#ffffff" text-anchor="middle">Candidate aggregate (all atlases)</text>
+<rect x="44.0" y="5064.0" width="361.4" height="28" rx="6" fill="#6b46c1" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="5082.5" font-size="13" fill="#ffffff" text-anchor="middle">Registered objects</text>
+<rect x="497.4" y="2439.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2457.5" font-size="13" fill="#4a5568" text-anchor="middle">candidate_picker</text>
+<rect x="497.4" y="3279.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3297.5" font-size="13" fill="#4a5568" text-anchor="middle">mendelian_burden_card</text>
+<rect x="497.4" y="3405.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3423.5" font-size="13" fill="#4a5568" text-anchor="middle">next_action_proposal</text>
+<rect x="497.4" y="3195.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3213.5" font-size="13" fill="#4a5568" text-anchor="middle">manuscript_chunks_panel</text>
+<rect x="497.4" y="2229.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2247.5" font-size="13" fill="#4a5568" text-anchor="middle">ancestry_het_battery_envelope_card</text>
+<rect x="497.4" y="2271.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2289.5" font-size="13" fill="#4a5568" text-anchor="middle">archaeology_synthesis_v1_card</text>
+<rect x="497.4" y="3615.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3633.5" font-size="13" fill="#4a5568" text-anchor="middle">regime_catalogue_v1_card</text>
+<rect x="497.4" y="2565.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2583.5" font-size="13" fill="#4a5568" text-anchor="middle">cross_species_226_overlap_card</text>
+<rect x="497.4" y="3069.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3087.5" font-size="13" fill="#4a5568" text-anchor="middle">joint_candidates_v1_card</text>
+<rect x="497.4" y="2481.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2499.5" font-size="13" fill="#4a5568" text-anchor="middle">cohort_master_samples_card</text>
+<rect x="497.4" y="2355.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2373.5" font-size="13" fill="#4a5568" text-anchor="middle">breakpoints_consolidated_v1_card</text>
+<rect x="497.4" y="2733.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2751.5" font-size="13" fill="#4a5568" text-anchor="middle">hobs_hwe_candidate_overlay_table_card</text>
+<rect x="497.4" y="3867.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3885.5" font-size="13" fill="#4a5568" text-anchor="middle">sample_set_picker</text>
+<rect x="497.4" y="2775.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2793.5" font-size="13" fill="#4a5568" text-anchor="middle">hobs_hwe_windows_card</text>
+<rect x="497.4" y="2817.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2835.5" font-size="13" fill="#4a5568" text-anchor="middle">hpp_offspring_gene_status_card</text>
+<rect x="497.4" y="2985.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3003.5" font-size="13" fill="#4a5568" text-anchor="middle">inversion_boundary_candidates_card</text>
+<rect x="497.4" y="3153.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3171.5" font-size="13" fill="#4a5568" text-anchor="middle">karyotype_calls_picker</text>
+<rect x="497.4" y="3027.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3045.5" font-size="13" fill="#4a5568" text-anchor="middle">inversion_meiosis_effects_v1_card</text>
+<rect x="497.4" y="2859.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2877.5" font-size="13" fill="#4a5568" text-anchor="middle">internal_composition_classification_card</text>
+<rect x="497.4" y="2901.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2919.5" font-size="13" fill="#4a5568" text-anchor="middle">intrachromosomal_co_effect_card</text>
+<rect x="497.4" y="2397.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="2415.5" font-size="13" fill="#4a5568" text-anchor="middle">candidate_classification_card</text>
+<rect x="497.4" y="3531.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3549.5" font-size="13" fill="#4a5568" text-anchor="middle">popstats_result_groupwise_card</text>
+<rect x="497.4" y="3111.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3129.5" font-size="13" fill="#4a5568" text-anchor="middle">karyotype_calls_card</text>
+<rect x="497.4" y="3321.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3339.5" font-size="13" fill="#4a5568" text-anchor="middle">msmc_per_group_v1_card</text>
+<rect x="497.4" y="3363.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3381.5" font-size="13" fill="#4a5568" text-anchor="middle">nco_enrichment_result_card</text>
+<rect x="497.4" y="3447.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3465.5" font-size="13" fill="#4a5568" text-anchor="middle">per_sample_diversity_envelope_card</text>
+<rect x="497.4" y="3657.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3675.5" font-size="13" fill="#4a5568" text-anchor="middle">regime_mendelian_v1_card</text>
+<rect x="497.4" y="3699.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3717.5" font-size="13" fill="#4a5568" text-anchor="middle">regime_pedigree_v1_card</text>
+<rect x="497.4" y="3741.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3759.5" font-size="13" fill="#4a5568" text-anchor="middle">regime_topology_v1_card</text>
+<rect x="497.4" y="3825.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3843.5" font-size="13" fill="#4a5568" text-anchor="middle">relatedness_res_perchrom_adaptive_card</text>
+<rect x="497.4" y="3573.0" width="320.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="657.4" y="3591.5" font-size="13" fill="#4a5568" text-anchor="middle">q_support_windows_card</text>
+<text x="44" y="6078" font-size="11" fill="#718096">kind:</text>
+<rect x="90" y="6070" width="12" height="12" rx="2" fill="#2f855a" stroke="#2d3748" stroke-width="0.8"/>
+<text x="107" y="6080" font-size="11" fill="#4a5568">analysis</text>
+<rect x="176" y="6070" width="12" height="12" rx="2" fill="#1a2540" stroke="#2d3748" stroke-width="0.8"/>
+<text x="193" y="6080" font-size="11" fill="#4a5568">atlas</text>
+<rect x="241" y="6070" width="12" height="12" rx="2" fill="#6b46c1" stroke="#2d3748" stroke-width="0.8"/>
+<text x="258" y="6080" font-size="11" fill="#4a5568">panel</text>
+<rect x="306" y="6070" width="12" height="12" rx="2" fill="#ffffff" stroke="#a0aec0" stroke-dasharray="2 2" stroke-width="0.8"/>
+<text x="323" y="6080" font-size="11" fill="#4a5568">referenced</text>
+</svg>

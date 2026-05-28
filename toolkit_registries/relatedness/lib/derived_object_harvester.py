@@ -191,8 +191,9 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(aggs[0] if args.instance else aggs, indent=2, ensure_ascii=False))
         return 0
 
+    objs = {o["object_kind"]: o for o in load_jsonl(REG / "derived_objects.jsonl")}
+    id_key = objs[args.kind]["identity_keys"][0]
     out_dir = QUEUE / f"{args.kind}s"
-    id_key = "candidate_id" if args.kind == "candidate" else f"{args.kind}_id"
     total_rows = 0
     for agg in aggs:
         n = sum(b.get("n", 0) for b in agg["evidence"].values())

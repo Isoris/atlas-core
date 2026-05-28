@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 321,
-  "n_edges": 252,
+  "n_nodes": 322,
+  "n_edges": 253,
   "warnings": [],
   "nodes": [
     {
@@ -93,7 +93,7 @@
       "id": "long_range_haplotype_regime",
       "type": "layer",
       "label": "Long-range haplotype regime",
-      "status": "stub"
+      "status": "experimental"
     },
     {
       "id": "family_hub",
@@ -1750,6 +1750,13 @@
       "layer_id": null
     },
     {
+      "id": "candidate_aggregate_card",
+      "type": "panel",
+      "label": "Candidate aggregate (all atlases)",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
       "id": "conversation",
       "type": "page",
       "label": "Conversation",
@@ -3023,6 +3030,11 @@
     {
       "from": "pages.jsonl",
       "to": "panel_coverage_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "02_queue/candidates/",
+      "to": "candidate_aggregate_card",
       "kind": "panel_reads"
     },
     {

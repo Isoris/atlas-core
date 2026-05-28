@@ -444,6 +444,63 @@
       </table>`);
   }
 
+  async function renderCandidateAggregateCard(panel, _ctx) {
+    const scope = (typeof window.getScope === "function") ? window.getScope() : {};
+    const cid = (scope.candidate_id || "").trim();
+    async function getJson(url) {
+      try { const r = await fetch(url, { cache: "no-store" }); return r.ok ? r.json() : null; }
+      catch { return null; }
+    }
+    let agg = cid ? await getJson(`../02_queue/candidates/${cid}.json`) : null;
+    let isExample = false;
+    if (!agg) {
+      // fall back to the shipped example seed so the pane renders on a
+      // fresh checkout / when no candidate is in scope
+      agg = await getJson("../02_queue/candidates/inv_LG28_INV_001.example.json");
+      isExample = !!agg;
+    }
+    if (!agg) {
+      return cardShell(panel, `
+        <div style="font-size:12px;color:var(--muted);font-style:italic;padding:6px 0">
+          No candidate aggregate. Pick a candidate in the scope ribbon, then run
+          <code>python3 -m toolkit_registries.relatedness.lib.derived_object_harvester --kind candidate --all --commit</code>.
+        </div>`);
+    }
+    const id = agg.candidate_id || "?";
+    const ident = agg.identity || {};
+    const interval = (ident.chrom && ident.start && ident.end)
+      ? `${ident.chrom}:${(+ident.start).toLocaleString()}–${(+ident.end).toLocaleString()}` : "";
+    const esc = (s) => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+    function block(layer, b) {
+      const rows = b.rows || [];
+      const cols = rows.length ? Object.keys(rows[0]) : [];
+      const head = cols.map(c => `<th style="text-align:left;padding:2px 6px;color:#6c727f;font-weight:500">${esc(c)}</th>`).join("");
+      const body = rows.slice(0, 12).map(r =>
+        `<tr>${cols.map(c => `<td style="padding:2px 6px;font-family:ui-monospace,Menlo,monospace;font-size:11px">${esc(r[c])}</td>`).join("")}</tr>`).join("");
+      const more = rows.length > 12 ? `<div style="font-size:10.5px;color:#a0aec0;padding:3px 6px">… ${rows.length - 12} more</div>` : "";
+      const modePill = `<span style="background:#edf2f7;color:#4a5568;padding:1px 5px;border-radius:3px;font-size:9.5px;font-weight:600">${esc(b.mode || "")}</span>`;
+      return `<details ${rows.length ? "open" : ""} style="margin:6px 0;border:1px solid var(--border);border-radius:5px">
+        <summary style="padding:5px 9px;cursor:pointer;font-size:12px;font-weight:600">
+          ${esc(layer)} <span style="color:#6c727f;font-weight:400">· ${rows.length} row${rows.length === 1 ? "" : "s"}</span> ${modePill}
+        </summary>
+        ${rows.length
+          ? `<div style="overflow-x:auto;padding:0 4px 6px"><table style="width:100%;border-collapse:collapse"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>${more}</div>`
+          : `<div style="font-size:11px;color:#a0aec0;font-style:italic;padding:4px 9px 8px">no evidence yet</div>`}
+      </details>`;
+    }
+    const blocks = Object.entries(agg.evidence || {}).map(([layer, b]) => block(layer, b)).join("");
+    const totalRows = Object.values(agg.evidence || {}).reduce((a, b) => a + (b.n || 0), 0);
+    return cardShell(panel, `
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
+        <code style="font-weight:600;font-size:12px">${esc(id)}</code>
+        ${interval ? ` · ${esc(interval)}` : ""}
+        · ${totalRows} evidence row${totalRows === 1 ? "" : "s"} across ${Object.keys(agg.evidence || {}).length} layers
+        ${isExample ? ` · <span style="background:#d69e2e;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase">example</span>` : ""}
+      </div>
+      ${blocks}`);
+  }
+
   async function renderRegistryHealthStrip(panel, _ctx) {
     const [atlases, addons, dbs] = await Promise.all([
       window.atlasFetchJsonl("../01_registry/atlases.jsonl"),
@@ -476,6 +533,7 @@
     plans_summary_card:              renderPlansSummaryCard,
     addons_summary_card:             renderAddonsSummaryCard,
     panel_coverage_card:             renderPanelCoverageCard,
+    candidate_aggregate_card:        renderCandidateAggregateCard,
     registry_health_strip:           renderRegistryHealthStrip,
     bridge_summary_card:             renderBridgeSummaryCard,
   };

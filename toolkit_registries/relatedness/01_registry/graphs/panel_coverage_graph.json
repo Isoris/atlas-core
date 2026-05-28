@@ -1,8 +1,8 @@
 {
   "schema_version": "panel_coverage_graph_v1",
-  "rewritten_at": "2026-05-28T14:49:06Z",
-  "n_nodes": 148,
-  "n_edges": 191,
+  "rewritten_at": "2026-05-28T14:57:52Z",
+  "n_nodes": 149,
+  "n_edges": 192,
   "nodes": [
     {
       "id": "atlas_core",
@@ -891,6 +891,12 @@
       "kind": "panel",
       "label": "Panel coverage by page",
       "atlas": "atlas_core"
+    },
+    {
+      "id": "candidate_aggregate_card",
+      "kind": "panel",
+      "label": "Candidate aggregate (all atlases)",
+      "atlas": "atlas_core"
     }
   ],
   "edges": [
@@ -936,6 +942,11 @@
     },
     {
       "from": "panel_coverage_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "candidate_aggregate_card",
       "to": "atlas_core",
       "kind": "panel_in_atlas"
     },
@@ -1998,7 +2009,7 @@
       "evolution_atlas": 11
     },
     "panels_per_atlas": {
-      "atlas_core": 9
+      "atlas_core": 10
     }
   }
 }

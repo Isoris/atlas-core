@@ -1,0 +1,4 @@
+regime_id	chrom	start	end	regime_class	n_windows	notes
+lrr_LG28_R1	C_gar_LG28	1100000	4000000	high_ld_block	58	synthetic; proximal LG28 long-range haplotype regime overlapping inv_LG28_INV_001
+lrr_LG28_R2	C_gar_LG28	5000000	8400000	high_ld_block	68	synthetic; distal LG28 regime, distal half of the inversion
+lrr_LG01_R1	C_gar_LG01	34000000	41200000	high_ld_block	144	synthetic; LG01 regime spanning the paired candidate inv_LG01_INV_001

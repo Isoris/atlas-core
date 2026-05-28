@@ -439,6 +439,27 @@ The pull-side promise: at any moment you can ask atlas-core for the
 full record of candidate X and get one JSON aggregating every atlas's
 evidence — no tab-hopping across per-atlas surfaces.
 
+### Genericity — the 2nd object kind
+
+`LRR_regime` (long-range haplotype regime) was added as the 2nd
+derived-object kind with **zero harvester code change** — one row in
+`derived_objects.jsonl` + a synthetic instance file
+(`02_sets/regimes/lrr_regimes.tsv`). It reuses the same
+`spatial_window` + `chromosome` join modes; the only differences are
+`identity_keys` (`regime_id`) and `instance_layer`. The harvester reads
+the join spec from the registry, so a 3rd kind (breakpoint_pair on the
+cross-species side) is the same one-row addition. This is the payoff of
+registering the *kind* rather than special-casing the harvester.
+
+### The pull-side surface
+
+`candidate_aggregate_card` (page 6, Candidate review) renders the
+harvested JSON scope-aware: it reads
+`02_queue/candidates/<scope.candidate_id>.json`, falls back to the
+example seed, and shows one collapsible block per evidence layer. Pick
+a candidate in the scope ribbon → see every atlas's evidence in one
+pane.
+
 ---
 
 _End of ADDON_SPEC.md (v0)._

@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 299,
-  "n_edges": 231,
+  "n_nodes": 309,
+  "n_edges": 245,
   "warnings": [],
   "nodes": [
     {
@@ -882,6 +882,18 @@
       "status": "experimental"
     },
     {
+      "id": "gene_conversion_tracts",
+      "type": "layer",
+      "label": "Gene-conversion tracts (NCO classifications)",
+      "status": "experimental"
+    },
+    {
+      "id": "cross_species_226_overlap",
+      "type": "layer",
+      "label": "Cross-species \u00d7 226-cohort haploblock overlap",
+      "status": "planned"
+    },
+    {
       "id": "ngsrelate",
       "type": "analysis",
       "label": "ngsRelate \u2014 pairwise relatedness from genotype likelihoods",
@@ -1584,6 +1596,18 @@
       "status": "experimental"
     },
     {
+      "id": "ngstracts_step_trc_01",
+      "type": "analysis",
+      "label": "ngsTracts STEP_TRC_01 \u2014 gene-conversion tract classifier",
+      "status": "experimental"
+    },
+    {
+      "id": "bp4_population_overlap",
+      "type": "analysis",
+      "label": "BP4 \u2014 cross-species \u00d7 226-cohort haploblock overlap",
+      "status": "experimental"
+    },
+    {
       "id": "mendelian_page_load",
       "type": "hook",
       "label": "Mendelian panel",
@@ -1661,6 +1685,48 @@
       "label": "Pairwise FST windows",
       "status": "experimental",
       "layer_id": "fst_windows"
+    },
+    {
+      "id": "atlas_summary_card",
+      "type": "panel",
+      "label": "Atlas summary (conductor-spawned)",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "cohort_summary_card",
+      "type": "panel",
+      "label": "Cohort hierarchy",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "adapter_completeness_card",
+      "type": "panel",
+      "label": "Adapter completeness",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "manuscript_chunks_summary_card",
+      "type": "panel",
+      "label": "Manuscript chunks coverage",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "plans_summary_card",
+      "type": "panel",
+      "label": "Plans \u2014 actionable count",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "bridge_summary_card",
+      "type": "panel",
+      "label": "Bridge \u2014 per-DB call summary",
+      "status": "experimental",
+      "layer_id": null
     },
     {
       "id": "conversation",
@@ -2618,6 +2684,26 @@
       "kind": "output"
     },
     {
+      "from": "ngstracts_step_trc_01",
+      "to": "gene_conversion_tracts",
+      "kind": "output"
+    },
+    {
+      "from": "breakpoint_clusters",
+      "to": "bp4_population_overlap",
+      "kind": "input"
+    },
+    {
+      "from": "long_range_haplotype_regime",
+      "to": "bp4_population_overlap",
+      "kind": "input"
+    },
+    {
+      "from": "bp4_population_overlap",
+      "to": "cross_species_226_overlap",
+      "kind": "output"
+    },
+    {
       "from": "karyotype_calls",
       "to": "mendelian_page_load",
       "kind": "hook_required"
@@ -2776,6 +2862,56 @@
       "from": "fst_windows",
       "to": "fst_panel",
       "kind": "panel_renders"
+    },
+    {
+      "from": "atlases.jsonl",
+      "to": "atlas_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "module_registry.jsonl",
+      "to": "atlas_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "cohorts.jsonl",
+      "to": "cohort_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "atlases.jsonl",
+      "to": "cohort_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "analysis_registry.jsonl",
+      "to": "adapter_completeness_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "manuscript_chunks.jsonl",
+      "to": "manuscript_chunks_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "references.jsonl",
+      "to": "manuscript_chunks_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "02_queue/plans/index.json",
+      "to": "plans_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "external_databases.jsonl",
+      "to": "bridge_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "02_queue/bridge_log.jsonl",
+      "to": "bridge_summary_card",
+      "kind": "panel_reads"
     },
     {
       "from": "relatedness_chain_view",
@@ -3047,7 +3183,7 @@
       "trigger_policy": "manual",
       "status": "experimental",
       "notes": "\"The pipeline runs on the comparative cohort (18 genomes + hybrid subgenomes); it produces COORDINATES that the hatchery LG01 x LG28 work consumes",
-      "_path": "analysis/cross_species_breakpoints/adapter_atlas.js"
+      "_path": "analysis/cross_species_breakpoint_detection/adapter_atlas.js"
     },
     {
       "analysis_id": "inversion_pair_incompatibility",

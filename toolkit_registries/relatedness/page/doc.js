@@ -165,7 +165,7 @@
     if (loaded !== null) return loaded;
     const url = "docs/" + pageName + ".md";
     try {
-      const r = await fetch(url, { cache: "no-store" });
+      const r = await fetch(url, { cache: "default" });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       loaded = await r.text();
     } catch (e) {

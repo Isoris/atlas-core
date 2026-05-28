@@ -1,0 +1,84 @@
+{
+  "schema_version": "bridge_endpoint_v1",
+  "db_id": "interpro",
+  "endpoints": [
+    {
+      "endpoint_id":  "interpro_entries",
+      "label":        "All InterPro entries",
+      "method":       "GET",
+      "path":         "/entry/interpro",
+      "params": {
+        "type":      {"required": false, "kind": "query"},
+        "page_size": {"required": false, "kind": "query", "default": 20}
+      },
+      "returns_layer": "interpro_entries",
+      "cache_seconds": 86400,
+      "describes":    "List InterPro entries; filter by type (family, domain, homologous_superfamily, repeat, site)."
+    },
+    {
+      "endpoint_id":  "interpro_entry_by_accession",
+      "label":        "InterPro entry by accession (e.g. IPR011615)",
+      "method":       "GET",
+      "path":         "/entry/interpro/{accession}",
+      "params": {
+        "accession": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "interpro_entries",
+      "cache_seconds": 604800,
+      "describes":    "Fetch a single InterPro entry by its IPR accession."
+    },
+    {
+      "endpoint_id":  "interpro_entries_by_protein",
+      "label":        "InterPro entries for a UniProt accession",
+      "method":       "GET",
+      "path":         "/entry/interpro/protein/uniprot/{accession}",
+      "params": {
+        "accession": {"required": true, "kind": "path"},
+        "page_size": {"required": false, "kind": "query", "default": 20}
+      },
+      "returns_layer": "interpro_entries",
+      "cache_seconds": 86400,
+      "describes":    "All InterPro domains, families, and sites mapped onto a given UniProt protein."
+    },
+    {
+      "endpoint_id":  "interpro_proteins_by_entry",
+      "label":        "Proteins matching an InterPro entry",
+      "method":       "GET",
+      "path":         "/protein/uniprot/entry/interpro/{accession}",
+      "params": {
+        "accession":  {"required": true,  "kind": "path"},
+        "tax_id":     {"required": false, "kind": "query"},
+        "page_size":  {"required": false, "kind": "query", "default": 50}
+      },
+      "returns_layer": "interpro_proteins",
+      "cache_seconds": 86400,
+      "describes":    "All UniProt proteins that match a given InterPro entry; filter by tax_id for species-restricted lookup."
+    },
+    {
+      "endpoint_id":  "interpro_structures_by_entry",
+      "label":        "PDB structures linked to an InterPro entry",
+      "method":       "GET",
+      "path":         "/structure/pdb/entry/interpro/{accession}",
+      "params": {
+        "accession":  {"required": true,  "kind": "path"},
+        "page_size":  {"required": false, "kind": "query", "default": 50}
+      },
+      "returns_layer": "interpro_structures",
+      "cache_seconds": 604800,
+      "describes":    "PDB structures associated with an InterPro entry — useful for cross-referencing inversion-disrupted domains to known protein structures."
+    },
+    {
+      "endpoint_id":  "interpro_taxonomy_by_entry",
+      "label":        "Taxonomic distribution of an InterPro entry",
+      "method":       "GET",
+      "path":         "/taxonomy/uniprot/entry/interpro/{accession}",
+      "params": {
+        "accession":  {"required": true,  "kind": "path"},
+        "page_size":  {"required": false, "kind": "query", "default": 50}
+      },
+      "returns_layer": "interpro_taxonomy",
+      "cache_seconds": 604800,
+      "describes":    "Species in which a particular InterPro entry occurs — for the cross_species_atlas, lets us check whether a domain is conserved across catfish."
+    }
+  ]
+}

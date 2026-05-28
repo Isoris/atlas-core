@@ -105,7 +105,7 @@
 
   async function loadAtlases() {
     try {
-      const r = await fetch("../01_registry/atlases.jsonl", { cache: "no-store" });
+      const r = await fetch("../01_registry/atlases.jsonl", { cache: "default" });
       if (!r.ok) return;
       atlases = (await r.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
     } catch {}

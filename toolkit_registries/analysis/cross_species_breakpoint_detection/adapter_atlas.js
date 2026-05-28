@@ -1,4 +1,4 @@
-// analysis/cross_species_breakpoints/adapter_atlas.js
+// analysis/cross_species_breakpoint_detection/adapter_atlas.js
 //
 // Cross-species comparative breakpoint detection. Two independent method
 // families fold into one consolidated catalog with a cross_method flag:

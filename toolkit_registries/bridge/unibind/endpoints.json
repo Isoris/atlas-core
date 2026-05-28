@@ -1,0 +1,61 @@
+{
+  "schema_version": "bridge_endpoint_v1",
+  "db_id": "unibind",
+  "endpoints": [
+    {
+      "endpoint_id":  "unibind_factors",
+      "label":        "List transcription factors",
+      "method":       "GET",
+      "path":         "/api/v1.0/factors/",
+      "params": {
+        "format": {"required": false, "kind": "query", "default": "json"},
+        "page":   {"required": false, "kind": "query"}
+      },
+      "returns_layer": "unibind_factors",
+      "cache_seconds": 604800,
+      "describes":    "All transcription factors with curated ChIP-seq-derived binding profiles in UniBind."
+    },
+    {
+      "endpoint_id":  "unibind_factor_detail",
+      "label":        "Single TF detail",
+      "method":       "GET",
+      "path":         "/api/v1.0/factors/{name}/",
+      "params": {
+        "name":   {"required": true, "kind": "path"},
+        "format": {"required": false, "kind": "query", "default": "json"}
+      },
+      "returns_layer": "unibind_factor_detail",
+      "cache_seconds": 604800,
+      "describes":    "Per-TF metadata + the list of TFBS datasets that target it. Use name lookups from unibind_factors first."
+    },
+    {
+      "endpoint_id":  "unibind_datasets",
+      "label":        "List TFBS datasets",
+      "method":       "GET",
+      "path":         "/api/v1.0/datasets/",
+      "params": {
+        "species":     {"required": false, "kind": "query"},
+        "tf_name":     {"required": false, "kind": "query"},
+        "cell_tissue": {"required": false, "kind": "query"},
+        "format":      {"required": false, "kind": "query", "default": "json"},
+        "page":        {"required": false, "kind": "query"}
+      },
+      "returns_layer": "unibind_datasets",
+      "cache_seconds": 604800,
+      "describes":    "Filtered TFBS datasets. Filter by species (Homo sapiens / Mus musculus / Danio rerio / …), TF name, or cell/tissue type. Each dataset corresponds to one ChIP-seq experiment + JASPAR motif scan."
+    },
+    {
+      "endpoint_id":  "unibind_dataset_detail",
+      "label":        "Single TFBS dataset detail",
+      "method":       "GET",
+      "path":         "/api/v1.0/datasets/{dataset_id}/",
+      "params": {
+        "dataset_id": {"required": true, "kind": "path"},
+        "format":     {"required": false, "kind": "query", "default": "json"}
+      },
+      "returns_layer": "unibind_dataset_detail",
+      "cache_seconds": 604800,
+      "describes":    "Full record for one TFBS dataset — experimental metadata + the binding site BED file URL. Download the BED separately when you need the coordinates."
+    }
+  ]
+}

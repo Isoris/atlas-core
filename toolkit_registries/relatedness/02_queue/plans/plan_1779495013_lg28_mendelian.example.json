@@ -1,0 +1,79 @@
+{
+  "schema_version": "panel_plan_v1",
+  "plan_id": "plan_1779495013_lg28_mendelian",
+  "generated_at": "2026-05-23T14:00:00Z",
+  "goal": "Validate Mendelian inheritance of inv_LG28_INV_001",
+  "source": {
+    "kind": "funnel",
+    "funnel_session": "fnl_demo",
+    "vocab_activated": [
+      {"level": "domain",          "id": "inheritance"},
+      {"level": "concept",         "id": "mendelian"},
+      {"level": "registry-vocab",  "kind": "analysis_id",  "id": "mendelian"},
+      {"level": "instance",        "kind": "candidate_id", "id": "inv_LG28_INV_001"}
+    ]
+  },
+  "scope_required": {
+    "atlas":        "inversion_atlas",
+    "cohort":       "cgar_hatchery_226",
+    "sample_set":   "qcpass_226",
+    "candidate_id": "inv_LG28_INV_001"
+  },
+  "steps": [
+    {
+      "phase":          "stage",
+      "panel_id":       "candidate_picker",
+      "role":           "scope_input",
+      "from_analysis":  "mendelian",
+      "gates_status": [
+        {"graph": "scope_graph", "node": "candidate_id", "state": "all_set", "passes": true}
+      ]
+    },
+    {
+      "phase":          "render",
+      "panel_id":       "mendelian_burden_card",
+      "role":           "primary_result",
+      "from_analysis":  "mendelian",
+      "expects_layers": ["mendelian_result"],
+      "gates_status": [
+        {"graph": "layer_graph", "node": "mendelian_result", "state": "producer_not_run", "passes": false}
+      ]
+    },
+    {
+      "phase":          "propose",
+      "panel_id":       "next_action_proposal",
+      "role":           "action",
+      "from_analysis":  "mendelian",
+      "actions": [
+        {
+          "action_id":    "queue_chain",
+          "label":        "Queue mendelian manifest",
+          "kind":         "dispatch",
+          "gates_status": [
+            {"graph": "chain_graph", "node": "mendelian", "tier": "one", "passes": true}
+          ],
+          "enabled":      true
+        }
+      ]
+    },
+    {
+      "phase":          "narrate",
+      "panel_id":       "manuscript_chunks_panel",
+      "role":           "writeup",
+      "from_analysis":  "mendelian",
+      "filter":         {"manuscript_chunks.analysis_id": "mendelian"}
+    }
+  ],
+  "summary": {
+    "n_steps":                 4,
+    "n_ready":                 2,
+    "n_gated_blocked":         1,
+    "n_actions_enabled":       1,
+    "first_unblocking_action": "run_mendelian_module"
+  },
+  "_provenance": {
+    "from_dispatcher_plan_id": "",
+    "atlas":                   "inversion_atlas",
+    "cohort":                  "cgar_hatchery_226"
+  }
+}

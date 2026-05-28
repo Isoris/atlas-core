@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "cross_species_breakpoints/schema_in.json",
-  "title": "cross_species_breakpoints input",
+  "$id": "cross_species_breakpoint_detection/schema_in.json",
+  "title": "cross_species_breakpoint_detection input",
   "type": "object",
   "required": ["sources"],
   "additionalProperties": false,

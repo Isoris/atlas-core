@@ -185,6 +185,7 @@
   <a href="queue.html"><span class="num">11.</span> Queue</a>
   <a href="manuscript.html"><span class="num">12.</span> Manuscript</a>
   <a href="adapters.html"><span class="num">13.</span> Adapters</a>
+  <a href="plans.html"><span class="num">14.</span> Plans</a>
   <span class="tag">atlas-core dashboard</span>
 </nav>
 
@@ -305,7 +306,7 @@ function isChain(reg) {
 
 async function _crFetchJsonl(rel) {
   try {
-    const r = await fetch(rel, { cache: "no-store" });
+    const r = await fetch(rel, { cache: "default" });
     if (!r.ok) return [];
     return (await r.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
   } catch { return []; }
@@ -343,8 +344,13 @@ async function loadChainAudit() {
 }
 
 // Layer is "ready" if any module that produces it has last_run_status=success.
-// Heuristic: walk modes → analysis_type → module_name → module.last_run_status.
+// File-sourced layers (source_kind: "file") are inherently inputs — they
+// don't need a producer; user supplies them. Treat as ready by definition.
 function layerReadiness(layerId) {
+  const L = CR.layers[layerId];
+  if (L && L.source_kind === "file") {
+    return { state: "ready", producers: [], via: { source: "file" } };
+  }
   const producers = CR.producesIdx[layerId] || [];
   if (producers.length === 0) return { state: "no_producer", producers: [] };
   for (const aid of producers) {
@@ -498,7 +504,7 @@ function parseTSV(text) {
 }
 
 async function fetchTsv(rel) {
-  const resp = await fetch(rel, { cache: "no-store" });
+  const resp = await fetch(rel, { cache: "default" });
   if (!resp.ok) throw new Error(`${rel} → HTTP ${resp.status}`);
   return parseTSV(await resp.text());
 }
@@ -975,8 +981,11 @@ function resolveAndRender() {
 
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="registry-cache.js"></script>
 <script defer src="loader.js"></script>
 <script defer src="filters.js"></script>
+<script defer src="conductor.js"></script>
 <script defer src="scope.js"></script>
+<section><div data-slot="conductor-demo" data-max-panels="3" style="padding:18px 24px"></div></section>
 </body>
 </html>

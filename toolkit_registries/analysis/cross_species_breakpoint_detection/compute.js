@@ -1,4 +1,4 @@
-// analysis/cross_species_breakpoints/compute.js
+// analysis/cross_species_breakpoint_detection/compute.js
 //
 // SUBPROCESS bridge — the real work lives in ./legacy_scripts/.
 //

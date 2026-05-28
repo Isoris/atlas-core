@@ -1,8 +1,8 @@
 # MERGE_PLAN — landing the stacked PRs in order
 
-Status: **v1.1 (refreshed after PR #28).**
+Status: **v1.2 (refreshed after PR #36 — the perf cache + manuscript draft + conductor vertical slice + BP4 + README).**
 
-The atlas-core branch currently carries **26 stacked PRs** (#3 → #28).
+The atlas-core branch currently carries **a 7-PR active stack on top of the historical 26 PRs** (#3 → #28 historical; #31 → #36 + a four-pack live).
 Each builds on the previous via branch stacking, so the cleanest merge
 sequence is **bottom-up, one PR at a time**, in the order below.
 
@@ -126,3 +126,35 @@ Each its own PR off `main` after this stack lands.
 ---
 
 _End of MERGE_PLAN.md (v1)._
+
+---
+
+## Live stack on top of PR #28 (2026-05-27)
+
+Seven PRs queued, each `base=` the head below so the diff is minimal per PR:
+
+| PR | title | head branch | base |
+|---|---|---|---|
+| **#28** | 4-atlas split + cross_species_breakpoints adapter + catalogue merges (umbrella) | `claude/catalogue-merge-jsonl-registrations` | `main` |
+| **#31** | page 12: Manuscript chunks + references / DOI | `claude/page-12-manuscript` | #28 |
+| **#32** | page 2: Chain readiness panel + HPP burden chunks + DYNAMIC_PANELS_SPEC v0.2 | `claude/chain-audit-and-hpp-chunks` | #31 |
+| **#33** | UX sweep + page 13 Adapters + karyotype adapters 6/6 | `claude/preview-pin-and-close` | #32 |
+| **#34** | Audit fixes (folder rename, dangling refs, biomod_status enum, chunks) | `claude/audit-fixes` | #33 |
+| **#35** | +8 manuscript chunks for inversion_atlas (headline coverage) | `claude/manuscript-inversion-chunks` | #34 |
+| **#36** | perf: registry-cache.js — single-session JSONL cache | `claude/registry-cache` | #35 |
+| **(next)** | four-pack: MANUSCRIPT_DRAFT_v0.md + conductor vertical slice + BP4 chain + README/MERGE_PLAN refresh | `claude/four-pack` | #36 |
+
+Merge order: #28 → #31 → #32 → #33 → #34 → #35 → #36 → four-pack.
+
+Each PR is mergeable_state: clean after the conflict resolution in #28 against `main` (gene_conversion_tracts.v1).
+
+## What remains open after THIS stack lands
+
+- **Conductor full panel inventory** — the §13 vertical slice (one rule + one panel) is live; ~30 more registered panels needed to cover the existing page widgets.
+- **LLM funnel runtime** — page 1 spec frozen; deterministic resolver + 2 LLM calls not yet wired.
+- **Real BP4 runner** — chain is registered (#3 of four-pack); `STEP_BP4_overlap_population.py` needs to be wired through the dispatcher.
+- **Plan UI** — `panel_plan_v1` viewer page (per DYNAMIC_PANELS_SPEC §27) to render + accept research plans.
+- **Per-user telemetry** — which spawn rules fire most, which panels get dismissed most. Wait until rules > 50.
+- **Cohort registry** — formal hierarchy for the 5-haplotype vs 18-species comparative sub-cohorts.
+
+_End of MERGE_PLAN.md (v1.2 live-stack refresh)._

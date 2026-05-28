@@ -492,6 +492,11 @@ python3 -m toolkit_registries.relatedness.lib.refresh_references --ref-id Manich
 
 # Commit (writes references.jsonl in place; backup at references.jsonl.bak)
 python3 -m toolkit_registries.relatedness.lib.refresh_references --commit
+
+# Cassette mode — bypass network, read DocSums from a checked-in JSON.
+# Used by smoke to exercise the citation-building path without PubMed.
+python3 -m toolkit_registries.relatedness.lib.refresh_references \
+  --fixture toolkit_registries/relatedness/lib/refresh_references_fixture.example.json
 ```
 
 Per row:

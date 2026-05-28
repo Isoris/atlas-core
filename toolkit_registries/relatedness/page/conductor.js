@@ -269,17 +269,23 @@
     // Reads external_databases.jsonl (in ctx via atlasFetchJsonl) and the
     // runtime 02_queue/bridge_log.jsonl (newline JSONL of {ts, db_id,
     // endpoint_id, url, ok, elapsed_ms}).
-    async function getLog() {
+    async function getLog(url) {
       try {
-        const r = await fetch("../02_queue/bridge_log.jsonl", { cache: "no-store" });
-        if (!r.ok) return [];
-        return (await r.text()).split("\n").filter(Boolean).map(l => {
+        const r = await fetch(url, { cache: "no-store" });
+        if (!r.ok) return null;
+        const rows = (await r.text()).split("\n").filter(Boolean).map(l => {
           try { return JSON.parse(l); } catch { return null; }
         }).filter(Boolean);
-      } catch { return []; }
+        return rows.length ? rows : null;
+      } catch { return null; }
     }
     const dbs = await window.atlasFetchJsonl("../01_registry/external_databases.jsonl");
-    const log = await getLog();
+    let log = await getLog("../02_queue/bridge_log.jsonl");
+    let isExample = false;
+    if (!log) {
+      log = await getLog("../02_queue/bridge_log.example.jsonl") || [];
+      isExample = log.length > 0;
+    }
     // Per-db roll-ups
     const perDb = {};
     for (const db of dbs) {
@@ -320,7 +326,8 @@
       <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
         ${dbs.length} external DBs registered · ${totalCalls} call${totalCalls === 1 ? "" : "s"} logged
         ${totalCalls > 0 ? ` · ${totalOk}/${totalCalls} ok` : ""}
-        · log: <code style="font-size:11px">02_queue/bridge_log.jsonl</code>
+        · log: <code style="font-size:11px">02_queue/bridge_log${isExample ? ".example" : ""}.jsonl</code>
+        ${isExample ? ` · <span style="background:#d69e2e;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase">example</span>` : ""}
       </div>
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead><tr>
@@ -334,6 +341,189 @@
       </table>`);
   }
 
+  async function renderAddonsSummaryCard(panel, _ctx) {
+    const addons = await window.atlasFetchJsonl("../01_registry/addons.jsonl");
+    if (!addons.length) {
+      return cardShell(panel, `
+        <div style="font-size:12px;color:var(--muted);font-style:italic;padding:6px 0">
+          addons.jsonl is empty.
+        </div>`);
+    }
+    const KINDS = ["panel", "page", "page_extension", "analysis", "bridge", "validator"];
+    const perKind = {};
+    for (const k of KINDS) perKind[k] = { n: 0, active: 0, experimental: 0, deprecated: 0, ids: [] };
+    const unknownKind = { n: 0, ids: [] };
+    for (const a of addons) {
+      const k = a.kind;
+      const tgt = perKind[k] || unknownKind;
+      tgt.n += 1;
+      tgt.ids.push(a.addon_id);
+      if (k in perKind) {
+        const s = a.status;
+        if (s === "active") tgt.active += 1;
+        else if (s === "experimental") tgt.experimental += 1;
+        else if (s === "deprecated") tgt.deprecated += 1;
+      }
+    }
+    const rows = KINDS.map(k => {
+      const r = perKind[k];
+      if (!r.n) return "";
+      const statusBlock = [
+        r.active        ? `<span style="background:#2f855a;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600">${r.active} active</span>` : "",
+        r.experimental  ? `<span style="background:#d69e2e;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600">${r.experimental} exp</span>`    : "",
+        r.deprecated    ? `<span style="background:#6c727f;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600">${r.deprecated} dep</span>`      : "",
+      ].filter(Boolean).join(" ");
+      return `<tr>
+        <td style="padding:3px 8px"><code style="font-weight:600">${k}</code></td>
+        <td style="padding:3px 8px;text-align:right;font-family:ui-monospace,Menlo,monospace">${r.n}</td>
+        <td style="padding:3px 8px">${statusBlock}</td>
+      </tr>`;
+    }).filter(Boolean).join("");
+    return cardShell(panel, `
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
+        ${addons.length} addon${addons.length === 1 ? "" : "s"} registered across ${Object.values(perKind).filter(r => r.n).length} kind${Object.values(perKind).filter(r => r.n).length === 1 ? "" : "s"}
+        · per ADDON_SPEC §10
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">kind</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">n</th>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`);
+  }
+
+  async function renderPanelCoverageCard(panel, _ctx) {
+    const [panels, rules, pages] = await Promise.all([
+      window.atlasFetchJsonl("../01_registry/panels.jsonl"),
+      window.atlasFetchJsonl("../01_registry/spawn_rules.jsonl"),
+      window.atlasFetchJsonl("../01_registry/pages.jsonl"),
+    ]);
+    const panelIds = new Set(panels.map(p => p.panel_id));
+    const perPage = new Map();
+    for (const r of rules) {
+      const pgs = (r.when || {}).page || [];
+      const spawns = ((r.then || {}).spawn || []).filter(s => panelIds.has(s.panel_id));
+      for (const pg of pgs) perPage.set(pg, (perPage.get(pg) || 0) + spawns.length);
+    }
+    let nGap = 0, nCovered = 0, nNoSlot = 0;
+    const rows = pages.slice()
+      .sort((a, b) => (a.nav_order || 0) - (b.nav_order || 0))
+      .map(pg => {
+        const n = perPage.get(pg.page_id) || 0;
+        const slots = pg.slots || [];
+        let pill;
+        if (slots.length === 0) {
+          nNoSlot += 1;
+          pill = `<span style="background:#e2e8f0;color:#4a5568;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600">no slot</span>`;
+        } else if (n === 0) {
+          nGap += 1;
+          pill = `<span style="background:#c53030;color:white;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600">gap</span>`;
+        } else {
+          nCovered += 1;
+          pill = `<span style="background:#2f855a;color:white;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600">${n}</span>`;
+        }
+        return `<tr>
+          <td style="padding:3px 8px"><code style="font-weight:600">${pg.page_id}</code></td>
+          <td style="padding:3px 8px;text-align:right;font-family:ui-monospace,Menlo,monospace">${n}</td>
+          <td style="padding:3px 8px">${pill}</td>
+        </tr>`;
+      }).join("");
+    return cardShell(panel, `
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
+        ${pages.length} pages · ${nCovered} covered · <span style="color:#c53030;font-weight:600">${nGap} gap${nGap === 1 ? "" : "s"}</span> · ${nNoSlot} no-slot
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">page</th>
+          <th style="text-align:right;padding:3px 8px;color:#6c727f;font-weight:500">n</th>
+          <th style="text-align:left;padding:3px 8px;color:#6c727f;font-weight:500">status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`);
+  }
+
+  async function renderCandidateAggregateCard(panel, _ctx) {
+    const scope = (typeof window.getScope === "function") ? window.getScope() : {};
+    const cid = (scope.candidate_id || "").trim();
+    async function getJson(url) {
+      try { const r = await fetch(url, { cache: "no-store" }); return r.ok ? r.json() : null; }
+      catch { return null; }
+    }
+    let agg = cid ? await getJson(`../02_queue/candidates/${cid}.json`) : null;
+    let isExample = false;
+    if (!agg) {
+      // fall back to the shipped example seed so the pane renders on a
+      // fresh checkout / when no candidate is in scope
+      agg = await getJson("../02_queue/candidates/inv_LG28_INV_001.example.json");
+      isExample = !!agg;
+    }
+    if (!agg) {
+      return cardShell(panel, `
+        <div style="font-size:12px;color:var(--muted);font-style:italic;padding:6px 0">
+          No candidate aggregate. Pick a candidate in the scope ribbon, then run
+          <code>python3 -m toolkit_registries.relatedness.lib.derived_object_harvester --kind candidate --all --commit</code>.
+        </div>`);
+    }
+    const id = agg.candidate_id || "?";
+    const ident = agg.identity || {};
+    const interval = (ident.chrom && ident.start && ident.end)
+      ? `${ident.chrom}:${(+ident.start).toLocaleString()}–${(+ident.end).toLocaleString()}` : "";
+    const esc = (s) => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+    function block(layer, b) {
+      const rows = b.rows || [];
+      const cols = rows.length ? Object.keys(rows[0]) : [];
+      const head = cols.map(c => `<th style="text-align:left;padding:2px 6px;color:#6c727f;font-weight:500">${esc(c)}</th>`).join("");
+      const body = rows.slice(0, 12).map(r =>
+        `<tr>${cols.map(c => `<td style="padding:2px 6px;font-family:ui-monospace,Menlo,monospace;font-size:11px">${esc(r[c])}</td>`).join("")}</tr>`).join("");
+      const more = rows.length > 12 ? `<div style="font-size:10.5px;color:#a0aec0;padding:3px 6px">… ${rows.length - 12} more</div>` : "";
+      const modePill = `<span style="background:#edf2f7;color:#4a5568;padding:1px 5px;border-radius:3px;font-size:9.5px;font-weight:600">${esc(b.mode || "")}</span>`;
+      return `<details ${rows.length ? "open" : ""} style="margin:6px 0;border:1px solid var(--border);border-radius:5px">
+        <summary style="padding:5px 9px;cursor:pointer;font-size:12px;font-weight:600">
+          ${esc(layer)} <span style="color:#6c727f;font-weight:400">· ${rows.length} row${rows.length === 1 ? "" : "s"}</span> ${modePill}
+        </summary>
+        ${rows.length
+          ? `<div style="overflow-x:auto;padding:0 4px 6px"><table style="width:100%;border-collapse:collapse"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>${more}</div>`
+          : `<div style="font-size:11px;color:#a0aec0;font-style:italic;padding:4px 9px 8px">no evidence yet</div>`}
+      </details>`;
+    }
+    const blocks = Object.entries(agg.evidence || {}).map(([layer, b]) => block(layer, b)).join("");
+    const totalRows = Object.values(agg.evidence || {}).reduce((a, b) => a + (b.n || 0), 0);
+    return cardShell(panel, `
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
+        <code style="font-weight:600;font-size:12px">${esc(id)}</code>
+        ${interval ? ` · ${esc(interval)}` : ""}
+        · ${totalRows} evidence row${totalRows === 1 ? "" : "s"} across ${Object.keys(agg.evidence || {}).length} layers
+        ${isExample ? ` · <span style="background:#d69e2e;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase">example</span>` : ""}
+      </div>
+      ${blocks}`);
+  }
+
+  async function renderRegistryHealthStrip(panel, _ctx) {
+    const [atlases, addons, dbs] = await Promise.all([
+      window.atlasFetchJsonl("../01_registry/atlases.jsonl"),
+      window.atlasFetchJsonl("../01_registry/addons.jsonl"),
+      window.atlasFetchJsonl("../01_registry/external_databases.jsonl"),
+    ]);
+    const pill = (n, label) =>
+      `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#3a4250">
+         <strong style="font-family:ui-monospace,Menlo,monospace;font-size:12px">${n}</strong>
+         <span style="color:#6c727f">${label}</span>
+       </span>`;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:24px;font-size:11.5px">
+      <div style="display:flex;gap:18px">
+        ${pill(atlases.length, "atlases")}
+        ${pill(addons.length, "addons")}
+        ${pill(dbs.length, "bridges")}
+      </div>
+      <span style="color:#a0aec0;font-size:10.5px;font-style:italic">
+        worked example: kind=page_extension adds the footer-row slot
+      </span>
+    </div>`;
+  }
+
   // Renderer dispatch by panel_id (each registered panel has its own renderer)
   const RENDERERS = {
     atlas_summary_card:              renderAtlasSummaryCard,
@@ -341,6 +531,10 @@
     adapter_completeness_card:       renderAdapterCompletenessCard,
     manuscript_chunks_summary_card:  renderManuscriptChunksSummaryCard,
     plans_summary_card:              renderPlansSummaryCard,
+    addons_summary_card:             renderAddonsSummaryCard,
+    panel_coverage_card:             renderPanelCoverageCard,
+    candidate_aggregate_card:        renderCandidateAggregateCard,
+    registry_health_strip:           renderRegistryHealthStrip,
     bridge_summary_card:             renderBridgeSummaryCard,
   };
 

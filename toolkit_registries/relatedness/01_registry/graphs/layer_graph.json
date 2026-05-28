@@ -1,6 +1,6 @@
 {
   "schema_version": "layer_graph_v1",
-  "rewritten_at": "2026-05-27T13:53:33Z",
+  "rewritten_at": "2026-05-28T14:57:52Z",
   "n_nodes": 262,
   "n_edges": 192,
   "nodes": [
@@ -106,7 +106,7 @@
       "id": "long_range_haplotype_regime",
       "kind": "layer",
       "source_kind": "analysis_result",
-      "status": "stub",
+      "status": "experimental",
       "label": "Long-range haplotype regime"
     },
     {

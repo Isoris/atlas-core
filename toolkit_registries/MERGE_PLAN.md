@@ -1,10 +1,12 @@
 # MERGE_PLAN — landing the stacked PRs in order
 
-Status: **v1.2 (refreshed after PR #36 — the perf cache + manuscript draft + conductor vertical slice + BP4 + README).**
+Status: **v1.3 (refreshed after the bridge tier + ADDON_SPEC + addon_manifest_v1 stack — 23/23 smoke).**
 
-The atlas-core branch currently carries **a 7-PR active stack on top of the historical 26 PRs** (#3 → #28 historical; #31 → #36 + a four-pack live).
-Each builds on the previous via branch stacking, so the cleanest merge
-sequence is **bottom-up, one PR at a time**, in the order below.
+The atlas-core branch carries a **multi-PR active stack on top of
+historical PRs #3 → #36**. The historical tiers in the merge tables below
+remain the record of how the registry/manager/dispatcher tiers landed;
+the **Live stack** section near the bottom is the current authoritative
+landing order.
 
 After each merge the next branch's diff against `main` shrinks to just
 that PR's content. Until the first one merges, every PR's diff looks
@@ -20,9 +22,11 @@ Run before merging anything. Exits 0 when green:
 python3 toolkit_registries/scripts/smoke_all_stack.py
 ```
 
-Today: **13/13 green in ~540 ms**. Exercises the librarian, manager,
-estimability manager, and dispatcher tiers against the manuscript
-stress-test question (`inversion_pair_incompatibility_LG01_LG28`).
+Today: **23/23 green in ~1100 ms**. Exercises the librarian, manager,
+estimability manager, dispatcher, conductor renderers, bridge tier,
+panel-spawn coverage graph, addon manifest, and the offline-cassette
+reference refresher — against the manuscript stress-test question
+(`inversion_pair_incompatibility_LG01_LG28`).
 
 ---
 
@@ -129,32 +133,51 @@ _End of MERGE_PLAN.md (v1)._
 
 ---
 
-## Live stack on top of PR #28 (2026-05-27)
+## Live stack — registry tier (post PR #30 / cohort + plans + four-pack landed)
 
-Seven PRs queued, each `base=` the head below so the diff is minimal per PR:
+`origin/main` advanced past the historical merge tables; the four-pack +
+karyotype-callers + cohort registry + manuscript-chunk coverage are
+**merged**. The current local stack adds the **conductor wishlist,
+bridge tier, addon manifest, and slot inventory** on top of that.
 
-| PR | title | head branch | base |
-|---|---|---|---|
-| **#28** | 4-atlas split + cross_species_breakpoints adapter + catalogue merges (umbrella) | `claude/catalogue-merge-jsonl-registrations` | `main` |
-| **#31** | page 12: Manuscript chunks + references / DOI | `claude/page-12-manuscript` | #28 |
-| **#32** | page 2: Chain readiness panel + HPP burden chunks + DYNAMIC_PANELS_SPEC v0.2 | `claude/chain-audit-and-hpp-chunks` | #31 |
-| **#33** | UX sweep + page 13 Adapters + karyotype adapters 6/6 | `claude/preview-pin-and-close` | #32 |
-| **#34** | Audit fixes (folder rename, dangling refs, biomod_status enum, chunks) | `claude/audit-fixes` | #33 |
-| **#35** | +8 manuscript chunks for inversion_atlas (headline coverage) | `claude/manuscript-inversion-chunks` | #34 |
-| **#36** | perf: registry-cache.js — single-session JSONL cache | `claude/registry-cache` | #35 |
-| **(next)** | four-pack: MANUSCRIPT_DRAFT_v0.md + conductor vertical slice + BP4 chain + README/MERGE_PLAN refresh | `claude/four-pack` | #36 |
+Stack order (each branch is `base=` the one above so the diff is minimal):
 
-Merge order: #28 → #31 → #32 → #33 → #34 → #35 → #36 → four-pack.
+| stage | branch | head | base | adds |
+|---|---|---|---|---|
+| A | `claude/bridge-summary-card` | `8d6a0f0` | `origin/main` | conductor: bridge_summary_card panel + spawn rule + renderer |
+| B | `claude/addon-spec` | `d3bc127` | A | `ADDON_SPEC.md` v0 (frozen) — six addon kinds + worked example |
+| C | `claude/pages-slot-inventory` | `2708ed5` | B | `pages.jsonl` backfill 7 → 14 rows + `slots: [...]` field + check_panels slot-overlap rule |
+| D | `claude/addon-manifest` | `434a9ca`* | C | `addon_manifest_v1` schema + `addons.jsonl` (23 rows) + `check_addons.py` + `addons_summary_card` + page_extension worked example + `bridge_log.example.jsonl` seed + `refresh_references --fixture` cassette mode |
 
-Each PR is mergeable_state: clean after the conflict resolution in #28 against `main` (gene_conversion_tracts.v1).
+(*) D extends as autopilot continues; the head moves but the base does
+not. All four branches carry the hand-merged `README.md` resolution
+(your shell-engine framing on top + a `toolkit_registries/` section
+underneath).
+
+Earlier branches in the local arc (already merged into the stack base or
+into `origin/main`):
+
+- `claude/bridge-tier`, `claude/bridge-5-more-adapters`,
+  `claude/bridge-final-3-adapters` → folded into A
+- `claude/four-pack`, `claude/manuscript-inversion-chunks`,
+  `claude/registry-cache`, `claude/preview-pin-and-close`,
+  `claude/page-12-manuscript` → already on `origin/main`
+
+Merge order for this stack: **A → B → C → D**. Smoke must be 23/23 after each step before the next merges.
 
 ## What remains open after THIS stack lands
 
-- **Conductor full panel inventory** — the §13 vertical slice (one rule + one panel) is live; ~30 more registered panels needed to cover the existing page widgets.
-- **LLM funnel runtime** — page 1 spec frozen; deterministic resolver + 2 LLM calls not yet wired.
-- **Real BP4 runner** — chain is registered (#3 of four-pack); `STEP_BP4_overlap_population.py` needs to be wired through the dispatcher.
-- **Plan UI** — `panel_plan_v1` viewer page (per DYNAMIC_PANELS_SPEC §27) to render + accept research plans.
-- **Per-user telemetry** — which spawn rules fire most, which panels get dismissed most. Wait until rules > 50.
-- **Cohort registry** — formal hierarchy for the 5-haplotype vs 18-species comparative sub-cohorts.
+The ADDON_SPEC §9 "future amendments" list is now empty. The remaining
+open items have moved off the registry tier and into the runtime tier:
 
-_End of MERGE_PLAN.md (v1.2 live-stack refresh)._
+| item | status | notes |
+|---|---|---|
+| **LLM funnel runtime** | open | Page 1 spec frozen; deterministic resolver + 2 LLM calls not yet wired. Needs a provider + cost/cache policy. |
+| **Real BP4 runner** | open | Chain registered; `STEP_BP4_overlap_population.py` needs to land behind the dispatcher's `02_queue/` contract. |
+| **Per-user telemetry** | open | Which spawn rules fire most, which panels get dismissed most. Hold until rules > 50 (currently 14). |
+| **Live PubMed sweep** | open (network-blocked in sandbox) | `refresh_references --commit` would populate the remaining 16 references.jsonl rows; cassette already exercises the path in smoke. |
+| **More addon kinds in service** | partial | 23 backfilled rows cover everything shipped under toolkit_registries/; page_extension has one example (workspace_health footer-row). Future addons land as one row each. |
+| **`addons_summary_card` slot affinity expansion** | open | currently fixed to workspace_health; the spawn-when-any-page mode would surface the addon registry on every page. |
+| **DYNAMIC_PANELS_SPEC ↔ ADDON_SPEC reconciliation** | open | DYNAMIC_PANELS_SPEC §2 panel kinds and ADDON_SPEC §2 panel kinds reference each other; a future refactor should pick one canonical home for the catalogue. |
+
+_End of MERGE_PLAN.md (v1.3 — bridge + addon-manifest refresh)._

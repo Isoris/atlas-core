@@ -1,0 +1,181 @@
+{
+  "schema_version": "candidate_aggregate_v1",
+  "object_kind": "candidate",
+  "candidate_id": "inv_LG28_INV_001",
+  "as_of": "2026-05-28T14:47:04Z",
+  "identity": {
+    "candidate_id": "inv_LG28_INV_001",
+    "chrom": "C_gar_LG28",
+    "start": "1200000",
+    "end": "8400000",
+    "karyotype_axis": "0_1_2",
+    "confidence": "high",
+    "notes": "synthetic; the manuscript stress-test candidate on LG28"
+  },
+  "evidence": {
+    "popstats_result": {
+      "mode": "spatial_window",
+      "layer": "popstats_result",
+      "rows": [
+        {
+          "chrom": "C_gar_LG28",
+          "start_bp": "1200000",
+          "end_bp": "1205000",
+          "n_sites": "4",
+          "fst": "0.41",
+          "dxy": "0.0088",
+          "piN": "0.0019",
+          "piS": "0.0021"
+        },
+        {
+          "chrom": "C_gar_LG28",
+          "start_bp": "3000000",
+          "end_bp": "3005000",
+          "n_sites": "4",
+          "fst": "0.46",
+          "dxy": "0.0091",
+          "piN": "0.0022",
+          "piS": "0.0020"
+        },
+        {
+          "chrom": "C_gar_LG28",
+          "start_bp": "5500000",
+          "end_bp": "5505000",
+          "n_sites": "4",
+          "fst": "0.39",
+          "dxy": "0.0079",
+          "piN": "0.0017",
+          "piS": "0.0023"
+        },
+        {
+          "chrom": "C_gar_LG28",
+          "start_bp": "8395000",
+          "end_bp": "8400000",
+          "n_sites": "3",
+          "fst": "0.31",
+          "dxy": "0.0065",
+          "piN": "0.0013",
+          "piS": "0.0018"
+        }
+      ],
+      "n": 4,
+      "files": [
+        "04_results/popstats/LG28.popstats.tsv"
+      ]
+    },
+    "mendelian_result": {
+      "mode": "chromosome",
+      "layer": "mendelian_result",
+      "rows": [
+        {
+          "trio_id": "T1",
+          "offspring": "GAR003",
+          "parent1": "GAR001",
+          "parent2": "GAR002",
+          "n_sites": "6",
+          "n_mendelian_errors": "0",
+          "rate": "0.000"
+        },
+        {
+          "trio_id": "T2",
+          "offspring": "GAR004",
+          "parent1": "GAR001",
+          "parent2": "GAR002",
+          "n_sites": "6",
+          "n_mendelian_errors": "1",
+          "rate": "0.167"
+        },
+        {
+          "trio_id": "T1",
+          "offspring": "GAR003",
+          "parent1": "GAR001",
+          "parent2": "GAR002",
+          "n_sites": "6",
+          "n_mendelian_errors": "0",
+          "rate": "0.000"
+        },
+        {
+          "trio_id": "T2",
+          "offspring": "GAR004",
+          "parent1": "GAR001",
+          "parent2": "GAR002",
+          "n_sites": "6",
+          "n_mendelian_errors": "1",
+          "rate": "0.167"
+        }
+      ],
+      "n": 4,
+      "files": [
+        "04_results/mendelian/LG28.mendelian.tsv",
+        "04_results/mendelian/LG28.mendelian.tsv"
+      ]
+    },
+    "relatedness_res": {
+      "mode": "chromosome",
+      "layer": "relatedness_res",
+      "rows": [
+        {
+          "a": "0",
+          "b": "1",
+          "nSites": "6",
+          "theta": "0.05",
+          "rab": "0.10",
+          "IBS0": "100",
+          "IBS1": "250",
+          "IBS2": "150",
+          "KING": "0.02"
+        },
+        {
+          "a": "0",
+          "b": "2",
+          "nSites": "6",
+          "theta": "0.04",
+          "rab": "0.09",
+          "IBS0": "60",
+          "IBS1": "140",
+          "IBS2": "90",
+          "KING": "0.01"
+        },
+        {
+          "a": "0",
+          "b": "1",
+          "nSites": "6",
+          "theta": "0.05",
+          "rab": "0.10",
+          "IBS0": "100",
+          "IBS1": "250",
+          "IBS2": "150",
+          "KING": "0.02"
+        },
+        {
+          "a": "0",
+          "b": "2",
+          "nSites": "6",
+          "theta": "0.04",
+          "rab": "0.09",
+          "IBS0": "60",
+          "IBS1": "140",
+          "IBS2": "90",
+          "KING": "0.01"
+        }
+      ],
+      "n": 4,
+      "files": [
+        "04_results/ngsrelate/LG28.res",
+        "04_results/ngsrelate/LG28.res"
+      ]
+    },
+    "candidate_registry": {
+      "mode": "direct_fk",
+      "layer": "candidate_registry",
+      "rows": [],
+      "n": 0
+    },
+    "chain_evidence": {
+      "mode": "direct_fk",
+      "layer": "chain_evidence",
+      "rows": [],
+      "n": 0
+    }
+  }
+}

@@ -1,8 +1,8 @@
 {
   "schema_version": "panel_coverage_graph_v1",
-  "rewritten_at": "2026-05-27T13:53:33Z",
-  "n_nodes": 143,
-  "n_edges": 188,
+  "rewritten_at": "2026-05-28T14:57:52Z",
+  "n_nodes": 149,
+  "n_edges": 192,
   "nodes": [
     {
       "id": "atlas_core",
@@ -69,6 +69,18 @@
       "kind": "atlas",
       "label": "Genome Atlas",
       "color": "#4a5d7e"
+    },
+    {
+      "id": "heterozygosity_atlas",
+      "kind": "atlas",
+      "label": "Heterozygosity Atlas",
+      "color": "#5fa86b"
+    },
+    {
+      "id": "pods_atlas",
+      "kind": "atlas",
+      "label": "PODs Atlas",
+      "color": "#a64ca6"
     },
     {
       "id": "ngsrelate",
@@ -861,6 +873,30 @@
       "kind": "panel",
       "label": "Bridge \u2014 per-DB call summary",
       "atlas": "atlas_core"
+    },
+    {
+      "id": "addons_summary_card",
+      "kind": "panel",
+      "label": "Addons \u2014 per-kind summary",
+      "atlas": "atlas_core"
+    },
+    {
+      "id": "registry_health_strip",
+      "kind": "panel",
+      "label": "Registry health (footer strip)",
+      "atlas": "atlas_core"
+    },
+    {
+      "id": "panel_coverage_card",
+      "kind": "panel",
+      "label": "Panel coverage by page",
+      "atlas": "atlas_core"
+    },
+    {
+      "id": "candidate_aggregate_card",
+      "kind": "panel",
+      "label": "Candidate aggregate (all atlases)",
+      "atlas": "atlas_core"
     }
   ],
   "edges": [
@@ -891,6 +927,26 @@
     },
     {
       "from": "bridge_summary_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "addons_summary_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "registry_health_strip",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "panel_coverage_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "candidate_aggregate_card",
       "to": "atlas_core",
       "kind": "panel_in_atlas"
     },
@@ -1953,7 +2009,7 @@
       "evolution_atlas": 11
     },
     "panels_per_atlas": {
-      "atlas_core": 6
+      "atlas_core": 10
     }
   }
 }

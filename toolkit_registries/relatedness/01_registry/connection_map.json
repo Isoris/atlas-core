@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 309,
-  "n_edges": 245,
+  "n_nodes": 322,
+  "n_edges": 253,
   "warnings": [],
   "nodes": [
     {
@@ -93,7 +93,7 @@
       "id": "long_range_haplotype_regime",
       "type": "layer",
       "label": "Long-range haplotype regime",
-      "status": "stub"
+      "status": "experimental"
     },
     {
       "id": "family_hub",
@@ -1729,6 +1729,34 @@
       "layer_id": null
     },
     {
+      "id": "addons_summary_card",
+      "type": "panel",
+      "label": "Addons \u2014 per-kind summary",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "registry_health_strip",
+      "type": "panel",
+      "label": "Registry health (footer strip)",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "panel_coverage_card",
+      "type": "panel",
+      "label": "Panel coverage by page",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "candidate_aggregate_card",
+      "type": "panel",
+      "label": "Candidate aggregate (all atlases)",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
       "id": "conversation",
       "type": "page",
       "label": "Conversation",
@@ -1769,6 +1797,48 @@
       "type": "page",
       "label": "Graph builder",
       "status": "active"
+    },
+    {
+      "id": "readiness",
+      "type": "page",
+      "label": "Readiness",
+      "status": "active"
+    },
+    {
+      "id": "layer_connector",
+      "type": "page",
+      "label": "Layer connector",
+      "status": "active"
+    },
+    {
+      "id": "workspace_health",
+      "type": "page",
+      "label": "Workspace health",
+      "status": "active"
+    },
+    {
+      "id": "queue",
+      "type": "page",
+      "label": "Queue",
+      "status": "active"
+    },
+    {
+      "id": "manuscript",
+      "type": "page",
+      "label": "Manuscript",
+      "status": "active"
+    },
+    {
+      "id": "adapters",
+      "type": "page",
+      "label": "Adapters",
+      "status": "active"
+    },
+    {
+      "id": "plans",
+      "type": "page",
+      "label": "Plans",
+      "status": "experimental"
     },
     {
       "id": "discovery_karyotype_package",
@@ -1852,6 +1922,20 @@
       "label": "Genome Atlas",
       "status": "experimental",
       "color": "#4a5d7e"
+    },
+    {
+      "id": "heterozygosity_atlas",
+      "type": "atlas",
+      "label": "Heterozygosity Atlas",
+      "status": "experimental",
+      "color": "#5fa86b"
+    },
+    {
+      "id": "pods_atlas",
+      "type": "atlas",
+      "label": "PODs Atlas",
+      "status": "experimental",
+      "color": "#a64ca6"
     },
     {
       "id": "cross_species_breakpoint_detection_adapter",
@@ -2911,6 +2995,46 @@
     {
       "from": "02_queue/bridge_log.jsonl",
       "to": "bridge_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "addons.jsonl",
+      "to": "addons_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "atlases.jsonl",
+      "to": "registry_health_strip",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "addons.jsonl",
+      "to": "registry_health_strip",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "external_databases.jsonl",
+      "to": "registry_health_strip",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "panels.jsonl",
+      "to": "panel_coverage_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "spawn_rules.jsonl",
+      "to": "panel_coverage_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "pages.jsonl",
+      "to": "panel_coverage_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "02_queue/candidates/",
+      "to": "candidate_aggregate_card",
       "kind": "panel_reads"
     },
     {

@@ -444,6 +444,75 @@
       </table>`);
   }
 
+  async function renderRegisteredObjectsCard(panel, _ctx) {
+    const [objs, layers] = await Promise.all([
+      window.atlasFetchJsonl("../01_registry/derived_objects.jsonl"),
+      window.atlasFetchJsonl("../01_registry/layer_registry.jsonl"),
+    ]);
+    if (!objs.length) {
+      return cardShell(panel, `<div style="font-size:12px;color:var(--muted);font-style:italic;padding:6px 0">derived_objects.jsonl is empty.</div>`);
+    }
+    const layerById = {};
+    for (const L of layers) layerById[L.layer_id] = L;
+    const esc = (s) => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+    async function instancesFor(o) {
+      const L = layerById[o.instance_layer] || {};
+      const path = L.default_path;
+      if (!path) return [];
+      try {
+        const r = await fetch(`../${path}`, { cache: "no-store" });
+        if (!r.ok) return [];
+        const lines = (await r.text()).split("\n").filter(Boolean);
+        if (lines.length < 2) return [];
+        const hdr = lines[0].split("\t");
+        const idKey = (o.identity_keys || [])[0];
+        const sk = o.spatial_keys || [];
+        const idx = (k) => hdr.indexOf(k);
+        return lines.slice(1).map(line => {
+          const cells = line.split("\t");
+          const get = (k) => { const i = idx(k); return i >= 0 ? cells[i] : ""; };
+          return {
+            id: get(idKey),
+            interval: (sk.length >= 3 && get(sk[0])) ? `${get(sk[0])}:${(+get(sk[1])).toLocaleString()}–${(+get(sk[2])).toLocaleString()}` : "",
+          };
+        }).filter(r => r.id);
+      } catch { return []; }
+    }
+
+    const sections = [];
+    let totalInst = 0;
+    for (const o of objs) {
+      const insts = await instancesFor(o);
+      totalInst += insts.length;
+      const rows = insts.map(r => `<tr>
+          <td style="padding:2px 8px"><code style="font-size:11px">${esc(r.id)}</code></td>
+          <td style="padding:2px 8px;font-size:11px;color:#4a5568">${esc(r.interval)}</td>
+          <td style="padding:2px 8px">
+            <button data-act="export" data-export-url="../02_queue/${esc(o.object_kind)}s/${esc(r.id)}.json"
+              data-export-name="${esc(r.id)}.json"
+              style="cursor:pointer;border:1px solid #cbd5e0;background:#fff;color:#2d3748;border-radius:3px;font-size:10px;font-weight:600;padding:1px 7px">⬇ JSON</button>
+          </td>
+        </tr>`).join("");
+      sections.push(`
+        <div style="margin:6px 0 10px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:3px">
+            ${esc(o.label || o.object_kind)}
+            <span style="color:#6c727f;font-weight:400">· <code>${esc(o.object_kind)}</code> · ${insts.length} instance${insts.length === 1 ? "" : "s"} · owner ${esc(o.owning_atlas || "?")}</span>
+          </div>
+          ${insts.length
+            ? `<table style="width:100%;border-collapse:collapse"><tbody>${rows}</tbody></table>`
+            : `<div style="font-size:11px;color:#a0aec0;font-style:italic">no instances on disk yet</div>`}
+        </div>`);
+    }
+    return cardShell(panel, `
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
+        ${objs.length} object kind${objs.length === 1 ? "" : "s"} · ${totalInst} registered instance${totalInst === 1 ? "" : "s"}
+        · download needs <code>harvester --all --commit</code> first (else 404)
+      </div>
+      ${sections.join("")}`);
+  }
+
   async function renderCandidateAggregateCard(panel, _ctx) {
     const scope = (typeof window.getScope === "function") ? window.getScope() : {};
     const cid = (scope.candidate_id || "").trim();
@@ -451,12 +520,14 @@
       try { const r = await fetch(url, { cache: "no-store" }); return r.ok ? r.json() : null; }
       catch { return null; }
     }
-    let agg = cid ? await getJson(`../02_queue/candidates/${cid}.json`) : null;
+    let resolvedUrl = cid ? `../02_queue/candidates/${cid}.json` : null;
+    let agg = resolvedUrl ? await getJson(resolvedUrl) : null;
     let isExample = false;
     if (!agg) {
       // fall back to the shipped example seed so the pane renders on a
       // fresh checkout / when no candidate is in scope
-      agg = await getJson("../02_queue/candidates/inv_LG28_INV_001.example.json");
+      resolvedUrl = "../02_queue/candidates/inv_LG28_INV_001.example.json";
+      agg = await getJson(resolvedUrl);
       isExample = !!agg;
     }
     if (!agg) {
@@ -491,12 +562,19 @@
     }
     const blocks = Object.entries(agg.evidence || {}).map(([layer, b]) => block(layer, b)).join("");
     const totalRows = Object.values(agg.evidence || {}).reduce((a, b) => a + (b.n || 0), 0);
+    const exportBtn = `<button data-act="export"
+        data-export-url="${esc(resolvedUrl)}" data-export-name="${esc(id)}.json"
+        style="margin-left:auto;cursor:pointer;border:1px solid #cbd5e0;background:#fff;color:#2d3748;
+               border-radius:4px;font-size:11px;font-weight:600;padding:3px 9px">⬇ Download JSON</button>`;
     return cardShell(panel, `
-      <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">
-        <code style="font-weight:600;font-size:12px">${esc(id)}</code>
-        ${interval ? ` · ${esc(interval)}` : ""}
-        · ${totalRows} evidence row${totalRows === 1 ? "" : "s"} across ${Object.keys(agg.evidence || {}).length} layers
-        ${isExample ? ` · <span style="background:#d69e2e;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase">example</span>` : ""}
+      <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin-bottom:8px">
+        <span>
+          <code style="font-weight:600;font-size:12px">${esc(id)}</code>
+          ${interval ? ` · ${esc(interval)}` : ""}
+          · ${totalRows} evidence row${totalRows === 1 ? "" : "s"} across ${Object.keys(agg.evidence || {}).length} layers
+          ${isExample ? ` · <span style="background:#d69e2e;color:white;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;text-transform:uppercase">example</span>` : ""}
+        </span>
+        ${exportBtn}
       </div>
       ${blocks}`);
   }
@@ -534,6 +612,7 @@
     addons_summary_card:             renderAddonsSummaryCard,
     panel_coverage_card:             renderPanelCoverageCard,
     candidate_aggregate_card:        renderCandidateAggregateCard,
+    registered_objects_card:         renderRegisteredObjectsCard,
     registry_health_strip:           renderRegistryHealthStrip,
     bridge_summary_card:             renderBridgeSummaryCard,
   };
@@ -588,6 +667,26 @@
         localStorage.setItem("atlas_panel_dismissals_v1", JSON.stringify(d));
         el.remove();
         CURRENT_PANELS.delete(pid);
+      });
+      // Generic export: any card emitting [data-act="export"] with a
+      // data-export-url + data-export-name downloads that file client-side.
+      el.querySelector('[data-act="export"]')?.addEventListener("click", async (ev) => {
+        const btn = ev.currentTarget;
+        const url = btn.getAttribute("data-export-url");
+        const name = btn.getAttribute("data-export-name") || "export.json";
+        const orig = btn.textContent;
+        try {
+          const r = await fetch(url, { cache: "no-store" });
+          if (!r.ok) throw new Error(String(r.status));
+          const text = await r.text();
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+          a.download = name;
+          a.click();
+          URL.revokeObjectURL(a.href);
+          btn.textContent = "✓ downloaded";
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+        } catch { btn.textContent = "export failed"; setTimeout(() => { btn.textContent = orig; }, 1500); }
       });
     }
     // Dismiss diff

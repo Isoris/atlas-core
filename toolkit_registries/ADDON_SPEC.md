@@ -34,9 +34,19 @@ rest. No per-addon HTML, no per-addon JS, no LLM in the loop.
 | **D. Analysis** | one new analysis_id + its modes + its layers | 1 row in `analysis_registry`, ≥1 row in `analysis_modes`, 1 row in `module_registry`, 0+ rows in `layer_registry` |
 | **E. Bridge** | one new external-database wrapper | 1 row in `external_databases.jsonl` + adapter folder under `bridge/<db>/` (endpoints.json + LICENSE_NOTICE.md) |
 | **F. Validator** | new audit step | 1 script under `scripts/check_*.py` + 1 entry in `smoke_all_stack.py` |
+| **G. Derived object** | a new first-class synthesised object (candidate, LRR regime, breakpoint pair) that many analyses FK to + its harvester join spec | 1 row in `derived_objects.jsonl` (`derived_object_v1`) declaring `instance_layer` + `harvest[]` join modes; rows themselves live in the instance layer file |
 
 The conductor + bridge + chain audit handle the wiring; the addon
 contributes data + (optionally) a renderer if its panel kind is new.
+
+A **derived object** (kind G) is the one addon that produces *no* new
+primary data — it declares that a synthesised object (the rows of an
+existing layer) is a first-class addressable subject, and how to
+harvest its scattered evidence into one aggregate. Primary-data
+registries declare what CAN be computed; the derived-object registry
+declares what synthesised subjects the system addresses. The rows
+still live in layer files — `derived_objects.jsonl` only declares the
+*kind* + the join spec. See §11.
 
 ---
 
@@ -359,6 +369,75 @@ in pages.jsonl row for 'workspace_health' (slots: ['conductor-demo'])
 
 (Audit-time visibility for what would otherwise be a silent
 conductor.pickSlot mismatch at runtime.)
+
+---
+
+## §11 Derived objects (`derived_object_v1`)
+
+Primary-data registries declare **schemas of capability** (what can be
+computed) and **schemas of structure** (what kinds of layers exist). A
+*derived object* is a third schema: **what synthesised subjects the
+system addresses.** An inversion candidate is the canonical example —
+it has a stable id, an interval, and 8+ analysis-result layers carry
+its `candidate_id` (or overlap its interval). The candidate is what the
+manuscript *talks about*; the per-atlas results are evidence that
+attaches to it.
+
+The rows of each object still live in a layer file (the candidate rows
+live in `inversion_candidates`/`candidate_registry`). `derived_objects.jsonl`
+only declares the **kind** + how to **harvest** its evidence:
+
+```jsonc
+{"object_kind":     "candidate",
+ "schema_version":  "derived_object_v1",
+ "owning_atlas":    "inversion_atlas",
+ "identity_keys":   ["candidate_id"],
+ "spatial_keys":    ["chrom", "start", "end"],
+ "instance_layer":  "inversion_candidates",
+ "aggregate_schema":"candidate_aggregate_v1",
+ "harvest": [
+   {"analysis_type": "popstats",  "layer": "popstats_result",
+    "mode": "spatial_window", "row_chrom": "chrom",
+    "row_start": "start_bp", "row_end": "end_bp"},
+   {"analysis_type": "mendelian", "layer": "mendelian_result",
+    "mode": "chromosome"},
+   {"layer": "candidate_registry", "mode": "direct_fk",
+    "fk": "candidate_id"}],
+ "lifecycle_states": ["discovery", "ranked", "validated",
+                      "manuscript", "dropped"]}
+```
+
+### The three join modes
+
+| mode | when | how the harvester joins |
+|---|---|---|
+| `direct_fk`      | result rows carry the object's id column | filter rows where `fk == instance_id` |
+| `spatial_window` | result rows carry chrom + start + end | keep rows on the same chromosome whose `[start,end]` overlaps the instance interval |
+| `chromosome`     | result file is per-chromosome (one file per LG) | attach the whole file to instances on that chromosome |
+
+### The harvester
+
+`lib/derived_object_harvester.py` is generic over `derived_objects.jsonl`.
+For each instance it resolves result files via `analysis_results.jsonl`
+(the run log) by matching `analysis_type` + the instance's chromosome
+short-name against the result path, applies the per-source join mode,
+and emits one `<aggregate_schema>` JSON under
+`02_queue/<kind>s/<instance_id>.json`.
+
+```bash
+python3 -m toolkit_registries.relatedness.lib.derived_object_harvester --kind candidate --all
+python3 -m ...derived_object_harvester --kind candidate --instance inv_LG28_INV_001 --stdout
+python3 -m ...derived_object_harvester --kind candidate --all --commit
+```
+
+`check_derived_objects.py` validates the registry; the harvest is
+exercised in smoke (`--kind candidate --all` → "2 candidate(s)
+harvested"). §refusals: read-only, never mutates a registry, never
+crosses cohort boundaries (the instance row carries its own cohort).
+
+The pull-side promise: at any moment you can ask atlas-core for the
+full record of candidate X and get one JSON aggregating every atlas's
+evidence — no tab-hopping across per-atlas surfaces.
 
 ---
 

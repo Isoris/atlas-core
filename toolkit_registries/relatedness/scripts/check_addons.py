@@ -27,7 +27,7 @@ REPO = pathlib.Path(__file__).resolve().parents[3]
 TK   = REPO / "toolkit_registries"
 REG  = TK / "relatedness" / "01_registry"
 
-ALLOWED_KINDS    = {"panel", "page_extension", "page", "analysis", "bridge", "validator"}
+ALLOWED_KINDS    = {"panel", "page_extension", "page", "analysis", "bridge", "validator", "derived_object"}
 ALLOWED_STATUSES = {"experimental", "active", "deprecated"}
 
 # Per-registry id field. Adding a registry: extend this map.
@@ -43,6 +43,7 @@ ID_FIELD_BY_FILE: dict[str, str] = {
     "references.jsonl":          "ref_id",
     "atlases.jsonl":             "atlas_id",
     "cohorts.jsonl":             "cohort_id",
+    "derived_objects.jsonl":     "object_kind",
 }
 
 

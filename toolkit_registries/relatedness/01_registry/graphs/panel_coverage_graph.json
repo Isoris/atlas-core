@@ -1,8 +1,8 @@
 {
   "schema_version": "panel_coverage_graph_v1",
-  "rewritten_at": "2026-05-28T14:57:52Z",
-  "n_nodes": 149,
-  "n_edges": 192,
+  "rewritten_at": "2026-05-28T15:13:11Z",
+  "n_nodes": 150,
+  "n_edges": 193,
   "nodes": [
     {
       "id": "atlas_core",
@@ -897,6 +897,12 @@
       "kind": "panel",
       "label": "Candidate aggregate (all atlases)",
       "atlas": "atlas_core"
+    },
+    {
+      "id": "registered_objects_card",
+      "kind": "panel",
+      "label": "Registered objects",
+      "atlas": "atlas_core"
     }
   ],
   "edges": [
@@ -947,6 +953,11 @@
     },
     {
       "from": "candidate_aggregate_card",
+      "to": "atlas_core",
+      "kind": "panel_in_atlas"
+    },
+    {
+      "from": "registered_objects_card",
       "to": "atlas_core",
       "kind": "panel_in_atlas"
     },
@@ -2009,7 +2020,7 @@
       "evolution_atlas": 11
     },
     "panels_per_atlas": {
-      "atlas_core": 10
+      "atlas_core": 11
     }
   }
 }

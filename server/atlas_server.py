@@ -2186,6 +2186,19 @@ async def popstats_groupwise(req: PopstatsGroupwiseReq) -> Response:
 # because chat A is single-user. A future enhancement can return 202 + job_id
 # and run ANGSD in a background task; the JobManager + endpoint are wired.
 
+
+class HobsInputsUnavailable(Exception):
+    """Hobs/Hexp can't be computed because the required per-sample inputs
+    (BAMs for the angsd -doHWE path) aren't present in this deployment.
+
+    This is a *data-availability* condition, not an engine failure: the
+    request is well-formed and the cohort is valid, the upstream BAMs just
+    aren't here. hobs_groupwise maps it to HTTP 422 so the client can render
+    an honest "unavailable" state instead of a misleading 500 "server error".
+    """
+    pass
+
+
 async def _ensure_hwe_for_group(
     chrom: str,
     members: List[str],
@@ -2212,11 +2225,11 @@ async def _ensure_hwe_for_group(
         else:
             bam_paths.append(b)
     if missing:
-        raise RuntimeError(
-            f"BAMs not found for {len(missing)} samples (e.g. {missing[:5]}) "
-            f"under {bam_dir}")
+        raise HobsInputsUnavailable(
+            f"per-sample BAMs not present for {len(missing)} of {len(members)} "
+            f"samples (e.g. {missing[:5]}) under {bam_dir}")
     if not bam_paths:
-        raise RuntimeError("no BAMs resolved for group")
+        raise HobsInputsUnavailable("no per-sample BAMs resolved for group")
 
     # Write bamlist
     scratch.mkdir(parents=True, exist_ok=True)
@@ -2311,6 +2324,18 @@ async def hobs_groupwise(req: HobsGroupwiseReq) -> Response:
         tasks = [_one(g, m) for g, m in cleaned.items()]
         try:
             results = await asyncio.gather(*tasks)
+        except HobsInputsUnavailable as e:
+            # Data-availability gap, not a crash. WARNING (not exception) so
+            # the log stays clean — this is an expected state when a cohort's
+            # BAMs aren't deployed. 422 + clear detail → client "unavailable".
+            log.warning("hobs_groupwise: inputs unavailable (chrom=%s, groups=%s): %s",
+                        req.chrom, list(cleaned.keys()), e)
+            raise HTTPException(
+                422,
+                f"heterozygosity per band unavailable: {e}. This metric needs "
+                f"per-sample BAMs for the angsd -doHWE path, which aren't part "
+                f"of this deployment; the beagle-based metrics (θ, Fst, dXY) "
+                f"are unaffected.")
         except RuntimeError as e:
             log.exception("hobs_groupwise: angsd path failed (chrom=%s, groups=%s, region=%s)",
                           req.chrom, list(cleaned.keys()), region_dict)

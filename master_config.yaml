@@ -205,6 +205,14 @@ roots:
     species_scoped: false
     description: "PODs (Pseudo-Observed Datasets) — coalescent-simulated null distributions for FST/dXY/theta outlier validation. Owned by pods-atlas (promoted from population-atlas on 2026-05-23 — Phase 1d). Three subdirs: simulations/<cache_key>.tsv (per-replicate per-locus stats), outlier_calls/<cache_key>.tsv (empirical-vs-PODs p-values + significance flags per locus), calibration/<cache_key>.json (model-fit diagnostics)."
 
+  # 2026-05-29: referenced by loads-atlas layers but previously undeclared.
+  # Phase-0 stub atlas (mutation/genetic-load tables). Flat root, two TSVs.
+  loads_results:
+    path: "/mnt/e/results_loads"
+    role: "samples"
+    species_scoped: false
+    description: "Genetic-load tables owned by loads-atlas: load_per_individual.tsv (per-sample mutation load) + load_per_inversion.tsv (per-inversion load). Phase-0 contract-only today — files land when the load pipeline ships."
+
   genome_assembly:
     path: "/mnt/e/results_genome/01_assembly"
     role: "intervals"
@@ -268,6 +276,42 @@ roots:
     species_scoped: false
     description: "BUSCO single-copy ortholog gene-order breakpoints (synteny_18sp_breakpoints.tsv, synteny_5sp_breakpoints.tsv). Independent method family to BP_ATLAS; used for Tier 1 cross-method validation."
 
+  # 2026-05-29: roots added to close cross-species wiring gaps — these
+  # five were referenced by cross-species layers.registry.json but had no
+  # root definition, so the layers silently failed to resolve. Producer:
+  # catfish-synteny-toolkit / MODULE_SYNTENY_ATLAS. Numbering continues
+  # the 00..03 sequence above. See docs/DATA_LAYOUT.md for the per-layer
+  # path_under_root breakdown.
+  cross_species_te:
+    path: "/mnt/e/results_cross_species/04_te"
+    role: "intervals"
+    species_scoped: false
+    description: "Cross-species TE landscape tables: TE_data_figure1_toky_v2.tsv, combined_data_joined.tsv, te_gc.tsv, te_density_by_LG_species.tsv, plus per-focal breakpoint_te_cross/{focal_genome}/ enrichment + resolution tables and centromeres/centromeres_complete_{focal_short}.tsv."
+
+  cross_species_mashmap:
+    path: "/mnt/e/results_cross_species/05_mashmap"
+    role: "intervals"
+    species_scoped: false
+    description: "mashmap fusion/fission scan: fusion_fission_candidates_1to2.tsv, best_refs_per_query.tsv, and per-request pair/{request_id}.json (some emitted as synthetic stubs on demand)."
+
+  cross_species_breakpoint_genes:
+    path: "/mnt/e/results_cross_species/06_breakpoint_genes"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-focal breakpoint gene-overlap tables: breakpoint_gene_analysis_{focal_genome}.tsv."
+
+  cross_species_phylogeny:
+    path: "/mnt/e/results_cross_species/07_phylogeny"
+    role: "intervals"
+    species_scoped: false
+    description: "BUSCO phylogeny outputs: busco_tree_v1__{alignment}.json, busco_qc_v1.json, busco_presence_absence_v1.json."
+
+  cross_species_inventory:
+    path: "/mnt/e/results_cross_species/08_inventory"
+    role: "intervals"
+    species_scoped: false
+    description: "Single-file run inventory (inventory_v1.json) enumerating what each cross-species pipeline produced."
+
   evolution_age_busco4d:
     path: "/mnt/e/results_evolution/01_age_busco_4d"
     role: "intervals"
@@ -291,6 +335,13 @@ roots:
     role: "intervals"
     species_scoped: false
     description: "Per-candidate archaeology synthesis cards (lineage + age + polarity + integrity verdict). Output of the archaeology_synthesis_card workflow."
+
+  # 2026-05-29: referenced by an evolution layer but previously undeclared.
+  evolution_orientation_diversity:
+    path: "/mnt/e/results_evolution/05_orientation_diversity"
+    role: "intervals"
+    species_scoped: false
+    description: "Per-candidate orientation-vs-diversity evidence (one {candidate_id}.json per inversion). Read by the evolution orientation/diversity page."
 
   popstats_groupwise:
     path: "/mnt/e/results_popstats/01_groupwise"

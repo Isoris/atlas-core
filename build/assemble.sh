@@ -42,6 +42,53 @@ resolve_path() {
   esac
 }
 
+# 2026-05-29: assemble was slow because every run did a FULL recopy
+# (tar for atlas-core, rm -rf + cp -r per atlas). On WSL/DrvFs (/mnt/c)
+# each file write is a Windows-driver round-trip, so rewriting unchanged
+# files dominated the runtime. rsync's size+mtime quick-check skips
+# unchanged files, making re-runs near-instant. We fall back to the old
+# tar/cp path if rsync isn't installed.
+#
+# rsync flags: -r recurse, -l preserve symlinks, -t preserve mtimes.
+# -t is REQUIRED — the incremental quick-check compares size+mtime, so
+# without it every re-run recopies everything. We deliberately omit
+# -p/-o/-g (perms/owner/group): DrvFs maps those to fixed values, so
+# preserving them just adds slow, noisy chmod/chown round-trips.
+have_rsync=0
+if command -v rsync >/dev/null 2>&1; then have_rsync=1; fi
+
+# Copy atlas-core's root into the workspace, EXCLUDING build/.git/atlases.
+# atlases/ is handled per-atlas (steps 2b/3) so external atlases copied
+# later aren't clobbered. No --delete here: stale root files lingering is
+# the same harmless trade-off the old tar had, and --delete would churn
+# start.sh/.atlas.env (recreated in steps 6/7) on every run.
+sync_root() {
+  if [ "$have_rsync" -eq 1 ]; then
+    rsync -rlt \
+      --exclude='/.git' --exclude='/build' --exclude='/atlases' \
+      "$ATLAS_CORE/" "$WORKSPACE/"
+  else
+    ( cd "$ATLAS_CORE" && tar -cf - --exclude=build --exclude=.git --exclude=atlases . ) \
+      | ( cd "$WORKSPACE" && tar -xf - )
+  fi
+}
+
+# Copy one atlas package (atlases/<aid>/) into the workspace, pruning
+# files removed upstream (--delete) but PRESERVING the generated specs/
+# dir, which index_specs.py writes after the copy — without the exclude,
+# --delete would wipe it every run.
+sync_atlas() {
+  local src="$1" dst="$2"
+  mkdir -p "$dst"
+  if [ "$have_rsync" -eq 1 ]; then
+    rsync -rlt --delete --exclude='/specs' "$src" "$dst/"
+  else
+    # fallback: wipe everything except specs/, then full copy.
+    find "$dst" -mindepth 1 -maxdepth 1 ! -name specs -exec rm -rf {} + 2>/dev/null || true
+    cp -r "$src". "$dst/"
+  fi
+}
+
 # atlas_core is required, plus at least one atlas_<other>.
 [ "${kv_atlas_core:-}" ] || { echo "ERROR: atlas.config missing 'atlas_core ='"; exit 1; }
 
@@ -59,12 +106,11 @@ WORKSPACE="$PARENT/atlas-workspace"
 # on wipe+recreate, so Starlette's StaticFiles loses its mount target
 # until restart). Quentin's report: a fresh assemble produced 404s on
 # every page fragment until the user restarted start.sh.
-# New strategy: keep $WORKSPACE intact; only wipe the inside (atlases/
-# and the top-level files we're about to overwrite). The atlas
-# subdirectories are individually wiped in step 3 so stale files from
-# removed atlases don't linger. Files that the tar in step 2 overwrites
-# are simply overwritten; files removed upstream may linger in workspace
-# (acceptable trade-off vs. breaking the running server).
+# New strategy: keep $WORKSPACE intact; sync into it in place. Each atlas
+# subdirectory is rsync'd with --delete (steps 2b/3) so stale files from
+# renamed/removed pages don't linger. Root-level files are synced without
+# --delete, so files removed upstream may linger at the root (acceptable
+# trade-off vs. breaking the running server, same as the old tar copy).
 if [ ! -d "$WORKSPACE" ]; then
   echo "==> creating $WORKSPACE/"
   mkdir -p "$WORKSPACE/atlases"
@@ -75,28 +121,34 @@ fi
 
 # 2. Copy atlas-core contents into workspace root ------------------------
 echo "==> copying atlas_core: $ATLAS_CORE"
-( cd "$ATLAS_CORE" && tar -cf - --exclude=build --exclude=.git . ) \
-  | ( cd "$WORKSPACE" && tar -xf - )
+sync_root
+
+# spec indexers run in the background (one python3 per atlas); we collect
+# their PIDs and wait before writing _index.json. Parallelizing ~25
+# interpreter startups is a meaningful chunk of the runtime on DrvFs.
+spec_pids=()
 
 # 2b. Pick up atlases bundled inside atlas-core itself -------------------
 # atlas-core may ship its own atlas package(s) under atlas-core/atlases/<id>/
 # (e.g. the `core` atlas — the registry-dashboard pages: conversation, action,
-# registries, catalogue). The tar copy in step 2 already moved them into
-# $WORKSPACE/atlases/<id>/; here we just record their ids so they end up at
-# the FRONT of atlas_ids (i.e. first in atlases/_index.json, which makes
-# them the default atlas the router opens).
+# registries, catalogue). Step 2 excludes /atlases from the root copy, so we
+# sync each bundled atlas here (and record its id at the FRONT of atlas_ids,
+# i.e. first in atlases/_index.json, which makes it the default the router
+# opens).
 atlas_ids=()
-if [ -d "$WORKSPACE/atlases" ]; then
-  for sub in "$WORKSPACE/atlases"/*/; do
+if [ -d "$ATLAS_CORE/atlases" ]; then
+  for sub in "$ATLAS_CORE/atlases"/*/; do
     [ -d "$sub" ] || continue
     aid="$(basename "$sub")"
     [ -f "$sub/manifest.json" ] || continue
-    echo "==> bundled atlas $aid: $sub (from atlas-core)"
+    echo "==> bundled atlas $aid: $WORKSPACE/atlases/$aid/ (from atlas-core)"
+    sync_atlas "$sub" "$WORKSPACE/atlases/$aid"
     atlas_ids+=("$aid")
     # SPECs for bundled atlases come from atlas-core's repo root
     # (atlas-core keeps them under docs/SPEC_*.md, not specs_done/).
     python3 "$SCRIPT_DIR/index_specs.py" "$aid" "$ATLAS_CORE" \
-      "$WORKSPACE/atlases/$aid/specs" || true
+      "$WORKSPACE/atlases/$aid/specs" &
+    spec_pids+=("$!")
   done
 fi
 
@@ -123,19 +175,25 @@ for key in "${kv_keys[@]}"; do
     aid="$(basename "$sub")"
     [ -f "$sub/manifest.json" ] || continue
     echo "==> copying atlas $aid: $sub"
-    # 2026-05-20: wipe just THIS atlas's destination before copying so
-    # stale files from a renamed/removed page don't linger. Keeps the
-    # workspace-root inode stable (see step 1 comment).
-    rm -rf "$WORKSPACE/atlases/$aid"
-    cp -r "$sub" "$WORKSPACE/atlases/"
+    # 2026-05-20: prune THIS atlas's stale files (renamed/removed pages)
+    # while keeping the workspace-root inode stable (see step 1 comment).
+    # sync_atlas does an incremental rsync --delete (preserving specs/),
+    # so unchanged files aren't rewritten — the big DrvFs speedup.
+    sync_atlas "$sub" "$WORKSPACE/atlases/$aid"
     atlas_ids+=("$aid")
     # Index specs_done/ + specs_todo/ + SPECS.md at the source repo root
     # (NOT inside atlases/<aid>/). Fail-soft: missing folders just yield an
     # empty section in specs_index.json; never aborts the assemble.
     python3 "$SCRIPT_DIR/index_specs.py" "$aid" "$src" \
-      "$WORKSPACE/atlases/$aid/specs" || true
+      "$WORKSPACE/atlases/$aid/specs" &
+    spec_pids+=("$!")
   done
 done
+
+# Wait for all background spec indexers before writing _index.json.
+if [ "${#spec_pids[@]}" -gt 0 ]; then
+  for pid in "${spec_pids[@]}"; do wait "$pid" || true; done
+fi
 
 # 4. Write atlases/_index.json -------------------------------------------
 # Dedupe atlas_ids while preserving order: if an external atlas in step 3

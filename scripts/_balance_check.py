@@ -93,7 +93,7 @@ def strip(src):
 
 if __name__ == '__main__':
     path = sys.argv[1]
-    src = open(path).read()
+    src = open(path, encoding='utf-8').read()
     s = strip(src)
     bad = 0
     for a, b in [('(', ')'), ('{', '}'), ('[', ']')]:

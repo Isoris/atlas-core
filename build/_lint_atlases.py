@@ -12,11 +12,15 @@ Checks:
   6. Cross-atlas exports match what's actually in this atlas's layers.registry.json.
   7. cohorts.registry.json producer entries cross-check against each atlas's
      declared layers.
+  8. Page-visibility: an atlas whose CSS hides .page/.subpage by default
+     (display:none) must add a `#app-root > .page { display:block }` override
+     or every fragment must carry `active` — the atlas-core router never adds
+     .active, so a fragment authored as class="page" otherwise renders blank.
 
 Pure read-only — never edits anything. Prints a finding per issue.
 """
 
-import json, io, os, sys
+import json, io, os, re, sys
 from collections import defaultdict
 
 DESKTOP = r"c:\Users\quent\Desktop"
@@ -149,12 +153,83 @@ for atlas_id, mf in manifest_by_atlas.items():
         if not os.path.isfile(full):
             fnd("ERR", atlas_id, f"stylesheet not found: {sheet}")
 
+# Page-visibility check (2026-05-29) — the atlas-core router swaps
+# #app-root.innerHTML per page and NEVER adds .active to the mounted
+# fragment. An atlas whose CSS hides .page/.subpage by default
+# (display:none) must EITHER add a compensating
+# `#app-root > .page { display:block }` override OR ship every fragment
+# with `active` already in its class list. The latter is brittle: a new
+# fragment authored as class="page" (the natural convention) silently
+# renders blank. Past incidents: relatedness (.subpage), inversion (.page).
+_HIDE_RE     = re.compile(r'\.(?:page|subpage)(?![\w-])\s*\{[^}]*display\s*:\s*none', re.I)
+_OVERRIDE_RE = re.compile(r'#app-root[^{}]*\.(?:page|subpage)(?![\w-])\s*\{[^}]*display\s*:\s*block', re.I)
+_CLASS_RE    = re.compile(r'class\s*=\s*"([^"]*)"', re.I)
+
+def _read_text(path):
+    try:
+        with io.open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception:
+        return ""
+
+def _root_page_classes(fragment_path):
+    """Class-token list of the first element whose class list contains a
+    bare `page`/`subpage` token (the fragment's page wrapper), or None.
+    `page-content`/`page-title` etc. are hyphenated single tokens, so the
+    `in tokens` test won't false-positive on them."""
+    for m in _CLASS_RE.finditer(_read_text(fragment_path)):
+        tokens = m.group(1).split()
+        if "page" in tokens or "subpage" in tokens:
+            return tokens
+    return None
+
+for atlas_id, mf in manifest_by_atlas.items():
+    workspace_root = atlas_root_by_id.get(atlas_id)
+    if not workspace_root: continue
+    css = ""
+    for sheet in (mf.get("stylesheets") or []):
+        css += _read_text(_resolve_page_path(sheet, workspace_root)) + "\n"
+    if not _HIDE_RE.search(css):
+        continue  # CSS doesn't hide pages by default → nothing to enforce
+    has_override = bool(_OVERRIDE_RE.search(css))
+    broke_any = False
+    for page in mf.get("pages", []):
+        frag = page.get("fragment")
+        if not frag: continue
+        # Only check fragments owned by THIS atlas; cross-atlas fragments
+        # are gated by their owner's CSS, not this atlas's.
+        if frag.startswith("atlases/") and frag.count("/") >= 2 \
+           and frag.split("/", 3)[1] != atlas_id:
+            continue
+        tokens = _root_page_classes(_resolve_page_path(frag, workspace_root))
+        if tokens is None:
+            continue
+        if not has_override and "active" not in tokens:
+            fnd("ERR", atlas_id,
+                f"page '{page.get('id')}' fragment hides by default "
+                f"(CSS .page/.subpage display:none) and root lacks 'active' — "
+                f"router never adds .active, page renders blank. Add "
+                f"`#app-root > .page {{ display:block }}` to the atlas CSS.")
+            broke_any = True
+    if not has_override and not broke_any:
+        fnd("WARN", atlas_id,
+            "CSS hides .page/.subpage by default and relies on every fragment "
+            "carrying 'active' (brittle — a new fragment authored as "
+            "class=\"page\" will render blank). Add "
+            "`#app-root > .page { display:block }` to harden.")
+
 # Cross-atlas import + export check (third pass — needs all atlases indexed)
 for atlas_id, mf in manifest_by_atlas.items():
     cx = mf.get("cross_atlas") or {}
     for imp in (cx.get("imports") or []):
         layer = imp.get("layer", "")
         producer = imp.get("from", "")
+        # `from: "external"` marks a reference to an out-of-atlas toolkit /
+        # pipeline (e.g. unified_ancestry_toolkit's ANGSD -doThetas output),
+        # not a cross-atlas import. There's no producer atlas to validate
+        # against, so skip it — the `engine` field documents the source.
+        if producer == "external":
+            continue
         # Strip <producer>. prefix if present
         bare = layer.split(".", 1)[1] if "." in layer else layer
         # Layer may be a layer OR an op

@@ -1,16 +1,24 @@
 # SPEC — Local PCA Comparator (cross-evidence view)
 
-**Status**: shipped 2026-05-20 (audit-sweep — Phases 1 + 2 confirmed
-shipping; Phase 3 explicitly gated by the SPEC's own "only-if-needed"
-rule). Promoted from `specs_todo/` after the per-slice audit below.
-Original SPEC body is preserved verbatim below as design archive.
+**Status**: shipped — all three phases. Phases 1 + 2 shipped
+2026-05-18/20; **Phase 3 (Procrustes overlay) shipped 2026-05-26**
+behind an off-by-default `overlay` toggle, when Quentin asked for it
+directly ("build Phase 3 anyway, behind a toggle"). The SPEC's
+original "only-if-needed" gate is satisfied: a concrete request
+arrived, and the overlay ships opt-in with explicit "dosage-anchored
+Procrustes" labelling so the fitted rotation is never mistaken for a
+natural shared space. Promoted from `specs_todo/` after the per-slice
+audit below. Original SPEC body is preserved verbatim below as design
+archive.
 
 **Implemented in:**
 - [`atlases/inversion/pages/discovery/pca_comparator.{html,js}`](../atlases/inversion/pages/discovery/) — page entry
 - [`atlases/inversion/pages/discovery/pca_comparator/_state.js`](../atlases/inversion/pages/discovery/pca_comparator/_state.js) — per-page state
-- [`atlases/inversion/pages/discovery/pca_comparator/renderer.js`](../atlases/inversion/pages/discovery/pca_comparator/renderer.js) — Phase 1 + 2 renderers:
-  - `paintTrajectory(state, si)` at line 527 (per-sample (PC1, PC2) trajectory across the three evidence streams)
-  - `computeConcordance(state, si)` at line 630 (fraction of windows where the three streams agree on the sample's L2 cluster)
+- [`atlases/inversion/pages/discovery/pca_comparator/renderer.js`](../atlases/inversion/pages/discovery/pca_comparator/renderer.js) — Phase 1 + 2 + 3 renderers:
+  - `paintTrajectory(state, si)` at line 559 (per-sample (PC1, PC2) trajectory across the three evidence streams)
+  - `computeConcordance(state, si)` at line 662 (fraction of windows where the three streams agree on the sample's L2 cluster)
+  - `paintProcrustesOverlay(state)` at line 715 (Phase 3 — single-panel dosage-anchored overlay: ⬤ dosage, △ θπ, □ GHSL, one connector per sample)
+  - `_alignLayerToDosage(ref, layer)` at line 863 (Phase 3 — closed-form 2D similarity Procrustes; rotation + uniform scale + translation, least-squares over samples finite in both layers)
 - [`atlases/inversion/pages/discovery/pca_comparator/heatmap.js`](../atlases/inversion/pages/discovery/pca_comparator/heatmap.js) — supporting heatmap renderer
 - Wired in: `pca_comparator.js#_refreshTrajectoryAndConcord` invokes the renderer pair
 - Page registration: `manifest.json` + `pages.registry.json` ✓
@@ -22,22 +30,25 @@ Original SPEC body is preserved verbatim below as design archive.
 | slice | status | location |
 |---|---|---|
 | Phase 1: side-by-side comparator of 3 PCAs (z-blocks / θπ / GHSL) | ✅ shipped 2026-05-18 | `pca_comparator.{html,js}` + `_state.js` + `renderer.js` |
-| Phase 2: per-sample trajectory across the 3 streams | ✅ shipped 2026-05-20 | `renderer.js#paintTrajectory(state, si)` (line 527) |
-| Phase 2: per-sample concordance score | ✅ shipped 2026-05-20 | `renderer.js#computeConcordance(state, si)` (line 630) |
+| Phase 2: per-sample trajectory across the 3 streams | ✅ shipped 2026-05-20 | `renderer.js#paintTrajectory(state, si)` (line 559) |
+| Phase 2: per-sample concordance score | ✅ shipped 2026-05-20 | `renderer.js#computeConcordance(state, si)` (line 662) |
 | Phase 2 wiring | ✅ shipped 2026-05-20 | `pca_comparator.js#_refreshTrajectoryAndConcord` |
 | Page registration | ✅ shipped | `manifest.json` + `pages.registry.json` |
-| Test coverage | ✅ shipped | `tests/test_discovery_pca_comparator.js` |
+| Test coverage | ✅ shipped | `tests/test_discovery_pca_comparator.js` (+ Phase 3 Procrustes-math group) |
+| Phase 3: Procrustes-aligned overlay (3 PCAs into a single rotation-aligned scatter) | ✅ shipped 2026-05-26 | `renderer.js#paintProcrustesOverlay` (line 715) + `_alignLayerToDosage` (line 863); off-by-default `overlay` toggle in `pca_comparator.{html,js}`; labelled "dosage-anchored Procrustes" |
 | Page contract docs | ✅ shipped | `docs/generated/page_contracts/pca_comparator/` |
-| Phase 3: Procrustes-aligned overlay (3 PCAs into a single rotation-aligned scatter) | ⏳ deferred-by-design | SPEC's own §"Phase 3" gate: "only if there's a real use case AFTER Phase 1+2." Plus rotation-misreading risk: Procrustes alignment can make spurious patterns look like real concordance. Won't ship unless a concrete request arrives that Phases 1+2 can't answer. |
 
-**Why archived now:** the SPEC explicitly stages itself in three
-phases, of which Phases 1+2 are shipped (with the exact line-number
-pointers and the page-contract docs to prove it). Phase 3 is
-deferred-by-design — the SPEC author (Quentin) wrote in the gating
-rule that Phase 3 must wait for a concrete use case AND that the
-rotation-misreading risk makes shipping it speculatively a mistake.
-Per the audit convention, a SPEC whose deferred slices are gated by
-its own intentional design (not by missing dependencies) is shipped.
+**Why archived now:** the SPEC stages itself in three phases, all now
+shipped. Phases 1+2 shipped 2026-05-18/20 (with exact line-number
+pointers + page-contract docs). Phase 3 (the Procrustes overlay) was
+held under the SPEC's "only-if-needed" gate until 2026-05-26, when
+Quentin requested it directly. It ships opt-in (off-by-default
+`overlay` toggle — the 3 honest side-by-side panels stay the primary
+view) and carries explicit "dosage-anchored Procrustes" labelling in
+the panel header + footer, so the fitted rotation the SPEC warned
+about is never read as a natural shared space. The rotation-misreading
+risk is mitigated by making the overlay a deliberate, labelled mode
+rather than the default.
 
 **User question**: "how could we try to have some sort of overlay of
 the 3 pcas at once so we can compare ? or have them side by side ?

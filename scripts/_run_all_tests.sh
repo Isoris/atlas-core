@@ -58,6 +58,10 @@ node atlases/core/pages/test_inventory.js 2>&1 | tail -2
 echo '--- meiosis-atlas adapter (staging + normalize) ---'
 ( cd /mnt/c/Users/quent/Desktop/meiosis-atlas/atlases/meiosis/registries && python3 test_adapter_smoke.py 2>&1 | tail -2 )
 
+echo '--- population-atlas cohort_f_stats adapter (F_HOM + Spearman rho) ---'
+( cd /mnt/c/Users/quent/Desktop/population-atlas/atlases/population/registries && python3 test_cohort_f_stats_smoke.py 2>&1 | tail -2 )
+cd /mnt/c/Users/quent/Desktop/atlas-core
+
 echo '--- meiosis-atlas nco page (envelope-aware) ---'
 ( cd /mnt/c/Users/quent/Desktop/meiosis-atlas && node atlases/meiosis/pages/hub/test_nco_envelope.js 2>&1 | tail -2 )
 

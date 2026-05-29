@@ -30,8 +30,10 @@ while IFS= read -r line; do
   [ -z "$line" ] && continue
   key="${line%%=*}"; key="$(echo "$key" | sed 's/ *$//')"
   val="${line#*=}";  val="$(echo "$val" | sed 's/^ *//')"
-  kv_keys+=("$key")
-  declare "kv_$key=$val"
+
+  safe_key="$(echo "$key" | sed 's/[^A-Za-z0-9_]/_/g')"
+  kv_keys+=("$safe_key")
+  declare "kv_$safe_key=$val"
 done < "$CONFIG"
 
 # Resolve a path: absolute as-is, relative resolved against atlas-core/build/.
@@ -173,7 +175,19 @@ for key in "${kv_keys[@]}"; do
   for sub in "$src/atlases"/*/; do
     [ -d "$sub" ] || continue
     aid="$(basename "$sub")"
-    [ -f "$sub/manifest.json" ] || continue
+    if [ ! -f "$sub/manifest.json" ]; then
+      # Not an atlas package. Underscore-prefixed dirs (e.g. _shared/) hold
+      # cross-atlas modules imported as ../../../_shared/x.js, so they must
+      # land in $WORKSPACE/atlases/<name> for the import to resolve — but
+      # they carry no manifest, no id, and no specs. Copy those through;
+      # skip any other non-atlas dir. 2026-05-29: evolution-atlas/atlases/
+      # _shared/ was 404ing because the manifest gate dropped it.
+      case "$aid" in
+        _*) echo "==> copying shared dir $aid: $WORKSPACE/atlases/$aid/ (from $key)"
+            sync_atlas "$sub" "$WORKSPACE/atlases/$aid" ;;
+      esac
+      continue
+    fi
     echo "==> copying atlas $aid: $sub"
     # 2026-05-20: prune THIS atlas's stale files (renamed/removed pages)
     # while keeping the workspace-root inode stable (see step 1 comment).

@@ -37,7 +37,7 @@
 # are physically moved out of /mnt/e/01-catfish_assembly_manuscript_CGA).
 # =====================================================================
 
-atlas_core = /mnt/c/Users/quent/Desktop/atlas-core
+atlas_core       = ..
 atlas_inversion  = ../../inversion-atlas
 atlas_diversity  = ../../diversity-atlas
 atlas_genome     = ../../genome-atlas

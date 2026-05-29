@@ -152,10 +152,16 @@ roots:
     description: "ANGSD -doThetas pestPG outputs (Module 03_theta_pi). 4 scales x 226 samples = 904 .pestPG files. Read by both diversity scans AND the inversion path-2 (theta-pi local-PCA) via the registry."
 
   diversity_roh:
-    path: "/mnt/e/results_diversity/04_roh"
+    path: "/mnt/e/results_diversity/04_roh_summary"
+    role: "intervals"
+    species_scoped: false
+    description: "ROH outputs (Module 04_roh_summary). Per-chrom tree under per_chr/<chrom>/: roh_tracts_all.bed (per-sample ROH segments), catfish_roh.per_sample_roh.tsv (per-sample FROH for that chrom), catfish_roh.per_sample_roh_bins_long.tsv (length-class bins), plus a multiscale/win*/ subtree (4 window scales). 2026-05-26: was /04_roh (empty); repointed to /04_roh_summary where the pipeline actually writes."
+
+  diversity_roh_bundle:
+    path: "/mnt/e/results_diversity/MS_BUNDLE_het_roh_2026-04-18/01_final_tables"
     role: "samples"
     species_scoped: false
-    description: "ROH outputs (Module 04_roh) including F_ROH | H framework results."
+    description: "Genome-wide ROH + H manuscript bundle (01_final_tables). Single-file cohort aggregates the UI consumers read: per_chr_roh_summary.tsv (sample x chrom F_ROH, 227x28), per_sample_roh.tsv (genome-wide per-sample F_ROH), master_summary.tsv (H + F_ROH + theta-in/out-ROH join), per_sample_het_in_out_roh.tsv. Added 2026-05-26 — the per-chrom 04_roh_summary tree has no pre-built genome-wide aggregate, so the cohort layers source from this bundle while per-chrom tracts source from diversity_roh."
 
   diversity_aggregated:
     path: "/mnt/e/results_diversity/05_aggregated"

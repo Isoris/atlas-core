@@ -109,3 +109,4 @@ pods_outlier_calls	0.1	simulation	pods_atlas	contract_only	not_implemented	false
 pods_calibration	0.1	simulation	pods_atlas	contract_only	not_implemented	false	false	true	Server endpoint not implemented	pods_simulate							226			2026-05-29
 compute_load_per_individual	0.1	deleterious_load	loads_atlas	contract_only	producer_not_wired	false	false	true	Phase 0 scaffold; producer pipeline not wired (layer _status: not_loaded)		compute_load_per_inversion						226			2026-05-29
 compute_load_per_inversion	0.1	deleterious_load	loads_atlas	contract_only	producer_not_wired	false	false	true	Phase 0 scaffold; producer pipeline not wired	compute_load_per_individual							226			2026-05-29
+mendelian_arrangement_v0	0.1.0	inheritance	relatedness_atlas	experimental	server_compute_relatedness_compute_py	true	true			ngspedigree_v1							226		python_3_11	2026-05-29

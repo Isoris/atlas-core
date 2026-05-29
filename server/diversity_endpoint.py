@@ -82,19 +82,29 @@ def _resolve_data_dir(
         if p.is_dir():
             return p
         log.warning(
-            "ATLAS_DIVERSITY_DATA_DIR=%s does not exist; falling back to PROJECT_ROOT/data",
+            "ATLAS_DIVERSITY_DATA_DIR=%s does not exist; falling back to project-root candidates",
             env,
         )
-    # Fallback: PROJECT_ROOT/data via the caller-injected safe_path.
-    try:
-        p = safe_path("data")
-        if p.is_dir():
-            return p
-    except HTTPException:
-        # 403 (path escapes root) or 503 (PROJECT_ROOT unset) — surface
-        # as None so the route returns a clear 404 instead of leaking
-        # the internal exception.
-        pass
+    # Project-root candidates via the caller-injected safe_path. Tried in
+    # order:
+    #   1. atlases/diversity/data — the viewer tables now ship INSIDE the
+    #      atlas package (2026-05-29); assemble.sh syncs them here and
+    #      start.sh runs with --project-root == --workspace-root, so this
+    #      resolves to <workspace>/atlases/diversity/data.
+    #   2. data — legacy top-level location. NB: in the assembled workspace
+    #      `data` is a symlink to the external genomics drive (atlas.config
+    #      `data = /mnt/e`), which does NOT hold these tables — so this only
+    #      matches a plain static checkout where data/ is the real dir.
+    for rel in ("atlases/diversity/data", "data"):
+        try:
+            p = safe_path(rel)
+            if p.is_dir():
+                return p
+        except HTTPException:
+            # 403 (path escapes root) or 503 (PROJECT_ROOT unset) — try the
+            # next candidate; return None below so the route emits a clear
+            # 404 instead of leaking the internal exception.
+            pass
     return None
 
 

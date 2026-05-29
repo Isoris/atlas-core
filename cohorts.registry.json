@@ -1,8 +1,8 @@
 {
   "_doc": "Atlas-core master index of cohorts + cross-atlas data flow. Aggregates the `cross_atlas` block declared in each atlas's manifest.json so the full producer/consumer graph is queryable in one place. NOT loaded by the shell at boot (each atlas registers its own block); this file is the human-readable answer to 'who reads what from whom?'. Update by re-running scripts/build_cohorts_index.py (to be written) or by hand when an atlas's cross_atlas block changes.",
   "version": "1.0",
-  "generated_at": "2026-05-23T18:00:00Z",
-  "_revision_log": "Created 2026-05-23 as part of Phase 1a (cross-species/evolution/popstats split from inversion). Phase 1b added 6 meiosis pages migrated from relatedness + cleanup of 3 shared modules. Phase 1c spun out heterozygosity-atlas. Phase 1d promoted PODs from population to its own atlas. Lint pass that day: 57 -> 0 warnings; per-atlas exports realigned to actual declared layer names. f_roh_h_plane import target corrected from samples_roh_per_sample to cohort_froh_per_chrom 2026-05-23 PM after the linter implemented the page.",
+  "generated_at": "2026-05-26T00:00:00Z",
+  "_revision_log": "Created 2026-05-23 as part of Phase 1a (cross-species/evolution/popstats split from inversion). Phase 1b added 6 meiosis pages migrated from relatedness + cleanup of 3 shared modules. Phase 1c spun out heterozygosity-atlas. Phase 1d promoted PODs from population to its own atlas. Lint pass that day: 57 -> 0 warnings; per-atlas exports realigned to actual declared layer names. f_roh_h_plane import target corrected from samples_roh_per_sample to cohort_froh_per_chrom 2026-05-23 PM after the linter implemented the page. Phase 1e 2026-05-26: created loads-atlas (deleterious-load lens; load_per_individual_v1 + load_per_inversion_v1 producers, no cross-atlas consumers yet) — added to cgar_hatchery_226.primary_atlases, build/atlas.config, and _lint_atlases.py ATLAS_DIRS. ROH wired 2026-05-26: master_config diversity_roh root repointed 04_roh -> 04_roh_summary + new diversity_roh_bundle root (MS_BUNDLE_het_roh_2026-04-18/01_final_tables); 7 diversity ROH layers enabled (cohort_froh_per_chrom / samples_roh_per_sample / samples_het_in_out_roh / cohort_roh_length_bins from the bundle, roh_tracts_per_chrom / roh_per_sample_per_chrom / roh_bins_long_per_chrom per-chrom from 04_roh_summary). New cross-atlas flow: diversity.samples_roh_per_sample now used_by inversion (local_pca_dosage paints the PCA + L3 contingency mini-PCAs by genome-wide F_ROH via the 'froh' ramp). Lint: 0 warnings.",
 
   "cohorts": {
     "cgar_hatchery_226": {
@@ -66,7 +66,7 @@
 
     "diversity.samples_theta_pi_pestpg":      { "atlas_id": "diversity",     "used_by": ["inversion"] },
     "diversity.samples_genomewide_het":       { "atlas_id": "diversity",     "used_by": ["inversion","population","heterozygosity"] },
-    "diversity.samples_roh_per_sample":       { "atlas_id": "diversity",     "used_by": ["population","relatedness"] },
+    "diversity.samples_roh_per_sample":       { "atlas_id": "diversity",     "used_by": ["population","relatedness","inversion"] },
     "diversity.cohort_froh_per_chrom":        { "atlas_id": "diversity",     "used_by": ["heterozygosity"] },
     "diversity.cohort_master_per_chrom":      { "atlas_id": "diversity",     "used_by": ["inversion"] },
 

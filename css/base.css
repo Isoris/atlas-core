@@ -85,24 +85,6 @@ header #loadSessionBtn {
   transition: background 100ms, border-color 100ms, color 100ms;
 }
 
-/* Settings gear, promoted from the per-atlas topbar into the shell header.
-   Same compact footprint as the other header buttons; gold tone so it
-   reads as a distinct affordance against the panel buttons. */
-/* 2026-05-19: 20px height pin matches the rest of the header row. */
-header #globalSettingsBtn {
-  align-self: center; flex-shrink: 0;
-  background: transparent;
-  color: #d4a017; border: 1px solid #b8860b;
-  border-radius: 2px;
-  padding: 0 7px; font-family: var(--mono); font-size: 11px;
-  height: 20px; line-height: 1;
-  box-sizing: border-box;
-  cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center;
-  vertical-align: middle;
-}
-header #globalSettingsBtn:hover  { background: rgba(212, 160, 23, 0.12); border-color: #d4a017; }
-header #globalSettingsBtn:active { transform: translateY(1px); }
 header #candidateModeBtn[data-active="1"] {
   background: var(--accent); color: #0e1116; border-color: var(--accent);
   font-weight: 600;
@@ -230,11 +212,6 @@ header .header-folder-btn:hover {
   background: var(--panel-2); border-color: var(--accent); color: var(--ink);
 }
 header .header-folder-btn .arrow { opacity: 0.55; margin-left: 4px; font-size: 7px; }
-/* Active-state ring when a child button inside has data-active="1"
-   (e.g. candidate mode). The folder button itself glows. */
-header .header-folder[data-has-active="1"][data-color="green"] .header-folder-btn {
-  box-shadow: 0 0 0 1px rgba(245, 165, 36, 0.45) inset;
-}
 /* The popover panel — hidden until hover/focus. */
 header .header-folder-panel {
   display: none;
@@ -261,10 +238,6 @@ header .header-folder-panel {
   isolation: isolate;
   opacity: 1;
 }
-/* Tinted left border on the panel matching the folder colour */
-header .header-folder[data-color="blue"]   .header-folder-panel { border-left: 3px solid rgba(64, 144, 220, 0.65); }
-header .header-folder[data-color="green"]  .header-folder-panel { border-left: 3px solid rgba(72, 200, 120, 0.65); }
-header .header-folder[data-color="yellow"] .header-folder-panel { border-left: 3px solid rgba(232, 196, 76, 0.65); }
 /* Reveal on hover/focus-within — same pattern as #atlasModeIndicator */
 header .header-folder:hover .header-folder-panel,
 header .header-folder:focus-within .header-folder-panel { display: flex !important; }
@@ -319,13 +292,6 @@ header .header-folder-panel .atlas-tool-btn:hover {
   background: var(--panel-3) !important;
   border-color: var(--accent) !important;
 }
-
-/* Colored dot prefix inside the session/mode/data folder buttons. The dot's
-   color is set per-folder so the closed button shows its category color. */
-header .header-folder-btn .dot { opacity: 0.85; margin-right: 2px; font-size: 9px; }
-header .header-folder[data-color="blue"]   .header-folder-btn .dot { color: rgb(64, 144, 220); }
-header .header-folder[data-color="green"]  .header-folder-btn .dot { color: rgb(72, 200, 120); }
-header .header-folder[data-color="yellow"] .header-folder-btn .dot { color: rgb(232, 196, 76); }
 
 /* Atlas switcher (hover dropdown) — moved from the topbar into the header. */
 #atlasModeIndicator {

@@ -16,6 +16,11 @@ fi
 
 echo '--- atlas-core server ---'
 cd /mnt/c/Users/quent/Desktop/atlas-core && python3 -m unittest discover -s server -p 'test_*.py' 2>&1 | tail -8
+# 2026-05-26: explicit run of the dosage_bridge layout test so its
+# pass/fail line is visible in the rollup even when the discover above
+# collapses to a summary count.
+echo '--- atlas-core server: dosage_bridge layouts (sites + dosage TSV) ---'
+( cd server && python3 -m unittest test_dosage_bridge_layouts 2>&1 | tail -4 )
 
 echo '--- atlas-core CLI ---'
 python3 -m unittest scripts.test_atlas_action 2>&1 | tail -8

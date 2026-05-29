@@ -28,6 +28,7 @@ ATLAS_DIRS = [
     "genome-atlas/atlases/genome",
     "heterozygosity-atlas/atlases/heterozygosity",
     "inversion-atlas/atlases/inversion",
+    "loads-atlas/atlases/loads",
     "meiosis-atlas/atlases/meiosis",
     "pods-atlas/atlases/pods",
     "popstats-atlas/atlases/popstats",

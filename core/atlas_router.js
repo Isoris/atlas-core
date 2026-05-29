@@ -28,6 +28,12 @@
 //      (e.g. to flush pending writes).
 //   4. Topbar: when one atlas is loaded, show stages + pages flat.
 //      When multiple are loaded, show atlas selector + per-atlas stages.
+//   5. Opt-in mount-time perf instrumentation. Set `window.__mountPerf = true`
+//      in DevTools to get per-nav console logs of unmount / fetch+import /
+//      inject / mount phase timings plus a structured ring at
+//      `window.__mountPerfLog` (last 200 navs). Off by default (zero cost
+//      when disabled). Use to verify shell-perf-audit wins or spot
+//      regressions in a real session.
 // ---------------------------------------------------------------------
 
 export class AtlasRouter {
@@ -56,6 +62,20 @@ export class AtlasRouter {
     const page = manifest.pages.find(p => p.id === page_id);
     if (!page) throw new Error(`Unknown page: ${atlas_id}/${page_id}`);
 
+    // Opt-in mount-time perf instrumentation. Enable in DevTools with
+    //   window.__mountPerf = true
+    // to log per-phase ms to the console on every nav. No-op when off
+    // so prod-path stays clean. The four phases — unmount / fetch+import /
+    // dom-injection / mount — are the slow surfaces we identified in
+    // the 2026-05 shell perf audit. `total` = wall time from navigate()
+    // entry to successful mount completion (excludes superseded navs).
+    const perfOn = (typeof window !== 'undefined' && window.__mountPerf === true);
+    const tNav0  = perfOn ? performance.now() : 0;
+    let tUnmount0 = 0, tUnmount1 = 0;
+    let tFetch0 = 0,   tFetch1 = 0;
+    let tInject0 = 0,  tInject1 = 0;
+    let tMount0 = 0,   tMount1 = 0;
+
     // 2026-05-21 correctness: rapid tab clicks used to leave the UI
     // broken because navigate(B) could start while navigate(A)'s mount
     // was still awaiting. Both nav A and nav B would overwrite
@@ -74,10 +94,12 @@ export class AtlasRouter {
     this._currentRoot   = null;
 
     // Unmount previous
+    if (perfOn) tUnmount0 = performance.now();
     if (toUnmount && typeof toUnmount.unmount === 'function') {
       try { await toUnmount.unmount(toUnmountRoot); }
       catch (e) { console.error('unmount threw:', e); }
     }
+    if (perfOn) tUnmount1 = performance.now();
     if (token !== this._navToken) return;
 
     // Load per-page stylesheet if declared. Loaded BEFORE the fragment is
@@ -93,14 +115,18 @@ export class AtlasRouter {
     // module — so fan them out via Promise.all. Saves one RTT per page
     // navigation. The browser's module cache means repeat navigates to
     // the same page only pay the fragment fetch.
+    if (perfOn) tFetch0 = performance.now();
     const [fragmentHtml, module] = await Promise.all([
       fetch(page.fragment).then(r => r.text()),
       import('/' + page.module),
     ]);
+    if (perfOn) tFetch1 = performance.now();
     if (token !== this._navToken) return;   // nothing mounted yet, safe to drop
 
     const root = document.getElementById('app-root');
+    if (perfOn) tInject0 = performance.now();
     root.innerHTML = fragmentHtml;
+    if (perfOn) tInject1 = performance.now();
 
     if (typeof module.mount !== 'function') {
       throw new Error(`Page ${atlas_id}/${page_id}: module has no mount() export`);
@@ -138,7 +164,9 @@ export class AtlasRouter {
     try { this.state.savePersisted(); } catch (_) {}
 
     // Mount
+    if (perfOn) tMount0 = performance.now();
     await module.mount(root, this.state, this.registry);
+    if (perfOn) tMount1 = performance.now();
     if (token !== this._navToken) {
       // A newer navigate superseded us mid-mount. Best-effort cleanup:
       // unmount what we just mounted so the next nav has a clean slate.
@@ -152,6 +180,34 @@ export class AtlasRouter {
 
     this._currentModule = module;
     this._currentRoot = root;
+
+    if (perfOn) {
+      const r = (ms) => Math.round(ms);
+      const total = performance.now() - tNav0;
+      const unmount = tUnmount1 - tUnmount0;
+      const fetch_  = tFetch1   - tFetch0;
+      const inject  = tInject1  - tInject0;
+      const mount   = tMount1   - tMount0;
+      // Pad the route field so columns align across navigations.
+      const route = `${atlas_id}/${page_id}`.padEnd(36);
+      console.log(
+        `[mount-perf] ${route} total=${r(total)}ms ` +
+        `(unmount=${r(unmount)} fetch+import=${r(fetch_)} ` +
+        `inject=${r(inject)} mount=${r(mount)})`
+      );
+      // Stash structured per-nav metrics on window so a future overlay /
+      // export can read them without re-parsing console output. Bounded
+      // ring (last 200 entries) so we don't leak across long sessions.
+      if (!Array.isArray(window.__mountPerfLog)) window.__mountPerfLog = [];
+      window.__mountPerfLog.push({
+        ts: Date.now(),
+        atlas_id, page_id,
+        total, unmount, fetch: fetch_, inject, mount,
+      });
+      if (window.__mountPerfLog.length > 200) {
+        window.__mountPerfLog.splice(0, window.__mountPerfLog.length - 200);
+      }
+    }
   }
 
   _ensureStylesheet(href, atlas_id) {
@@ -716,7 +772,14 @@ export class AtlasRouter {
           if (stage === activeStageForBar) pill.dataset.expanded = '1';
           const meta = stageMeta.get(stage);
           const label = (meta && meta.label) || stage;
-          pill.title = (meta && meta.description)
+          // Stage tooltip source order:
+          //   1. `tooltip` — short, hover-friendly (matches the page-entry convention)
+          //   2. `description` — legacy / cross-manifest fallback
+          //   3. `_doc` — long narrative docstring already present in most
+          //      manifests (inversion uses this exclusively today). Browser
+          //      title= renders multi-paragraph text fine; no truncation.
+          //   4. generic "click to expand" filler so the pill is never bare.
+          pill.title = (meta && (meta.tooltip || meta.description || meta._doc))
             || `Click to expand the "${label}" tab group`;
           const dot = document.createElement('span');
           dot.className = 'pill-dot';
@@ -776,7 +839,10 @@ export class AtlasRouter {
             btn.appendChild(num);
           }
           btn.appendChild(document.createTextNode(' ' + (page.label || page.id)));
-          if (page.tooltip) btn.title = page.tooltip;
+          // Same source order as the stage pill above: short `tooltip`
+          // wins, then `description`, then the long `_doc` narrative.
+          const pageTip = page.tooltip || page.description || page._doc;
+          if (pageTip) btn.title = pageTip;
           // 2026-05-21 perf: stamp data-page-id so the partial-update
           // path in _renderTopbar can locate the right tab by id, not
           // by text (which would mismatch on label-suffix collisions).

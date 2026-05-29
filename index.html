@@ -294,6 +294,18 @@ import { setStrictMode as setCrossAtlasStrict }
       return;
     }
 
+    // 2026-05-26: expose the full discovered atlas list + registration
+    // failures globally so the system_health page (and any future
+    // shell-side dashboard) can enumerate EVERY atlas — including ones
+    // that failed to register — instead of just the registry's
+    // successful subset. The system_health summary card grid uses this
+    // to mark failed atlases with ⚠ + reason instead of silently
+    // dropping them. Keyed for stability:
+    //   window.__atlasManifests        — Map<atlas_id, manifest>  (loaded)
+    //   window.__atlasFailedAtlases    — Array<{atlas_id, error}> (boot-time failures)
+    window.__atlasManifests = manifests;
+    window.__atlasFailedAtlases = failedAtlases.slice();
+
     // 2026-05-20: expose registry on `window.__atlasRegistry` so shell_chrome
     // (and any future cross-page debug surface) can read per-atlas layer
     // metadata without having to be passed the instance directly. The

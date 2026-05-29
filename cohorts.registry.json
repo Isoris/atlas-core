@@ -10,7 +10,7 @@
       "species_id": "gariepinus",
       "reference_id": "fClaHyb_Gar_LG",
       "sample_count": 226,
-      "primary_atlases": ["inversion", "diversity", "population", "relatedness", "meiosis", "popstats", "evolution", "genome", "heterozygosity", "pods"],
+      "primary_atlases": ["inversion", "diversity", "population", "relatedness", "meiosis", "popstats", "evolution", "genome", "heterozygosity", "pods", "loads"],
       "_doc": "The main cohort. Single-species F1 hatchery sampling; every atlas that operates on individual fish reads this cohort."
     },
     "f1_hybrid_cga_cma": {
@@ -96,7 +96,10 @@
     "meiosis.nco_gc_track":                   { "atlas_id": "meiosis",       "used_by": ["genome"] },
     "meiosis.coincidence_matrix_v1":          { "atlas_id": "meiosis",       "used_by": ["inversion"] },
     "meiosis.inversion_meiosis_effects_v1":   { "atlas_id": "meiosis",       "used_by": ["inversion","evolution"] },
-    "meiosis.chromosome_meiosis_events_v1":   { "atlas_id": "meiosis",       "used_by": ["inversion"] }
+    "meiosis.chromosome_meiosis_events_v1":   { "atlas_id": "meiosis",       "used_by": ["inversion"] },
+
+    "loads.load_per_individual_v1":           { "atlas_id": "loads",         "used_by": [] },
+    "loads.load_per_inversion_v1":            { "atlas_id": "loads",         "used_by": [] }
   },
   "_producers_note": "Producer entries match what's actually declared in each producer atlas's layers.registry.json. Layers that were earlier listed under aspirational names (e.g. relatedness.pairwise_relationship_classification, meiosis.coincidence_matrix_v1) were renamed to the existing canonical names (res_pairwise, etc.) on 2026-05-23 after the lint pass surfaced the gap. The cross_atlas.imports/exports blocks in each atlas manifest were updated in lockstep.",
 

@@ -52,25 +52,31 @@ const _state = {
 };
 
 // ----- data collection --------------------------------------------------
+// 2026-05-26: was returning false (→ page aborts) when reg was missing.
+// Now still collects whatever globals are exposed so failed-only boots
+// still render a useful "what's wrong" view instead of a blank panel.
 function _collect() {
-  const reg = window.__atlasRegistry;
-  if (!reg) return false;
+  const reg = window.__atlasRegistry || null;
   _state.registry = reg;
   _state.allLayers = [];
-  // reg._atlases is a Map<atlas_id, { layers, operations, files, pages, slots }>
-  for (const [atlas_id, conf] of reg._atlases.entries()) {
-    const layers = conf.layers || {};
-    for (const [layer_id, entry] of Object.entries(layers)) {
-      if (layer_id.startsWith('_')) continue;
-      _state.allLayers.push({
-        atlas_id,
-        layer_id,
-        entry,
-        statusKind: _statusKind(entry),
-      });
+  if (reg) {
+    // reg._atlases is a Map<atlas_id, { layers, operations, files, pages, slots }>
+    for (const [atlas_id, conf] of reg._atlases.entries()) {
+      const layers = conf.layers || {};
+      for (const [layer_id, entry] of Object.entries(layers)) {
+        if (layer_id.startsWith('_')) continue;
+        _state.allLayers.push({
+          atlas_id,
+          layer_id,
+          entry,
+          statusKind: _statusKind(entry),
+        });
+      }
     }
   }
-  return true;
+  // True if we have *anything* to render — either a registry or a
+  // manifests map (which exists even when every registration failed).
+  return !!(reg || (window.__atlasManifests instanceof Map && window.__atlasManifests.size > 0));
 }
 
 async function _loadCohorts() {
@@ -85,57 +91,182 @@ async function _loadCohorts() {
 }
 
 // ----- summary cards ----------------------------------------------------
+// 2026-05-26: was iterating reg._atlases (registered only). Atlases
+// whose register_atlas() threw were silently dropped from the dashboard
+// — Quentin: "its missing many atlases". Now enumerates the FULL
+// discovered set (window.__atlasManifests) so failed atlases render
+// with ⚠ + reason instead of vanishing. Adds workflows / files /
+// scope_pickers counts (previously only pages/layers/ops were shown).
 function _renderSummary() {
   const slot = document.getElementById('shSummaryGrid');
   if (!slot) return;
+
+  // Canonical atlas list = every atlas discovered at boot, regardless
+  // of whether registration succeeded. Fall back to the registry's
+  // keys if __atlasManifests isn't exposed (older bundles).
+  const manifests = (typeof window !== 'undefined' && window.__atlasManifests instanceof Map)
+    ? window.__atlasManifests : null;
+  const failedList = (typeof window !== 'undefined' && Array.isArray(window.__atlasFailedAtlases))
+    ? window.__atlasFailedAtlases : [];
+  const failedByAtlas = new Map(failedList.map(f => [f.atlas_id, f.error]));
+
   const reg = _state.registry;
-  if (!reg) {
-    slot.innerHTML = '<span class="sh-hint">window.__atlasRegistry not present.</span>';
+  let atlasIds = [];
+  if (manifests) {
+    atlasIds = Array.from(manifests.keys());
+    for (const fId of failedByAtlas.keys()) {
+      if (!atlasIds.includes(fId)) atlasIds.push(fId);
+    }
+  } else if (reg) {
+    atlasIds = Array.from(reg._atlases.keys());
+  }
+  atlasIds.sort();
+
+  if (atlasIds.length === 0) {
+    slot.innerHTML = '<span class="sh-hint">No atlases discovered at boot.</span>';
     return;
   }
 
-  const atlases = Array.from(reg._atlases.keys()).sort();
-  const html = atlases.map(aid => {
-    const conf = reg._atlases.get(aid);
-    const nLayers = Object.keys(conf.layers || {}).filter(k => !k.startsWith('_')).length;
-    const nOps    = Object.keys(conf.operations || {}).filter(k => !k.startsWith('_')).length;
-    const nPages  = Object.keys(conf.pages || {}).filter(k => !k.startsWith('_')).length;
+  // ── Top-line summary strip (counts across atlases) ─────────────
+  const nLoaded = manifests ? manifests.size : (reg ? reg._atlases.size : 0);
+  const nFailed = failedByAtlas.size;
+  const nRegistered = reg ? reg._atlases.size : 0;
+  const summaryStrip = `
+    <div class="sh-card-strip"
+         style="grid-column: 1 / -1; padding: 8px 12px;
+                background: var(--panel-2, #181d27);
+                border: 1px solid var(--rule, #2a3242); border-radius: 3px;
+                margin-bottom: 8px;
+                display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px;">
+      <span><b>${atlasIds.length}</b> total</span>
+      <span style="color: var(--good, #4ade80);"><b>${nRegistered}</b> registered</span>
+      ${nFailed > 0
+        ? `<span style="color: var(--bad, #ef4444);"><b>${nFailed}</b> failed</span>`
+        : ''}
+      ${manifests && nLoaded !== nRegistered
+        ? `<span style="color: var(--ink-dim);"><b>${nLoaded - nRegistered}</b> discovered but unregistered</span>`
+        : ''}
+    </div>
+  `;
 
-    // % ready
+  const cardsHtml = atlasIds.map(aid => {
+    const manifest = manifests ? manifests.get(aid) : null;
+    const conf = reg ? reg._atlases.get(aid) : null;
+    const failedReason = failedByAtlas.get(aid) || null;
+
+    // Per-atlas counts. Use registry confs when registered; fall back to
+    // manifest declarations when only-discovered. Both can be 0 / missing.
+    const nLayers = conf
+      ? Object.keys(conf.layers || {}).filter(k => !k.startsWith('_')).length : 0;
+    const nOps    = conf
+      ? Object.keys(conf.operations || {}).filter(k => !k.startsWith('_')).length : 0;
+    const nFiles  = conf
+      ? Object.keys(conf.files || {}).filter(k => !k.startsWith('_')).length : 0;
+    const nPages  = conf
+      ? Object.keys(conf.pages || {}).filter(k => !k.startsWith('_')).length
+      : (manifest && Array.isArray(manifest.pages) ? manifest.pages.length : 0);
+    const nWorkflows = (conf && conf.workflows && Array.isArray(conf.workflows.workflows))
+      ? conf.workflows.workflows.length : 0;
+    const nPickers = (manifest && Array.isArray(manifest.scope_pickers))
+      ? manifest.scope_pickers.length : 0;
+
+    // Card state — drives the border color + status pill.
+    let stateKind, stateLabel, stateColor;
+    if (failedReason) {
+      stateKind = 'failed';
+      stateLabel = '⚠ failed to register';
+      stateColor = 'var(--bad, #ef4444)';
+    } else if (!conf) {
+      stateKind = 'unregistered';
+      stateLabel = '· not registered';
+      stateColor = 'var(--ink-dim, #8895a8)';
+    } else if (nLayers === 0 && nOps === 0 && nPages === 0) {
+      stateKind = 'empty';
+      stateLabel = '· empty (no layers / ops / pages)';
+      stateColor = 'var(--accent, #f5a524)';
+    } else {
+      stateKind = 'registered';
+      stateLabel = '✓ registered';
+      stateColor = 'var(--good, #4ade80)';
+    }
+
+    // Ready bar — only meaningful when the atlas registered AND has layers.
     const layersOfAtlas = _state.allLayers.filter(L => L.atlas_id === aid);
-    const nReady = layersOfAtlas.filter(L => L.statusKind === 'ready' || L.statusKind === 'session_state').length;
+    const nReady = layersOfAtlas.filter(L =>
+      L.statusKind === 'ready' || L.statusKind === 'session_state').length;
     const pct = nLayers > 0 ? Math.round(100 * nReady / nLayers) : 0;
+    const readyBar = (stateKind === 'registered' && nLayers > 0) ? `
+      <div class="sh-card-ready">
+        <div class="sh-bar"><div class="sh-bar-fill" style="width:${pct}%"></div></div>
+        <div class="sh-bar-label">${nReady}/${nLayers} ready (${pct}%)</div>
+      </div>` : '';
+
+    const reasonHtml = failedReason ? `
+      <div style="margin-top: 6px; padding: 6px 8px; background: rgba(239,68,68,0.10);
+                  border-left: 2px solid var(--bad, #ef4444); border-radius: 2px;
+                  font-size: 10.5px; word-break: break-word;">
+        ${_esc(failedReason)}
+      </div>` : '';
 
     return `
-      <div class="sh-card">
-        <div class="sh-card-title">${_esc(aid)}</div>
+      <div class="sh-card" data-state="${stateKind}" style="border-left: 3px solid ${stateColor};">
+        <div class="sh-card-title">
+          ${_esc(aid)}
+          <span style="float: right; font-size: 9.5px; font-weight: 400; color: ${stateColor};">
+            ${_esc(stateLabel)}
+          </span>
+        </div>
         <div class="sh-card-stats">
           <span class="sh-stat"><b>${nPages}</b> pages</span>
           <span class="sh-stat"><b>${nLayers}</b> layers</span>
           <span class="sh-stat"><b>${nOps}</b> ops</span>
+          ${nFiles > 0    ? `<span class="sh-stat"><b>${nFiles}</b> files</span>`     : ''}
+          ${nWorkflows > 0? `<span class="sh-stat"><b>${nWorkflows}</b> workflows</span>` : ''}
+          ${nPickers > 0  ? `<span class="sh-stat"><b>${nPickers}</b> pickers</span>`  : ''}
         </div>
-        <div class="sh-card-ready">
-          <div class="sh-bar"><div class="sh-bar-fill" style="width:${pct}%"></div></div>
-          <div class="sh-bar-label">${nReady}/${nLayers} ready (${pct}%)</div>
-        </div>
+        ${readyBar}
+        ${reasonHtml}
       </div>
     `;
   }).join('');
-  slot.innerHTML = html || '<span class="sh-hint">No atlases registered.</span>';
+
+  slot.innerHTML = summaryStrip + cardsHtml;
 }
 
 // ----- layer table ------------------------------------------------------
+// 2026-05-26: dropdown now includes every discovered atlas (from
+// __atlasManifests + failed list), not just those that contributed
+// layers. Atlases with 0 layers get a "·" marker so the user can tell
+// at a glance which selections will show an empty table.
 function _populateLayerFilter() {
   const sel = document.getElementById('shLayerAtlasFilter');
   if (!sel) return;
-  const atlases = Array.from(new Set(_state.allLayers.map(L => L.atlas_id))).sort();
-  // Preserve "all"
-  const had = new Set(Array.from(sel.options).map(o => o.value));
+
+  const manifests = (typeof window !== 'undefined' && window.__atlasManifests instanceof Map)
+    ? window.__atlasManifests : null;
+  const failedList = (typeof window !== 'undefined' && Array.isArray(window.__atlasFailedAtlases))
+    ? window.__atlasFailedAtlases : [];
+
+  const withLayers = new Set(_state.allLayers.map(L => L.atlas_id));
+  const all = new Set([...withLayers]);
+  if (manifests) for (const aid of manifests.keys()) all.add(aid);
+  for (const f of failedList) all.add(f.atlas_id);
+
+  const atlases = Array.from(all).sort();
+
+  // Preserve the "all" option, replace the rest.
+  const allOpt = Array.from(sel.options).find(o => o.value === '');
+  sel.innerHTML = '';
+  if (allOpt) sel.appendChild(allOpt);
+  else {
+    const o = document.createElement('option');
+    o.value = ''; o.textContent = 'all atlases';
+    sel.appendChild(o);
+  }
   for (const aid of atlases) {
-    if (had.has(aid)) continue;
     const opt = document.createElement('option');
     opt.value = aid;
-    opt.textContent = aid;
+    opt.textContent = withLayers.has(aid) ? aid : `${aid} · 0 layers`;
     sel.appendChild(opt);
   }
 }
@@ -261,7 +392,7 @@ export async function mount(root, atlasState, registry) {
   const ok = _collect();
   if (!ok) {
     const grid = document.getElementById('shSummaryGrid');
-    if (grid) grid.innerHTML = '<span class="sh-hint">window.__atlasRegistry not present. Atlas has not finished booting yet.</span>';
+    if (grid) grid.innerHTML = '<span class="sh-hint">Atlas has not finished booting yet — no registry and no manifests exposed.</span>';
     return;
   }
   await _loadCohorts();

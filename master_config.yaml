@@ -262,25 +262,25 @@ roots:
     path: "/mnt/e/results_cross_species/00_manifests"
     role: "intervals"
     species_scoped: false
-    description: "Haplotype manifests for cross-species runs (18-genome + 5-hap Cgar/Cmac). TSV mapping species_id -> FASTA + divergence tier. Input to bp_atlas_pipeline + gene_order_consolidation."
+    description: "NO E: SOURCE 2026-05-29 — haplotype_manifest_18sp.tsv / _5hap.tsv are not on E: (only bundled under the atlas data/manifests/). Stays the empty flat dir; the manifest layers fall back to the bundled fixtures. TSV mapping species_id -> FASTA + divergence tier; input to bp_atlas_pipeline + gene_order_consolidation."
 
   cross_species_bp_atlas:
-    path: "/mnt/e/results_cross_species/01_bp_atlas"
+    path: "/mnt/e/results_cross_species/bpatlas"
     role: "intervals"
     species_scoped: false
-    description: "wfmash BP_ATLAS pipeline outputs: passA/B PAFs (02_paf_passA/passB), raw + zoned breakpoints (03_breakpoints), reciprocity table, arc visualisation JSON (05_atlas_data), joint candidates (06_joint)."
+    description: "WIRED 2026-05-29 -> real bpatlas/ tree (was the empty flat 01_bp_atlas/; the comparative_atlas_FINAL_20260524.tar.gz was extracted in place). wfmash BP_ATLAS pipeline outputs: passA/B PAFs (02_paf_passA/passB), raw breakpoints (03_breakpoints_allavail/breakpoints_raw.tsv), refined per-anchor zones + reciprocity (03_breakpoints_refined/). NOTE: atlas_data.json, atlas_paf_arcs.json, joint_candidates.tsv, breakpoint_junctions_v1.json, cs_pairs_v1.json, and pairs/{pair}/cs_breakpoints_v1.json have NO source on E: yet — those layers fall back to the bundled fixtures / 404."
 
   cross_species_consolidated:
-    path: "/mnt/e/results_cross_species/02_consolidated"
+    path: "/mnt/e/results_cross_species/synteny/_inputs/results"
     role: "intervals"
     species_scoped: false
-    description: "Consolidated breakpoint clusters across method families. Includes breakpoint_clusters.tsv (cross-method validated headlines), pairwise_summary.tsv, and the tolerance_sweep subfolder."
+    description: "WIRED 2026-05-29 -> real synteny/_inputs/results/ (was the empty flat 02_consolidated/). breakpoint_clusters.tsv (cross-method validated headlines), pairwise_summary_{focal}.tsv, and the sweep/ tolerance subfolder all live here directly. NOTE: verified_numbers_v1.json + supp_tables_v1.json have NO source on E: yet — bundled-fixture fallback."
 
   cross_species_gene_order:
-    path: "/mnt/e/results_cross_species/03_gene_order"
+    path: "/mnt/e/results_cross_species/synteny"
     role: "intervals"
     species_scoped: false
-    description: "BUSCO single-copy ortholog gene-order breakpoints (synteny_18sp_breakpoints.tsv, synteny_5sp_breakpoints.tsv). Independent method family to BP_ATLAS; used for Tier 1 cross-method validation."
+    description: "WIRED 2026-05-29 -> real synteny/ (was the empty flat 03_gene_order/). Gene-order breakpoints at {panel}/breakpoints/synteny_{panel}_breakpoints.tsv (5sp/9sp/18sp); Oxford grids at {panel}/atlas_export/oxford_{panel}.json. NOTE: geneanchor_{breakpoints,chunks,pairs}_v1.json + focal_busco_anchors_v1.json have NO source on E: yet — bundled-fixture fallback."
 
   # 2026-05-29: roots added to close cross-species wiring gaps — these
   # five were referenced by cross-species layers.registry.json but had no
@@ -289,34 +289,34 @@ roots:
   # the 00..03 sequence above. See docs/DATA_LAYOUT.md for the per-layer
   # path_under_root breakdown.
   cross_species_te:
-    path: "/mnt/e/results_cross_species/04_te"
+    path: "/mnt/e/results_cross_species/te"
     role: "intervals"
     species_scoped: false
-    description: "Cross-species TE landscape tables: TE_data_figure1_toky_v2.tsv, combined_data_joined.tsv, te_gc.tsv, te_density_by_LG_species.tsv, plus per-focal breakpoint_te_cross/{focal_genome}/ enrichment + resolution tables and centromeres/centromeres_complete_{focal_short}.tsv."
+    description: "WIRED 2026-05-29 -> real te/ (was the empty flat 04_te/; te.tar extracted in place). Landscape tables under module/data/ (TE_data_figure1_toky_v2.tsv, combined_data_joined.tsv, te_gc.tsv, te_density_by_LG_species.tsv); centromeres_complete_{focal_short}.tsv at the te/ root. NOTE: breakpoint_te_cross/enrichment/resolution expect a per-focal directory of 6 TE12 TSVs — only single breakpoint_TE_cross_{Gar,Mac}.tsv present, so those layers stay on the bundled fixture until the TE12 dir is materialised."
 
   cross_species_mashmap:
-    path: "/mnt/e/results_cross_species/05_mashmap"
+    path: "/mnt/e/results_cross_species/mashmap_panel_triage_results/mashmap_fusion_scan_lines/reports_best_refs_and_1to2"
     role: "intervals"
     species_scoped: false
-    description: "mashmap fusion/fission scan: fusion_fission_candidates_1to2.tsv, best_refs_per_query.tsv, and per-request pair/{request_id}.json (some emitted as synthetic stubs on demand)."
+    description: "WIRED 2026-05-29 -> real mashmap_panel_triage_results/.../reports_best_refs_and_1to2/ (was the empty flat 05_mashmap/). fusion_fission_candidates_1to2.tsv + best_refs_per_query.tsv live here directly. pair/{request_id}.json is the on-demand run_mashmap_pair action output (synthetic stub when mashmap is off PATH)."
 
   cross_species_breakpoint_genes:
     path: "/mnt/e/results_cross_species/06_breakpoint_genes"
     role: "intervals"
     species_scoped: false
-    description: "Per-focal breakpoint gene-overlap tables: breakpoint_gene_analysis_{focal_genome}.tsv."
+    description: "NO E: SOURCE 2026-05-29 — breakpoint_gene_analysis_{focal_genome}.tsv is produced by the breakpoint_gene_analysis action (needs a genome-atlas GFF3) and has not been run against E: yet. Stays the empty flat dir; the layer falls back to the bundled fixture (data/breakpoint_genes/) / 404."
 
   cross_species_phylogeny:
-    path: "/mnt/e/results_cross_species/07_phylogeny"
+    path: "/mnt/e/results_cross_species/phylogeny"
     role: "intervals"
     species_scoped: false
-    description: "BUSCO phylogeny outputs: busco_tree_v1__{alignment}.json, busco_qc_v1.json, busco_presence_absence_v1.json."
+    description: "WIRED 2026-05-29 -> real phylogeny/. The busco extractors were run against the real E: inputs to materialise three envelopes in place: busco_tree_v1__AA.json (from supermatrix_AA/AA_LG_R3.treefile), busco_tree_v1__ASTRAL_AA.json (from species_tree_AA_ASTRAL.nwk), and busco_presence_absence_v1.json (from matrix_busco_absence_presence_catfish.tsv) — all schema-validated. STILL ON BUNDLED FIXTURES: busco_tree NT + ASTRAL_NT (the NT supermatrix IQ-TREE run is not finished on E: — only SUPERMATRIX.fasta/phylip alignments exist, no .treefile) and busco_qc_v1 (no input_BUSCO_QC.tsv on E:; rebuild it from the per-genome run_*/short_summary.json via count_busco_edited.py, then run extract_busco_qc)."
 
   cross_species_inventory:
     path: "/mnt/e/results_cross_species/08_inventory"
     role: "intervals"
     species_scoped: false
-    description: "Single-file run inventory (inventory_v1.json) enumerating what each cross-species pipeline produced."
+    description: "NO E: SOURCE 2026-05-29 — inventory_v1 is in-memory (produced_by null); the single-file export inventory_v1.json is not written to E:. Stays the empty flat dir."
 
   evolution_age_busco4d:
     path: "/mnt/e/results_evolution/01_age_busco_4d"

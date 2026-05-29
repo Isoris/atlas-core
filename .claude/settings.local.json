@@ -628,7 +628,17 @@
       "Bash(python3 test_cohort_f_stats_smoke.py)",
       "PowerShell($base=\"http://localhost:8000/atlases/inversion/pages\"; try { $c=\\(Invoke-WebRequest \"$base/discovery/local_pca_dosage/candidates.js\" -UseBasicParsing -TimeoutSec 5\\).Content; $s=\\(Invoke-WebRequest \"$base/discovery/haplotype_regimes/short_range.js\" -UseBasicParsing -TimeoutSec 5\\).Content; $r=\\(Invoke-WebRequest \"$base/classification/candidate_regimes.js\" -UseBasicParsing -TimeoutSec 5\\).Content; Write-Output \\(\"candidates.js exports helper: \" + \\($c -match \"export function loadPersistedCandidatesForChrom\"\\)\\); Write-Output \\(\"short_range.js imports+uses fallback: \" + \\(\\($s -match \"loadPersistedCandidatesForChrom\"\\) -and \\($s -match \"hydrate\"\\)\\)\\); Write-Output \\(\"candidate_regimes.js uses fallback: \" + \\($r -match \"loadPersistedCandidatesForChrom\"\\)\\) } catch { Write-Output \"ERR: $\\($_.Exception.Message\\)\" })",
       "Bash(bash -lc 'bash scripts/_run_all_tests.sh')",
-      "PowerShell($ErrorActionPreference='Continue'; $n=\\(Get-Command node -ErrorAction SilentlyContinue\\); if\\($n\\){ node --check \"C:\\\\Users\\\\quent\\\\Desktop\\\\population-atlas\\\\atlases\\\\population\\\\pages\\\\structure\\\\page_inbreeding.js\"; if\\($?\\){ \"page_inbreeding.js: syntax OK\" } } else { \"node not on PATH\" })"
+      "PowerShell($ErrorActionPreference='Continue'; $n=\\(Get-Command node -ErrorAction SilentlyContinue\\); if\\($n\\){ node --check \"C:\\\\Users\\\\quent\\\\Desktop\\\\population-atlas\\\\atlases\\\\population\\\\pages\\\\structure\\\\page_inbreeding.js\"; if\\($?\\){ \"page_inbreeding.js: syntax OK\" } } else { \"node not on PATH\" })",
+      "Bash(git -C \"C:/Users/quent/Desktop/other-atlas\" init -b main)",
+      "Bash(wsl.exe -e bash -lc ' *)",
+      "Bash(ls -la data/)",
+      "Bash(find . -name \"embedded_tables.json\")",
+      "Bash(find . -name \"texture_metrics.json\" -o -name \"roh_gene_overlap.json\")",
+      "Bash(grep -E \" data\\( |$|->\\)\")",
+      "Bash(wsl.exe -e bash -lc \"ls -la /mnt/e/results_relatedness/ ; echo '--- parent ---' ; ls /mnt/e/results_relatedness/05_ngsrelate/ 2>/dev/null | head ; echo '--- find qopt anywhere on e ---' ; find /mnt/e/results_relatedness -maxdepth 2 -iname '*.qopt' -o -iname '*qopt*' 2>/dev/null | head\")",
+      "Bash(rm -v /e/embedded_tables.json /e/divergence_network.json /e/functional_burden.json /e/roh_gene_overlap.json /e/texture_metrics.json /e/README.md 2>&1; echo \"=== confirm removed ===\"; ls /e/embedded_tables.json /e/README.md 2>&1)",
+      "Bash(mkdir -p atlases/diversity/data)",
+      "Bash(cp -v data/embedded_tables.json data/texture_metrics.json data/functional_burden.json data/roh_gene_overlap.json data/divergence_network.json atlases/diversity/data/)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",
@@ -654,7 +664,8 @@
       "c:\\Users\\quent\\Desktop\\pods-atlas\\atlases\\pods\\pages\\scenario",
       "c:\\Users\\quent\\Desktop\\cross-species-atlas\\atlases\\cross-species\\registries\\schemas",
       "C:\\Users\\quent\\Desktop\\atlas-core\\core",
-      "c:\\Users\\quent\\Desktop\\loads-atlas\\atlases\\loads"
+      "c:\\Users\\quent\\Desktop\\loads-atlas\\atlases\\loads",
+      "E:\\"
     ]
   }
 }

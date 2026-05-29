@@ -280,7 +280,7 @@ roots:
     path: "/mnt/e/results_cross_species/synteny"
     role: "intervals"
     species_scoped: false
-    description: "WIRED 2026-05-29 -> real synteny/ (was the empty flat 03_gene_order/). Gene-order breakpoints at {panel}/breakpoints/synteny_{panel}_breakpoints.tsv (5sp/9sp/18sp); Oxford grids at {panel}/atlas_export/oxford_{panel}.json. NOTE: geneanchor_{breakpoints,chunks,pairs}_v1.json + focal_busco_anchors_v1.json have NO source on E: yet — bundled-fixture fallback."
+    description: "WIRED 2026-05-29 -> real synteny/ (was the empty flat 03_gene_order/). Gene-order breakpoints at {panel}/breakpoints/synteny_{panel}_breakpoints.tsv (5sp/9sp/18sp); Oxford grids at {panel}/atlas_export/oxford_{panel}.json. geneanchor_breakpoints_v1 was MATERIALISED for all 3 panels (extract_geneanchor_breakpoints over the synteny_<N>sp_breakpoints.tsv) into geneanchor/{panel}/geneanchor_breakpoints_v1.json — needed a one-line extractor fix so bare-integer ref_chrom ('1'..'28') joins the LG01..LG28 density axis. STILL NO E: SOURCE (bundled-fixture fallback): geneanchor_chunks_v1 (needs T2_exchanged_chunks.tsv), geneanchor_pairs_v1 (needs the 153 all-vs-all macrosyntR figures dir), focal_busco_anchors_v1 (needs the gar×mac BUSCO anchor TSV) — none present on E:."
 
   # 2026-05-29: roots added to close cross-species wiring gaps — these
   # five were referenced by cross-species layers.registry.json but had no

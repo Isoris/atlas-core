@@ -689,7 +689,8 @@
       "Bash(python3 -c \"import yaml; d=yaml.safe_load\\(open\\('master_config.yaml'\\)\\); r=d.get\\('roots',d\\); print\\('master_config.yaml OK —', sum\\(1 for k in \\(r.get\\('roots',{}\\) if 'roots' in r else r\\) if str\\(k\\).startswith\\('cross_species'\\)\\), 'cross_species roots'\\)\")",
       "Bash(python3 extract_busco_tree.py --treefile __TRACKED_VAR__/supermatrix_AA/AA_LG_R3.treefile --alignment AA --method 'IQ-TREE ML' --out __TRACKED_VAR__/busco_tree_v1__AA.json)",
       "Bash(python3 extract_busco_tree.py --treefile __TRACKED_VAR__/species_tree_AA_ASTRAL.nwk --alignment ASTRAL_AA --method 'ASTER coalescent' --out __TRACKED_VAR__/busco_tree_v1__ASTRAL_AA.json)",
-      "Bash(python3 extract_busco_presence_absence.py --matrix-tsv __TRACKED_VAR__/matrix_busco_absence_presence_catfish.tsv --out __TRACKED_VAR__/busco_presence_absence_v1.json)"
+      "Bash(python3 extract_busco_presence_absence.py --matrix-tsv __TRACKED_VAR__/matrix_busco_absence_presence_catfish.tsv --out __TRACKED_VAR__/busco_presence_absence_v1.json)",
+      "Bash(python3 tests/test_te_extractors.py)"
     ],
     "additionalDirectories": [
       "c:\\Users\\quent\\Desktop\\genome-atlas\\atlases\\genome\\pages\\assembly",

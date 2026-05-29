@@ -108,12 +108,12 @@ layers (cross_species_atlas)
 
 analysis_registry
 └── cross_species_breakpoint_detection      // engine=subprocess
-                                            // adapter: analysis/cross_species_breakpoints/
+                                            // adapter: analysis/cross_species_breakpoint_detection/
 ```
 
 The adapter's `compute.js` does NOT reimplement the pipeline. It
 returns a SUBPROCESS recipe: scripts + args. The real pipeline lives in
-`analysis/cross_species_breakpoints/legacy_scripts/` and is the user's
+`analysis/cross_species_breakpoint_detection/legacy_scripts/` and is the user's
 hand-tuned chain (preserved as-is).
 
 ---
@@ -153,8 +153,12 @@ atlas boundary; claims do not.
 
 ## §8 What's deferred
 
-- **BP4 population overlap** (intersect with 226-cohort haploblocks) —
-  next chat, scoped to the hatchery cohort with strict cohort boundary.
+- **BP4 population overlap** — chain is now REGISTERED (analysis_id
+  `bp4_population_overlap`, status `experimental`, runner not yet
+  wired). Chain audit + page 13 surface it as a planned chain whose
+  inputs (`breakpoint_clusters` + `long_range_haplotype_regime`) are
+  declared and discoverable. Real run happens once
+  `STEP_BP4_overlap_population.py` is wired through the dispatcher.
 - **BP5 figures** (R ribbons, dotplots, montages) — figure chat.
 - **C. macrocephalus wild cohort** — future paper.
 

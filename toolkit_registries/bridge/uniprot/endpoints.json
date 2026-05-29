@@ -1,0 +1,58 @@
+{
+  "schema_version": "bridge_endpoint_v1",
+  "db_id": "uniprot",
+  "endpoints": [
+    {
+      "endpoint_id":  "uniprot_entry",
+      "label":        "UniProt entry by accession",
+      "method":       "GET",
+      "path":         "/uniprotkb/{accession}",
+      "params": {
+        "accession": {"required": true, "kind": "path"},
+        "format":    {"required": false, "kind": "query", "default": "json"}
+      },
+      "returns_layer": "uniprot_entries",
+      "cache_seconds": 604800,
+      "describes":    "Full UniProtKB record for a single accession — sequence, features, cross-references, GO annotations, keywords."
+    },
+    {
+      "endpoint_id":  "uniprot_search",
+      "label":        "UniProt search (gene name, organism, …)",
+      "method":       "GET",
+      "path":         "/uniprotkb/search",
+      "params": {
+        "query":  {"required": true,  "kind": "query"},
+        "format": {"required": false, "kind": "query", "default": "json"},
+        "size":   {"required": false, "kind": "query", "default": 25},
+        "fields": {"required": false, "kind": "query"}
+      },
+      "returns_layer": "uniprot_entries",
+      "cache_seconds": 3600,
+      "describes":    "Query UniProtKB with the UniProt query language (e.g. 'gene:tp53 AND organism_id:9606'). USE TO RESOLVE GENE NAMES TO ACCESSIONS — required before any InterPro lookup."
+    },
+    {
+      "endpoint_id":  "uniprot_isoforms",
+      "label":        "Isoforms for a UniProt entry",
+      "method":       "GET",
+      "path":         "/uniprotkb/{accession}/isoforms",
+      "params": {
+        "accession": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "uniprot_isoforms",
+      "cache_seconds": 604800,
+      "describes":    "All annotated isoforms (alternative splicing products) for a given protein."
+    },
+    {
+      "endpoint_id":  "uniprot_proteome",
+      "label":        "UniProt reference proteome",
+      "method":       "GET",
+      "path":         "/proteomes/{accession}",
+      "params": {
+        "accession": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "uniprot_proteomes",
+      "cache_seconds": 2592000,
+      "describes":    "Reference proteome record (e.g. UP000000437 for Danio rerio). Lists all proteins for an organism + the underlying assembly."
+    }
+  ]
+}

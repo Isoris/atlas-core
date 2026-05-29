@@ -1,0 +1,56 @@
+{
+  "schema_version": "bridge_endpoint_v1",
+  "db_id": "reactome",
+  "endpoints": [
+    {
+      "endpoint_id":  "reactome_top_pathways_by_species",
+      "label":        "Top-level pathways for a species",
+      "method":       "GET",
+      "path":         "/data/pathways/top/{species}",
+      "params": {
+        "species": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "reactome_pathways",
+      "cache_seconds": 604800,
+      "describes":    "Top-level pathway tree rooted at the species. species ∈ {Homo sapiens, Mus musculus, Danio rerio, ...} (uses scientific names). For catfish, fall back to Danio rerio (zebrafish) as the closest annotated teleost."
+    },
+    {
+      "endpoint_id":  "reactome_pathway",
+      "label":        "Reactome pathway by stable id",
+      "method":       "GET",
+      "path":         "/data/pathway/{stable_id}/containedEvents",
+      "params": {
+        "stable_id": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "reactome_pathway_events",
+      "cache_seconds": 604800,
+      "describes":    "All child events (sub-pathways + reactions) under a given pathway. stable_id is like 'R-HSA-1640170'."
+    },
+    {
+      "endpoint_id":  "reactome_query",
+      "label":        "Enhanced query (resolve any Reactome identifier)",
+      "method":       "GET",
+      "path":         "/data/query/enhanced/{stable_id}",
+      "params": {
+        "stable_id": {"required": true, "kind": "path"}
+      },
+      "returns_layer": "reactome_query_records",
+      "cache_seconds": 604800,
+      "describes":    "Resolves a Reactome stable id of any class (Event, PhysicalEntity, ReferenceEntity, …) into the full enriched record."
+    },
+    {
+      "endpoint_id":  "reactome_interactors_for_uniprot",
+      "label":        "Static interactor catalogue for a UniProt accession",
+      "method":       "GET",
+      "path":         "/interactors/static/molecule/{accession}/details",
+      "params": {
+        "accession": {"required": true,  "kind": "path"},
+        "page":      {"required": false, "kind": "query", "default": -1},
+        "pageSize":  {"required": false, "kind": "query", "default": -1}
+      },
+      "returns_layer": "reactome_interactors",
+      "cache_seconds": 86400,
+      "describes":    "Reactome's static interactor catalogue (IntAct sources) for a given UniProt protein. Lighter than the live PPI service."
+    }
+  ]
+}

@@ -203,6 +203,8 @@
   <a href="workspace_health.html"><span class="num">10.</span> Workspace Health</a>
   <a href="queue.html"><span class="num">11.</span> Queue</a>
   <a href="manuscript.html"><span class="num">12.</span> Manuscript</a>
+  <a href="adapters.html"><span class="num">13.</span> Adapters</a>
+  <a href="plans.html"><span class="num">14.</span> Plans</a>
   <span class="tag">atlas-core / page 8 — Manager (products + questions)</span>
 </nav>
 
@@ -228,7 +230,7 @@
       <h2>Products <span class="n" id="count-products">0</span></h2>
       <div class="filter-bar">
         filter
-        <input type="text" id="filter-product" placeholder="substring…" size="20">
+        <input type="text" id="filter-product" placeholder="substring…" size="20" data-clear="true">
         <select id="filter-status">
           <option value="">any status</option>
           <option value="ready">ready</option>
@@ -732,7 +734,12 @@ function openQuestionDetail(qid) { state.detail = { kind: "question", id: qid };
 </script>
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="registry-cache.js"></script>
+<script defer src="loader.js"></script>
+<script defer src="filters.js"></script>
+<script defer src="conductor.js"></script>
 <script defer src="scope.js"></script>
 <script defer src="atlas-colors.js"></script>
+<section><div data-slot="conductor-demo" data-max-panels="3" style="padding:18px 24px"></div></section>
 </body>
 </html>

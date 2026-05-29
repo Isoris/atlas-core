@@ -1,8 +1,8 @@
 {
   "schema_version": "connection_map_v1",
   "registry_root": "/home/user/atlas-core/toolkit_registries/relatedness",
-  "n_nodes": 299,
-  "n_edges": 231,
+  "n_nodes": 323,
+  "n_edges": 255,
   "warnings": [],
   "nodes": [
     {
@@ -93,7 +93,7 @@
       "id": "long_range_haplotype_regime",
       "type": "layer",
       "label": "Long-range haplotype regime",
-      "status": "stub"
+      "status": "experimental"
     },
     {
       "id": "family_hub",
@@ -882,6 +882,18 @@
       "status": "experimental"
     },
     {
+      "id": "gene_conversion_tracts",
+      "type": "layer",
+      "label": "Gene-conversion tracts (NCO classifications)",
+      "status": "experimental"
+    },
+    {
+      "id": "cross_species_226_overlap",
+      "type": "layer",
+      "label": "Cross-species \u00d7 226-cohort haploblock overlap",
+      "status": "planned"
+    },
+    {
       "id": "ngsrelate",
       "type": "analysis",
       "label": "ngsRelate \u2014 pairwise relatedness from genotype likelihoods",
@@ -933,13 +945,13 @@
       "id": "karyotype_auto_caller",
       "type": "analysis",
       "label": "Karyotype auto caller",
-      "status": "stub"
+      "status": "experimental"
     },
     {
       "id": "karyotype_polarizer",
       "type": "analysis",
       "label": "Karyotype polarizer",
-      "status": "stub"
+      "status": "experimental"
     },
     {
       "id": "inversion_pair_incompatibility",
@@ -1584,6 +1596,18 @@
       "status": "experimental"
     },
     {
+      "id": "ngstracts_step_trc_01",
+      "type": "analysis",
+      "label": "ngsTracts STEP_TRC_01 \u2014 gene-conversion tract classifier",
+      "status": "experimental"
+    },
+    {
+      "id": "bp4_population_overlap",
+      "type": "analysis",
+      "label": "BP4 \u2014 cross-species \u00d7 226-cohort haploblock overlap",
+      "status": "experimental"
+    },
+    {
       "id": "mendelian_page_load",
       "type": "hook",
       "label": "Mendelian panel",
@@ -1663,6 +1687,83 @@
       "layer_id": "fst_windows"
     },
     {
+      "id": "atlas_summary_card",
+      "type": "panel",
+      "label": "Atlas summary (conductor-spawned)",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "cohort_summary_card",
+      "type": "panel",
+      "label": "Cohort hierarchy",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "adapter_completeness_card",
+      "type": "panel",
+      "label": "Adapter completeness",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "manuscript_chunks_summary_card",
+      "type": "panel",
+      "label": "Manuscript chunks coverage",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "plans_summary_card",
+      "type": "panel",
+      "label": "Plans \u2014 actionable count",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "bridge_summary_card",
+      "type": "panel",
+      "label": "Bridge \u2014 per-DB call summary",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "addons_summary_card",
+      "type": "panel",
+      "label": "Addons \u2014 per-kind summary",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "registry_health_strip",
+      "type": "panel",
+      "label": "Registry health (footer strip)",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "panel_coverage_card",
+      "type": "panel",
+      "label": "Panel coverage by page",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "candidate_aggregate_card",
+      "type": "panel",
+      "label": "Candidate aggregate (all atlases)",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
+      "id": "registered_objects_card",
+      "type": "panel",
+      "label": "Registered objects",
+      "status": "experimental",
+      "layer_id": null
+    },
+    {
       "id": "conversation",
       "type": "page",
       "label": "Conversation",
@@ -1703,6 +1804,48 @@
       "type": "page",
       "label": "Graph builder",
       "status": "active"
+    },
+    {
+      "id": "readiness",
+      "type": "page",
+      "label": "Readiness",
+      "status": "active"
+    },
+    {
+      "id": "layer_connector",
+      "type": "page",
+      "label": "Layer connector",
+      "status": "active"
+    },
+    {
+      "id": "workspace_health",
+      "type": "page",
+      "label": "Workspace health",
+      "status": "active"
+    },
+    {
+      "id": "queue",
+      "type": "page",
+      "label": "Queue",
+      "status": "active"
+    },
+    {
+      "id": "manuscript",
+      "type": "page",
+      "label": "Manuscript",
+      "status": "active"
+    },
+    {
+      "id": "adapters",
+      "type": "page",
+      "label": "Adapters",
+      "status": "active"
+    },
+    {
+      "id": "plans",
+      "type": "page",
+      "label": "Plans",
+      "status": "experimental"
     },
     {
       "id": "discovery_karyotype_package",
@@ -1788,6 +1931,20 @@
       "color": "#4a5d7e"
     },
     {
+      "id": "heterozygosity_atlas",
+      "type": "atlas",
+      "label": "Heterozygosity Atlas",
+      "status": "experimental",
+      "color": "#5fa86b"
+    },
+    {
+      "id": "pods_atlas",
+      "type": "atlas",
+      "label": "PODs Atlas",
+      "status": "experimental",
+      "color": "#a64ca6"
+    },
+    {
       "id": "cross_species_breakpoint_detection_adapter",
       "type": "adapter",
       "label": "Cross-species breakpoint detection",
@@ -1836,7 +1993,7 @@
       "id": "karyotype_auto_caller_adapter",
       "type": "adapter",
       "label": "Karyotype auto caller",
-      "status": "stub",
+      "status": "experimental",
       "input_layer_types": [
         "candidate_registry",
         "chain_evidence",
@@ -1851,7 +2008,7 @@
       "id": "karyotype_polarizer_adapter",
       "type": "adapter",
       "label": "Karyotype polarizer",
-      "status": "stub",
+      "status": "experimental",
       "input_layer_types": [
         "unpolarized_karyotype_calls",
         "reference_genome_layer"
@@ -2618,6 +2775,26 @@
       "kind": "output"
     },
     {
+      "from": "ngstracts_step_trc_01",
+      "to": "gene_conversion_tracts",
+      "kind": "output"
+    },
+    {
+      "from": "breakpoint_clusters",
+      "to": "bp4_population_overlap",
+      "kind": "input"
+    },
+    {
+      "from": "long_range_haplotype_regime",
+      "to": "bp4_population_overlap",
+      "kind": "input"
+    },
+    {
+      "from": "bp4_population_overlap",
+      "to": "cross_species_226_overlap",
+      "kind": "output"
+    },
+    {
       "from": "karyotype_calls",
       "to": "mendelian_page_load",
       "kind": "hook_required"
@@ -2776,6 +2953,106 @@
       "from": "fst_windows",
       "to": "fst_panel",
       "kind": "panel_renders"
+    },
+    {
+      "from": "atlases.jsonl",
+      "to": "atlas_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "module_registry.jsonl",
+      "to": "atlas_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "cohorts.jsonl",
+      "to": "cohort_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "atlases.jsonl",
+      "to": "cohort_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "analysis_registry.jsonl",
+      "to": "adapter_completeness_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "manuscript_chunks.jsonl",
+      "to": "manuscript_chunks_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "references.jsonl",
+      "to": "manuscript_chunks_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "02_queue/plans/index.json",
+      "to": "plans_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "external_databases.jsonl",
+      "to": "bridge_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "02_queue/bridge_log.jsonl",
+      "to": "bridge_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "addons.jsonl",
+      "to": "addons_summary_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "atlases.jsonl",
+      "to": "registry_health_strip",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "addons.jsonl",
+      "to": "registry_health_strip",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "external_databases.jsonl",
+      "to": "registry_health_strip",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "panels.jsonl",
+      "to": "panel_coverage_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "spawn_rules.jsonl",
+      "to": "panel_coverage_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "pages.jsonl",
+      "to": "panel_coverage_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "02_queue/candidates/",
+      "to": "candidate_aggregate_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "derived_objects.jsonl",
+      "to": "registered_objects_card",
+      "kind": "panel_reads"
+    },
+    {
+      "from": "layer_registry.jsonl",
+      "to": "registered_objects_card",
+      "kind": "panel_reads"
     },
     {
       "from": "relatedness_chain_view",
@@ -3047,7 +3324,7 @@
       "trigger_policy": "manual",
       "status": "experimental",
       "notes": "\"The pipeline runs on the comparative cohort (18 genomes + hybrid subgenomes); it produces COORDINATES that the hatchery LG01 x LG28 work consumes",
-      "_path": "analysis/cross_species_breakpoints/adapter_atlas.js"
+      "_path": "analysis/cross_species_breakpoint_detection/adapter_atlas.js"
     },
     {
       "analysis_id": "inversion_pair_incompatibility",
@@ -3104,7 +3381,7 @@
       "atlas_id": "inversion_atlas",
       "schema_version": "adapter_atlas_v1",
       "label": "Karyotype auto caller",
-      "description": "Calls per-sample karyotype (0/1/2) for each candidate from dosage + window-band signals + the candidate_registry.",
+      "description": "\"Calls per-sample karyotype (0/1/2) for each candidate from dosage + window-band signals + the candidate_registry. v0 uses fixed dosage_breaks + a (chain_score",
       "input_layer_types": [
         "candidate_registry",
         "chain_evidence",
@@ -3120,7 +3397,7 @@
       "example_input": "./example_input.json",
       "example_output": "./example_output.json",
       "trigger_policy": "manual",
-      "status": "stub",
+      "status": "experimental",
       "_path": "analysis/karyotype_auto_caller/adapter_atlas.js"
     },
     {
@@ -3129,7 +3406,8 @@
       "atlas_id": "inversion_atlas",
       "schema_version": "adapter_atlas_v1",
       "label": "Karyotype polarizer",
-      "description": "Polarises unpolarized_karyotype_calls against a reference / ancestral comparison so 0/1/2 carries direction.",
+      "description": "\"Polarises unpolarized_karyotype_calls so 0/1/2 carries direction (0 = reference-like",
+      "2 = derived/inverted-like). Decision tree": "reference_match (ref_dosage) / outgroup_vote / majority_allele / force_unchanged. Heterozygotes (class 1) are symmetric and never flip; NA propagates.\"",
       "input_layer_types": [
         "unpolarized_karyotype_calls",
         "reference_genome_layer"
@@ -3143,7 +3421,7 @@
       "example_input": "./example_input.json",
       "example_output": "./example_output.json",
       "trigger_policy": "manual",
-      "status": "stub",
+      "status": "experimental",
       "_path": "analysis/karyotype_polarizer/adapter_atlas.js"
     }
   ],

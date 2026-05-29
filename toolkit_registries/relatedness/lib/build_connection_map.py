@@ -152,8 +152,12 @@ class ConnectionMapBuilder:
         # 2) panel cross-check
         layer_ids = {l["layer_id"] for l in self.layers}
         for p in self.panels:
-            if p.get("layer_id") not in layer_ids:
-                warnings.append(f"panel {p['panel_id']!r} layer_id {p.get('layer_id')!r} not in layer_registry")
+            # Spec-v1 panels (data_source.kind in {registry, scope, chain_audit, …})
+            # legitimately have no layer_id. Only warn for layer-bound panels.
+            if p.get("layer_id") is None or "data_source" in p:
+                continue
+            if p["layer_id"] not in layer_ids:
+                warnings.append(f"panel {p['panel_id']!r} layer_id {p['layer_id']!r} not in layer_registry")
 
         # 3) page cross-check
         panel_ids = {p["panel_id"] for p in self.panels}
@@ -180,7 +184,13 @@ class ConnectionMapBuilder:
             for lid in _csv(h.get("requires_layers")): edges.append({"from": lid, "to": hid, "kind": "hook_required"})
             for lid in _csv(h.get("optional_layers")): edges.append({"from": lid, "to": hid, "kind": "hook_optional"})
         for p in self.panels:
-            edges.append({"from": p["layer_id"], "to": p["panel_id"], "kind": "panel_renders"})
+            # Spec-v1 panels use data_source.kind instead of a direct layer_id
+            # (e.g. data_source.kind ∈ {registry, scope, chain_audit, …}).
+            # Only emit a panel_renders edge for layer-bound panels.
+            if p.get("layer_id"):
+                edges.append({"from": p["layer_id"], "to": p["panel_id"], "kind": "panel_renders"})
+            for lid in (p.get("data_source", {}) or {}).get("reads", []):
+                edges.append({"from": lid, "to": p["panel_id"], "kind": "panel_reads"})
         for pg in self.pages:
             for pn in (pg.get("panels") or []):
                 pid = pn.get("panel_id") if isinstance(pn, dict) else pn

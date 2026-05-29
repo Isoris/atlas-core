@@ -1,0 +1,53 @@
+{
+  "schema_version": "bridge_endpoint_v1",
+  "db_id": "pubmed",
+  "endpoints": [
+    {
+      "endpoint_id":  "pubmed_search",
+      "label":        "PubMed search",
+      "method":       "GET",
+      "path":         "/esearch.fcgi",
+      "params": {
+        "db":      {"required": false, "kind": "query", "default": "pubmed"},
+        "term":    {"required": true,  "kind": "query"},
+        "retmax":  {"required": false, "kind": "query", "default": 20},
+        "retmode": {"required": false, "kind": "query", "default": "json"},
+        "api_key": {"required": false, "kind": "query"}
+      },
+      "returns_layer": "pubmed_search_hits",
+      "cache_seconds": 3600,
+      "describes":    "PubMed search; returns PMID idlist for an Entrez query (e.g. 'Clarias gariepinus[ORGN] AND inversion'). db default = 'pubmed' so callers can omit it."
+    },
+    {
+      "endpoint_id":  "pubmed_summary",
+      "label":        "PubMed summary by PMID",
+      "method":       "GET",
+      "path":         "/esummary.fcgi",
+      "params": {
+        "db":      {"required": false, "kind": "query", "default": "pubmed"},
+        "id":      {"required": true,  "kind": "query"},
+        "retmode": {"required": false, "kind": "query", "default": "json"},
+        "api_key": {"required": false, "kind": "query"}
+      },
+      "returns_layer": "pubmed_summaries",
+      "cache_seconds": 2592000,
+      "describes":    "DocSum records for PMIDs. id is comma-separated. Cheap metadata lookup for citations in references.jsonl."
+    },
+    {
+      "endpoint_id":  "pubmed_abstract",
+      "label":        "PubMed abstract by PMID",
+      "method":       "GET",
+      "path":         "/efetch.fcgi",
+      "params": {
+        "db":      {"required": false, "kind": "query", "default": "pubmed"},
+        "id":      {"required": true,  "kind": "query"},
+        "rettype": {"required": false, "kind": "query", "default": "abstract"},
+        "retmode": {"required": false, "kind": "query", "default": "text"},
+        "api_key": {"required": false, "kind": "query"}
+      },
+      "returns_layer": "pubmed_abstracts",
+      "cache_seconds": 2592000,
+      "describes":    "Full abstract + metadata for one or more PMIDs. retmode=text returns formatted abstracts; retmode=xml for parsed records."
+    }
+  ]
+}

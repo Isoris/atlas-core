@@ -1,0 +1,483 @@
+{
+  "schema_version": "chain_graph_v1",
+  "rewritten_at": "2026-05-28T15:13:12Z",
+  "n_nodes": 26,
+  "n_edges": 46,
+  "nodes": [
+    {
+      "id": "nco_inside_vs_outside_inversion",
+      "kind": "chain",
+      "label": "NCO enrichment inside vs outside inversion candidate",
+      "tier": "one",
+      "n_required": 1,
+      "n_unready": 1
+    },
+    {
+      "id": "intrachromosomal_co_karyotype_effect",
+      "kind": "chain",
+      "label": "CO_rate(het) vs CO_rate(non-het) per focal inversion \u00d7 tested chrom",
+      "tier": "one",
+      "n_required": 2,
+      "n_unready": 1
+    },
+    {
+      "id": "interchromosomal_inversion_effect",
+      "kind": "chain",
+      "label": "HEADLINE: focal inversion karyotype \u2192 meiosis on OTHER chromosomes",
+      "tier": "multi",
+      "n_required": 4,
+      "n_unready": 3
+    },
+    {
+      "id": "snp_q_support",
+      "kind": "chain",
+      "label": "snp_q_support",
+      "tier": "ready",
+      "n_required": 1,
+      "n_unready": 0
+    },
+    {
+      "id": "internal_ancestry_composition",
+      "kind": "chain",
+      "label": "internal_ancestry_composition",
+      "tier": "ready",
+      "n_required": 1,
+      "n_unready": 0
+    },
+    {
+      "id": "inversion_candidate_classifier",
+      "kind": "chain",
+      "label": "inversion_candidate_classifier",
+      "tier": "one",
+      "n_required": 1,
+      "n_unready": 1
+    },
+    {
+      "id": "hobs_hwe_pipeline",
+      "kind": "chain",
+      "label": "hobs_hwe_pipeline",
+      "tier": "ready",
+      "n_required": 1,
+      "n_unready": 0
+    },
+    {
+      "id": "hobs_hwe_candidate_overlay",
+      "kind": "chain",
+      "label": "hobs_hwe_candidate_overlay",
+      "tier": "one",
+      "n_required": 1,
+      "n_unready": 1
+    },
+    {
+      "id": "karyotype_resolution",
+      "kind": "chain",
+      "label": "karyotype_resolution",
+      "tier": "multi",
+      "n_required": 2,
+      "n_unready": 2
+    },
+    {
+      "id": "instant_q_boundary_scan",
+      "kind": "chain",
+      "label": "instant_q_boundary_scan",
+      "tier": "ready",
+      "n_required": 1,
+      "n_unready": 0
+    },
+    {
+      "id": "inversion_groupwise_popstats",
+      "kind": "chain",
+      "label": "inversion_groupwise_popstats",
+      "tier": "ready",
+      "n_required": 1,
+      "n_unready": 0
+    },
+    {
+      "id": "relatedness_per_chrom_adaptive",
+      "kind": "chain",
+      "label": "relatedness_per_chrom_adaptive",
+      "tier": "ready",
+      "n_required": 1,
+      "n_unready": 0
+    },
+    {
+      "id": "per_sample_diversity_assembly",
+      "kind": "chain",
+      "label": "per_sample_diversity_assembly",
+      "tier": "ready",
+      "n_required": 0,
+      "n_unready": 0
+    },
+    {
+      "id": "ancestry_het_test_battery",
+      "kind": "chain",
+      "label": "ancestry_het_test_battery",
+      "tier": "ready",
+      "n_required": 0,
+      "n_unready": 0
+    },
+    {
+      "id": "cohort_master_assembly",
+      "kind": "chain",
+      "label": "cohort_master_assembly",
+      "tier": "ready",
+      "n_required": 0,
+      "n_unready": 0
+    },
+    {
+      "id": "hpp_offspring_pipeline",
+      "kind": "chain",
+      "label": "hpp_offspring_pipeline",
+      "tier": "ready",
+      "n_required": 0,
+      "n_unready": 0
+    },
+    {
+      "id": "bp_atlas_pipeline",
+      "kind": "chain",
+      "label": "BP_ATLAS chain (sequence method, full)",
+      "tier": "ready",
+      "n_required": 0,
+      "n_unready": 0
+    },
+    {
+      "id": "gene_order_consolidation",
+      "kind": "chain",
+      "label": "Gene-order + cross-method chain",
+      "tier": "one",
+      "n_required": 1,
+      "n_unready": 1
+    },
+    {
+      "id": "regime_mendelian_annotation",
+      "kind": "chain",
+      "label": "Per-regime Mendelian annotation (trios + families)",
+      "tier": "ready",
+      "n_required": 0,
+      "n_unready": 0
+    },
+    {
+      "id": "regime_pedigree_inference",
+      "kind": "chain",
+      "label": "Inverse pedigree from regime co-membership",
+      "tier": "ready",
+      "n_required": 0,
+      "n_unready": 0
+    },
+    {
+      "id": "msmc_per_founder_background",
+      "kind": "chain",
+      "label": "MSMC2 per founder-like ancestry background",
+      "tier": "ready",
+      "n_required": 0,
+      "n_unready": 0
+    },
+    {
+      "id": "regime_topology",
+      "kind": "chain",
+      "label": "Cross-regime topology",
+      "tier": "one",
+      "n_required": 1,
+      "n_unready": 1
+    },
+    {
+      "id": "banding_pipeline_full",
+      "kind": "chain",
+      "label": "Haplotype-regimes full pipeline (chain)",
+      "tier": "multi",
+      "n_required": 2,
+      "n_unready": 2
+    },
+    {
+      "id": "haplotype_regimes_het_mode",
+      "kind": "chain",
+      "label": "Haplotype regimes via het-skeleton (chain)",
+      "tier": "one",
+      "n_required": 1,
+      "n_unready": 1
+    },
+    {
+      "id": "archaeology_synthesis",
+      "kind": "chain",
+      "label": "Per-candidate archaeology synthesis card",
+      "tier": "multi",
+      "n_required": 3,
+      "n_unready": 3
+    },
+    {
+      "id": "bp4_population_overlap",
+      "kind": "chain",
+      "label": "BP4 \u2014 cross-species \u00d7 226-cohort haploblock overlap",
+      "tier": "blocked",
+      "n_required": 2,
+      "n_unready": 2
+    }
+  ],
+  "edges": [
+    {
+      "from": "nco_inside_vs_outside_inversion",
+      "to": "tract_classifications_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "tract_classifications_v1",
+      "to": "tract_classifications",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "intrachromosomal_co_karyotype_effect",
+      "to": "karyotype_calls",
+      "kind": "chain_requires_layer",
+      "source_kind": "file"
+    },
+    {
+      "from": "karyotype_calls",
+      "to": "karyotype_resolution",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "intrachromosomal_co_karyotype_effect",
+      "to": "chromosome_meiosis_events_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "chromosome_meiosis_events_v1",
+      "to": "chromosome_meiosis_events",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "interchromosomal_inversion_effect",
+      "to": "karyotype_calls",
+      "kind": "chain_requires_layer",
+      "source_kind": "file"
+    },
+    {
+      "from": "interchromosomal_inversion_effect",
+      "to": "coincidence_matrix_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "coincidence_matrix_v1",
+      "to": "coincidence_matrix",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "interchromosomal_inversion_effect",
+      "to": "local_inv_controls_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "local_inv_controls_v1",
+      "to": "local_inv_controls",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "interchromosomal_inversion_effect",
+      "to": "family_aware_permutation_design_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "family_aware_permutation_design_v1",
+      "to": "family_aware_permutation_design",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "snp_q_support",
+      "to": "sample_set",
+      "kind": "chain_requires_layer",
+      "source_kind": "file"
+    },
+    {
+      "from": "internal_ancestry_composition",
+      "to": "sample_set",
+      "kind": "chain_requires_layer",
+      "source_kind": "file"
+    },
+    {
+      "from": "inversion_candidate_classifier",
+      "to": "q_support_windows",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "q_support_windows",
+      "to": "snp_q_support",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "hobs_hwe_pipeline",
+      "to": "sample_set",
+      "kind": "chain_requires_layer",
+      "source_kind": "file"
+    },
+    {
+      "from": "hobs_hwe_candidate_overlay",
+      "to": "hobs_hwe_windows",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "hobs_hwe_windows",
+      "to": "hobs_hwe_pipeline",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "karyotype_resolution",
+      "to": "q_residual_dosage_matrix",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "q_residual_dosage_matrix",
+      "to": "q_residual_dosage",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "karyotype_resolution",
+      "to": "hobs_hwe_candidate_overlay_table",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "hobs_hwe_candidate_overlay_table",
+      "to": "hobs_hwe_candidate_overlay",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "instant_q_boundary_scan",
+      "to": "sample_set",
+      "kind": "chain_requires_layer",
+      "source_kind": "file"
+    },
+    {
+      "from": "inversion_groupwise_popstats",
+      "to": "karyotype_calls",
+      "kind": "chain_requires_layer",
+      "source_kind": "file"
+    },
+    {
+      "from": "relatedness_per_chrom_adaptive",
+      "to": "sample_set",
+      "kind": "chain_requires_layer",
+      "source_kind": "file"
+    },
+    {
+      "from": "gene_order_consolidation",
+      "to": "bp_atlas_reciprocity_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "bp_atlas_reciprocity_v1",
+      "to": "breakpoint_reciprocity",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "regime_topology",
+      "to": "haplotype_regimes_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "haplotype_regimes_v1",
+      "to": "haplotype_regime_refine",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "banding_pipeline_full",
+      "to": "per_window_kmeans_labels_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "per_window_kmeans_labels_v1",
+      "to": "local_pca_kmeans",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "banding_pipeline_full",
+      "to": "band_quality_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "band_quality_v1",
+      "to": "band_quality_scoring",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "haplotype_regimes_het_mode",
+      "to": "per_window_kmeans_labels_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "archaeology_synthesis",
+      "to": "inversion_age_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "inversion_age_v1",
+      "to": "age_estimation_busco_4d",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "archaeology_synthesis",
+      "to": "inversion_polarity_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "inversion_polarity_v1",
+      "to": "polarize_synteny_vote",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "inversion_polarity_v1",
+      "to": "polarize_msa_stacked",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "archaeology_synthesis",
+      "to": "inversion_mosaicism_v1",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "inversion_mosaicism_v1",
+      "to": "mosaicism_leakage",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "bp4_population_overlap",
+      "to": "breakpoint_clusters",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    },
+    {
+      "from": "breakpoint_clusters",
+      "to": "cross_species_breakpoint_detection",
+      "kind": "layer_produced_by"
+    },
+    {
+      "from": "bp4_population_overlap",
+      "to": "long_range_haplotype_regime",
+      "kind": "chain_requires_layer",
+      "source_kind": "analysis_result"
+    }
+  ],
+  "rollups": {
+    "by_tier": {
+      "one": 7,
+      "multi": 4,
+      "ready": 14,
+      "blocked": 1
+    }
+  }
+}

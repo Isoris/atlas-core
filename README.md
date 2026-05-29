@@ -111,8 +111,90 @@ atlas-core/
 ├── css/                        Shell-level styles (tokens, base, badges, shell)
 ├── master_config.yaml          (site-local) named root paths for the data tree
 ├── cohorts.registry.json       Master producer/consumer index
+├── toolkit_registries/         Per-atlas registry + manuscript work tree (see below)
 └── index.html                  Shell bootstrap
 ```
+
+---
+
+## Manuscript work area (`toolkit_registries/`)
+
+Companion to the shell engine above. `toolkit_registries/` is the JSONL-backed
+registry + audit + manuscript-composition tree the `relatedness` atlas uses for
+the **MS_Inversions** *Clarias gariepinus* manuscript (Nature Communications-tier;
+LG01 × LG28 pair-relation + LG27 cross-species bounded inversion). It is a thin
+dashboard that surfaces what's registered, what's missing, what's runnable, and
+what's ready to write up — not a workflow engine. The dispatcher writes
+`action_manifest_v1` JSONs to `02_queue/`; an external runner picks them up.
+
+```
+librarian → manager → dispatcher → chain audit → conductor → pages
+connect ≠ resolve ≠ run ≠ render
+```
+
+Five tiers + a bridge tier:
+
+1. **Librarian** — resolves layer status from `analysis_results.jsonl` + filesystem. Pure read.
+2. **Manager** — classifies product readiness + estimability per question.
+3. **Dispatcher** — writes `action_manifest_v1` to `02_queue/`. Never executes.
+4. **Chain audit** — per-chain "one step away vs blocked" verdict.
+5. **Conductor** *(DYNAMIC_PANELS_SPEC §13)* — composes which panels render in which slots from `panels.jsonl` + `spawn_rules.jsonl`.
+6. **Bridge** *(BRIDGE_SPEC v0)* — direct HTTP wrappers around 10 external DBs (InterPro / UniProt / NCBI / PDB / UCSC / UniBind / STRING / Reactome / PubMed / QuickGO). No LLM in the call path.
+
+Subtree layout:
+
+```
+toolkit_registries/
+├── relatedness/01_registry/         the canonical JSONL pool
+│   ├── atlases.jsonl                atlas descriptors
+│   ├── analysis_registry.jsonl      analysis_ids + chains
+│   ├── analysis_modes.jsonl         analysis × mode rows
+│   ├── module_registry.jsonl        biomod modules (canonical biomod_status enum)
+│   ├── layer_registry.jsonl         layers (file inputs + analysis_result outputs)
+│   ├── products.jsonl / questions.jsonl / estimands.jsonl
+│   ├── manuscript_chunks.jsonl + references.jsonl
+│   ├── panels.jsonl + spawn_rules.jsonl + pages.jsonl
+│   ├── external_databases.jsonl     bridge tier
+│   └── connection_map.json          derived; regen on every commit
+├── relatedness/lib/                 librarian + manager + dispatcher + chain audit + bridge_client
+├── relatedness/page/                browser pages + shared chrome (loader, search,
+│                                     filters, scope, doc, previews, conductor, registry-cache)
+├── relatedness/scripts/             check_* validators (panels, plans, chunks,
+│                                     analysis_registry, external_databases)
+├── analysis/                        adapter folders (one per atlas-side analysis,
+│                                     each 6/6: adapter_atlas.js + compute.js +
+│                                     schema_in/out.json + example_in/out.json)
+├── bridge/<db>/                     10 external-DB adapters (endpoints.json + LICENSE_NOTICE.md)
+├── scripts/smoke_all_stack.py       21/21 audit pass
+└── *.md                             frozen specs (ADDON_SPEC, DYNAMIC_PANELS_SPEC,
+                                     DISPATCHER_SPEC, MANAGER_SPEC, BRIDGE_SPEC,
+                                     LAYER_GRAPH_BUILDER_SPEC, …)
+```
+
+Cohort discipline (read first if touching biology): three *Clarias gariepinus*
+cohorts that **never** conflate — F1 hybrid (assembly paper), 226-sample pure
+*C. gariepinus* hatchery (MS_Inversions), pure *C. macrocephalus* wild (future
+paper). Coordinates can cross cohort boundaries; **claims cannot**.
+
+### Smoke / audit (toolkit_registries)
+
+```bash
+python3 -m toolkit_registries.scripts.smoke_all_stack       # 21/21
+python3 -m toolkit_registries.relatedness.lib.build_connection_map
+```
+
+### Key specs (toolkit_registries)
+
+| spec | what it pins |
+|---|---|
+| `ADDON_SPEC.md`                | the 6 addon kinds + panel-kind catalogue + data_source kinds + spawn `when` keys |
+| `DISPATCHER_SPEC.md`           | manifest queue + §refusals (no execution from dispatcher) |
+| `MANAGER_SPEC.md`              | product readiness + estimability classifier |
+| `LAYER_GRAPH_BUILDER_SPEC.md`  | 5 node types, 9 librarian states, edge_rules.tsv |
+| `ADAPTER_CONTRACT.md`          | compute.js vs adapter_atlas.js separation |
+| `DYNAMIC_PANELS_SPEC.md`       | conductor / panels / spawn rules / fluidity / per-analysis panel requirements |
+| `BRIDGE_SPEC.md` + `BRIDGE_USAGE.md` | the external-DB tier (10 adapters, no LLM in the call path) |
+| `CROSS_SPECIES_BREAKPOINTS_WORKFLOW.md` | the comparative chain + cohort discipline |
 
 ---
 

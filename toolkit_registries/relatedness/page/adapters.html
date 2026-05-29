@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Adapters — in / out contracts per analysis</title>
+<style>
+  :root {
+    --fg: #1a1a1a;
+    --muted: #6c727f;
+    --bg: #fafafa;
+    --bg-card: #fff;
+    --border: #d8dce3;
+    --accent: #2b6cb0;
+    --ok:   #2f855a;
+    --warn: #b7791f;
+    --fail: #c53030;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+               font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+  .topnav { display: flex; gap: 0; background: #2d3748; }
+  .topnav a { padding: 10px 18px; color: #cbd5e0; text-decoration: none; font-size: 13px; font-weight: 500; }
+  .topnav a:hover { background: #1a202c; color: white; }
+  .topnav a.current { background: var(--accent); color: white; }
+  .topnav .num { color: #718096; margin-right: 6px; font-weight: 400; }
+  .topnav a.current .num { color: rgba(255,255,255,0.65); }
+  .topnav .tag { margin-left: auto; padding: 10px 18px; color: #718096; font-size: 11.5px; }
+
+  header { padding: 14px 24px 10px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+  h1 { margin: 0; font-size: 16px; font-weight: 600; }
+  .sub { color: var(--muted); margin-top: 3px; font-size: 12.5px; }
+
+  .layout { display: grid; grid-template-columns: 280px 1fr; gap: 0;
+            min-height: calc(100vh - 100px); }
+  .pane { padding: 14px 18px; }
+  .pane.left  { border-right: 1px solid var(--border); background: var(--bg-card); overflow-y: auto;
+                max-height: calc(100vh - 100px); }
+  .pane.right { background: var(--bg); }
+
+  .adapter-item {
+    display: block; padding: 8px 10px; border-radius: 5px; cursor: pointer;
+    border: 1px solid transparent; margin-bottom: 4px;
+  }
+  .adapter-item:hover { background: #edf2f7; }
+  .adapter-item.selected { border-color: var(--accent); background: #ebf5ff; }
+  .adapter-item .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; font-weight: 600; }
+  .adapter-item .row2 { display: flex; gap: 5px; align-items: center; margin-top: 3px; font-size: 11px; }
+  .adapter-item .files {
+    display: inline-flex; gap: 2px; margin-left: auto;
+  }
+  .adapter-item .files .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #d8dce3;
+  }
+  .adapter-item .files .dot.ok { background: var(--ok); }
+  .adapter-item .files .dot.missing { background: #cbd5e0; }
+
+  .atlas-badge {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em;
+    color: white; background: #6c727f;
+  }
+
+  .detail-empty { padding: 40px; color: var(--muted); text-align: center; }
+  .detail-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+                 padding: 14px 18px; margin-bottom: 14px; }
+  .detail-card h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600;
+                    display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
+                    padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .detail-card h2 .chev { font-size: 11px; color: var(--muted); transition: transform 120ms linear; }
+  .detail-card.collapsed h2 .chev { transform: rotate(-90deg); }
+  .detail-card.collapsed .body { display: none; }
+  .detail-card h2 .pill {
+    display: inline-block; padding: 1px 7px; border-radius: 3px;
+    font-size: 10px; font-weight: 600; color: white; letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pill.ok      { background: var(--ok); }
+  .pill.warn    { background: var(--warn); }
+  .pill.fail    { background: var(--fail); }
+  .pill.muted   { background: #6c727f; }
+  .pill.info    { background: var(--accent); }
+
+  .meta dl { display: grid; grid-template-columns: 160px 1fr; gap: 4px 14px; margin: 0;
+             font-size: 12.5px; }
+  .meta dt { color: var(--muted); }
+  .meta dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .meta dd .chip {
+    display: inline-block; padding: 1px 6px; border-radius: 3px; background: #edf2f7;
+    color: #2d3748; font-size: 11px; margin-right: 4px;
+  }
+
+  .io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 1100px) { .io-grid { grid-template-columns: 1fr; } }
+  .io-block { border: 1px solid var(--border); border-radius: 4px; background: #fcfcfd; }
+  .io-block .label { padding: 6px 10px; font-size: 11.5px; font-weight: 600;
+                     border-bottom: 1px solid var(--border); color: var(--muted); display: flex; }
+  .io-block .label .arrow { margin-left: auto; color: var(--accent); }
+  .io-block pre {
+    margin: 0; padding: 10px 12px; font-size: 11px; line-height: 1.45;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #2d3748; white-space: pre-wrap; word-break: break-word;
+    max-height: 360px; overflow-y: auto;
+  }
+  .io-block .missing { padding: 12px; color: var(--muted); font-style: italic; font-size: 12px; }
+
+  .files-list { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11.5px; }
+  .files-list .f {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 3px; border: 1px solid var(--border);
+    background: var(--bg-card); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px;
+  }
+  .files-list .f.ok      { color: var(--ok);   border-color: #c6f6d5; background: #f0fff4; }
+  .files-list .f.missing { color: var(--muted); border-style: dashed; }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="conversation.html"><span class="num">1.</span> Conversation</a>
+  <a href="action.html"><span class="num">2.</span> Action</a>
+  <a href="index.html"><span class="num">3.</span> Registries</a>
+  <a href="catalogue.html"><span class="num">4.</span> Catalogue</a>
+  <a href="layers.html"><span class="num">5.</span> Layers</a>
+  <a href="candidate_review.html"><span class="num">6.</span> Candidate review</a>
+  <a href="graph_builder.html"><span class="num">7.</span> Graph builder</a>
+  <a href="readiness.html"><span class="num">8.</span> Readiness</a>
+  <a href="layer_connector.html"><span class="num">9.</span> Layer Connector</a>
+  <a href="workspace_health.html"><span class="num">10.</span> Workspace Health</a>
+  <a href="queue.html"><span class="num">11.</span> Queue</a>
+  <a href="manuscript.html"><span class="num">12.</span> Manuscript</a>
+  <a href="adapters.html" class="current"><span class="num">13.</span> Adapters</a>
+  <a href="plans.html"><span class="num">14.</span> Plans</a>
+  <span class="tag">Atlas-core — page 13</span>
+</nav>
+
+<header>
+  <h1>Adapters — in / out contracts per analysis</h1>
+  <div class="sub">Click an adapter on the left. Reads <code>analysis_registry.jsonl</code> for the meta, then probes each adapter folder for <code>schema_in.json</code>, <code>schema_out.json</code>, <code>example_input.json</code>, <code>example_output.json</code>. Missing files surface as dashed chips.</div>
+</header>
+
+<div class="layout">
+  <div class="pane left" id="picker">Loading…</div>
+  <div class="pane right" id="detail"><div class="detail-empty">Pick an adapter on the left.</div></div>
+</div>
+
+<script>
+const ADAPTERS_DIR = "../../analysis/";   // toolkit_registries/relatedness/page/ → analysis/
+
+async function fetchJsonl(rel) {
+  if (typeof window.atlasFetchJsonl === "function") return await window.atlasFetchJsonl(rel);
+  try {
+    const r = await fetch(rel, { cache: "default" });
+    if (!r.ok) return [];
+    return (await r.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
+  } catch { return []; }
+}
+
+async function fetchJsonOrNull(rel) {
+  try {
+    const r = await fetch(rel, { cache: "default" });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+async function probeFile(rel) {
+  try { const r = await fetch(rel, { method: "HEAD", cache: "default" });
+        return r.ok; } catch { return false; }
+}
+
+const DB = { adapters: [], registry: {}, atlases: {} };
+
+function atlasBadge(atlasId) {
+  if (!atlasId) return "";
+  const a = DB.atlases[atlasId];
+  const bg = (a && a.color) || "#6c727f";
+  const label = (a && a.label) || atlasId;
+  const ico = (a && a.icon) || "";
+  return `<span class="atlas-badge" style="background:${bg}" title="${(a && a.description || '').replace(/"/g,'&quot;')}">${ico} ${label}</span>`;
+}
+
+async function loadAdapterList() {
+  // analysis_registry rows that point at an adapter file under analysis/<id>/
+  const reg = await fetchJsonl("../01_registry/analysis_registry.jsonl");
+  DB.registry = Object.fromEntries(reg.map(r => [r.analysis_id, r]));
+  const atlases = await fetchJsonl("../01_registry/atlases.jsonl");
+  DB.atlases = Object.fromEntries(atlases.map(a => [a.atlas_id, a]));
+  const candidates = reg.filter(r =>
+    (r.definition_path && r.definition_path.startsWith("analysis/")) ||
+    (r.default_runner && r.default_runner.startsWith("analysis."))
+  );
+  // Probe file presence for each
+  const checks = await Promise.all(candidates.map(async r => {
+    const dir = ADAPTERS_DIR + r.analysis_id + "/";
+    const [hasAdapter, hasSchemaIn, hasSchemaOut, hasEgIn, hasEgOut, hasCompute] = await Promise.all([
+      probeFile(dir + "adapter_atlas.js"),
+      probeFile(dir + "schema_in.json"),
+      probeFile(dir + "schema_out.json"),
+      probeFile(dir + "example_input.json"),
+      probeFile(dir + "example_output.json"),
+      probeFile(dir + "compute.js"),
+    ]);
+    return {
+      analysis_id:    r.analysis_id,
+      label:          r.label || r.analysis_id,
+      atlas:          inferAtlas(r),
+      hasAdapter, hasSchemaIn, hasSchemaOut, hasEgIn, hasEgOut, hasCompute,
+      dir,
+    };
+  }));
+  DB.adapters = checks.filter(c => c.hasAdapter);
+}
+
+function inferAtlas(reg) {
+  // analysis_registry.engine sometimes carries the family which maps to atlas;
+  // fall back to scanning module_registry on first selection.
+  if (!reg) return "";
+  // explicit atlas field would be ideal; for now, peek heuristically
+  return "";
+}
+
+function renderPicker() {
+  const root = document.getElementById("picker");
+  if (DB.adapters.length === 0) {
+    root.innerHTML = `<div class="detail-empty">No adapter folders found under <code>${ADAPTERS_DIR}</code>.</div>`;
+    return;
+  }
+  const items = DB.adapters.map(a => {
+    const dots = [
+      a.hasSchemaIn,  a.hasSchemaOut,
+      a.hasEgIn,      a.hasEgOut,
+      a.hasCompute,
+    ];
+    const dotHtml = dots.map(ok => `<span class="dot ${ok ? 'ok' : 'missing'}"></span>`).join("");
+    return `<div class="adapter-item" data-aid="${a.analysis_id}">
+      <div class="id">${a.analysis_id}</div>
+      <div class="row2">
+        <span style="color:var(--muted);font-size:11px">${a.label}</span>
+        <span class="files" title="schema_in · schema_out · ex_in · ex_out · compute">${dotHtml}</span>
+      </div>
+    </div>`;
+  }).join("");
+  root.innerHTML = items;
+  for (const el of root.querySelectorAll(".adapter-item")) {
+    el.onclick = () => selectAdapter(el.dataset.aid);
+  }
+}
+
+async function selectAdapter(aid) {
+  for (const el of document.querySelectorAll(".adapter-item")) {
+    el.classList.toggle("selected", el.dataset.aid === aid);
+  }
+  const a = DB.adapters.find(x => x.analysis_id === aid);
+  const r = DB.registry[aid] || {};
+  if (!a) return;
+  const detail = document.getElementById("detail");
+  detail.innerHTML = `<div class="detail-card"><h2><span class="chev">▼</span>${a.analysis_id} <span class="pill info">loading…</span></h2><div class="body">…</div></div>`;
+  // load schemas + examples in parallel
+  const [si, so, ei, eo] = await Promise.all([
+    a.hasSchemaIn  ? fetchJsonOrNull(a.dir + "schema_in.json")    : null,
+    a.hasSchemaOut ? fetchJsonOrNull(a.dir + "schema_out.json")   : null,
+    a.hasEgIn      ? fetchJsonOrNull(a.dir + "example_input.json"): null,
+    a.hasEgOut     ? fetchJsonOrNull(a.dir + "example_output.json"): null,
+  ]);
+  paintDetail(a, r, si, so, ei, eo);
+}
+
+function fileChip(name, ok) {
+  return `<span class="f ${ok ? 'ok' : 'missing'}">${ok ? '●' : '○'} ${name}</span>`;
+}
+
+function metaPill(reg) {
+  const status = reg.status || "?";
+  const cls = status === "active" ? "ok" :
+              status === "experimental" ? "info" :
+              status === "deprecated" ? "fail" :
+              status === "stub" ? "warn" : "muted";
+  return `<span class="pill ${cls}">${status}</span>`;
+}
+
+function paintDetail(a, reg, si, so, ei, eo) {
+  const aid = a.analysis_id;
+  const dir = a.dir;
+  const completeness =
+    [a.hasSchemaIn, a.hasSchemaOut, a.hasEgIn, a.hasEgOut, a.hasCompute].filter(Boolean).length;
+  const completenessTotal = 5;
+  const completenessPill =
+    completeness === completenessTotal ? `<span class="pill ok">complete</span>` :
+    completeness >= 3 ? `<span class="pill info">${completeness}/${completenessTotal}</span>` :
+    `<span class="pill warn">${completeness}/${completenessTotal}</span>`;
+  const html = `
+    <div class="detail-card">
+      <h2><span class="chev">▼</span>
+        <span style="flex:0 0 auto">meta</span>
+        <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;flex:1">${aid}</span>
+        ${metaPill(reg)}${completenessPill}
+      </h2>
+      <div class="body meta">
+        <dl>
+          <dt>analysis_id</dt>      <dd><code data-preview-table="analysis_registry" data-preview-id="${aid}">${aid}</code></dd>
+          <dt>label</dt>            <dd>${escapeHtml(reg.label || aid)}</dd>
+          <dt>version</dt>          <dd>${escapeHtml(reg.analysis_version || "?")}</dd>
+          <dt>engine</dt>           <dd>${escapeHtml(reg.engine || "(unset)")}</dd>
+          <dt>default_runner</dt>   <dd>${escapeHtml(reg.default_runner || "(unset)")}</dd>
+          <dt>input_layer_types</dt><dd>${
+            (reg.input_layer_types || "").split(",").map(s => s.trim()).filter(Boolean)
+              .map(s => `<span class="chip">${escapeHtml(s)}</span>`).join("") || `<em style="color:var(--muted)">(none)</em>`
+          }</dd>
+          <dt>produces</dt>         <dd>${
+            (reg.produces || "").split(",").map(s => s.trim()).filter(Boolean)
+              .map(s => `<span class="chip">${escapeHtml(s)}</span>`).join("") || `<em style="color:var(--muted)">(none)</em>`
+          }</dd>
+          <dt>requires</dt>         <dd>${
+            (reg.requires || "").split(",").map(s => s.trim()).filter(Boolean)
+              .map(s => `<span class="chip">${escapeHtml(s)}</span>`).join("") || `<em style="color:var(--muted)">(none)</em>`
+          }</dd>
+          <dt>folder</dt>           <dd><code>${escapeHtml(dir)}</code></dd>
+          <dt>shipped files</dt>    <dd><div class="files-list">
+            ${fileChip("adapter_atlas.js", a.hasAdapter)}
+            ${fileChip("compute.js",       a.hasCompute)}
+            ${fileChip("schema_in.json",   a.hasSchemaIn)}
+            ${fileChip("schema_out.json",  a.hasSchemaOut)}
+            ${fileChip("example_input.json",  a.hasEgIn)}
+            ${fileChip("example_output.json", a.hasEgOut)}
+          </div></dd>
+        </dl>
+      </div>
+    </div>
+    <div class="detail-card">
+      <h2><span class="chev">▼</span>schema (in / out)</h2>
+      <div class="body io-grid">
+        <div class="io-block">
+          <div class="label">schema_in.json <span class="arrow">→</span></div>
+          ${si ? `<pre>${escapeHtml(JSON.stringify(si, null, 2))}</pre>`
+               : `<div class="missing">no schema_in.json shipped for this adapter</div>`}
+        </div>
+        <div class="io-block">
+          <div class="label">schema_out.json <span class="arrow">→</span></div>
+          ${so ? `<pre>${escapeHtml(JSON.stringify(so, null, 2))}</pre>`
+               : `<div class="missing">no schema_out.json shipped for this adapter</div>`}
+        </div>
+      </div>
+    </div>
+    <div class="detail-card collapsed">
+      <h2><span class="chev">▼</span>example (in / out)</h2>
+      <div class="body io-grid">
+        <div class="io-block">
+          <div class="label">example_input.json</div>
+          ${ei ? `<pre>${escapeHtml(JSON.stringify(ei, null, 2))}</pre>`
+               : `<div class="missing">no example_input.json shipped</div>`}
+        </div>
+        <div class="io-block">
+          <div class="label">example_output.json</div>
+          ${eo ? `<pre>${escapeHtml(JSON.stringify(eo, null, 2))}</pre>`
+               : `<div class="missing">no example_output.json shipped</div>`}
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById("detail").innerHTML = html;
+
+  // collapsible cards
+  for (const card of document.querySelectorAll(".detail-card")) {
+    card.querySelector("h2").onclick = () => card.classList.toggle("collapsed");
+  }
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+}
+
+(async () => {
+  await loadAdapterList();
+  renderPicker();
+})();
+</script>
+
+<script defer src="doc.js"></script>
+<script defer src="search.js"></script>
+<script defer src="registry-cache.js"></script>
+<script defer src="loader.js"></script>
+<script defer src="filters.js"></script>
+<script defer src="conductor.js"></script>
+<script defer src="scope.js"></script>
+<script defer src="previews.js"></script>
+<section><div data-slot="conductor-demo" data-max-panels="3" style="padding:18px 24px"></div></section>
+</body>
+</html>

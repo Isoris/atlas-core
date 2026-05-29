@@ -1,0 +1,191 @@
+{
+  "schema_version": "atlas_dependency_graph_v1",
+  "rewritten_at": "2026-05-28T15:13:12Z",
+  "n_nodes": 13,
+  "n_edges": 15,
+  "nodes": [
+    {
+      "id": "atlas_core",
+      "kind": "atlas",
+      "label": "Atlas Core",
+      "status": "active",
+      "color": "#1a2540"
+    },
+    {
+      "id": "inversion_atlas",
+      "kind": "atlas",
+      "label": "Inversion Atlas",
+      "status": "experimental",
+      "color": "#2d6cb6"
+    },
+    {
+      "id": "relatedness_atlas",
+      "kind": "atlas",
+      "label": "Relatedness Atlas",
+      "status": "experimental",
+      "color": "#2f7d8d"
+    },
+    {
+      "id": "meiosis_atlas",
+      "kind": "atlas",
+      "label": "Meiosis Atlas",
+      "status": "experimental",
+      "color": "#b87a14"
+    },
+    {
+      "id": "cross_species_atlas",
+      "kind": "atlas",
+      "label": "Cross-Species Atlas",
+      "status": "experimental",
+      "color": "#e67e22"
+    },
+    {
+      "id": "popstats_atlas",
+      "kind": "atlas",
+      "label": "Popstats Atlas",
+      "status": "experimental",
+      "color": "#b13030"
+    },
+    {
+      "id": "evolution_atlas",
+      "kind": "atlas",
+      "label": "Evolution Atlas",
+      "status": "experimental",
+      "color": "#6b3aa6"
+    },
+    {
+      "id": "genome_synteny_atlas",
+      "kind": "atlas",
+      "label": "Genome / Synteny Atlas (deprecated)",
+      "status": "deprecated",
+      "color": "#888888"
+    },
+    {
+      "id": "marker_design",
+      "kind": "atlas",
+      "label": "Marker Design",
+      "status": "stub",
+      "color": "#e89c2a"
+    },
+    {
+      "id": "diversity_atlas",
+      "kind": "atlas",
+      "label": "Diversity Atlas",
+      "status": "experimental",
+      "color": "#3aa6c0"
+    },
+    {
+      "id": "genome_atlas",
+      "kind": "atlas",
+      "label": "Genome Atlas",
+      "status": "experimental",
+      "color": "#4a5d7e"
+    },
+    {
+      "id": "heterozygosity_atlas",
+      "kind": "atlas",
+      "label": "Heterozygosity Atlas",
+      "status": "experimental",
+      "color": "#5fa86b"
+    },
+    {
+      "id": "pods_atlas",
+      "kind": "atlas",
+      "label": "PODs Atlas",
+      "status": "experimental",
+      "color": "#a64ca6"
+    }
+  ],
+  "edges": [
+    {
+      "from": "meiosis_atlas",
+      "to": "relatedness_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "meiosis_atlas",
+      "to": "inversion_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "popstats_atlas",
+      "to": "inversion_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "evolution_atlas",
+      "to": "inversion_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "evolution_atlas",
+      "to": "meiosis_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "evolution_atlas",
+      "to": "cross_species_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "genome_synteny_atlas",
+      "to": "cross_species_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "marker_design",
+      "to": "inversion_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "marker_design",
+      "to": "meiosis_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "heterozygosity_atlas",
+      "to": "diversity_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "heterozygosity_atlas",
+      "to": "population_atlas",
+      "kind": "depends_on",
+      "satisfied": false
+    },
+    {
+      "from": "heterozygosity_atlas",
+      "to": "inversion_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "pods_atlas",
+      "to": "popstats_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "pods_atlas",
+      "to": "inversion_atlas",
+      "kind": "depends_on",
+      "satisfied": true
+    },
+    {
+      "from": "pods_atlas",
+      "to": "population_atlas",
+      "kind": "depends_on",
+      "satisfied": false
+    }
+  ]
+}

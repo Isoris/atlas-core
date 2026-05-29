@@ -16,4 +16,13 @@ Thumbs.db
 # dispatcher queue is runtime state — per-commit manifests + their index
 # are written by lib/dispatcher.py and consumed by page 11 (Queue).
 # The directory is created on demand; not tracked in git.
-toolkit_registries/relatedness/02_queue/
+# Exception: *.example.* files are shipped seeds so page 11 + page 14 have
+# something to render in a fresh checkout.
+toolkit_registries/relatedness/02_queue/*
+!toolkit_registries/relatedness/02_queue/plans/
+!toolkit_registries/relatedness/02_queue/candidates/
+!toolkit_registries/relatedness/02_queue/*.example.*
+toolkit_registries/relatedness/02_queue/plans/*
+!toolkit_registries/relatedness/02_queue/plans/*.example.*
+toolkit_registries/relatedness/02_queue/candidates/*
+!toolkit_registries/relatedness/02_queue/candidates/*.example.*

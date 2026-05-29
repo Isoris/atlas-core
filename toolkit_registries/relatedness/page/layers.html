@@ -169,6 +169,8 @@
   <a href="workspace_health.html"><span class="num">10.</span> Workspace Health</a>
   <a href="queue.html"><span class="num">11.</span> Queue</a>
   <a href="manuscript.html"><span class="num">12.</span> Manuscript</a>
+  <a href="adapters.html"><span class="num">13.</span> Adapters</a>
+  <a href="plans.html"><span class="num">14.</span> Plans</a>
   <span class="tag">atlas-core / page 5</span>
 </nav>
 
@@ -190,10 +192,10 @@
       </select>
     </label>
     <label>Filter layer
-      <input type="text" id="filter-layer" placeholder="substring…" size="14">
+      <input type="text" id="filter-layer" placeholder="substring…" size="14" data-clear="true">
     </label>
     <label>Filter analysis
-      <input type="text" id="filter-analysis" placeholder="substring…" size="14">
+      <input type="text" id="filter-analysis" placeholder="substring…" size="14" data-clear="true">
     </label>
     <button class="btn" id="btn-import">Import JSON</button>
     <input type="file" id="file-import" accept="application/json" style="display:none">
@@ -527,6 +529,10 @@ function clearManual() {
 </script>
 <script defer src="doc.js"></script>
 <script defer src="search.js"></script>
+<script defer src="registry-cache.js"></script>
+<script defer src="loader.js"></script>
+<script defer src="filters.js"></script>
+<script defer src="conductor.js"></script>
 <script defer src="scope.js"></script>
 </body>
 </html>

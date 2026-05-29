@@ -1,0 +1,10 @@
+{"ts": "2026-01-15T09:42:11Z", "db_id": "interpro", "endpoint_id": "protein_lookup", "url": "https://www.ebi.ac.uk/interpro/api/protein/UniProt/P53_HUMAN", "ok": true, "elapsed_ms": 312}
+{"ts": "2026-01-15T09:42:14Z", "db_id": "interpro", "endpoint_id": "entry_search", "url": "https://www.ebi.ac.uk/interpro/api/entry/InterPro/?type=domain&page_size=20", "ok": true, "elapsed_ms": 287}
+{"ts": "2026-01-15T09:42:18Z", "db_id": "interpro", "endpoint_id": "protein_lookup", "url": "https://www.ebi.ac.uk/interpro/api/protein/UniProt/Q9NQX5", "ok": true, "elapsed_ms": 295}
+{"ts": "2026-01-15T09:43:02Z", "db_id": "uniprot", "endpoint_id": "search", "url": "https://rest.uniprot.org/uniprotkb/search?query=organism_id:2724128&format=json", "ok": true, "elapsed_ms": 461}
+{"ts": "2026-01-15T09:43:09Z", "db_id": "uniprot", "endpoint_id": "entry_by_accession", "url": "https://rest.uniprot.org/uniprotkb/A0A6P7QUW1.json", "ok": true, "elapsed_ms": 218}
+{"ts": "2026-01-15T09:44:31Z", "db_id": "pubmed", "endpoint_id": "pubmed_search", "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=10.1093/molbev/msab103[doi]&retmax=2&retmode=json", "ok": true, "elapsed_ms": 543}
+{"ts": "2026-01-15T09:44:34Z", "db_id": "pubmed", "endpoint_id": "pubmed_summary", "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=33944923&retmode=json", "ok": true, "elapsed_ms": 421}
+{"ts": "2026-01-15T09:45:17Z", "db_id": "ncbi", "endpoint_id": "gene_search", "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=2724128[taxid]+AND+TP53[gene]&retmode=json", "ok": false, "elapsed_ms": 30412}
+{"ts": "2026-01-15T09:45:23Z", "db_id": "ncbi", "endpoint_id": "gene_search", "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=2724128[taxid]+AND+TP53[gene]&retmode=json", "ok": true, "elapsed_ms": 612}
+{"ts": "2026-01-15T09:46:02Z", "db_id": "pdb", "endpoint_id": "entry_metadata", "url": "https://data.rcsb.org/rest/v1/core/entry/4HHB", "ok": true, "elapsed_ms": 178}

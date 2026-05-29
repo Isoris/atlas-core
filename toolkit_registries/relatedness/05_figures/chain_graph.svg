@@ -1,0 +1,179 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2567" height="1107" viewBox="0 0 2567 1108" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="2567" height="1108" fill="#ffffff"/>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#9aa3af"/></marker></defs>
+<text x="44" y="66" font-size="22" font-weight="700" fill="#1a202c">chain graph</text>
+<text x="44" y="88" font-size="13" fill="#4a5568">61 nodes · 46 edges</text>
+<path d="M405.4,836.0 C451.4,836.0 451.4,878.0 497.4,878.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,878.0 C822.0,878.0 822.0,878.0 868.0,878.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,248.0 C451.4,248.0 451.4,668.0 497.4,668.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,668.0 C822.0,668.0 822.0,584.0 868.0,584.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,248.0 C451.4,248.0 451.4,374.0 497.4,374.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,374.0 C822.0,374.0 822.0,374.0 868.0,374.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,500.0 C451.4,500.0 451.4,668.0 497.4,668.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,500.0 C451.4,500.0 451.4,416.0 497.4,416.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,416.0 C822.0,416.0 822.0,416.0 868.0,416.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,500.0 C451.4,500.0 451.4,710.0 497.4,710.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,710.0 C822.0,710.0 822.0,626.0 868.0,626.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,500.0 C451.4,500.0 451.4,458.0 497.4,458.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,458.0 C822.0,458.0 822.0,500.0 868.0,500.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1146.6,836.0 C1778.5,836.0 1778.5,563.0 2410.5,563.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,626.0 C1408.0,626.0 1408.0,563.0 2410.5,563.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,710.0 C451.4,710.0 451.4,836.0 497.4,836.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,836.0 C822.0,836.0 822.0,836.0 868.0,836.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M2318.5,563.0 C2364.5,563.0 2364.5,563.0 2410.5,563.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1818.8,542.0 C1864.8,542.0 1864.8,563.0 1910.8,563.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M2065.2,563.0 C2111.2,563.0 2111.2,563.0 2157.2,563.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1146.6,584.0 C1192.6,584.0 1192.6,584.0 1238.6,584.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1503.4,584.0 C1549.4,584.0 1549.4,584.0 1595.4,584.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1146.6,584.0 C1192.6,584.0 1192.6,542.0 1238.6,542.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M1503.4,542.0 C1549.4,542.0 1549.4,542.0 1595.4,542.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,584.0 C1408.0,584.0 1408.0,563.0 2410.5,563.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,752.0 C451.4,752.0 451.4,668.0 497.4,668.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,1004.0 C1408.0,1004.0 1408.0,563.0 2410.5,563.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,374.0 C451.4,374.0 451.4,290.0 497.4,290.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,290.0 C822.0,290.0 822.0,332.0 868.0,332.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,332.0 C451.4,332.0 451.4,500.0 497.4,500.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,500.0 C822.0,500.0 822.0,542.0 868.0,542.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,458.0 C451.4,458.0 451.4,794.0 497.4,794.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,794.0 C822.0,794.0 822.0,668.0 868.0,668.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,458.0 C451.4,458.0 451.4,248.0 497.4,248.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,248.0 C822.0,248.0 822.0,290.0 868.0,290.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,416.0 C451.4,416.0 451.4,794.0 497.4,794.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,878.0 C451.4,878.0 451.4,542.0 497.4,542.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,542.0 C822.0,542.0 822.0,248.0 868.0,248.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,878.0 C451.4,878.0 451.4,626.0 497.4,626.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,626.0 C822.0,626.0 822.0,794.0 868.0,794.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,626.0 C822.0,626.0 822.0,752.0 868.0,752.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,878.0 C451.4,878.0 451.4,584.0 497.4,584.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,584.0 C822.0,584.0 822.0,710.0 868.0,710.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,164.0 C451.4,164.0 451.4,332.0 497.4,332.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M776.0,332.0 C822.0,332.0 822.0,458.0 868.0,458.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<path d="M405.4,164.0 C451.4,164.0 451.4,752.0 497.4,752.0" fill="none" stroke="#c2c8d0" stroke-width="1.2" marker-end="url(#arrow)"/>
+<rect x="44.0" y="822.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="840.5" font-size="13" fill="#ffffff" text-anchor="middle">NCO enrichment inside vs outside inversion ca…</text>
+<rect x="44.0" y="234.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="252.5" font-size="13" fill="#ffffff" text-anchor="middle">CO_rate(het) vs CO_rate(non-het) per focal in…</text>
+<rect x="44.0" y="486.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="504.5" font-size="13" fill="#ffffff" text-anchor="middle">HEADLINE: focal inversion karyotype → meiosis…</text>
+<rect x="868.0" y="822.0" width="278.6" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="1007.3" y="840.5" font-size="13" fill="#ffffff" text-anchor="middle">snp_q_support</text>
+<rect x="44.0" y="612.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="630.5" font-size="13" fill="#ffffff" text-anchor="middle">internal_ancestry_composition</text>
+<rect x="44.0" y="696.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="714.5" font-size="13" fill="#ffffff" text-anchor="middle">inversion_candidate_classifier</text>
+<rect x="2157.2" y="549.0" width="161.3" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="2237.8" y="567.5" font-size="13" fill="#ffffff" text-anchor="middle">hobs_hwe_pipeline</text>
+<rect x="1595.4" y="528.0" width="223.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="1707.1" y="546.5" font-size="13" fill="#ffffff" text-anchor="middle">hobs_hwe_candidate_overlay</text>
+<rect x="868.0" y="570.0" width="278.6" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="1007.3" y="588.5" font-size="13" fill="#ffffff" text-anchor="middle">karyotype_resolution</text>
+<rect x="44.0" y="570.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="588.5" font-size="13" fill="#ffffff" text-anchor="middle">instant_q_boundary_scan</text>
+<rect x="44.0" y="738.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="756.5" font-size="13" fill="#ffffff" text-anchor="middle">inversion_groupwise_popstats</text>
+<rect x="44.0" y="990.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="1008.5" font-size="13" fill="#ffffff" text-anchor="middle">relatedness_per_chrom_adaptive</text>
+<rect x="44.0" y="948.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="966.5" font-size="13" fill="#ffffff" text-anchor="middle">per_sample_diversity_assembly</text>
+<rect x="44.0" y="108.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="126.5" font-size="13" fill="#ffffff" text-anchor="middle">ancestry_het_test_battery</text>
+<rect x="44.0" y="276.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="294.5" font-size="13" fill="#ffffff" text-anchor="middle">cohort_master_assembly</text>
+<rect x="44.0" y="528.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="546.5" font-size="13" fill="#ffffff" text-anchor="middle">hpp_offspring_pipeline</text>
+<rect x="44.0" y="192.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="210.5" font-size="13" fill="#ffffff" text-anchor="middle">BP_ATLAS chain (sequence method, full)</text>
+<rect x="44.0" y="360.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="378.5" font-size="13" fill="#ffffff" text-anchor="middle">Gene-order + cross-method chain</text>
+<rect x="44.0" y="906.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="924.5" font-size="13" fill="#ffffff" text-anchor="middle">Per-regime Mendelian annotation (trios + fami…</text>
+<rect x="44.0" y="654.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="672.5" font-size="13" fill="#ffffff" text-anchor="middle">Inverse pedigree from regime co-membership</text>
+<rect x="44.0" y="780.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="798.5" font-size="13" fill="#ffffff" text-anchor="middle">MSMC2 per founder-like ancestry background</text>
+<rect x="44.0" y="318.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="336.5" font-size="13" fill="#ffffff" text-anchor="middle">Cross-regime topology</text>
+<rect x="44.0" y="444.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="462.5" font-size="13" fill="#ffffff" text-anchor="middle">Haplotype-regimes full pipeline (chain)</text>
+<rect x="44.0" y="402.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="420.5" font-size="13" fill="#ffffff" text-anchor="middle">Haplotype regimes via het-skeleton (chain)</text>
+<rect x="44.0" y="864.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="882.5" font-size="13" fill="#ffffff" text-anchor="middle">Per-candidate archaeology synthesis card</text>
+<rect x="44.0" y="150.0" width="361.4" height="28" rx="6" fill="#9c4221" stroke="#2d3748" stroke-width="1"/>
+<text x="224.7" y="168.5" font-size="13" fill="#ffffff" text-anchor="middle">BP4 — cross-species × 226-cohort haploblock o…</text>
+<rect x="497.4" y="864.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="882.5" font-size="13" fill="#4a5568" text-anchor="middle">tract_classifications_v1</text>
+<rect x="868.0" y="864.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="882.5" font-size="13" fill="#4a5568" text-anchor="middle">tract_classifications</text>
+<rect x="497.4" y="654.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="672.5" font-size="13" fill="#4a5568" text-anchor="middle">karyotype_calls</text>
+<rect x="497.4" y="360.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="378.5" font-size="13" fill="#4a5568" text-anchor="middle">chromosome_meiosis_events_v1</text>
+<rect x="868.0" y="360.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="378.5" font-size="13" fill="#4a5568" text-anchor="middle">chromosome_meiosis_events</text>
+<rect x="497.4" y="402.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="420.5" font-size="13" fill="#4a5568" text-anchor="middle">coincidence_matrix_v1</text>
+<rect x="868.0" y="402.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="420.5" font-size="13" fill="#4a5568" text-anchor="middle">coincidence_matrix</text>
+<rect x="497.4" y="696.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="714.5" font-size="13" fill="#4a5568" text-anchor="middle">local_inv_controls_v1</text>
+<rect x="868.0" y="612.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="630.5" font-size="13" fill="#4a5568" text-anchor="middle">local_inv_controls</text>
+<rect x="497.4" y="444.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="462.5" font-size="13" fill="#4a5568" text-anchor="middle">family_aware_permutation_design_v1</text>
+<rect x="868.0" y="486.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="504.5" font-size="13" fill="#4a5568" text-anchor="middle">family_aware_permutation_design</text>
+<rect x="2410.5" y="549.0" width="113.0" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="2467.0" y="567.5" font-size="13" fill="#4a5568" text-anchor="middle">sample_set</text>
+<rect x="497.4" y="822.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="840.5" font-size="13" fill="#4a5568" text-anchor="middle">q_support_windows</text>
+<rect x="1910.8" y="549.0" width="154.4" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1988.0" y="567.5" font-size="13" fill="#4a5568" text-anchor="middle">hobs_hwe_windows</text>
+<rect x="1238.6" y="570.0" width="264.8" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1371.0" y="588.5" font-size="13" fill="#4a5568" text-anchor="middle">q_residual_dosage_matrix</text>
+<rect x="1595.4" y="570.0" width="223.4" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1707.1" y="588.5" font-size="13" fill="#4a5568" text-anchor="middle">q_residual_dosage</text>
+<rect x="1238.6" y="528.0" width="264.8" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1371.0" y="546.5" font-size="13" fill="#4a5568" text-anchor="middle">hobs_hwe_candidate_overlay_table</text>
+<rect x="497.4" y="276.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="294.5" font-size="13" fill="#4a5568" text-anchor="middle">bp_atlas_reciprocity_v1</text>
+<rect x="868.0" y="318.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="336.5" font-size="13" fill="#4a5568" text-anchor="middle">breakpoint_reciprocity</text>
+<rect x="497.4" y="486.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="504.5" font-size="13" fill="#4a5568" text-anchor="middle">haplotype_regimes_v1</text>
+<rect x="868.0" y="528.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="546.5" font-size="13" fill="#4a5568" text-anchor="middle">haplotype_regime_refine</text>
+<rect x="497.4" y="780.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="798.5" font-size="13" fill="#4a5568" text-anchor="middle">per_window_kmeans_labels_v1</text>
+<rect x="868.0" y="654.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="672.5" font-size="13" fill="#4a5568" text-anchor="middle">local_pca_kmeans</text>
+<rect x="497.4" y="234.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="252.5" font-size="13" fill="#4a5568" text-anchor="middle">band_quality_v1</text>
+<rect x="868.0" y="276.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="294.5" font-size="13" fill="#4a5568" text-anchor="middle">band_quality_scoring</text>
+<rect x="497.4" y="528.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="546.5" font-size="13" fill="#4a5568" text-anchor="middle">inversion_age_v1</text>
+<rect x="868.0" y="234.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="252.5" font-size="13" fill="#4a5568" text-anchor="middle">age_estimation_busco_4d</text>
+<rect x="497.4" y="612.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="630.5" font-size="13" fill="#4a5568" text-anchor="middle">inversion_polarity_v1</text>
+<rect x="868.0" y="780.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="798.5" font-size="13" fill="#4a5568" text-anchor="middle">polarize_synteny_vote</text>
+<rect x="868.0" y="738.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="756.5" font-size="13" fill="#4a5568" text-anchor="middle">polarize_msa_stacked</text>
+<rect x="497.4" y="570.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="588.5" font-size="13" fill="#4a5568" text-anchor="middle">inversion_mosaicism_v1</text>
+<rect x="868.0" y="696.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="714.5" font-size="13" fill="#4a5568" text-anchor="middle">mosaicism_leakage</text>
+<rect x="497.4" y="318.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="336.5" font-size="13" fill="#4a5568" text-anchor="middle">breakpoint_clusters</text>
+<rect x="868.0" y="444.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1007.3" y="462.5" font-size="13" fill="#4a5568" text-anchor="middle">cross_species_breakpoint_detection</text>
+<rect x="497.4" y="738.0" width="278.6" height="28" rx="6" fill="#ffffff" stroke="#a0aec0" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="636.7" y="756.5" font-size="13" fill="#4a5568" text-anchor="middle">long_range_haplotype_regime</text>
+<text x="44" y="1080" font-size="11" fill="#718096">kind:</text>
+<rect x="90" y="1072" width="12" height="12" rx="2" fill="#9c4221" stroke="#2d3748" stroke-width="0.8"/>
+<text x="107" y="1082" font-size="11" fill="#4a5568">chain</text>
+<rect x="155" y="1072" width="12" height="12" rx="2" fill="#ffffff" stroke="#a0aec0" stroke-dasharray="2 2" stroke-width="0.8"/>
+<text x="172" y="1082" font-size="11" fill="#4a5568">referenced</text>
+</svg>

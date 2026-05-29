@@ -82,6 +82,9 @@
     }
     .scoperibbon .field select { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; cursor: pointer; }
     .scoperibbon .field input:focus { background: #fff8d9; }
+    /* unset-scope visual cue: italic muted placeholder + dim field border */
+    .scoperibbon .field input::placeholder { color: #a0aec0; font-style: italic; font-weight: 500; }
+    .scoperibbon .field:has(input:placeholder-shown) { border-color: #e2e8f0; opacity: 0.85; }
     .scoperibbon .field .clear {
       border: none; background: transparent; cursor: pointer; padding: 0 6px;
       color: #c0c4cb; font-size: 14px; line-height: 1;
@@ -102,7 +105,7 @@
 
   async function loadAtlases() {
     try {
-      const r = await fetch("../01_registry/atlases.jsonl", { cache: "no-store" });
+      const r = await fetch("../01_registry/atlases.jsonl", { cache: "default" });
       if (!r.ok) return;
       atlases = (await r.text()).split("\n").map(l => l.trim()).filter(Boolean).map(JSON.parse);
     } catch {}
@@ -141,15 +144,15 @@
         <select data-k="atlas">${atlasOptions()}</select>
       </span>
       <span class="field"><span class="name">sample_set</span>
-        <input type="text" data-k="sample_set" value="${state.sample_set || ""}" placeholder="e.g. samples_226_v1">
+        <input type="text" data-k="sample_set" value="${state.sample_set || ""}" placeholder="pick a sample set (e.g. samples_226_v1)">
         <button class="clear" title="clear">×</button>
       </span>
       <span class="field"><span class="name">interval_set</span>
-        <input type="text" data-k="interval_set" value="${state.interval_set || ""}" placeholder="(none)">
+        <input type="text" data-k="interval_set" value="${state.interval_set || ""}" placeholder="pick an interval set (optional)">
         <button class="clear" title="clear">×</button>
       </span>
       <span class="field"><span class="name">candidate</span>
-        <input type="text" data-k="candidate_id" value="${state.candidate_id || ""}" placeholder="(none)">
+        <input type="text" data-k="candidate_id" value="${state.candidate_id || ""}" placeholder="pick a candidate (e.g. inv_LG28_INV_001)">
         <button class="clear" title="clear">×</button>
       </span>
       <span class="note">persisted across pages · auto-saves on Enter / blur</span>

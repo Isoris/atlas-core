@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "block_classification.schema.json",
+  "block_type": "block_classification",
+  "description": "Final classification call for a candidate long-range haplotype block. Assigns one of 8 classes describing the most likely architectural cause of the local-PCA / haplotype signal. The classifier consumes block_alt_evidence (Q7 alternative-explanation measurements) and existence_layer_a/b/c/d (Q7 inversion-evidence layers). This entry does NOT supersede hypothesis_verdict — hypothesis_verdict is the existence call (does the signal exist), block_classification scopes WHICH MECHANISM the verdict is about (clean inversion vs repeat-architecture vs SD-mediated vs CNV vs artefact). Atlas 2.0 extension.",
+  "question": "Q7",
+  "group_validation_required": "NONE",
+  "source_script": "TBD (to be implemented). Consumes block_alt_evidence + existence_layer_a (required) and existence_layer_b / c / d + hypothesis_verdict (optional, raises confidence).",
+  "required": ["block_id", "class_primary"],
+  "properties": {
+    "block_id": {
+      "type": "string",
+      "description": "Candidate block identifier; same id as block_alt_evidence.block_id and existence_layer_a.block_id."
+    },
+    "class_primary": {
+      "type": "string",
+      "enum": [
+        "INV_LIKE",
+        "TR_ASSOCIATED",
+        "HOR_ASSOCIATED",
+        "SD_ASSOCIATED",
+        "CEN_PERI_ASSOCIATED",
+        "CNV_LIKE",
+        "MIXED",
+        "ART_RISK"
+      ],
+      "description": "Primary class. INV_LIKE = clean three-cluster local-PCA (n_localpca_clusters == 3), HWE_FIS_pattern balanced_three_class, low TR / HOR / SD / CNV overlap, mean_depth_ratio near 1, low low_mappability_pct. TR_ASSOCIATED = appreciable tandem-repeat overlap dominates the architecture signal. HOR_ASSOCIATED = higher-order repeat / satellite organisation overlap; usually n_localpca_clusters > 3. SD_ASSOCIATED = segmental-duplication overlap; mechanism likely NAHR or paralogous-mapping interaction. CEN_PERI_ASSOCIATED = adjacent to or overlapping a centromere / pericentromere candidate (small centromere_candidate_distance_bp). CNV_LIKE = local-PCA cluster membership correlates with mean_depth_ratio anomalies. MIXED = inversion-like local-PCA signal plus strong repeat / SD overlap; deliberately picks no single mechanism rather than overcommit. ART_RISK = signal plausibly driven by low mappability / MQ0 / mapping collapse; should not be claimed as biology without orthogonal evidence."
+    },
+    "class_secondary": {
+      "type": "string",
+      "enum": [
+        "INV_LIKE",
+        "TR_ASSOCIATED",
+        "HOR_ASSOCIATED",
+        "SD_ASSOCIATED",
+        "CEN_PERI_ASSOCIATED",
+        "CNV_LIKE",
+        "MIXED",
+        "ART_RISK",
+        "NONE"
+      ],
+      "description": "Optional secondary class for MIXED-style blocks where two mechanisms have comparable evidence (e.g. INV_LIKE + SD_ASSOCIATED). NONE if not applicable. A block whose class_primary is MIXED SHOULD set class_secondary to a concrete class; a block whose class_primary is a concrete class MAY set class_secondary to NONE."
+    },
+    "class_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Classifier confidence in the primary class on 0-1. Not a calibrated probability — a normalised score reflecting how many criteria fired and how cleanly. Consumers should treat values < 0.5 as low-confidence and prefer MIXED in that range."
+    },
+    "rationale_codes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Short codes naming the criteria that fired for this classification, for example ['n_clusters_eq_3', 'hwe_balanced_three_class', 'tr_overlap_lt_10', 'sd_overlap_lt_10', 'mean_depth_ratio_in_band'] for an INV_LIKE call. Aids audit; consumers should not parse the codes for semantics, only display them."
+    },
+    "depends_on_blocks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "block_alt_evidence",
+          "existence_layer_a",
+          "existence_layer_b",
+          "existence_layer_c",
+          "existence_layer_d",
+          "hypothesis_verdict"
+        ]
+      },
+      "description": "Which upstream blocks were consulted to produce this classification. A defensible call requires at least ['block_alt_evidence', 'existence_layer_a']; without block_alt_evidence the classifier cannot distinguish INV_LIKE from TR / HOR / SD / CNV / ART alternatives and must not be run."
+    }
+  },
+  "keys_extracted": [
+    { "key": "q7_block_class_primary",    "from": "class_primary" },
+    { "key": "q7_block_class_secondary",  "from": "class_secondary" },
+    { "key": "q7_block_class_confidence", "from": "class_confidence" }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "block_alt_evidence.schema.json",
+  "block_type": "block_alt_evidence",
+  "description": "Alternative-explanation evidence for a candidate long-range haplotype block: track-overlap percentages (tandem repeat, higher-order repeat, segmental duplication, gene, ncRNA), depth / CNV diagnostics, mappability risk, local-PCA cluster diagnostics, and proximity to a centromere candidate. These are measurements only and do not call a class — they are the inputs consumed by block_classification. A block scoring high on TR / HOR / SD / CNV overlap or low mappability may still be a real long-range haplotype but should not be presented as a 'clean inversion' on local-PCA evidence alone (cf. INVERSION_REGISTRY_SPECIFICATION_v2 Q7 layers). Atlas 2.0 extension: generalises the candidate model from 'inversion-only' to 'long-range haplotype block, mechanism to be determined'.",
+  "question": "Q7",
+  "group_validation_required": "NONE",
+  "source_script": "TBD (to be implemented). Consumes a block interval set (existence_layer_a.block_id intervals) and per-track annotations: TR (TRF / dustmasker), HOR (satellite-array annotation), SD (BISER2 catalog or equivalent), gene / ncRNA (GFF), mappability / MQ0 BED, per-window depth BED, centromere-candidate intervals.",
+  "required": ["block_id"],
+  "properties": {
+    "block_id": {
+      "type": "string",
+      "description": "Candidate block / regime identifier. Matches existence_layer_a.block_id so this evidence joins to the local-PCA layer."
+    },
+    "tr_overlap_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Fraction of the block (in bp) covered by tandem-repeat annotations, 0-100. A simple tandem repeat is one repeat unit tiled head-to-tail (A A A A A)."
+    },
+    "hor_overlap_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Fraction covered by higher-order-repeat / satellite-array annotations. HOR = blocks of *different* repeat units forming a periodic super-structure (A-B-C-D / A-B-C-D / A-B-C-D), distinct from a plain tandem repeat. Even a rough HOR annotation is informative — the relevant question is whether the block overlaps structured satellite arrays that could explain cluster multiplicity."
+    },
+    "sd_overlap_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Fraction covered by segmental-duplication / paralogous-region annotations (BISER2 catalog or equivalent). High SD overlap raises a NAHR mechanism prior."
+    },
+    "gene_overlap_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Fraction covered by gene annotations (any feature class)."
+    },
+    "ncrna_overlap_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Fraction covered by ncRNA / regulatory-RNA annotations; flags repeat-associated RNA content."
+    },
+    "mean_depth_ratio": {
+      "type": "number",
+      "description": "Mean per-sample read depth inside the block divided by the cohort-wide median depth. Values markedly below 1 suggest mapping collapse / unique-mapper loss; values markedly above 1 suggest collapsed paralogous mapping or CNV gain."
+    },
+    "low_mappability_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Fraction of the block flagged as low-mappability or MQ0-enriched. High values raise ART_RISK regardless of other signals."
+    },
+    "centromere_candidate_distance_bp": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Distance in bp from the block to the nearest centromere / pericentromere candidate; 0 if overlapping. Small distances raise the CEN_PERI_ASSOCIATED prior."
+    },
+    "n_localpca_clusters": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of sample clusters detected by local-PCA inside the block. 3 is consistent with a clean biallelic inversion (HOM1 / HET / HOM2). >3 suggests a repeat-architecture haplotype system where individuals can differ in copy number, unit sequence, or array organisation. 1 indicates no detectable structure."
+    },
+    "cluster_FST_like": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "FST-like between-cluster differentiation summary computed over the local-PCA cluster labels in the block. Named '_like' because the partitioning is by inferred clusters rather than declared populations; this is not a population-genetic FST estimator (cf. arrangement_FST_like elsewhere in this registry)."
+    },
+    "HWE_FIS_pattern": {
+      "type": "string",
+      "enum": [
+        "balanced_three_class",
+        "excess_heterozygosity",
+        "heterozygote_deficit",
+        "monomorphic",
+        "no_pattern",
+        "untestable"
+      ],
+      "description": "Pattern of per-site HWE_FIS deviations within the block. 'balanced_three_class' = HOM / HET / HOM proportions consistent with a single biallelic segregating arrangement (inversion-like). Other patterns may indicate CNV, mapping collapse, or absence of real structure. Uses HWE_FIS rather than bare HWE because the pattern is summarised at the inbreeding-coefficient level."
+    }
+  },
+  "keys_extracted": [
+    { "key": "q7_tr_overlap_pct",            "from": "tr_overlap_pct" },
+    { "key": "q7_hor_overlap_pct",           "from": "hor_overlap_pct" },
+    { "key": "q7_sd_overlap_pct",            "from": "sd_overlap_pct" },
+    { "key": "q7_gene_overlap_pct",          "from": "gene_overlap_pct" },
+    { "key": "q7_ncrna_overlap_pct",         "from": "ncrna_overlap_pct" },
+    { "key": "q7_mean_depth_ratio",          "from": "mean_depth_ratio" },
+    { "key": "q7_low_mappability_pct",       "from": "low_mappability_pct" },
+    { "key": "q7_cen_candidate_distance_bp", "from": "centromere_candidate_distance_bp" },
+    { "key": "q7_n_localpca_clusters",       "from": "n_localpca_clusters" },
+    { "key": "q7_cluster_FST_like",          "from": "cluster_FST_like" },
+    { "key": "q7_HWE_FIS_pattern",           "from": "HWE_FIS_pattern" }
+  ]
+}

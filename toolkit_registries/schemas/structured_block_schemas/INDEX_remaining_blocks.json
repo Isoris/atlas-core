@@ -160,10 +160,27 @@
       "group_validation_required": "NONE",
       "source_script": "synteny_inversion_detection.sh + dollo_parsimony_inversions.py",
       "description": "Cross-species synteny: is this inversion present in sister species? If present in C. macrocephalus and absent in outgroups → shared ancestral; if only in hatchery line → derived. Dollo parsimony call."
+    },
+    {
+      "block_type": "block_alt_evidence",
+      "question": "Q7",
+      "group_validation_required": "NONE",
+      "source_script": "TBD",
+      "description": "Atlas 2.0 extension. Alternative-explanation measurements for a candidate long-range haplotype block: TR / HOR / SD / gene / ncRNA overlap %, mean_depth_ratio, low_mappability_pct, centromere_candidate_distance_bp, n_localpca_clusters, cluster_FST_like, HWE_FIS_pattern. Inputs to block_classification; does not itself call a class.",
+      "status": "written (Atlas 2.0 extension) — block_alt_evidence.schema.json"
+    },
+    {
+      "block_type": "block_classification",
+      "question": "Q7",
+      "group_validation_required": "NONE",
+      "source_script": "TBD",
+      "description": "Atlas 2.0 extension. Assigns a candidate block to one of 8 classes (INV_LIKE / TR_ASSOCIATED / HOR_ASSOCIATED / SD_ASSOCIATED / CEN_PERI_ASSOCIATED / CNV_LIKE / MIXED / ART_RISK). Consumes block_alt_evidence + existence_layer_a (required) and existence_layer_b/c/d + hypothesis_verdict (optional). Does not supersede hypothesis_verdict — scopes which mechanism the verdict is about.",
+      "status": "written (Atlas 2.0 extension) — block_classification.schema.json"
     }
   ],
   "total": 20,
-  "written_so_far": ["existence_layer_d", "internal_dynamics", "hypothesis_verdict", "boundary_left", "boundary_right", "recombinant_map", "internal_ancestry_composition"],
+  "written_so_far": ["existence_layer_d", "internal_dynamics", "hypothesis_verdict", "boundary_left", "boundary_right", "recombinant_map", "internal_ancestry_composition", "block_alt_evidence", "block_classification"],
   "remaining": 13,
-  "note": "Chat 15 BK added recombinant_map + internal_ancestry_composition as separate blocks (they were carved out of internal_dynamics during the chat-12 rewrite but had no canonical schema). internal_dynamics itself was rewritten chat-15 to match current C01i_decompose output. Remaining 13 schemas follow same pattern: required fields list, properties with descriptions and types, keys_extracted mapping block fields to flat key names. Each takes ~15 minutes to write from the corresponding script's output."
+  "atlas_2_extensions": ["block_alt_evidence", "block_classification"],
+  "note": "Chat 15 BK added recombinant_map + internal_ancestry_composition as separate blocks (they were carved out of internal_dynamics during the chat-12 rewrite but had no canonical schema). internal_dynamics itself was rewritten chat-15 to match current C01i_decompose output. Remaining 13 schemas follow same pattern: required fields list, properties with descriptions and types, keys_extracted mapping block fields to flat key names. Each takes ~15 minutes to write from the corresponding script's output. Atlas 2.0 extension (block_alt_evidence + block_classification) was added outside the original v2 count of 20; total/remaining intentionally not updated. See ATLAS_2_BLOCK_CLASSIFICATION_NOTE.md for the rationale."
 }

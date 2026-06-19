@@ -1,0 +1,14 @@
+{
+  "block_id": "LRR02",
+  "n_windows": 45,
+  "window_bp": 100000,
+  "long_range_vote_pct": 71.0,
+  "local_continuity_score": 0.78,
+  "major_dosage_classes": [
+    "H1H1",
+    "H1H2",
+    "H2H2"
+  ],
+  "detection_method": "synthetic demo",
+  "broodline_structure_note": "Any K-structure observed in the cgar_hatchery_226 cohort is broodline / family structure, NOT species admixture."
+}

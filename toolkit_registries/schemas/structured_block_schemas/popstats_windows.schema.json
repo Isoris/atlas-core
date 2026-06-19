@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "popstats_windows.schema.json",
+  "block_type": "popstats_windows",
+  "description": "ROW contract for popstats.tsv (one row per window per candidate). Per-window population-genetic summaries: nucleotide diversity (pi), between-arrangement divergence (dxy), an arrangement-FST-like contrast (H1 vs H2 partition), the inbreeding coefficient HWE_FIS, and observed / expected heterozygosity. Names are disciplined: arrangement_FST_like (not bare FST — the partition is by inferred arrangement), HWE_FIS (the summary is at the FIS level).",
+  "question": "Q6",
+  "group_validation_required": "SUPPORTED",
+  "source_script": "atlas popstats pipeline (to be wired)",
+  "tabular": true,
+  "required": ["window_id", "chrom", "start", "end", "pi", "arrangement_FST_like", "HWE_FIS"],
+  "properties": {
+    "window_id":             { "type": "string" },
+    "chrom":                 { "type": "string" },
+    "start":                 { "type": "integer", "minimum": 0 },
+    "end":                   { "type": "integer", "minimum": 0 },
+    "pi":                    { "type": "number", "minimum": 0, "description": "Nucleotide diversity per site, all samples." },
+    "dxy_H1_H2":             { "type": "number", "minimum": 0, "description": "Per-site dxy between H1 and H2 arrangement carriers." },
+    "arrangement_FST_like":  { "type": "number", "description": "FST-like contrast between H1 and H2 arrangement carriers; named '_like' because the partition is by inferred arrangement rather than declared populations." },
+    "HWE_FIS":               { "type": "number", "minimum": -1, "maximum": 1, "description": "Per-window inbreeding coefficient = 1 - H_obs / H_exp." },
+    "heterozygosity_obs":    { "type": "number", "minimum": 0, "maximum": 1 },
+    "heterozygosity_exp":    { "type": "number", "minimum": 0, "maximum": 1 }
+  }
+}

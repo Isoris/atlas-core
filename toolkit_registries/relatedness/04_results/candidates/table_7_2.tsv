@@ -1,0 +1,4 @@
+block_id	chrom	n_H1H1	n_H1H2	n_H2H2	heterozygote_diversity	HWE_p	HWE_FIS	arrangement_FST_like_mean	deleterious_burden_SIFT	interpretation
+LRR01	C_gar_LG28	64	114	48	increased	0.834107	-0.013932	0.73	n/a (not in demo)	divergent maintenance
+LRR02	C_gar_LG14	34	126	66	increased	0.038224	-0.137857	0.477	n/a (not in demo)	overdominance-like
+LRR03	C_gar_LG07	36	104	86	increased	0.627489	0.032279	0.304	n/a (not in demo)	unresolved

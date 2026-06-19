@@ -1,0 +1,15 @@
+{
+  "block_id": "LRR01",
+  "n_total": 226,
+  "n_H1H1": 64,
+  "n_H1H2": 114,
+  "n_H2H2": 48,
+  "freq_H1": 0.535398,
+  "expected_H1H1": 64.783186,
+  "expected_H1H2": 112.433628,
+  "expected_H2H2": 48.783186,
+  "HWE_chi2": 0.043864,
+  "HWE_p": 0.834107,
+  "HWE_FIS": -0.013932,
+  "polymorphism_class": "balanced_three_class"
+}

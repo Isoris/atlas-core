@@ -1,0 +1,10 @@
+{
+  "block_id": "LRR02",
+  "chrom": "C_gar_LG14",
+  "start": 22400000,
+  "end": 26900000,
+  "size_bp": 4500001,
+  "cohort_id": "cgar_hatchery_226",
+  "source": "synthetic demo (gen_candidate_demo.py)",
+  "synthetic": true
+}

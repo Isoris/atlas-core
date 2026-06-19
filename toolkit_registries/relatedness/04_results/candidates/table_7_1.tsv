@@ -1,0 +1,4 @@
+block_id	chrom	start_bp	end_bp	size_Mb	n_windows	major_dosage_classes	long_range_vote_pct	local_continuity_score	interpretation
+LRR01	C_gar_LG28	1200000	8400000	7.2	72	H1H1/H1H2/H2H2	86.0	0.91	candidate LRR
+LRR02	C_gar_LG14	22400000	26900000	4.5	45	H1H1/H1H2/H2H2	71.0	0.78	candidate LRR
+LRR03	C_gar_LG07	11100000	13700000	2.6	26	H1H1/H1H2/H2H2	58.0	0.62	weak / unresolved

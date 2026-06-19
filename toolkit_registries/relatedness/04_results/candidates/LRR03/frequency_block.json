@@ -1,0 +1,15 @@
+{
+  "block_id": "LRR03",
+  "n_total": 226,
+  "n_H1H1": 36,
+  "n_H1H2": 104,
+  "n_H2H2": 86,
+  "freq_H1": 0.389381,
+  "expected_H1H1": 34.265487,
+  "expected_H1H2": 107.469027,
+  "expected_H2H2": 84.265487,
+  "HWE_chi2": 0.235482,
+  "HWE_p": 0.627489,
+  "HWE_FIS": 0.032279,
+  "polymorphism_class": "skewed_minor_allele"
+}

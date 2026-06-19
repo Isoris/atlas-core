@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="480" viewBox="0 0 920 480" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="920" height="480" fill="#ffffff"/>
+<text x="70" y="22" font-size="16" font-weight="700" fill="#1a202c">Fig 3 · LRR02 · Per-window popstats (π · arrangement_FST_like · HWE_FIS)</text>
+<text x="70" y="38" font-size="11" fill="#4a5568">C_gar_LG14:22,400,000–26,900,000  ·  45 windows</text>
+<rect x="70" y="46.0" width="826" height="116.0" fill="none" stroke="#4a5568" stroke-width="0.8"/>
+<line x1="70" y1="162.0" x2="896" y2="162.0" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="165.0" font-size="10" fill="#4a5568" text-anchor="end">0.004</text>
+<line x1="70" y1="123.3" x2="896" y2="123.3" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="126.3" font-size="10" fill="#4a5568" text-anchor="end">0.004</text>
+<line x1="70" y1="84.7" x2="896" y2="84.7" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="87.7" font-size="10" fill="#4a5568" text-anchor="end">0.005</text>
+<line x1="70" y1="46.0" x2="896" y2="46.0" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="49.0" font-size="10" fill="#4a5568" text-anchor="end">0.005</text>
+<polyline points="79.2,105.7 97.5,63.7 115.9,160.2 134.2,147.6 152.6,102.5 171.0,125.2 189.3,74.4 207.7,52.6 226.0,159.9 244.4,92.8 262.7,136.3 281.1,133.2 299.4,151.7 317.8,140.1 336.2,94.2 354.5,162.0 372.9,95.9 391.2,100.2 409.6,86.7 427.9,120.2 446.3,102.3 464.6,128.6 483.0,49.5 501.4,107.7 519.7,136.7 538.1,74.2 556.4,117.4 574.8,46.0 593.1,59.6 611.5,157.9 629.8,47.8 648.2,68.8 666.6,66.0 684.9,151.5 703.3,64.9 721.6,67.3 740.0,153.2 758.3,82.6 776.7,123.2 795.0,108.1 813.4,137.5 831.8,58.7 850.1,141.5 868.5,131.4 886.8,96.7" fill="none" stroke="#2f855a" stroke-width="1.4"/>
+<text x="78" y="60.0" font-size="11" fill="#2f855a" font-weight="600">π (nucleotide diversity)</text>
+<rect x="70" y="172.0" width="826" height="116.0" fill="none" stroke="#4a5568" stroke-width="0.8"/>
+<line x1="70" y1="288.0" x2="896" y2="288.0" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="291.0" font-size="10" fill="#4a5568" text-anchor="end">0.405</text>
+<line x1="70" y1="249.3" x2="896" y2="249.3" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="252.3" font-size="10" fill="#4a5568" text-anchor="end">0.453</text>
+<line x1="70" y1="210.7" x2="896" y2="210.7" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="213.7" font-size="10" fill="#4a5568" text-anchor="end">0.500</text>
+<line x1="70" y1="172.0" x2="896" y2="172.0" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="175.0" font-size="10" fill="#4a5568" text-anchor="end">0.548</text>
+<polyline points="79.2,172.9 97.5,184.6 115.9,239.5 134.2,260.8 152.6,250.3 171.0,264.2 189.3,229.6 207.7,278.4 226.0,215.3 244.4,240.6 262.7,234.5 281.1,214.0 299.4,250.4 317.8,221.2 336.2,188.4 354.5,284.7 372.9,220.3 391.2,226.6 409.6,205.8 427.9,189.0 446.3,200.0 464.6,275.3 483.0,229.1 501.4,228.0 519.7,207.5 538.1,197.1 556.4,232.2 574.8,252.4 593.1,208.5 611.5,264.0 629.8,172.0 648.2,242.7 666.6,182.4 684.9,240.2 703.3,253.1 721.6,219.6 740.0,235.0 758.3,264.9 776.7,288.0 795.0,202.8 813.4,275.7 831.8,226.7 850.1,257.3 868.5,188.0 886.8,210.4" fill="none" stroke="#9c4221" stroke-width="1.4"/>
+<text x="78" y="186.0" font-size="11" fill="#9c4221" font-weight="600">arrangement_FST_like (H1 vs H2)</text>
+<rect x="70" y="298.0" width="826" height="116.0" fill="none" stroke="#4a5568" stroke-width="0.8"/>
+<line x1="70" y1="414.0" x2="896" y2="414.0" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="417.0" font-size="10" fill="#4a5568" text-anchor="end">-0.080</text>
+<line x1="70" y1="375.3" x2="896" y2="375.3" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="378.3" font-size="10" fill="#4a5568" text-anchor="end">-0.054</text>
+<line x1="70" y1="336.7" x2="896" y2="336.7" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="339.7" font-size="10" fill="#4a5568" text-anchor="end">-0.027</text>
+<line x1="70" y1="298.0" x2="896" y2="298.0" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="301.0" font-size="10" fill="#4a5568" text-anchor="end">-0.001</text>
+<polyline points="79.2,298.0 97.5,374.6 115.9,355.9 134.2,403.3 152.6,384.1 171.0,334.7 189.3,319.0 207.7,414.0 226.0,358.3 244.4,396.4 262.7,363.8 281.1,320.0 299.4,301.1 317.8,355.2 336.2,374.8 354.5,312.6 372.9,403.3 391.2,357.1 409.6,377.7 427.9,361.3 446.3,313.9 464.6,386.1 483.0,334.9 501.4,351.7 519.7,387.9 538.1,318.8 556.4,300.6 574.8,348.1 593.1,326.8 611.5,361.7 629.8,387.7 648.2,310.4 666.6,401.5 684.9,396.4 703.3,400.9 721.6,392.4 740.0,355.1 758.3,406.4 776.7,409.9 795.0,368.6 813.4,403.0 831.8,336.4 850.1,368.4 868.5,321.4 886.8,342.3" fill="none" stroke="#1a2540" stroke-width="1.4"/>
+<text x="78" y="312.0" font-size="11" fill="#1a2540" font-weight="600">HWE_FIS (window)</text>
+<text x="70.0" y="430.0" font-size="10" fill="#4a5568" text-anchor="middle">22 Mb</text>
+<text x="235.2" y="430.0" font-size="10" fill="#4a5568" text-anchor="middle">23 Mb</text>
+<text x="400.4" y="430.0" font-size="10" fill="#4a5568" text-anchor="middle">24 Mb</text>
+<text x="565.6" y="430.0" font-size="10" fill="#4a5568" text-anchor="middle">25 Mb</text>
+<text x="730.8" y="430.0" font-size="10" fill="#4a5568" text-anchor="middle">25 Mb</text>
+<text x="896.0" y="430.0" font-size="10" fill="#4a5568" text-anchor="middle">26 Mb</text>
+</svg>

@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "candidate.schema.json",
+  "block_type": "candidate",
+  "description": "Manifest for one candidate long-range haplotype block. Anchors every other file in 04_results/candidates/<block_id>/. The cohort is pinned at the manifest level so all downstream evidence inherits it and cross-cohort leakage is structurally impossible.",
+  "question": "Q0",
+  "group_validation_required": "NONE",
+  "source_script": "manual / atlas detection pipeline",
+  "required": ["block_id", "chrom", "start", "end", "cohort_id"],
+  "properties": {
+    "block_id":    { "type": "string", "description": "Stable id; matches folder name and is the foreign key for every other file in this candidate's folder." },
+    "chrom":       { "type": "string", "description": "Chromosome / linkage group. Convention: C_gar_LG<NN>." },
+    "start":       { "type": "integer", "minimum": 0, "description": "Block start, bp, inclusive." },
+    "end":         { "type": "integer", "minimum": 0, "description": "Block end, bp, inclusive." },
+    "size_bp":     { "type": "integer", "minimum": 0, "description": "end - start + 1; redundant but checked by the harvester." },
+    "cohort_id":   { "type": "string", "description": "Cohort label. 'cgar_hatchery_226' = the 226 pure C. gariepinus broodstock samples; not the F1 hybrid assembly cohort." },
+    "source":      { "type": "string", "description": "Free-text provenance (which detection run produced the block)." },
+    "synthetic":   { "type": "boolean", "description": "True if this row is a synthetic demo, false for real cohort data." }
+  }
+}

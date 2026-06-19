@@ -1,0 +1,4 @@
+block_id	informative_families	informative_offspring	mendelian_consistent_offspring	inconsistent_offspring	apparent_internal_switches	estimated_recombinant_rate	interpretation
+LRR01	18	103	101	2	0	0.0	coherent inheritance
+LRR02	18	88	79	9	6	0.0682	weak / unresolved
+LRR03	18	72	64	8	8	0.1111	weak / unresolved

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "family_segregation.schema.json",
+  "block_type": "family_segregation",
+  "description": "ROW contract for family_segregation.tsv (one row per inferred family per candidate). Counts informative offspring, Mendelian-consistent / inconsistent calls, and apparent internal switches within the block. Rolled up by the harvester to one row of thesis Table 7.3 per candidate.",
+  "question": "Q2",
+  "group_validation_required": "SUPPORTED",
+  "source_script": "to be wired against the pedigree from chapter 6",
+  "tabular": true,
+  "required": ["family_id", "n_informative_offspring", "n_consistent", "n_inconsistent", "n_internal_switches"],
+  "properties": {
+    "family_id":               { "type": "string", "description": "Broodline / family label inherited from the relatedness pipeline." },
+    "n_informative_offspring": { "type": "integer", "minimum": 0, "description": "Offspring whose parental karyotype combination makes the segregation test informative." },
+    "n_consistent":            { "type": "integer", "minimum": 0, "description": "Offspring whose karyotype is consistent with Mendelian segregation from the parents." },
+    "n_inconsistent":          { "type": "integer", "minimum": 0, "description": "Offspring whose karyotype is not consistent with any Mendelian outcome from the parental classes." },
+    "n_internal_switches":     { "type": "integer", "minimum": 0, "description": "Apparent recombinant switches within the block in this family's offspring." }
+  }
+}

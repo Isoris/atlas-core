@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "frequency_block.schema.json",
+  "block_type": "frequency_block",
+  "description": "Block-level frequency summary for one candidate. Reports the H1 allele frequency, the three karyotype-class counts (H1H1 / H1H2 / H2H2), HWE expected counts and chi-square, the HWE_FIS inbreeding coefficient, and a coarse polymorphism class. Named frequency_block to avoid clashing with frequency.v3.schema.json (the older v2 SV-frequency block).",
+  "question": "Q6",
+  "group_validation_required": "SUPPORTED",
+  "source_script": "harvest_candidates.py reads karyotype_groups.tsv and computes the chi-square + FIS in pure stdlib (math.erfc for the 1-df p-value).",
+  "required": ["block_id", "n_total", "n_H1H1", "n_H1H2", "n_H2H2", "freq_H1", "HWE_chi2", "HWE_p"],
+  "properties": {
+    "block_id":         { "type": "string", "description": "FK to candidate.block_id." },
+    "n_total":          { "type": "integer", "minimum": 1, "description": "Total samples with a karyotype call." },
+    "n_H1H1":           { "type": "integer", "minimum": 0 },
+    "n_H1H2":           { "type": "integer", "minimum": 0 },
+    "n_H2H2":           { "type": "integer", "minimum": 0 },
+    "freq_H1":          { "type": "number", "minimum": 0, "maximum": 1, "description": "Allele frequency of H1." },
+    "expected_H1H1":    { "type": "number", "minimum": 0 },
+    "expected_H1H2":    { "type": "number", "minimum": 0 },
+    "expected_H2H2":    { "type": "number", "minimum": 0 },
+    "HWE_chi2":         { "type": "number", "minimum": 0, "description": "1-df chi-square statistic against HWE expectation." },
+    "HWE_p":            { "type": "number", "minimum": 0, "maximum": 1, "description": "p-value from 1-df chi-square (computed via math.erfc(sqrt(chi2/2)))." },
+    "HWE_FIS":          { "type": "number", "minimum": -1, "maximum": 1, "description": "Inbreeding coefficient 1 - H_obs/H_exp. Negative = heterozygote excess (consistent with overdominance or sheltered load)." },
+    "polymorphism_class": { "type": "string", "enum": ["balanced_three_class", "skewed_minor_allele", "near_monomorphic", "untestable"] }
+  }
+}

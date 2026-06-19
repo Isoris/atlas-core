@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "karyotype_groups.schema.json",
+  "block_type": "karyotype_groups",
+  "description": "ROW contract for karyotype_groups.tsv (one row per sample, per candidate). Maps each of the 226 hatchery samples to one of the three karyotype classes (H1H1 / H1H2 / H2H2) for THIS block. Per-candidate file; the same sample appears in multiple candidate folders with potentially different classes.",
+  "question": "Q1",
+  "group_validation_required": "NONE",
+  "source_script": "atlas karyotype caller (to be wired)",
+  "tabular": true,
+  "required": ["sample_id", "karyotype_class"],
+  "properties": {
+    "sample_id":       { "type": "string", "description": "Sample identifier from cohort cgar_hatchery_226." },
+    "karyotype_class": { "type": "string", "enum": ["H1H1", "H1H2", "H2H2", "UNCALLED"], "description": "UNCALLED reserved for low-confidence samples; excluded from frequency_block counts." },
+    "confidence":      { "type": "number", "minimum": 0, "maximum": 1, "description": "Caller confidence 0-1." },
+    "family_id":       { "type": "string", "description": "Broodline / family label from the relatedness pipeline; carried through for Table 7.3." }
+  }
+}

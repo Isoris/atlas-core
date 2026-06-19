@@ -1,0 +1,20 @@
+# SYNTHETIC demo — per-family segregation counts — gen_candidate_demo.py
+family_id	n_informative_offspring	n_consistent	n_inconsistent	n_internal_switches
+BL01	4	4	0	1
+BL02	3	3	0	0
+BL03	5	5	0	1
+BL04	5	5	0	0
+BL05	5	5	0	1
+BL06	3	3	0	0
+BL07	3	1	2	0
+BL08	3	3	0	0
+BL09	3	3	0	0
+BL10	4	4	0	0
+BL11	5	3	2	1
+BL12	4	3	1	1
+BL13	5	4	1	0
+BL14	4	3	1	0
+BL15	3	3	0	1
+BL16	5	5	0	1
+BL17	4	3	1	0
+BL18	4	4	0	1

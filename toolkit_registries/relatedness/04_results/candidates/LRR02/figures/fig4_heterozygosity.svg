@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360" font-family="Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="920" height="360" fill="#ffffff"/>
+<text x="70" y="22" font-size="16" font-weight="700" fill="#1a202c">Fig 4 · LRR02 · Per-window heterozygosity (observed vs expected)</text>
+<text x="70" y="38" font-size="11" fill="#4a5568">mean observed = 0.505  ·  mean expected = 0.484  ·  Δ = +0.021</text>
+<rect x="70" y="46" width="826" height="258" fill="none" stroke="#4a5568" stroke-width="0.8"/>
+<line x1="70" y1="304.0" x2="896" y2="304.0" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="307.0" font-size="10" fill="#4a5568" text-anchor="end">0.000</text>
+<line x1="70" y1="239.5" x2="896" y2="239.5" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="242.5" font-size="10" fill="#4a5568" text-anchor="end">0.150</text>
+<line x1="70" y1="175.0" x2="896" y2="175.0" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="178.0" font-size="10" fill="#4a5568" text-anchor="end">0.301</text>
+<line x1="70" y1="110.5" x2="896" y2="110.5" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="113.5" font-size="10" fill="#4a5568" text-anchor="end">0.451</text>
+<line x1="70" y1="46.0" x2="896" y2="46.0" stroke="#e2e8f0" stroke-width="0.6"/>
+<text x="64" y="49.0" font-size="10" fill="#4a5568" text-anchor="end">0.601</text>
+<polyline points="79.2,97.5 97.5,94.2 115.9,95.2 134.2,94.4 152.6,96.5 171.0,94.6 189.3,98.2 207.7,94.8 226.0,94.2 244.4,94.7 262.7,96.2 281.1,95.0 299.4,96.0 317.8,96.8 336.2,96.5 354.5,96.3 372.9,97.8 391.2,94.3 409.6,97.7 427.9,94.8 446.3,95.6 464.6,98.2 483.0,95.5 501.4,96.9 519.7,97.9 538.1,95.4 556.4,98.0 574.8,94.4 593.1,97.2 611.5,95.2 629.8,96.3 648.2,97.8 666.6,96.8 684.9,96.5 703.3,98.0 721.6,95.5 740.0,97.6 758.3,97.3 776.7,96.2 795.0,94.3 813.4,94.4 831.8,97.5 850.1,96.3 868.5,97.4 886.8,97.7" fill="none" stroke="#a0aec0" stroke-width="1.5"/>
+<polyline points="79.2,96.1 97.5,85.2 115.9,87.9 134.2,81.2 152.6,83.9 171.0,90.9 189.3,93.1 207.7,79.7 226.0,87.6 244.4,82.1 262.7,86.8 281.1,93.0 299.4,95.7 317.8,88.0 336.2,85.2 354.5,94.0 372.9,81.2 391.2,87.7 409.6,84.8 427.9,87.1 446.3,93.9 464.6,83.6 483.0,90.9 501.4,88.5 519.7,83.4 538.1,93.2 556.4,95.7 574.8,89.0 593.1,92.0 611.5,87.1 629.8,83.4 648.2,94.4 666.6,81.4 684.9,82.2 703.3,81.5 721.6,82.7 740.0,88.0 758.3,80.7 776.7,80.2 795.0,86.1 813.4,81.2 831.8,90.7 850.1,86.1 868.5,92.8 886.8,89.8" fill="none" stroke="#1f6feb" stroke-width="1.5"/>
+<text x="70.0" y="320" font-size="10" fill="#4a5568" text-anchor="middle">22 Mb</text>
+<text x="235.2" y="320" font-size="10" fill="#4a5568" text-anchor="middle">23 Mb</text>
+<text x="400.4" y="320" font-size="10" fill="#4a5568" text-anchor="middle">24 Mb</text>
+<text x="565.6" y="320" font-size="10" fill="#4a5568" text-anchor="middle">25 Mb</text>
+<text x="730.8" y="320" font-size="10" fill="#4a5568" text-anchor="middle">25 Mb</text>
+<text x="896.0" y="320" font-size="10" fill="#4a5568" text-anchor="middle">26 Mb</text>
+<rect x="70" y="333" width="12" height="12" fill="#1f6feb"/>
+<text x="87" y="343" font-size="11" fill="#4a5568">observed</text>
+<rect x="180" y="333" width="12" height="12" fill="#a0aec0"/>
+<text x="197" y="343" font-size="11" fill="#4a5568">expected (HWE)</text>
+</svg>

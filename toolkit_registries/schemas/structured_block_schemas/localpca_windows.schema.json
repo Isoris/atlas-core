@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "localpca_windows.schema.json",
+  "block_type": "localpca_windows",
+  "description": "ROW contract for localpca_windows.tsv (one row per window per candidate). Reports the local-PCA score summary per window inside the block: cluster-level PC1 / PC2 medians and the local cluster label. Note this is the window-level summary; per-sample loadings live in the popstats pipeline if needed.",
+  "question": "Q1",
+  "group_validation_required": "NONE",
+  "source_script": "atlas local-PCA pipeline (to be wired)",
+  "tabular": true,
+  "required": ["window_id", "chrom", "start", "end", "pc1_median_H1H1", "pc1_median_H1H2", "pc1_median_H2H2"],
+  "properties": {
+    "window_id":         { "type": "string" },
+    "chrom":             { "type": "string" },
+    "start":             { "type": "integer", "minimum": 0 },
+    "end":               { "type": "integer", "minimum": 0 },
+    "pc1_median_H1H1":   { "type": "number" },
+    "pc1_median_H1H2":   { "type": "number" },
+    "pc1_median_H2H2":   { "type": "number" },
+    "pc2_median_H1H1":   { "type": "number" },
+    "pc2_median_H1H2":   { "type": "number" },
+    "pc2_median_H2H2":   { "type": "number" },
+    "window_cluster_continuity": { "type": "number", "minimum": 0, "maximum": 1, "description": "Agreement (0-1) between this window's clustering and the block-majority clustering." }
+  }
+}

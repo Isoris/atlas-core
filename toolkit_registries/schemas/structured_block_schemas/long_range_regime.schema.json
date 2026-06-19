@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "long_range_regime.schema.json",
+  "block_type": "long_range_regime",
+  "description": "Detection summary for a candidate long-range recombination-suppressed haplotype block. Captures the two complementary criteria used to retain a block as a candidate: long-range votes (do the same individuals repeatedly cluster together across the interval?) and local continuity (do adjacent windows agree on the grouping?). Cohort inherited from candidate.json.",
+  "question": "Q1",
+  "group_validation_required": "NONE",
+  "source_script": "atlas LRR detection pipeline (to be wired)",
+  "required": ["block_id", "n_windows", "long_range_vote_pct", "local_continuity_score"],
+  "properties": {
+    "block_id":                  { "type": "string", "description": "FK to candidate.block_id." },
+    "n_windows":                 { "type": "integer", "minimum": 1, "description": "Number of analysis windows inside the block." },
+    "window_bp":                 { "type": "integer", "minimum": 1, "description": "Window size in bp." },
+    "long_range_vote_pct":       { "type": "number", "minimum": 0, "maximum": 100, "description": "Fraction (0-100) of windows where the same individuals re-cluster together." },
+    "local_continuity_score":    { "type": "number", "minimum": 0, "maximum": 1, "description": "0-1 score for adjacent-window grouping stability." },
+    "major_dosage_classes":      { "type": "array", "items": { "type": "string" }, "description": "The classes detected, e.g. ['H1H1','H1H2','H2H2']." },
+    "detection_method":          { "type": "string", "description": "Detector name/version." },
+    "broodline_structure_note":  { "type": "string", "description": "If K-structure was detected upstream, note here that it was attributed to broodline (hatchery) structure, not species admixture." }
+  }
+}
